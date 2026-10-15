@@ -46,6 +46,10 @@ async def console_turn(prompt: str, root: Path, env: dict, native_id="", *,
                        timeout=1800, interactive=True, on_bind=None) -> tuple[str, str]:
     config = settings(root / "outputs", env)
     runtime = config["runtime"]
+    from easel.service_contracts import TaskContext
+    context = TaskContext(config["service_source"], config["execution_target"], runtime,
+                          config["models"].get(runtime, ""))
+    context.require_available()
     full_text = []
     identifiers = [native_id]
 
@@ -69,7 +73,7 @@ async def console_turn(prompt: str, root: Path, env: dict, native_id="", *,
         return answers
 
     request = RunRequest(prompt, root, {**env, "EASEL_AGENT_RUNTIME": runtime}, native_id,
-                         config["models"].get(runtime, ""), config["sandbox"], timeout,
+                         context.model, config["sandbox"], timeout,
                          codex_auto_approve=config["codex_auto_approve"])
 
     def bind(value):

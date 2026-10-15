@@ -968,11 +968,19 @@ def _agent_thinking_level() -> str:
 
 def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | None = None,
                    context: TaskContext | None = None) -> str:
-    direct = context.runtime == "api" if context else _direct_api_enabled()
+    config = _harness_settings() if context is None else None
+    if context is None:
+        runtime = _chat_backend(session_id)
+        context = _task_context(ChatRequest(message=msg, sessionId=session_id), runtime, config)
+    try:
+        context.require_available()
+    except HarnessError as error:
+        raise HTTPException(409, str(error)) from error
+    direct = context.runtime == "api"
     if direct:
         raise HTTPException(409, "API 直连模式支持聊天；此操作需要具备文件和技能执行工具的 Agent 运行时")
     sk = session_id or f'web-{int(time.time() * 1000)}'
-    runtime = context.runtime if context else _chat_backend(session_id)
+    runtime = context.runtime
     if runtime not in ("api", "openclaw"):
         async def execute():
             request = ChatRequest(message=msg, sessionId=sk)
@@ -981,7 +989,7 @@ def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | No
                 if kind == "error":
                     errors.append(text)
             result = await _run_harness_chat(request, sk, msg, runtime, _harness_settings(), emit,
-                                             timeout, interactive=False)
+                                             timeout, interactive=False, context=context)
             if errors:
                 raise HTTPException(502, errors[0])
             return result
@@ -2027,12 +2035,17 @@ class ModelSaveRequest(BaseModel):
     rows: list[ModelSaveRow] = Field(default_factory=list)
 
 
+def _guard_chat_model_mutation():
+    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS:
+        raise HTTPException(409, "请等待当前任务完成或停止后修改聊天模型")
+
+
 @app.post("/api/settings/models/save")
 async def api_settings_models_save(req: ModelSaveRequest):
     """保存模型通道：.env 就地更新（key 留空=不改）；chat 同步 openclaw；媒体通道写 provider 配置。"""
     ch0 = (req.channel or "").strip()
-    if ch0 == "chat" and (_RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS):
-        raise HTTPException(409, "请等待当前任务完成或停止后修改聊天模型")
+    if ch0 == "chat":
+        _guard_chat_model_mutation()
     if ch0 == "chat" and _harness_settings()["runtime"] not in ("api", "openclaw"):
         raise HTTPException(409, "当前底座使用原生认证；模型覆盖请在 Agent 底座设置中保存")
     direct = _direct_api_enabled()
@@ -2298,6 +2311,7 @@ async def api_local_agent_enable(req: LocalAgentEnableRequest):
     req.model 可选：从插件模型目录里选一个（前端下拉列表），不传用各家默认。
     传了但不在目录里 → 400 拒绝，绝不静默写入一个不存在的模型引用。
     """
+    _guard_chat_model_mutation()
     from easel.local_agents import detect_local_agents, catalog_for_provider
     agents = {a["id"]: a for a in detect_local_agents()}
     agent = agents.get(req.id)
@@ -3946,6 +3960,57 @@ async def api_chat_stop(req: StopRequest):
     return {"stopped": False}          # 没有在跑（可能已结束）→ 前端照常清理即可
 
 
+def _submit_sync_task(message: str, timeout: int, context: TaskContext, *,
+                      session_id: str | None = None, turn_id: str | None = None,
+                      on_complete=None) -> asyncio.Task:
+    """Own the thread until it actually exits, independent of request cancellation."""
+    context.require_available()
+    route = context.metadata()
+
+    async def execute():
+        try:
+            worker = asyncio.get_running_loop().run_in_executor(
+                None, run_agent_sync, message, timeout, session_id, context)
+            while True:
+                try:
+                    result = await asyncio.shield(worker)
+                    break
+                except asyncio.CancelledError:
+                    # Cancelling an asyncio waiter cannot stop the underlying thread.
+                    # Keep ownership and settings protection until its real completion.
+                    continue
+            if session_id:
+                _save_turn(f"web:{session_id}", "done", result, {
+                    "turn_id": turn_id, "route": route, "stop_reason": "completed", "clean_end": True})
+            if on_complete:
+                on_complete(True, result)
+            return result
+        except Exception:
+            detail = "Agent 执行失败，请检查本机 CLI、登录和模型配置"
+            if session_id:
+                _save_turn(f"web:{session_id}", "done", detail, {
+                    "turn_id": turn_id, "route": route, "stop_reason": "error", "clean_end": False})
+            if on_complete:
+                on_complete(False, detail)
+            raise HTTPException(502, detail) from None
+        finally:
+            task = asyncio.current_task()
+            _HARNESS_TASKS.discard(task)
+            _BG_TASKS.discard(task)
+
+    task = asyncio.create_task(execute())
+    _HARNESS_TASKS.add(task)
+    _BG_TASKS.add(task)
+    # Detached requests have no waiter to retrieve execution failures.
+    def consume_error(done):
+        _HARNESS_TASKS.discard(done)
+        _BG_TASKS.discard(done)
+        if not done.cancelled():
+            done.exception()
+    task.add_done_callback(consume_error)
+    return task
+
+
 @app.post("/api/chat")
 async def api_chat(req: ChatRequest):
     """非流式对话（备选）。"""
@@ -3980,18 +4045,12 @@ async def api_chat(req: ChatRequest):
         raise HTTPException(409, "此会话属于 API 直连，请新建会话使用 OpenClaw")
     # 每轮末尾追加「先查技能库」提醒，抗长对话指令衰减（对用户不可见）
     message = _chat_message(req)
-    loop = asyncio.get_event_loop()
     # chat 可能中途触发制作层长任务 → 用 TIMEOUT_CHAT，与流式 /api/chat/stream 一致（勿用 300s）
     sk = req.sessionId or uuid.uuid4().hex
     _bind_task(sk, context)
     _save_turn(f"web:{sk}", "running", "", {"route": context.metadata()})
-    task = asyncio.current_task()
-    _HARNESS_TASKS.add(task)
-    try:
-        result = await loop.run_in_executor(None, run_agent_sync, message, TIMEOUT_CHAT, sk, context)
-        _save_turn(f"web:{sk}", "done", result, {"route": context.metadata()})
-    finally:
-        _HARNESS_TASKS.discard(task)
+    task = _submit_sync_task(message, TIMEOUT_CHAT, context, session_id=sk, turn_id=req.turnId)
+    result = await asyncio.shield(task)
     return {"response": result}
 
 
@@ -4003,7 +4062,9 @@ class SkillRequest(BaseModel):
 
 @app.post("/api/skill")
 async def api_skill(req: SkillRequest):
-    if _direct_api_enabled():
+    config = _harness_settings()
+    context = _task_context(ChatRequest(message=req.input), config["runtime"], config)
+    if context.runtime == "api":
         raise HTTPException(409, "API 直连模式支持聊天；SKILL 执行需要具备本机工具的 Agent 运行时")
     skill_full = find_skill(req.skill)
     if skill_full is None:
@@ -4011,8 +4072,7 @@ async def api_skill(req: SkillRequest):
     message = f"{_persona_prefix(req.persona)}请执行 /{skill_full}，内容如下：\n\n{req.input}"
     # 统一给足超时：制作类 SKILL（生视频/多镜合成）可能跑很久，取安全上界
     timeout = TIMEOUT_PRODUCE
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, run_agent_sync, message, timeout)
+    result = await asyncio.shield(_submit_sync_task(message, timeout, context))
     return {"response": result}
 
 
@@ -5080,6 +5140,10 @@ async def api_profile_build(req: ProfileBuildRequest):
         raise HTTPException(400, '画像名不能包含 / 或 \\ 字符，请改掉后重试')
     if name.startswith(('.', '_')):
         raise HTTPException(400, '画像名不能以 . 或 _ 开头，请换个开头')
+    config = _harness_settings()
+    context = _task_context(ChatRequest(message="profile enhancement"), config["runtime"], config)
+    if context.runtime == "api":
+        raise HTTPException(409, "画像增强需要具备本机工具的 Agent 运行时")
     pd = PROFILES_DIR / name
     if pd.exists():
         raise HTTPException(409, f'画像「{name}」已存在，请换一个名字')
@@ -5090,14 +5154,10 @@ async def api_profile_build(req: ProfileBuildRequest):
 
     _write_profile_status(name, 'running', 'AI 正在分析并增强画像…')
 
-    def _enhance() -> None:
-        try:
-            log = run_agent_sync(msg, TIMEOUT_PRODUCE)
-            _write_profile_status(name, 'done', log)
-        except Exception as e:  # noqa: BLE001
-            _write_profile_status(name, 'failed', f'AI 增强失败（基线画像已可用）：{e}')
+    def completed(ok, text):
+        _write_profile_status(name, 'done' if ok else 'failed', text)
 
-    threading.Thread(target=_enhance, daemon=True).start()
+    _submit_sync_task(msg, TIMEOUT_PRODUCE, context, on_complete=completed)
     # 基线已写、画像立即可用；增强在后台，前端轮询状态
     return {'created': pd.is_dir(), 'name': name, 'async': True, 'status': 'running'}
 
@@ -5223,6 +5283,8 @@ async def api_delete_session(session_key: str):
         if key in data:
             del data[key]
             sessions_file.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+            harness_store.binding_path(SESSIONS_DIR, session_key).unlink(missing_ok=True)
+            _turn_file(f"web:{session_key}").unlink(missing_ok=True)
             return {'deleted': True}
     return {'deleted': False, 'reason': 'session not found'}
 

@@ -608,6 +608,7 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "SESSIONS_DIR", tmp_path / "sessions")
     monkeypatch.setattr(web, "OPENCLAW_SESSIONS_DIR", tmp_path / "openclaw-sessions")
     monkeypatch.setattr(web, "OUTPUTS_DIR", tmp_path / "outputs")
+    monkeypatch.setattr(web, "PROFILE_BUILD_DIR", tmp_path / "outputs" / "_profile_build")
     for name in ("_session_locks", "_RUNNING_CHAT", "_HARNESS_QUESTIONS"):
         monkeypatch.setattr(web, name, {})
     for name in ("_BG_TASKS", "_DIRECT_CHAT_TASKS", "_HARNESS_TASKS", "_STOPPED_CHAT"):
@@ -1005,3 +1006,146 @@ def test_invalid_request_routes_fail_closed(sandbox, fields):
     assert sandbox.post("/api/settings/harness", json={"runtime": "codex", **fields}).status_code == 409
     assert sandbox.post("/api/chat", json={"message": "hello", **fields}).status_code == 409
     assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("runtime", ["openclaw", "codex"])
+@pytest.mark.parametrize("source,target", [("subscription", "local"), ("custom", "cloud"), ("subscription", "cloud")])
+def test_sync_and_skill_unavailable_route_never_execute(sandbox, monkeypatch, runtime, source, target):
+    store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {
+        "runtime": runtime, "service_source": source, "execution_target": target})
+    execute = Mock(side_effect=AssertionError("must not execute"))
+    monkeypatch.setattr(web.subprocess, "run", execute)
+    monkeypatch.setattr(web, "_heal_openclaw_session", execute)
+    with pytest.raises(web.HTTPException) as error:
+        web.run_agent_sync("hello")
+    assert error.value.status_code == 409
+    assert sandbox.post("/api/skill", json={"skill": "missing", "input": "hello"}).status_code == 409
+    assert not execute.called
+    assert not web.SESSIONS_DIR.exists()
+
+
+def test_profile_preflight_has_no_artifacts_on_unavailable_route(sandbox, monkeypatch, tmp_path):
+    worker = Mock(return_value="must not execute")
+    monkeypatch.setattr(web, "run_agent_sync", worker)
+    monkeypatch.setattr(web, "PROFILES_DIR", tmp_path / "profiles")
+    store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {
+        "runtime": "openclaw", "execution_target": "cloud"})
+    assert sandbox.post("/api/profile/build", json={"name": "new", "form": {}}).status_code == 409
+    assert not web.PROFILES_DIR.exists()
+    assert not web.SESSIONS_DIR.exists()
+    assert not worker.called
+
+
+@pytest.mark.parametrize("source,target", [("subscription", "local"), ("custom", "cloud"), ("subscription", "cloud")])
+def test_console_unavailable_route_never_calls_adapter(tmp_path, monkeypatch, source, target):
+    store.write_json(tmp_path / "outputs" / "_harness" / "config.json", {
+        "runtime": "codex", "service_source": source, "execution_target": target})
+    execute = Mock(side_effect=AssertionError("must not execute"))
+    monkeypatch.setattr(web.harnesses, "adapter", execute)
+    with pytest.raises(HarnessError):
+        asyncio.run(web.harnesses.console_turn("hello", tmp_path, {}))
+    assert not execute.called
+
+
+def test_openclaw_delete_clears_easel_ownership_and_last_turn(sandbox, monkeypatch, tmp_path):
+    state = tmp_path / "state"
+    monkeypatch.setattr(web, "_oc_state_dir", lambda: state)
+    sessions = state / "agents" / "main" / "sessions" / "sessions.json"
+    store.write_json(sessions, {"agent:main:old": {"sessionId": "native"}})
+    store.bind(web.SESSIONS_DIR, "old", "openclaw", "native")
+    web._save_turn("web:old", "done", "old result")
+    assert sandbox.delete("/api/session/old").json()["deleted"]
+    assert not store.binding(web.SESSIONS_DIR, "old")
+    assert not web._turn_file("web:old").exists()
+    assert web._chat_backend("old") == "codex"
+
+
+def test_sync_openclaw_failure_persists_terminal_turn(sandbox, monkeypatch):
+    store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {"runtime": "openclaw"})
+    monkeypatch.setattr(web, "run_agent_sync", Mock(side_effect=RuntimeError("private failure")))
+    async def exercise():
+        with pytest.raises(web.HTTPException) as error:
+            await web.api_chat(web.ChatRequest(message="hello", sessionId="broken"))
+        assert error.value.status_code == 502
+        last = await web.api_chat_last("broken")
+        assert last["status"] == "done" and last["stop_reason"] == "error"
+        assert "private failure" not in last["text"]
+        assert last["route"]["model_resolution"] == "gateway-agent-default"
+        assert not web._HARNESS_TASKS and not web._BG_TASKS
+    asyncio.run(exercise())
+
+
+def test_sync_request_disconnect_keeps_worker_protected_until_completion(sandbox, monkeypatch):
+    import threading
+    store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {"runtime": "openclaw"})
+    started, finish = threading.Event(), threading.Event()
+    def worker(*args, **kwargs):
+        started.set()
+        assert finish.wait(3)
+        return "finished"
+    monkeypatch.setattr(web, "run_agent_sync", worker)
+    async def exercise():
+        request = asyncio.create_task(web.api_chat(web.ChatRequest(message="hello", sessionId="detached")))
+        try:
+            assert await asyncio.to_thread(started.wait, 2)
+            request.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await request
+            assert web._HARNESS_TASKS and web._BG_TASKS
+            with pytest.raises(web.HTTPException) as error:
+                await web.api_harness_settings_save(web.HarnessSettingsRequest(runtime="codex"))
+            assert error.value.status_code == 409
+            assert (await web.api_chat_last("detached"))["status"] == "running"
+        finally:
+            finish.set()
+        await asyncio.wait_for(asyncio.gather(*web._BG_TASKS), 2)
+        assert (await web.api_chat_last("detached"))["text"] == "finished"
+        assert not web._HARNESS_TASKS and not web._BG_TASKS
+    asyncio.run(exercise())
+
+
+def test_local_agent_enable_rejects_accepted_tasks_before_mutations(sandbox, monkeypatch):
+    monkeypatch.setattr(web, "_BG_TASKS", {"accepted"})
+    declare, primary = Mock(), Mock()
+    monkeypatch.setattr(web, "_declare_anthropic_provider", declare)
+    monkeypatch.setattr(web, "_set_openclaw_primary", primary)
+    config_path = web.OUTPUTS_DIR / "openclaw.json"
+    store.write_json(config_path, {"models": {"providers": {"keep": {}}},
+                                  "agents": {"defaults": {"model": {"primary": "keep"}}}})
+    monkeypatch.setattr(web, "_oc_config_path", lambda: config_path)
+    config_before = config_path.read_bytes()
+    before = web.ENV_FILE.read_bytes()
+    response = sandbox.post("/api/settings/local-agents/enable", json={"id": "claude-code"})
+    assert response.status_code == 409
+    assert not declare.called and not primary.called
+    assert config_path.read_bytes() == config_before
+    assert web.ENV_FILE.read_bytes() == before
+
+
+def test_profile_background_worker_retains_submitted_context(sandbox, monkeypatch, tmp_path):
+    import threading
+    monkeypatch.setattr(web, "PROFILES_DIR", tmp_path / "profiles")
+    started, finish = threading.Event(), threading.Event()
+    contexts = []
+    def worker(message, timeout, session_id, context):
+        contexts.append(context)
+        started.set()
+        assert finish.wait(3)
+        return "enhanced"
+    monkeypatch.setattr(web, "run_agent_sync", worker)
+    async def exercise():
+        try:
+            result = await web.api_profile_build(web.ProfileBuildRequest(name="safe", form={}))
+            assert result["async"]
+            assert await asyncio.to_thread(started.wait, 2)
+            assert web._BG_TASKS and web._HARNESS_TASKS
+            store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {
+                "runtime": "openclaw", "execution_target": "cloud"})
+            assert contexts[0].runtime == "codex" and contexts[0].model == "test-model"
+        finally:
+            finish.set()
+        await asyncio.wait_for(asyncio.gather(*web._BG_TASKS), 2)
+        status = json.loads(web._profile_status_file("safe").read_text())
+        assert status["state"] == "done" and status["log"] == "enhanced"
+        assert not web._BG_TASKS and not web._HARNESS_TASKS
+    asyncio.run(exercise())
