@@ -742,13 +742,25 @@ def _mask(val: str) -> str:
 _SECRETISH_RE = re.compile(r'KEY|TOKEN|SECRET|PASSWORD|COOKIE', re.I)
 
 
+def _web_output_redactor(emit):
+    """One transient boundary before Web queues, persisted events and recovery."""
+    from easel.harnesses.secrets import StreamRedactor
+    from easel.platform.privacy import sensitive_values
+    values = [value.strip().strip('"').strip("'")
+              for key, value in _read_env().items()
+              if _SECRETISH_RE.search(key) and len(value.strip()) >= 8]
+    return StreamRedactor(values, emit, additional=lambda: sensitive_values(PROJECT_ROOT))
+
+
 def _scrub_secrets(text: str) -> str:
     """把 .env 里的机密值从要回显给前端的文本里抹掉。
 
     子进程 stderr 会被原样带到浏览器，而 openclaw 的报错可能回显配置值；
     按「已知机密的字面量」替换最稳妥，不依赖猜正则能否匹配各家 key 的格式。
     """
-    out = text
+    from easel.platform.privacy import sensitive_values
+    from easel.harnesses.secrets import StreamRedactor
+    out = StreamRedactor(sensitive_values(PROJECT_ROOT), lambda *_: None).text(text)
     for key, val in _read_env().items():
         v = val.strip().strip('"').strip("'")
         # 太短的值（占位符、枚举值如 none/http）替换会误伤正常文本
@@ -1020,6 +1032,7 @@ def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | No
         if _HARNESS_LOOP is not None and _HARNESS_LOOP.is_running():
             return asyncio.run_coroutine_threadsafe(execute(), _HARNESS_LOOP).result(timeout + 15)
         return asyncio.run(execute())
+    _scrub_secrets("")  # register retained account values before the child can read/rotate them
     _heal_openclaw_session(sk)   # 清洗历史里无签名 thinking 块，防回放失效
     # 钉死 --session-id 让 OpenClaw 每轮续同一 transcript（防跨天空闲后新起空会话丢历史，见 _openclaw_session_id）
     cmd = openclaw_base_cmd() + ['--profile', OPENCLAW_PROFILE, 'agent', '--agent', 'main',
@@ -1032,12 +1045,12 @@ def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | No
         return _SyncOutcome('⏳ 这个会话正在另一个窗口运行，请稍候再试', clean_end=False, stop_reason='session_lock_timeout')
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, cwd=str(PROJECT_ROOT), timeout=timeout + 30, env=_proxy_env())
-        out = clean_agent_output(r.stdout or '')
+        out = _scrub_secrets(clean_agent_output(r.stdout or ''))
         # 以前这里直接 `or '（无输出）'`：returncode 与 stderr 全部丢弃，于是子进程的
         # 任何失败（参数不被当前 OpenClaw 版本支持、配置校验不过、provider 报错）都长
         # 成同一句「（无输出）」，排查只能靠手动把整条命令行复现一遍。
         # 实测 `--session-key` 在老版 OpenClaw 上不存在，就是被这里藏掉一整轮的。
-        err = clean_agent_output(r.stderr or '')
+        err = _scrub_secrets(clean_agent_output(r.stderr or ''))
         if r.returncode != 0:
             detail = _scrub_secrets(err)[-400:].strip() or f'退出码 {r.returncode}'
             return _SyncOutcome(f'❌ agent 执行失败（rc={r.returncode}）：{detail}', clean_end=False, stop_reason='error')
@@ -3441,8 +3454,10 @@ async def api_chat_stream(req: ChatRequest):
         except OSError:
             pass
 
-        def to_client(kind, text=None, **extra):
+        def publish(kind, text=None, **extra):
             nonlocal event_seq
+            if kind == "token" and not direct and not alternate:
+                full_text.append(text)
             event_seq += 1
             data = ({"sessionKey": extra.get("sessionKey")} if kind == "done" else text)
             event = {"id": event_seq, "event": kind, "data": data}
@@ -3453,6 +3468,16 @@ async def api_chat_stream(req: ChatRequest):
             except OSError:
                 pass
             client_q.put_nowait({"t": kind, "text": text, "id": event_seq, **extra})
+
+        redactor = _web_output_redactor(lambda kind, text: publish(kind, text))
+
+        def to_client(kind, text=None, **extra):
+            if kind in ("done", "error"):
+                redactor.flush()
+            if kind == "done":
+                publish(kind, **redactor.value(extra))
+            else:
+                redactor.emit(kind, text)
 
         # 秒级反馈：发出即亮「已收到」，不等 agent 冷启动（首个 SSE 事件，随流回放必达）
         to_client("activity", "⏳ 已收到…" if direct else "⏳ 已收到，正在唤醒 agent…")
@@ -3503,7 +3528,7 @@ async def api_chat_stream(req: ChatRequest):
                             "POST", chat_completions_url(),
                             json=body, headers=headers) as resp:
                         if resp.status_code != 200:
-                            raw = (await resp.aread())[:200].decode("utf-8", "replace")
+                            raw = _scrub_secrets((await resp.aread()).decode("utf-8", "replace"))[:200]
                             to_client("error", f"❌ 对话失败（HTTP {resp.status_code}）：{raw[:160]}")
                             return
                         async for line in resp.aiter_lines():
@@ -3518,7 +3543,7 @@ async def api_chat_stream(req: ChatRequest):
                             except ValueError:
                                 continue
                             if isinstance(d.get("error"), dict):   # 200 里夹错误对象：不能当正常流吞掉
-                                to_client("error", f"❌ 网关返回错误：{str(d['error'])[:160]}")
+                                to_client("error", f"❌ 网关返回错误：{_scrub_secrets(str(d['error']))[:160]}")
                                 return
                             delta = (d.get("choices") or [{}])[0].get("delta") or {}
                             # 思考流的两个可能来源，先到先得（`sse_thinking` 闩锁，防两路都来时重复）：
@@ -3530,11 +3555,11 @@ async def api_chat_stream(req: ChatRequest):
                             if rc:
                                 run_info["sse_thinking"] = True
                                 run_info["thinking_chars"] += len(rc)
-                                _emit("thinking", rc)
+                                q.put_nowait({"t": "thinking", "text": rc})
                             c = delta.get("content")
                             if c:
                                 got_text = True
-                                _emit("token", c)
+                                q.put_nowait({"t": "token", "text": c})
                             if delta.get("tool_calls") and not tool_noted:
                                 tool_noted = True
                                 to_client("activity", "🔧 正在执行操作…")
@@ -3547,7 +3572,7 @@ async def api_chat_stream(req: ChatRequest):
             except asyncio.CancelledError:
                 raise
             except Exception as e:  # noqa: BLE001
-                to_client("error", f"❌ 网关连接失败：{str(e)[:140]}")
+                to_client("error", f"❌ 网关连接失败：{_scrub_secrets(str(e))[:140]}")
             finally:
                 # 先把 SENTINEL 排进 q（FIFO 保证它排在本轮所有 token 之后），再标记完成：
                 # 主循环读到它时，前面的 token 必然已全部消费过。
@@ -3840,7 +3865,6 @@ async def api_chat_stream(req: ChatRequest):
                     continue
                 if item["t"] == "token":
                     emitted = True
-                    full_text.append(item["text"])
                     to_client("token", item["text"])
                 elif item["t"] == "thinking":
                     to_client("thinking", item["text"])
@@ -3860,10 +3884,9 @@ async def api_chat_stream(req: ChatRequest):
                 clean = clean_agent_output("".join(stdout_lines))
                 if clean:
                     emitted = True
-                    full_text.append(clean)
                     to_client("token", clean)
                 elif rc not in (0, None):
-                    err = clean_agent_output("".join(stdout_lines))[:200]
+                    err = _scrub_secrets(clean_agent_output("".join(stdout_lines)))[:200]
                     to_client("error", f"❌ 执行失败（退出码 {rc}）{' — ' + err if err else ''}")
             # 收尾检测：即使已吐了内容，只要不是「正常收尾」就显式告知——
             # 否则被截断（触顶）/被杀（负载）/流被中断，都会被当成「清晰地答完了」，
@@ -3890,7 +3913,6 @@ async def api_chat_stream(req: ChatRequest):
                     note = ("\n\n---\n⚠️ 我似乎停在了冒号处、没接着把后面的内容/操作做出来。"
                             "回我「继续」我补上。")
                 if note:
-                    full_text.append(note)
                     to_client("token", note)
         finally:
             # 只有真的在 HTTP 上跑出了内容，才把这个会话钉到 http 上。钉早了（比如选路时就钉）
@@ -3916,12 +3938,13 @@ async def api_chat_stream(req: ChatRequest):
                         await asyncio.to_thread(proc.wait, timeout=2)
                     except (OSError, subprocess.TimeoutExpired):
                         pass
+            redactor.flush()  # also before cancellation recovery persistence
             # 诊断日志：每次对话流收尾都记一行，供事后定位「莫名停下」到底是哪种情况。
             try:
                 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
-                tail = clean_agent_output("".join(stdout_lines))[-800:]
+                tail = _scrub_secrets(clean_agent_output("".join(stdout_lines)))[-800:]
                 with (DEBUG_DIR / "chat-stream.jsonl").open("a", encoding="utf-8") as lf:
-                    lf.write(json.dumps({
+                    lf.write(_scrub_secrets(json.dumps({
                         "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
                         "session": sk,
                         "rc": proc.poll(),
@@ -3934,9 +3957,9 @@ async def api_chat_stream(req: ChatRequest):
                         "thinking_chars": run_info["thinking_chars"],
                         "delegated": run_info["delegated"],
                         "ignored_foreign_events": run_info["ignored_foreign_events"],
-                        "text_tail": run_info.get("text_tail", ""),
+                        "text_tail": "".join(full_text)[-160:],
                         "stdout_tail": tail,
-                    }, ensure_ascii=False) + "\n")
+                    }, ensure_ascii=False)) + "\n")
             except Exception:
                 pass
             # 落盘完整结果：后端跑完整轮不依赖客户端连接，断线后前端用 /api/chat/last 取回
@@ -4300,12 +4323,28 @@ def api_artifact_archive(path: str):
     return {'paths': artifacts}
 
 
+async def _output_snapshot(full):
+    """Await an owned worker result; cancelled callers still close its spool."""
+    from easel.platform.privacy import safe_snapshot
+    scan = asyncio.create_task(asyncio.to_thread(safe_snapshot, full, OUTPUTS_DIR))
+    try:
+        snapshot = await asyncio.shield(scan)
+    except asyncio.CancelledError:
+        def close_scanned(task):
+            try:
+                task.result().close()
+            except Exception:
+                pass  # retrieve failed scan too; it already closed its own spool
+        scan.add_done_callback(close_scanned)
+        raise
+    return snapshot
+
+
 @app.get("/api/output/{path:path}")
 async def api_output(path: str):
     """文本产物内容。二进制/媒体返回 isBinary=true，前端改用 /api/media。"""
     full = _safe_output_path(path)
-    from easel.platform.privacy import safe_snapshot
-    with safe_snapshot(full, OUTPUTS_DIR) as snapshot:
+    with await _output_snapshot(full) as snapshot:
         kind = _file_kind(full.name)
         if kind != "text":
             return {"path": path, "content": "", "kind": kind, "isBinary": True}
@@ -4323,19 +4362,9 @@ async def api_output(path: str):
 @app.get("/api/media/{path:path}")
 async def api_media(path: str, request: Request):
     """Serve a scanned immutable snapshot, including Range requests."""
-    from easel.platform.privacy import safe_snapshot, snapshot_response
+    from easel.platform.privacy import snapshot_response
     full = _safe_output_path(path)
-    scan = asyncio.create_task(asyncio.to_thread(safe_snapshot, full, OUTPUTS_DIR))
-    try:
-        snapshot = await asyncio.shield(scan)
-    except asyncio.CancelledError:
-        def close_scanned(task):
-            try:
-                task.result().close()
-            except Exception:
-                pass  # retrieve failed scan too; it already closed its own spool
-        scan.add_done_callback(close_scanned)
-        raise
+    snapshot = await _output_snapshot(full)
     return snapshot_response(snapshot, full.name, request.headers.get("range", ""))
 
 

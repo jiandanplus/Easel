@@ -422,7 +422,8 @@ def test_anonymous_custom_context_needs_no_account_http_or_fcntl(tmp_path, monke
 
 
 @pytest.mark.asyncio
-async def test_cancel_during_scan_closes_worker_snapshot(tmp_path, monkeypatch):
+@pytest.mark.parametrize("route", ["media", "output"])
+async def test_cancel_during_scan_closes_worker_snapshot(tmp_path, monkeypatch, route):
     import asyncio
     import io
     import threading
@@ -445,8 +446,14 @@ async def test_cancel_during_scan_closes_worker_snapshot(tmp_path, monkeypatch):
     monkeypatch.setattr(privacy, "safe_snapshot", slow_scan)
     task = asyncio.create_task(
         web.api_media("clean.txt", Request({"type": "http", "headers": []}))
+        if route == "media" else web.api_output("clean.txt")
     )
     assert await asyncio.to_thread(entered.wait, 2)
+    # The scanner remains blocked while actual stop/status handlers can progress.
+    stopped = await asyncio.wait_for(web.api_chat_stop(web.StopRequest(sessionId="scan-status")), 0.5)
+    assert stopped is not None
+    last = await asyncio.wait_for(web.api_chat_last("scan-status"), 0.5)
+    assert last["status"] == "none"
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task
@@ -590,3 +597,162 @@ def test_private_snapshot_spool_cannot_use_public_output_temp_directory(
     with pytest.raises(HTTPException) as error:
         privacy.safe_snapshot(target, outputs)
     assert error.value.status_code == 403
+
+
+@pytest.fixture
+def openclaw_web(sandbox, monkeypatch):
+    from easel.harnesses import store
+    store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {"runtime": "openclaw"})
+    monkeypatch.setattr(web, "DEBUG_DIR", web.OUTPUTS_DIR / "_debug")
+    monkeypatch.setattr(web, "SHARED_RAW_STREAM", web.PROJECT_ROOT / "raw.jsonl")
+    monkeypatch.setattr(web, "_heal_openclaw_session", lambda *a: None)
+    monkeypatch.setattr(web, "openclaw_base_cmd", lambda: ["synthetic-openclaw"])
+    monkeypatch.setattr(web, "_resolve_transport", lambda *a: "cli")
+    monkeypatch.setattr(web, "GatewayClient", None)
+    return sandbox
+
+
+@pytest.mark.parametrize("ending", ["complete", "stopped", "error"])
+def test_openclaw_actual_web_split_stream_and_recovery(openclaw_web, monkeypatch, ending):
+    import io
+    state = session(web.PROJECT_ROOT)
+    secret = state["auth"]["refresh_token"]
+    seen = []
+
+    class Process:
+        def __init__(self, cmd, **kwargs):
+            seen.append((cmd, kwargs["env"]))
+            raw = []
+            # Ordinary cat output and interleaved thinking, split at sensitive prefixes.
+            for kind, value in [("text", SessionStore(web.PROJECT_ROOT).path.read_text()),
+                                ("text", "normal-before " + secret + " normal-after"),
+                                ("thinking", "thought " + secret + " clear")]:
+                for part in (value[:18], value[18:25], value[25:]):
+                    raw.append({"runId": "test-run", "event": "assistant_" + kind + "_stream",
+                                "evtType": kind + "_delta", "delta": part})
+            if ending == "complete":
+                raw.append({"runId": "test-run", "event": "assistant_message_end"})
+            elif ending == "stopped":
+                web._STOPPED_CHAT.add("oc-private")
+                raw.append({"runId": "test-run", "event": "assistant_text_stream",
+                            "evtType": "text_delta", "delta": secret[:12]})
+            web.SHARED_RAW_STREAM.write_text("".join(json.dumps(v) + "\n" for v in raw))
+            self.stdout = io.StringIO("diagnostic " + secret + "\n")
+        def poll(self):
+            return 1 if ending == "error" else 0
+
+    monkeypatch.setattr(web.subprocess, "Popen", Process)
+    response = openclaw_web.post("/api/chat/stream", json={
+        "message": "cat account diagnostic", "sessionId": "oc-private", "turnId": "oc-job"})
+    assert response.status_code == 200
+    public = response.text + openclaw_web.get("/api/chat/last/oc-private").text
+    public += openclaw_web.get("/api/chat/jobs/oc-job/stream").text
+    stored = "".join(p.read_text() for root in (web.SESSIONS_DIR, web.DEBUG_DIR)
+                     for p in root.rglob("*") if p.is_file())
+    for value in (secret, state["auth"]["access_token"]):
+        assert value not in public and value not in stored
+    assert "normal-before " in response.text and " normal-after" in response.text
+    assert "thought " in response.text and " clear" in response.text
+    assert "[已隐藏]" in public
+    assert all(secret not in json.dumps(value) for value in seen)
+    assert response.text.index("[已隐藏]") < response.text.index("event: done")
+    last = openclaw_web.get("/api/chat/last/oc-private").json()
+    assert "normal-before " in last["text"] and " normal-after" in last["text"]
+    assert not web._RUNNING_CHAT
+
+
+@pytest.mark.parametrize("mode", ["stdout", "stderr", "exception"])
+def test_openclaw_sync_output_and_error_are_private(openclaw_web, monkeypatch, mode):
+    from types import SimpleNamespace
+    state = session(web.PROJECT_ROOT)
+    secret = state["auth"]["access_token"]
+    def run(cmd, **kwargs):
+        assert secret not in json.dumps([cmd, kwargs["env"]])
+        if mode == "exception":
+            raise OSError("safe-prefix " + secret + " safe-suffix")
+        return SimpleNamespace(returncode=int(mode == "stderr"),
+                               stdout="safe-prefix " + secret + " safe-suffix" if mode == "stdout" else "",
+                               stderr="safe-prefix " + secret + " safe-suffix")
+    monkeypatch.setattr(web.subprocess, "run", run)
+    response = openclaw_web.post("/api/chat", json={"message": "hello", "sessionId": "oc-sync"})
+    public = response.text + openclaw_web.get("/api/chat/last/oc-sync").text
+    assert secret not in public
+    assert "safe-prefix" in public and "safe-suffix" in public
+    assert "[已隐藏]" in public
+
+
+@pytest.mark.parametrize("rc", [0, 1])
+def test_openclaw_stdout_fallback_redacted_before_web_persistence(openclaw_web, monkeypatch, rc):
+    import io
+    secret = session(web.PROJECT_ROOT)["auth"]["refresh_token"]
+    class Process:
+        stdout = io.StringIO("ordinary fallback " + secret + " suffix\n")
+        def poll(self):
+            return rc
+    monkeypatch.setattr(web.subprocess, "Popen", lambda *a, **k: Process())
+    response = openclaw_web.post("/api/chat/stream", json={
+        "message": "hello", "sessionId": "fallback", "turnId": "fallback-job"})
+    public = response.text + openclaw_web.get("/api/chat/last/fallback").text
+    public += openclaw_web.get("/api/chat/jobs/fallback-job/stream").text
+    assert secret not in public
+    assert "ordinary fallback" in public and "suffix" in public and "[已隐藏]" in public
+
+
+@pytest.mark.asyncio
+async def test_openclaw_cancel_flushes_pending_before_recovery(openclaw_web, monkeypatch):
+    import io
+    secret = session(web.PROJECT_ROOT)["auth"]["access_token"]
+    class Process:
+        stdout = io.StringIO("")
+        stopped = False
+        def __init__(self):
+            web.SHARED_RAW_STREAM.write_text(json.dumps({
+                "runId": "cancel-run", "event": "assistant_text_stream",
+                "evtType": "text_delta", "delta": "safe cancellation " + secret[:12]}) + "\n")
+        def poll(self):
+            return 0 if self.stopped else None
+        def terminate(self):
+            self.stopped = True
+        def wait(self, **kwargs):
+            self.stopped = True
+    monkeypatch.setattr(web.subprocess, "Popen", lambda *a, **k: Process())
+    response = await web.api_chat_stream(web.ChatRequest(message="hello", sessionId="cancel", turnId="cancel-job"))
+    events = []
+    async for event in response.body_iterator:
+        events.append(event)
+        if event.get("event") == "token" and "safe cancellation" in event.get("data", ""):
+            tasks = list(web._BG_TASKS)
+            assert tasks
+            tasks[0].cancel()
+    last = await web.api_chat_last("cancel")
+    public = json.dumps(events, ensure_ascii=False) + json.dumps(last, ensure_ascii=False)
+    assert secret[:12] not in public and "[已隐藏]" in public
+    assert last["text"] == "safe cancellation [已隐藏]"
+    assert events[-1]["event"] == "done"
+    assert not web._RUNNING_CHAT
+
+
+@pytest.mark.parametrize("failure", [False, True])
+def test_openclaw_http_stream_uses_same_private_sink(openclaw_web, monkeypatch, failure):
+    import httpx
+    secret = session(web.PROJECT_ROOT, "x" * 240)["auth"]["refresh_token"]
+    original = httpx.AsyncClient
+    async def provider(request):
+        assert secret not in request.content.decode()
+        if failure:
+            return httpx.Response(503, text="safe error " + secret)
+        lines = []
+        for field in ("content", "reasoning_content"):
+            for value in ("safe " + secret[:10], secret[10:] + " suffix"):
+                lines.append("data: " + json.dumps({"choices": [{"delta": {field: value}}]}) + "\n\n")
+        return httpx.Response(200, text="".join(lines) + "data: [DONE]\n\n")
+    monkeypatch.setattr(web, "_resolve_transport", lambda *a: "http")
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kwargs: original(
+        transport=httpx.MockTransport(provider), **kwargs))
+    response = openclaw_web.post("/api/chat/stream", json={
+        "message": "hello", "sessionId": "http-private", "turnId": "http-job"})
+    public = response.text + openclaw_web.get("/api/chat/last/http-private").text
+    public += openclaw_web.get("/api/chat/jobs/http-job/stream").text
+    assert secret not in public and "[已隐藏]" in public
+    assert "safe" in public
+    assert "event: done" in response.text

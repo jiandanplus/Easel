@@ -85,3 +85,23 @@ rtk proxy npm --prefix web/frontend run build
 rtk proxy ruff check easel/platform/privacy.py easel/platform/session.py easel/harnesses/secrets.py tests/test_output_privacy.py --output-format concise
 rtk proxy git diff --check
 ```
+
+
+## OpenClaw 输出边界与大文件扫描响应性补正
+
+现有自定义 OpenClaw 继续可用；本机保存平台会话后切回自定义服务也适用同一保护。Web 的公共事件出口现在使用共享 StreamRedactor，动态读取同一仅进程内敏感值上下文及当前 `.env` 凭证；token／thinking 跨分片遮蔽后才写浏览器队列、事件 JSONL 和完整回答累积。error／done 和 supervisor 取消清理均先 flush，完整回答、last-turn、事件回放和诊断 stdout/text tail 保持遮蔽。同步 OpenClaw stdout、stderr 和异常也在返回或截断前遮蔽，启动前先观察当前账号值；不向子进程 env、argv 或 metadata 注入账号凭证。
+
+OpenClaw CLI reader 与 HTTP gateway 使用同一出口；HTTP 协程的增量直接入队，保证同步完成的模拟提供者也在终止 sentinel 前保留全部正文／思考，线程 reader 继续使用线程安全入队。`run_agent_sync` 是 Web 的 CLI runner seam，本轮以实际 handler＋模拟 subprocess 覆盖；独立 `easel chat` TUI／`easel skill` CLI 未被 Web 调用，也不写 Web 浏览器公开日志，没有扩展终端托管范围。
+
+`/api/output` 与 `/api/media` 复用同一可取消 worker 快照生命周期：全文件复制、原始扫描和 ZIP 检查移到线程；取消等待时仍在 worker 返回后关闭其快照。合成阻塞扫描期间，实际异步 stop／last-status handler 可继续执行。全文件扫描的磁盘 I/O、临时空间与首字节延迟成本仍存在，原有扫描上限和同用户／任意编码边界不变。
+
+补正回归：隔离后端全量 **1583通过／6跳过／1项既有 warning，68.89秒**；最后覆盖集 **271通过／1项同一 warning，4.62秒**，含 **42项隐私检查**。覆盖集在全量启动后补充的 HTTP 错误先遮蔽后截断和完整会话 JSON cat 断言后重新执行；不重复无新失败的全量。完整前端历史 **134通过**，本轮仅修改后端／测试／本文档，未重跑 Node／构建，也未改动前端源与回执。ruff 隐私测试检查与 git diff --check 通过；12项冻结外观 SHA256和 main ref 均保持一致。
+
+```sh
+rtk proxy .venv/bin/python scripts/validation/run_isolated_tests.py --pytest-path /opt/anaconda3/lib/python3.12/site-packages tests/test_output_privacy.py tests/test_direct_api.py tests/test_agent_harnesses.py tests/test_codex_completion_cleanup.py tests/test_platform_client.py tests/test_subscription_execution.py tests/test_output_paths.py tests/test_output_delete_protect.py tests/test_artifact_archive.py -q --tb=short
+rtk proxy .venv/bin/python scripts/validation/run_isolated_tests.py --pytest-path /opt/anaconda3/lib/python3.12/site-packages tests -q --tb=short
+rtk proxy ruff check tests/test_output_privacy.py --output-format concise
+rtk proxy git diff --check
+```
+
+新增检查为真实 Web 路径的合成 CLI raw stream／HTTP MockTransport、同步 subprocess mocks：完整普通 cat、split token／thinking、stdout fallback、错误、停止及实际 supervisor 取消 flush、事件持久化／回放／last-turn、正常文字保留、子进程不含账号值及扫描取消关闭。没有真实 OpenClaw／Codex 推理、外部网络、账号或画像访问；没有修改既有7860、推送、合并、部署或创建新桌面包。前述原生与浏览器验收仍是历史证据。
