@@ -1,4 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import paperHero from '../assets/paper-hero.png';
+import forestHero from '../assets/forest-hero.png';
+import pastelHero from '../assets/pastel-hero.png';
+import { getTheme, subscribeTheme } from '../lib/theme';
+import type { ThemeId } from '../lib/theme';
 import {
   fetchTrends, fetchSchedule, fetchOutputs, fetchAccounts, fetchIdeas,
   fetchAnalyticsPlatforms, fetchAccountAnalytics,
@@ -36,11 +41,15 @@ interface DashboardProps {
   agentRuntime: string;
   onNavigate: (page: Page) => void;
   onUseTopic: (title: string) => void;
+  onStartCreate: (brief: string) => void;
 }
 
 const STATUS_LABEL: Record<string, string> = { idea: '选题', draft: '草稿', scheduled: '待发', published: '已发' };
+const HERO_IMAGES: Partial<Record<ThemeId, string>> = { paper: paperHero, forest: forestHero, pastel: pastelHero };
 
-export default function DashboardPage({ persona, gatewayStatus, apiDirect, agentRuntime, onNavigate, onUseTopic }: DashboardProps) {
+export default function DashboardPage({ persona, gatewayStatus, apiDirect, agentRuntime, onNavigate, onUseTopic, onStartCreate }: DashboardProps) {
+  const theme = useSyncExternalStore<ThemeId>(subscribeTheme, getTheme, () => 'paper');
+  const [brief, setBrief] = useState('');
   const [trends, setTrends] = useState<TrendGroup[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
   const [outputs, setOutputs] = useState<OutputNode[]>([]);
@@ -137,24 +146,19 @@ export default function DashboardPage({ persona, gatewayStatus, apiDirect, agent
 
   return (
     <div className="page-scroll dash-page">
-      <div className="dash-hero">
-        <h1 className="page-title" style={{ fontSize: 26 }}>{greet} 👋</h1>
-        <p className="page-subtitle">
+      <div className="dash-hero" style={{ backgroundImage: HERO_IMAGES[theme] ? `url(${HERO_IMAGES[theme]})` : 'none' }}>
+        <div className="dash-hero-copy">
+          <span className="editorial-eyebrow">YOUR CREATIVE DESK</span>
+          <h1 className="page-title">{greet}，{persona || '创作者'}</h1>
+          <p className="dash-hero-tagline">把想法变成好内容</p>
+        </div>
+        <p className="dash-connection" title={apiDirect ? '仅聊天模式' : agentRuntime}>
           {apiDirect ? (gatewayStatus === 'connected' ? '仅聊天模式已配置，可开始对话。' : '请先配置仅聊天模式的模型 API。')
             : agentRuntime !== 'openclaw' ? (gatewayStatus === 'connected'
             ? `${agentRuntime} CLI 已安装；原生登录及模型可用性请发送消息验证。`
             : `请先在服务器安装并配置 ${agentRuntime} CLI。`)
             : gatewayStatus === 'connected' ? '一切就绪。' : '⚠ 网关未连接。'}
-          {persona ? ` 当前画像「${persona}」。` : ' 通用模式——指定画像效果更好。'}
-          从热点到发布，一站式搞定今天的内容。
         </p>
-        <div className="dash-quick">
-          {quick.map((q) => (
-            <button key={q.page} className="dash-quick-btn" onClick={() => onNavigate(q.page)}>
-              <q.Icon size={16} /><span>{q.label}</span>
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* 概览数字 */}
@@ -167,6 +171,17 @@ export default function DashboardPage({ persona, gatewayStatus, apiDirect, agent
           </button>
         ))}
       </div>
+
+      <form className="dash-create" onSubmit={event => { event.preventDefault(); onStartCreate(brief); }}>
+        <label htmlFor="creative-brief"><IconSkills size={23} />今天想创作什么？</label>
+        <div className="dash-create-row">
+          <input id="creative-brief" value={brief} onChange={event => setBrief(event.target.value)} placeholder="输入一个主题，让灵感从这里开始…" />
+          <button type="submit" className="btn btn-primary">开始创作 <span aria-hidden="true">→</span></button>
+        </div>
+        <div className="dash-quick">
+          {quick.slice(1).map(q => <button type="button" key={q.page} className="dash-quick-btn" onClick={() => onNavigate(q.page)}><q.Icon size={14} />{q.label}</button>)}
+        </div>
+      </form>
 
       <div className="dash-grid">
         {/* 今日热点 */}

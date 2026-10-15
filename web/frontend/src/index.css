@@ -1,2 +1,4 @@
 @import './styles/index.css';
 @import './styles/theme.css';
+@import './styles/paper.css';
+@import './styles/variants.css';

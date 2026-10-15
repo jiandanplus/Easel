@@ -104,6 +104,7 @@ export default function SkillDrawer({ skillName, persona, onClose, onConfigured 
 
         <div className="drawer-body">
           {loadErr && <div style={{ color: 'var(--red)', fontSize: 14 }}>{loadErr}</div>}
+          {detail?.description && <p className="skill-drawer-summary">{detail.description}</p>}
 
           {/* API 配置 */}
           {detail?.needsApi && detail.apiSpec && (
@@ -195,13 +196,14 @@ export default function SkillDrawer({ skillName, persona, onClose, onConfigured 
 
           {/* 执行 */}
           <div className="panel">
-            <div className="panel-title">▶ 运行</div>
+            <label className="panel-title" htmlFor="skill-run-input">输入创作需求</label>
             {blocked && (
               <div style={{ fontSize: 13, color: 'var(--amber)', marginBottom: 10 }}>
                 该 SKILL 需要先配置上面的 API 才能运行。
               </div>
             )}
             <textarea
+              id="skill-run-input"
               className="field"
               placeholder="输入内容，例如主题 / 素材 / 要求…"
               value={input}
@@ -222,12 +224,12 @@ export default function SkillDrawer({ skillName, persona, onClose, onConfigured 
           </div>
 
           {/* 描述 */}
-          <div className="panel">
-            <div className="panel-title">📖 说明</div>
+          <details className="panel skill-instructions">
+            <summary className="panel-title">技能说明与输出格式</summary>
             {detail
               ? <div className="skill-body-md" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
               : !loadErr && <div className="loading"><div className="spinner" />加载中…</div>}
-          </div>
+          </details>
         </div>
       </div>
     </div>

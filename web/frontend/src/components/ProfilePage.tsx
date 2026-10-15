@@ -148,7 +148,7 @@ export default function ProfilePage({ persona, onNewProfile, onDeleted }: Profil
   if (!persona) {
     return (
       <div className="profile-page">
-        <h1 className="page-title">用户画像 Profile</h1>
+        <h1 className="page-title">画像</h1>
         <div className="empty-state" style={{ height: '70%' }}>
           <div className="empty-icon">👤</div>
           <h3>还没有选择画像</h3>

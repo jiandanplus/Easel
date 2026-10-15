@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import EnvBoard from './EnvBoard';
+import ThemeSettings from './ThemeSettings';
 import HarnessSettings from './HarnessSettings';
 import { OptionsDropdown } from './SettingsSelect';
 import type { JobView } from './EnvBoard';
@@ -14,11 +15,13 @@ import { IconSlidersHorizontal, IconPackage, IconEllipsis } from './settingsIcon
 
 interface Props {
   onClose: () => void;
+  initialSection?: 'model' | 'theme';
+  sectionRequest?: number;
   /** 非空时在面板顶部显示一条提示条。首开未配置模型时由 App 传入。 */
   banner?: string;
 }
 
-type Sec = 'model' | 'env' | 'more';
+type Sec = 'model' | 'theme' | 'env' | 'more';
 type Chan = 'chat' | 'transcribe' | 'speech' | 'image' | 'video' | 'music';
 
 const CHANNELS: { id: Chan; label: string }[] = [
@@ -59,8 +62,9 @@ const hhmm = (ts: number) => {
 };
 
 /** 设置（统一入口）：竖＝功能分类（模型配置 / 环境安装 / 更多设置），横＝模型六通道。 */
-export default function SettingsPanel({ onClose, banner = '' }: Props) {
-  const [sec, setSec] = useState<Sec>('model');
+export default function SettingsPanel({ onClose, banner = '', initialSection = 'model', sectionRequest = 0 }: Props) {
+  const [sec, setSec] = useState<Sec>(initialSection);
+  useEffect(() => { setSec(initialSection); }, [initialSection, sectionRequest]);
   const [chan, setChan] = useState<Chan>('chat');
   const [harness, setHarness] = useState('');
   const [selectedHarness, setSelectedHarness] = useState('');
@@ -640,17 +644,15 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
   const transOk = transRows.length > 1 && transRows[1].result.includes('已配置');
 
   return (
-    <div
-      className="settings-overlay"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="settings-panel" role="dialog" aria-modal="true" aria-label="设置">
+    <div className="settings-page settings-overlay">
+      <div className="settings-panel" role="region" aria-label="设置">
         <div className="settings-head">
           <div>
             <h2 className="settings-title">设置</h2>
-            <div className="settings-sub">模型配置 · 环境安装 · 更多设置</div>
+            <div className="settings-sub">模型配置 · 主题设置 · 环境安装 · 更多设置</div>
           </div>
           <div className="settings-actions">
+            {sec === 'model' && <>
             <button
               className="btn btn-sm btn-primary"
               onClick={() => void saveCurrent()}
@@ -667,6 +669,7 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
             >
               {testing ? '自测中…' : '全部自测'}
             </button>
+            </>}
             <button className="settings-close" onClick={onClose} title="关闭（Esc）">✕</button>
           </div>
         </div>
@@ -689,6 +692,9 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
             <button className={`snav${sec === 'model' ? ' active' : ''}`} onClick={() => setSec('model')}>
               <IconSlidersHorizontal size={16} />模型配置<small>六个通道</small>
             </button>
+            <button className={`snav${sec === 'theme' ? ' active' : ''}`} onClick={() => setSec('theme')}>
+              <span aria-hidden="true">◐</span>主题设置<small>五套风格</small>
+            </button>
             <button className={`snav${sec === 'env' ? ' active' : ''}`} onClick={() => setSec('env')}>
               <IconPackage size={16} />环境安装<small>{total ? (okCount === total ? '全就绪' : `${okCount}/${total}`) : '…'}</small>
             </button>
@@ -698,6 +704,7 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
           </nav>
 
           <div className="settings-main">
+            {sec === 'theme' && <ThemeSettings />}
             {sec === 'model' && (
               <section className="st-sec active">
                 <div className="tabbar">
@@ -861,26 +868,26 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
             )}
 
             {sec === 'more' && (
-              <section className="st-sec active">
-                <div className="panel-top">
-                  <span className="pill off"><span className="dot" />可扩展位</span>
-                  <span className="desc">同一个面板，以后放更多设置</span>
+              <section className="st-sec active settings-more" aria-label="更多设置">
+                <h3>更多设置</h3>
+                <p className="desc">更多工作空间选项正在准备中。</p>
+                <div className="settings-more-options">
+                  {['网关参数', '语言设置', '自动更新', '数据目录'].map(label => (
+                    <button type="button" className="settings-more-option" key={label} disabled>
+                      <strong>{label}</strong><span>暂未开放</span>
+                    </button>
+                  ))}
                 </div>
-                <div className="board">
-                  <div className="stub-row"><span className="tag2">预留</span>网关参数（端口 / 绑定 / 会话）<span className="future">就挂在这页旁边</span></div>
-                  <div className="stub-row"><span className="tag2">预留</span>通用设置（语言 / 更新 / 数据目录）<span className="future">按需加</span></div>
-                </div>
-                <div className="foot-note">扩展方式：在这个面板里加标签即可——模型、环境已各就位，其余按需加。</div>
               </section>
             )}
           </div>
         </div>
 
-        <div className="settings-foot">
+        {sec === 'model' && <div className="settings-foot">
           {harness === 'api' || harness === 'openclaw'
             ? 'ⓘ 供应商配置保存到 .env；API 直连仅聊天、无工具。切换底座或对话模式后请新建对话。'
             : 'ⓘ 原生 Agent 认证由其 CLI 管理；「保存底座」只保存底座、模型覆盖和权限设置。媒体通道仍单独配置。'}
-        </div>
+        </div>}
       </div>
     </div>
   );

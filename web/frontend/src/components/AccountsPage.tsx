@@ -392,7 +392,7 @@ export default function AccountsPage() {
     <div className="accounts-page">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
-          <h1 className="page-title">账号登录 Accounts</h1>
+          <h1 className="page-title">账号</h1>
           <p className="page-subtitle">
             用手机 App 扫码登录，登录态本地持久化，之后发布免登。<br />
             ⚠️ 平台可能对机房/代理 IP 判风险导致二维码弹不出，需干净/家宽 IP，或在正常网络登录后拷贝登录态目录。
@@ -406,6 +406,7 @@ export default function AccountsPage() {
         <div className="card" style={{ padding: 13, fontSize: 13, marginTop: 14 }}>{terminalMsg}</div>
       )}
 
+      <div className="account-table-head" aria-hidden="true"><span>平台</span><span>账号信息</span><span>登录状态</span><span>操作</span></div>
       <div className="accounts-grid">
         {accounts.map((a) => {
           const w = whoami[a.platform];
@@ -414,7 +415,7 @@ export default function AccountsPage() {
           return (
             <div key={a.platform} className="card account-card" style={{ opacity: a.supported ? 1 : 0.6 }}>
               <div className="account-card-head">
-                <span className="account-card-name">{a.name}</span>
+                <span className="account-card-name"><span className="platform-mark" aria-hidden="true">{a.name.slice(0, 1)}</span>{a.name}</span>
                 {badge(a)}
               </div>
 
@@ -425,10 +426,10 @@ export default function AccountsPage() {
                 </div>
               )}
               {!logged && (
-                <div className="account-card-note">{a.note ? a.note : `后端：${a.name}`}</div>
+                <div className="account-card-note">{a.note || '扫码连接账号'}</div>
               )}
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+              <div className="account-row-actions" style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
                 {logged ? (
                   <>
                     <button className="btn btn-sm" style={{ flex: 1 }}

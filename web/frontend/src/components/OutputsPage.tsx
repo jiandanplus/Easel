@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { fetchOutputs, fetchOutputContent, mediaUrl, deleteOutput } from '../lib/api';
 import type { OutputNode, OutputMeta } from '../lib/api';
 import { renderMarkdown } from '../lib/sanitize';
+import { filterLibraryNodes } from '../lib/outputSearch';
 import { IconOutputs, IconImage, IconVideo, IconMusic, IconFile, IconFolder, IconRefresh, IconChevron, IconTrash } from './icons';
 
 const FILTERS: { key: string; label: string }[] = [
@@ -86,6 +87,7 @@ export default function OutputsPage({ jumpPath, onJumpHandled }: OutputsPageProp
   const [treeError, setTreeError] = useState('');
   const [stack, setStack] = useState<string[]>([]);   // 当前所在的文件夹名称路径
   const [filter, setFilter] = useState('all');
+  const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<OutputNode | null>(null);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
@@ -98,13 +100,14 @@ export default function OutputsPage({ jumpPath, onJumpHandled }: OutputsPageProp
   useEffect(() => { load(); }, [load]);
 
   const currentNodes = useMemo(() => resolvePath(roots, stack), [roots, stack]);
+  const visibleNodes = useMemo(() => filterLibraryNodes(currentNodes, query), [currentNodes, query]);
   const dirs = useMemo(
-    () => currentNodes.filter((n) => n.type === 'dir').sort((a, b) => (b.mtime || 0) - (a.mtime || 0)),
-    [currentNodes]);
+    () => visibleNodes.filter((n) => n.type === 'dir').sort((a, b) => (b.mtime || 0) - (a.mtime || 0)),
+    [visibleNodes]);
   const files = useMemo(() => {
-    const fs = currentNodes.filter((n) => n.type === 'file').sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+    const fs = visibleNodes.filter((n) => n.type === 'file').sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
     return filter === 'all' ? fs : fs.filter((f) => f.kind === filter);
-  }, [currentNodes, filter]);
+  }, [visibleNodes, filter]);
 
   const atTop = stack.length === 0;
   const atProjectRoot = stack.length === 1;
@@ -123,8 +126,8 @@ export default function OutputsPage({ jumpPath, onJumpHandled }: OutputsPageProp
     () => (hasSplit ? files.filter((f) => !deliverableSet.has(f.path)) : files),
     [files, deliverableSet, hasSplit]);
 
-  const enterDir = useCallback((name: string) => { setStack((s) => [...s, name]); setFilter('all'); }, []);
-  const goTo = useCallback((depth: number) => { setStack((s) => s.slice(0, depth)); setFilter('all'); }, []);
+  const enterDir = useCallback((name: string) => { setStack((s) => [...s, name]); setFilter('all'); setQuery(''); }, []);
+  const goTo = useCallback((depth: number) => { setStack((s) => s.slice(0, depth)); setFilter('all'); setQuery(''); }, []);
 
   const remove = useCallback(async (node: OutputNode, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -262,6 +265,10 @@ export default function OutputsPage({ jumpPath, onJumpHandled }: OutputsPageProp
       </div>
 
       {treeError && <div className="notice-error">{treeError}</div>}
+      <div className="library-search">
+        <input className="field" type="search" aria-label="搜索项目或文件" placeholder="搜索项目或文件" value={query} onChange={event => setQuery(event.target.value)} />
+        {query && <button className="btn btn-ghost btn-sm" onClick={() => setQuery('')}>清除</button>}
+      </div>
 
       {/* 项目主题标签（进入项目根时展示） */}
       {atProjectRoot && projectMeta?.tags && projectMeta.tags.length > 0 && (
@@ -285,7 +292,7 @@ export default function OutputsPage({ jumpPath, onJumpHandled }: OutputsPageProp
       {empty && !treeError ? (
         <div className="empty-state" style={{ height: 300 }}>
           <div className="empty-icon"><IconOutputs size={44} /></div>
-          <p>{atTop ? '还没有产物——去对话或技能库生成第一条内容吧' : '这个文件夹是空的'}</p>
+          <p>{query.trim() ? '没有找到匹配的项目或文件' : atTop ? '还没有产物——去对话或技能库生成第一条内容吧' : '这个文件夹是空的'}</p>
         </div>
       ) : hasSplit ? (
         <>

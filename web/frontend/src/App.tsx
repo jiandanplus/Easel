@@ -12,7 +12,7 @@ import CalendarPage from './components/CalendarPage';
 import IdeasPage from './components/IdeasPage';
 import PublishPage from './components/PublishPage';
 import BreakdownPage from './components/BreakdownPage';
-import SubNav from './components/SubNav';
+import AppTopbar from './components/AppTopbar';
 import OnboardingWizard from './components/OnboardingWizard';
 import SettingsPanel from './components/SettingsPanel';
 import { fetchStatus, fetchPersonas, streamChat, fetchLastTurn, stopChat } from './lib/api';
@@ -56,6 +56,8 @@ export default function App() {
   const [showRecommend, setShowRecommend] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSectionRequest, setSettingsSectionRequest] = useState(0);
+  const [settingsSection, setSettingsSection] = useState<'model' | 'theme'>('model');
   // 装完还没配模型时，首开要把用户直接带到模型设置页（安装脚本不再在终端问 Key）
   const [needModelSetup, setNeedModelSetup] = useState(false);
 
@@ -548,6 +550,14 @@ export default function App() {
     sendUserAndStream(ns.id, prompt);
   }, [selectedPersona, sendUserAndStream]);
 
+  const handleStartCreate = useCallback((brief: string) => {
+    const ns = createSession(selectedPersona || undefined);
+    setSessions(prev => { const next = [ns, ...prev]; saveSessions(next); return next; });
+    setActiveSessionId(ns.id);
+    setCurrentPage('chat');
+    if (brief.trim()) sendUserAndStream(ns.id, brief.trim());
+  }, [selectedPersona, sendUserAndStream]);
+
   const handleStopStream = useCallback((sessionId: string) => {
     streamCtl.current[sessionId]?.abort();
     // 告诉后端**真正终止**这一轮 agent 并释放会话锁——否则后端进程还在跑、占着锁，下一句会被拦
@@ -709,6 +719,7 @@ export default function App() {
             agentRuntime={agentRuntime}
             onNavigate={setCurrentPage}
             onUseTopic={handleUseTopic}
+            onStartCreate={handleStartCreate}
           />
         );
       case 'chat':
@@ -787,11 +798,33 @@ export default function App() {
     setActiveSessionId(newSession.id);
   }, [activeSessionId]);
 
+  const openSettings = (section: 'model' | 'theme') => {
+    setSettingsSection(section);
+    setSettingsSectionRequest(request => request + 1);
+    setSettingsOpen(true);
+  };
+
+  const closeSettings = () => {
+    if (!settingsOpen) return;
+    setSettingsOpen(false);
+    setNeedModelSetup(false);
+    void fetchStatus().then(data => {
+      setApiDirect(data.transport === 'api');
+      setAgentRuntime(data.runtime || 'openclaw');
+      setGatewayStatus(data.gateway ? 'connected' : 'disconnected');
+    }).catch(() => setGatewayStatus('disconnected'));
+  };
+
+  const navigateToPage = (page: Page) => {
+    closeSettings();
+    setCurrentPage(page);
+  };
+
   return (
     <div className="app-layout">
       <Sidebar
         currentPage={currentPage}
-        onPageChange={setCurrentPage}
+        onPageChange={navigateToPage}
         personas={personas}
         selectedPersona={selectedPersona}
         onPersonaChange={handlePersonaChange}
@@ -806,14 +839,20 @@ export default function App() {
         gatewayStatus={gatewayStatus}
         apiDirect={apiDirect}
         agentRuntime={agentRuntime}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={() => openSettings('model')}
+        settingsOpen={settingsOpen}
       />
       <main className="main-content">
-        {(['trends', 'ideas', 'calendar', 'publish', 'breakdown'] as Page[]).includes(currentPage) && (
-          <SubNav current={currentPage} onNavigate={setCurrentPage} />
-        )}
+        <AppTopbar currentPage={currentPage} settingsOpen={settingsOpen}
+          personas={personas} selectedPersona={selectedPersona}
+          onNavigate={navigateToPage}
+          onPersonaChange={handlePersonaChange} onNewProfile={() => setShowWizard(true)}
+          onAppearance={() => openSettings('theme')} />
         <div className="page-host">
-          {renderPage()}
+          <div className="page-view" hidden={settingsOpen}>{renderPage()}</div>
+          {settingsOpen && <SettingsPanel initialSection={settingsSection} sectionRequest={settingsSectionRequest}
+            banner={needModelSetup ? '请先配置模型，再开始创作。' : ''}
+            onClose={closeSettings} />}
         </div>
       </main>
 
@@ -840,23 +879,6 @@ export default function App() {
         <OnboardingWizard onClose={() => setShowWizard(false)} onCreated={handleProfileCreated} />
       )}
 
-      {/* 设置（统一入口：模型配置 · 环境安装 · 更多设置） */}
-      {settingsOpen && (
-        <SettingsPanel
-          banner={needModelSetup
-            ? '还没有配置模型 —— 填一个 API Key 才能开始对话。保存后会自动同步配置并重启网关。'
-            : ''}
-          onClose={() => {
-            setSettingsOpen(false);
-            setNeedModelSetup(false);
-            void fetchStatus().then((data) => {
-              setApiDirect(data.transport === 'api');
-              setAgentRuntime(data.runtime || 'openclaw');
-              setGatewayStatus(data.gateway ? 'connected' : 'disconnected');
-            }).catch(() => setGatewayStatus('disconnected'));
-          }}
-        />
-      )}
     </div>
   );
 }
