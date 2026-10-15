@@ -6,6 +6,7 @@ from urllib.parse import urlsplit
 import httpx
 from easel.harnesses.base import HarnessError
 from .session import SessionStore
+from .transport import require_local_http
 
 
 class PlatformError(HarnessError):
@@ -61,6 +62,7 @@ def validate_url(value):
 
 class PlatformClient:
     def __init__(self, root, *, transport=None, clock=time.time):
+        require_local_http()
         self.store = SessionStore(root)
         self.transport = transport
         self.clock = clock

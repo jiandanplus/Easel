@@ -38,7 +38,12 @@ class SessionStore:
         self.directory.chmod(0o700)
         lock = self.directory / "platform-session.lock"
         try:
-            descriptor = os.open(lock, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+            descriptor = os.open(
+                lock, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600
+            )
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                os.close(descriptor)
+                raise HarnessError("平台账号锁必须为普通文件")
             with os.fdopen(descriptor, "a") as stream:
                 fcntl.flock(stream, fcntl.LOCK_EX)
                 self.check()
@@ -51,7 +56,7 @@ class SessionStore:
         if not self.path.exists():
             return {}
         try:
-            descriptor = os.open(self.path, os.O_RDONLY | os.O_NOFOLLOW)
+            descriptor = os.open(self.path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
             with os.fdopen(descriptor, "rb") as stream:
                 if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
                     raise ValueError

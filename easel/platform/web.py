@@ -1,15 +1,22 @@
-"""Origin-protected local API: platform credentials never leave native bridge."""
+"""Loopback-restricted local API: platform credentials never leave native bridge."""
 
 import asyncio
 import inspect
 import re
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from easel.harnesses.base import HarnessError
 from .client import PlatformClient, PlatformError
+from .transport import require_loopback
+
+
+def require_local_request(request: Request):
+    require_loopback(request.client.host if request.client else "")
 
 
 def create_router(workspace, guard, close_idle=None, *, transport=None):
-    router = APIRouter(prefix="/api/platform")
+    router = APIRouter(
+        prefix="/api/platform", dependencies=[Depends(require_local_request)]
+    )
 
     def client():
         return PlatformClient(

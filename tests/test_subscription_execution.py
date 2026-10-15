@@ -334,6 +334,22 @@ async def test_subscription_model_save_preserves_custom_selection(
         and saved["subscription_model"] == "alias"
     )
 
+    # Omitted model must survive source-only saves in both directions.
+    for source in ("custom", "subscription", "custom"):
+        await web.api_harness_settings_save(
+            web.HarnessSettingsRequest(runtime="codex", service_source=source)
+        )
+        saved = store.read_json(tmp_path / "outputs/_harness/config.json")
+        assert saved["models"]["codex"] == "custom-original"
+        assert saved["subscription_model"] == "alias"
+    await web.api_harness_settings_save(
+        web.HarnessSettingsRequest(runtime="codex", service_source="custom", model="")
+    )
+    assert (
+        store.read_json(tmp_path / "outputs/_harness/config.json")["models"]["codex"]
+        == ""
+    )
+
 
 @pytest.mark.asyncio
 async def test_actual_codex_adapter_scrubs_chunked_tokens_errors_and_questions(
@@ -421,3 +437,123 @@ async def test_actual_codex_adapter_scrubs_chunked_tokens_errors_and_questions(
     assert "task-SECRET" not in str(exc.value)
     assert "SECRET" not in str(output) + str(questions)
     assert "before [已隐藏] after" in "".join(text for _, text in output)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("source_override", [False, True])
+@pytest.mark.parametrize(
+    "peer", ["198.51.100.23", "127.0.0.1", "::1", "::ffff:127.0.0.1"]
+)
+async def test_http_subscription_requires_loopback(
+    tmp_path, monkeypatch, source_override, peer
+):
+    import httpx
+    import web.app as web
+    from easel.platform.client import PlatformClient
+
+    config = dict(
+        runtime="codex",
+        service_source="custom" if source_override else "subscription",
+        execution_target="local",
+        models={},
+        subscription_model="alias",
+    )
+    monkeypatch.setattr(web, "_harness_settings", lambda: config)
+    monkeypatch.setattr(web, "_chat_backend", lambda *a: "codex")
+    monkeypatch.setattr(web, "read_settings", lambda *a: {})
+    calls = []
+
+    def authorize(self, model):
+        calls.append("authorize")
+        return {
+            "account_id": "synthetic-owner",
+            "platform_url": "http://localhost:8790",
+        }
+
+    async def dispatch(*a, **k):
+        assert k["context"].account_id == "synthetic-owner"
+        calls.append("dispatch")
+        return "synthetic response"
+
+    monkeypatch.setattr(PlatformClient, "authorize", authorize)
+    monkeypatch.setattr(web, "_run_harness_chat", dispatch)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=web.app, client=(peer, 1234)),
+        base_url="http://localhost:7860",
+    ) as client:
+        body = (
+            {"message": "synthetic", "service_source": "subscription"}
+            if source_override
+            else {"message": "synthetic"}
+        )
+        response = await client.post(
+            "/api/chat",
+            json=body,
+            headers={"Origin": "http://localhost:7860", "X-Forwarded-For": "127.0.0.1"},
+        )
+    if peer == "198.51.100.23":
+        assert response.status_code == 403, response.text
+        assert calls == []
+    else:
+        assert response.status_code == 200, response.text
+        assert calls == ["authorize", "dispatch"]
+
+
+@pytest.mark.asyncio
+async def test_custom_remote_http_preserves_existing_access(monkeypatch):
+    import httpx
+    import web.app as web
+    from easel.platform.client import PlatformClient
+
+    config = dict(
+        runtime="codex",
+        service_source="custom",
+        execution_target="local",
+        models={"codex": "custom"},
+    )
+    monkeypatch.setattr(web, "_harness_settings", lambda: config)
+    monkeypatch.setattr(web, "_chat_backend", lambda *a: "codex")
+    monkeypatch.setattr(web, "read_settings", lambda *a: {})
+    monkeypatch.setattr(
+        PlatformClient, "authorize", lambda *a: pytest.fail("custom authorization")
+    )
+
+    async def dispatch(*a, **k):
+        assert k["context"].service_source == "custom"
+        return "synthetic custom response"
+
+    monkeypatch.setattr(web, "_run_harness_chat", dispatch)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=web.app, client=("198.51.100.23", 1234)),
+        base_url="http://localhost:7860",
+    ) as client:
+        response = await client.post(
+            "/api/chat",
+            json={"message": "synthetic"},
+            headers={"Origin": "http://localhost:7860"},
+        )
+    assert response.status_code == 200, response.text
+
+
+def test_owned_servers_disable_forwarded_peer_rewriting():
+    import ast
+    from pathlib import Path
+
+    for filename, target in (("web/app.py", "run"), ("easel/portable.py", "Config")):
+        tree = ast.parse(Path(filename).read_text())
+        calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "uvicorn"
+            and node.func.attr == target
+        ]
+        assert len(calls) == 1
+        assert any(
+            keyword.arg == "proxy_headers"
+            and isinstance(keyword.value, ast.Constant)
+            and keyword.value.value is False
+            for keyword in calls[0].keywords
+        )

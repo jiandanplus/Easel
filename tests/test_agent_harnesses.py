@@ -618,7 +618,7 @@ def sandbox(tmp_path, monkeypatch):
     store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json",
                      {"runtime": "codex", "models": {"codex": "test-model"}, "sandbox": "read-only"})
     local = "http://127.0.0.1:7860"
-    with TestClient(web.app, base_url=local, headers={"Origin": local}) as client:
+    with TestClient(web.app, base_url=local, headers={"Origin": local}, client=("127.0.0.1", 50000)) as client:
         yield client
 
 

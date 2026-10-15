@@ -133,7 +133,8 @@ async def test_local_router_guard_and_safe_http_shapes(tmp_path):
         create_router(lambda: tmp_path, guard, transport=httpx.MockTransport(handle))
     )
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app), base_url="http://local"
+        transport=httpx.ASGITransport(app=app, client=("127.0.0.1", 1234)),
+        base_url="http://local",
     ) as c:
         assert (
             await c.post(
@@ -201,7 +202,8 @@ async def test_local_router_uses_actual_backend_contract(tmp_path):
             )
         )
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=local), base_url="http://local"
+            transport=httpx.ASGITransport(app=local, client=("127.0.0.1", 1234)),
+            base_url="http://local",
         ) as c:
             await c.post(
                 "/api/platform/configure", json={"url": "http://127.0.0.1:8790"}
@@ -251,3 +253,66 @@ def test_missing_posix_lock_fails_subscription_safely_without_import_breakage(
         with session.SessionStore(tmp_path).locked():
             pytest.fail("unsupported lock entered")
     assert not (tmp_path / "outputs").exists()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "peer", ["198.51.100.23", "testclient", "::ffff:198.51.100.23"]
+)
+async def test_platform_router_denies_remote_before_client(tmp_path, monkeypatch, peer):
+    from fastapi import FastAPI
+    import easel.platform.web as bridge
+
+    app = FastAPI()
+    app.include_router(bridge.create_router(tmp_path, lambda: None))
+    monkeypatch.setattr(
+        bridge, "PlatformClient", lambda *a, **k: pytest.fail("remote platform call")
+    )
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app, client=(peer, 1234)),
+        base_url="http://localhost",
+    ) as c:
+        for method, path in [
+            ("GET", "status"),
+            ("GET", "devices"),
+            ("GET", "plans"),
+            ("GET", "entitlements"),
+            ("GET", "usage"),
+            ("GET", "models"),
+            ("POST", "configure"),
+            ("POST", "login"),
+            ("POST", "register"),
+            ("POST", "logout"),
+            ("DELETE", "devices/fake"),
+        ]:
+            response = await c.request(
+                method,
+                "/api/platform/" + path,
+                json={},
+                headers={"Origin": "http://localhost", "X-Forwarded-For": "127.0.0.1"},
+            )
+            assert response.status_code == 403, (path, response.text)
+
+
+@pytest.mark.parametrize("name", ["platform-session.json", "platform-session.lock"])
+def test_special_session_files_fail_promptly(tmp_path, name):
+    import os
+    import signal
+    from easel.platform.session import SessionStore
+
+    store = SessionStore(tmp_path)
+    store.directory.mkdir(parents=True)
+    os.mkfifo(store.directory / name)
+
+    def timed_out(*args):
+        raise AssertionError("special session file blocked")
+
+    previous = signal.signal(signal.SIGALRM, timed_out)
+    signal.setitimer(signal.ITIMER_REAL, 0.5)
+    try:
+        with pytest.raises(HarnessError):
+            with store.locked():
+                store.read()
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)

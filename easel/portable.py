@@ -203,7 +203,7 @@ def main(argv=None):
             if not secrets.compare_digest(request.headers.get('X-Easel-Token',''), token): raise HTTPException(403)
             server.should_exit = True
             return {'token':token,'workspace':str(workspace)}
-        server = uvicorn.Server(uvicorn.Config(app, host='127.0.0.1', port=port, log_level='info'))
+        server = uvicorn.Server(uvicorn.Config(app, host='127.0.0.1', port=port, log_level='info', proxy_headers=False))
         atomic_json(state_path, {'port':port,'token':token})
         def ready():
             while not server.started and not server.should_exit: time.sleep(.05)

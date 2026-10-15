@@ -504,6 +504,18 @@ app.add_middleware(CORSMiddleware, allow_origins=_LOCAL_ORIGINS, allow_methods=[
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=['localhost', '127.0.0.1'] + _EXTRA_HOSTS)
 
 
+from easel.platform.transport import http_peer as _platform_http_peer, require_local_http
+
+
+@app.middleware("http")
+async def platform_peer_context(request: Request, call_next):
+    token = _platform_http_peer.set(request.client.host if request.client else "")
+    try:
+        return await call_next(request)
+    finally:
+        _platform_http_peer.reset(token)
+
+
 @app.middleware('http')
 async def local_write_guard(request: Request, call_next):
     """拦住「别的网站让浏览器替我改本机状态」的写请求，同时不误伤本机调用。
@@ -1873,17 +1885,20 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
     config["sandbox"] = req.sandbox
     if req.runtime == "codex" and req.codex_auto_approve is not None:
         config["codex_auto_approve"] = req.codex_auto_approve
-    model = req.model.strip()
-    if route.service_source == "custom" and req.runtime == "codex":
+    original = harness_store.read_json(OUTPUTS_DIR / "_harness" / "config.json")
+    config["models"] = original.get("models", config["models"])
+    config["subscription_model"] = original.get("subscription_model", config.get("subscription_model", ""))
+    model = req.model.strip() if "model" in req.model_fields_set else config["models"].get(req.runtime, "")
+    if route.service_source == "custom" and req.runtime == "codex" and "model" in req.model_fields_set:
         from easel.harnesses.runtime import codex_model
         try:
             model = codex_model(PROJECT_ROOT, model, require_configured=False)
         except HarnessError as error:
             raise HTTPException(400, str(error)) from error
     if route.service_source == "subscription":
-        original = harness_store.read_json(OUTPUTS_DIR / "_harness" / "config.json")
-        config["models"] = original.get("models", config["models"])
-        selected = req.subscription_model if req.subscription_model is not None else model
+        selected = (req.subscription_model if req.subscription_model is not None else
+                    req.model.strip() if "model" in req.model_fields_set else
+                    original.get("subscription_model", config.get("subscription_model", "")))
         if any(ord(c) < 32 for c in selected):
             raise HTTPException(400, "模型名称不能包含控制字符")
         config["subscription_model"] = selected
@@ -2724,6 +2739,8 @@ def _task_context(req: ChatRequest, runtime: str, config: dict, env: dict | None
         selected = {**config, "runtime": runtime,
                     "service_source": req.service_source if "service_source" in req.model_fields_set else config["service_source"],
                     "execution_target": req.execution_target if "execution_target" in req.model_fields_set else config["execution_target"]}
+        if selected["service_source"] == "subscription":
+            require_local_http()
         context = task_context(selected, root=PROJECT_ROOT)
         if context.service_source == "custom" and runtime in ("api", "openclaw"):
             from dataclasses import replace
@@ -5806,4 +5823,4 @@ if __name__ == "__main__":
     print()
     # 监听 0.0.0.0（非仅回环）是为了兼容 Docker/远程容器端口转发访问 Easel 的场景；
     # local_write_guard/TrustedHostMiddleware 只挡浏览器发起的跨站请求，见其注释里的局限说明。
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning", proxy_headers=False)
