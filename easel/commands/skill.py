@@ -25,7 +25,9 @@ from easel.timeouts import TIMEOUT_PRODUCE
 from easel.service_contracts import task_context
 from easel.direct_api import read_settings
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from easel.paths import workspace_root, resource_root
+
+PROJECT_ROOT = workspace_root()
 SKILLS_DIR = PROJECT_ROOT / "skills" / "builtin"
 PROFILES_DIR = PROJECT_ROOT / "profiles"
 OPENCLAW_PROFILE = "easel"

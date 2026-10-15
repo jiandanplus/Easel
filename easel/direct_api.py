@@ -10,7 +10,9 @@ from urllib.parse import urlsplit
 
 import httpx
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from easel.paths import workspace_root, resource_root
+
+PROJECT_ROOT = workspace_root()
 SYSTEM_PROMPT = (
     "你是 Easel 社媒内容助手，用用户的语言协助写作、策划和分析。"
     "当前是模型 API 直连模式，没有本机文件、命令、浏览器或技能执行工具。"

@@ -36,12 +36,13 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, StrictBool
 from sse_starlette.sse import EventSourceResponse
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+RESOURCE_ROOT = Path(os.environ.get("EASEL_RESOURCE_ROOT") or Path(__file__).resolve().parents[1]).resolve()
+PROJECT_ROOT = Path(os.environ.get("EASEL_WORKSPACE_ROOT") or Path(__file__).resolve().parents[1]).resolve()
 
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-if str(PROJECT_ROOT / "scripts") not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+if str(RESOURCE_ROOT) not in sys.path:
+    sys.path.insert(0, str(RESOURCE_ROOT))
+if str(RESOURCE_ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(RESOURCE_ROOT / "scripts"))
 
 from easel.gateway_endpoint import chat_completions_url, healthz_url, port_source
 from easel.openclaw_cmd import openclaw_base_cmd
@@ -84,7 +85,7 @@ SKILLS_DIR = PROJECT_ROOT / "skills"
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
-REACT_DIR = Path(__file__).resolve().parent / "frontend" / "dist"
+REACT_DIR = RESOURCE_ROOT / "web" / "frontend" / "dist"
 OPENCLAW_PROFILE = "easel"
 # 对话传输层：http＝直连常驻 gateway 的 OpenAI 兼容端点，agent 在 gateway 进程里直接跑，
 # 省掉每轮 spawn `openclaw agent` 瘦客户端的冷启动（本机实测同一句话：CLI 7.1-7.6s/轮，
@@ -204,7 +205,7 @@ def _heal_openclaw_session(sk: str) -> None:
 
 # 制作层/直接执行层/chat 超时统一走 easel/timeouts.py（CLI/Web/skill 三入口单一真相源）
 
-SHARED_SCRIPTS = PROJECT_ROOT / "skills" / "shared" / "scripts"
+SHARED_SCRIPTS = RESOURCE_ROOT / "skills" / "shared" / "scripts"
 if str(SHARED_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SHARED_SCRIPTS))
 

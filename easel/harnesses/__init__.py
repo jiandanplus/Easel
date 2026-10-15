@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from easel.paths import workspace_root
 
 from .acp import ACPAdapter, OpenCodeAdapter
 from .base import Descriptor, HarnessError, RunRequest
@@ -25,6 +26,10 @@ def describe(runtime: str) -> dict:
     descriptor = CHAT_ONLY if runtime == "api" else OPENCLAW if runtime == "openclaw" else adapter(runtime).descriptor
     from dataclasses import asdict
     result = asdict(descriptor)
+    if runtime == "codex":
+        import os
+        result.update(origin="bundled" if "EASEL_RUNTIME_MANIFEST" in os.environ else
+                      "override" if "EASEL_CODEX_EXECUTABLE" in os.environ else "external", version="")
     try:
         if runtime == "api":
             pass
@@ -33,12 +38,17 @@ def describe(runtime: str) -> dict:
             openclaw_base_cmd.cache_clear()
             openclaw_base_cmd()
         elif runtime == "acp":
-            acp_command(Path(__file__).resolve().parents[2])
+            acp_command(workspace_root())
         else:
             base_command(runtime)
+        if runtime == "codex":
+            from .runtime import resolve_codex
+            resolved = resolve_codex()
+            result.update(origin=resolved.origin, version=resolved.version)
         result["installed"] = True
-    except (HarnessError, OSError):
+    except (HarnessError, OSError) as error:
         result["installed"] = False
+        result["resolution_error"] = str(error) if isinstance(error, HarnessError) else "无法读取运行时，请检查安装"
     return result
 
 

@@ -57,7 +57,8 @@ def cmd_ping(_args) -> int:
     from pathlib import Path
     from easel import harnesses
     from easel.harnesses.base import HarnessError
-    root = Path(__file__).resolve().parents[2]
+    from easel.paths import workspace_root
+    root = workspace_root()
     try:
         config = harnesses.settings(root / "outputs", settings)
         context = task_context(config)

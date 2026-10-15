@@ -9,6 +9,8 @@ from easel import __version__
 
 from .base import HarnessError, RunRequest
 from .commands import base_command
+from .runtime import codex_environment
+from dataclasses import replace
 from .rpc import RPC
 
 
@@ -19,6 +21,7 @@ def _valid_id(value):
 
 async def available_models(runtime: str, request: RunRequest) -> list[dict]:
     if runtime == "codex":
+        request = replace(request, env=codex_environment(request.env, request.cwd))
         async def reject(method, params):
             raise HarnessError("读取模型列表时不允许执行工具")
 

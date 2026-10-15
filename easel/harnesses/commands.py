@@ -9,6 +9,11 @@ from .base import HarnessError
 
 
 def base_command(name: str) -> list[str]:
+    if name == "codex":
+        from .runtime import resolve_codex
+        resolved = resolve_codex()
+        if resolved.executable is not None:
+            return [str(resolved.executable)]
     executable = shutil.which(name)
     if not executable:
         raise HarnessError(f"{name} CLI 未安装或不在 PATH，请先安装并在终端登录")

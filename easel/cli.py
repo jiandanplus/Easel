@@ -34,7 +34,9 @@ from easel.timeouts import TIMEOUT_CHAT
 from easel import harnesses
 from easel.harnesses.base import HarnessError
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from easel.paths import workspace_root, resource_root
+
+PROJECT_ROOT = workspace_root()
 PROFILES_DIR = PROJECT_ROOT / "profiles"
 PROFILE = "easel"
 
@@ -215,7 +217,8 @@ def cmd_web(args) -> int:
     port = getattr(args, "port", 7860)
     env = web_environment(_proxy_env())
     env["EASEL_PORT"] = str(port)
-    script = PROJECT_ROOT / "web" / "app.py"
+    script_root = resource_root() if (os.environ.get("EASEL_RESOURCE_ROOT") or os.environ.get("EASEL_WORKSPACE_ROOT")) else PROJECT_ROOT
+    script = script_root / "web" / "app.py"
     if not script.is_file():
         print(f"{RED}未找到 web/app.py{NC} — 安装可能不完整，请重跑 `bash setup.sh`。",
               file=sys.stderr)
