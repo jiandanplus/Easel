@@ -14,7 +14,11 @@ class Settings:
     def __post_init__(self):
         object.__setattr__(self, "database", Path(self.database))
         if self.upstream_url:
-            u = urlsplit(self.upstream_url)
+            try:
+                u = urlsplit(self.upstream_url)
+                u.port
+            except ValueError:
+                raise ValueError("Invalid upstream configuration") from None
             try:
                 loopback = u.hostname == "localhost" or ipaddress.ip_address(u.hostname).is_loopback
             except ValueError:

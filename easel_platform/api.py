@@ -1,17 +1,27 @@
 import json
 import time
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from .auth import PlatformError
 from .store import Store
+from .gateway import Gateway, read_body
 
 MAX_BODY = 16384
 
 def create_app(settings, *, transport=None, clock=None):
-    app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    @asynccontextmanager
+    async def lifespan(app):
+        app.state.ledger.recover()
+        yield
+
+    app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None,lifespan=lifespan)
     store = Store(settings, clock=clock or time.time)
     app.state.store, app.state.settings, app.state.transport = store, settings, transport
+
+    gateway=Gateway(store,transport)
+    app.state.gateway,app.state.ledger=gateway,gateway.ledger
 
     @app.exception_handler(PlatformError)
     async def platform_error(request, exc):
@@ -88,12 +98,20 @@ def create_app(settings, *, transport=None, clock=None):
 
     @app.get("/v1/models")
     async def models(request: Request):
-        authenticated(request)
-        return {"models":[],"ready":False,"reason":"gateway_not_configured"}
+        return gateway.models(authenticated(request)["account_id"])
 
     @app.get("/v1/usage")
     async def usage(request: Request):
-        authenticated(request)
-        return {"usage":[],"used_tokens":0,"reserved_tokens":0,"pending_reconciliation":0}
+        return gateway.ledger.snapshot(authenticated(request)["account_id"])
+
+    @app.post("/v1/task-tokens")
+    async def task_tokens(request: Request):
+        user=authenticated(request)
+        data=await read_body(request,MAX_BODY)
+        return gateway.mint(user,data.get("model"))
+
+    @app.post("/v1/responses")
+    async def responses(request: Request):
+        return await gateway.responses(request)
 
     return app

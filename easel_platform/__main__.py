@@ -22,6 +22,10 @@ def main(argv=None):
     grant=commands.add_parser("grant")
     grant.add_argument("--database",type=Path,required=True)
     for flag in ("email","plan","key"): grant.add_argument("--"+flag,required=True)
+    reconcile=commands.add_parser("reconcile")
+    reconcile.add_argument("--database",type=Path,required=True)
+    for flag in ("request-id","key"):reconcile.add_argument("--"+flag,required=True)
+    for flag in ("input-tokens","output-tokens"):reconcile.add_argument("--"+flag,type=int,required=True)
     args=parser.parse_args(argv)
     try:
         settings=Settings(args.database,upstream_url=os.environ.get("EASEL_PLATFORM_UPSTREAM_URL",""),upstream_key=os.environ.get("EASEL_PLATFORM_UPSTREAM_KEY",""),upstream_model=os.environ.get("EASEL_PLATFORM_UPSTREAM_MODEL",""),public_model=os.environ.get("EASEL_PLATFORM_PUBLIC_MODEL",""))
@@ -31,7 +35,10 @@ def main(argv=None):
         else:
             store=Store(settings)
             if args.command=="plan": result=store.create_plan(args.id,args.name,args.tokens,args.concurrency,args.days,args.model)
-            else: result=store.grant(args.email,args.plan,args.key)
+            elif args.command=="grant": result=store.grant(args.email,args.plan,args.key)
+            else:
+                from .ledger import Ledger
+                result=Ledger(store).reconcile(args.request_id,args.input_tokens,args.output_tokens,args.key)
             print(json.dumps(result))
     except PlatformError as exc:
         parser.exit(1,exc.code+"\n")

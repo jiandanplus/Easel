@@ -170,4 +170,9 @@ class Store:
     def entitlements(self,account_id):
         with self.transaction() as db:
             rows=db.execute("SELECT id,plan_id,plan_version,starts_at,ends_at,status,token_quota,concurrency_limit,models FROM grants WHERE account_id=? ORDER BY starts_at,id",(account_id,)).fetchall()
-            return [{**dict(r),"test_only":True,"models":json.loads(r["models"]),"status":"expired" if r["status"]=="active" and r["ends_at"]<=self.clock() else r["status"],"used_tokens":0,"reserved_tokens":0,"remaining_tokens":r["token_quota"]} for r in rows]
+        return [{**dict(r),"test_only":True,"models":json.loads(r["models"]),"status":"expired" if r["status"]=="active" and r["ends_at"]<=self.clock() else r["status"],**self._usage(account_id,r["id"])} for r in rows]
+
+    def _usage(self,owner,grant):
+        from .ledger import Ledger
+        snapshot=Ledger(self).snapshot(owner,grant)
+        return {k:snapshot[k] for k in ("used_tokens","reserved_tokens","remaining_tokens")}
