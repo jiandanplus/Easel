@@ -90,3 +90,20 @@ def test_database_never_persists_request_content_or_task_secret(setup):
     with s.transaction() as db:
         columns=[row[1] for row in db.execute('PRAGMA table_info(requests)')]
     assert not any(c in columns for c in ('input','body','prompt','response','text','token','authorization'))
+
+
+def test_entitlement_reads_do_not_initialize_ledger(setup,monkeypatch):
+    s,u,g,l=setup
+    def fail(*a,**k):pytest.fail('entitlement reads must not run Ledger DDL')
+    monkeypatch.setattr(Ledger,'__init__',fail)
+    assert s.entitlements(u['account']['id'])[0]['remaining_tokens']==10000
+
+
+def test_selection_prefers_budget_then_earliest_expiry(setup):
+    s,u,g,l=setup;owner=u['account']['id']
+    new=s.grant('a@example.test','p','new')['id']
+    with s.transaction() as db:
+        db.execute('UPDATE grants SET ends_at=2000 WHERE id=?',(g,))
+        assert l.select_grant(db,owner,'alias')['id']==g
+        db.execute('UPDATE grants SET token_quota=20000 WHERE id=?',(new,))
+        assert l.select_grant(db,owner,'alias')['id']==new

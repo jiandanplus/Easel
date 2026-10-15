@@ -42,16 +42,14 @@ class Gateway:
         allowed=any(g['status']=='active' and self.settings.public_model in g['models'] for g in self.store.entitlements(owner))
         return {'models':[{'id':self.settings.public_model}] if self.ready and allowed else [],'ready':bool(self.ready),'authentication_verified':False,'reason':None if self.ready else 'gateway_not_configured'}
 
-    def mint(self,user,model):
+    def mint(self,access_token,model):
         if not self.ready:raise PlatformError(503,'gateway_not_configured')
         if model!=self.settings.public_model:raise PlatformError(403,'model_not_allowed')
         token=secrets.token_urlsafe(32)
         with self.store.transaction() as db:
-            s=db.execute('SELECT * FROM sessions WHERE id=? AND revoked=0 AND refresh_expires_at>?',(user['session_id'],self.store.clock())).fetchone()
-            if not s:raise PlatformError(401,'invalid_authentication')
-            grants=db.execute('SELECT * FROM grants WHERE account_id=? ORDER BY ends_at,id',(user['account_id'],)).fetchall()
-            g=next((r for r in grants if r['status']=='active' and r['starts_at']<=self.store.clock()<r['ends_at'] and model in json.loads(r['models'])),None)
-            if not g:raise PlatformError(403,'entitlement_required')
+            user=self.store.authenticate_in_transaction(db,access_token)
+            s=db.execute('SELECT * FROM sessions WHERE id=?',(user['session_id'],)).fetchone()
+            g=self.ledger.select_grant(db,user['account_id'],model)
             end=min(self.store.clock()+3600,s['refresh_expires_at'],g['ends_at'])
             db.execute('INSERT INTO task_tokens VALUES(?,?,?,?,?,?)',(digest(token),user['account_id'],user['session_id'],g['id'],model,end))
         return {'token':token,'expires_at':end,'account_id':user['account_id'],'model':model,'base_url_path':'/v1'}
@@ -127,7 +125,8 @@ class Gateway:
             client=httpx.AsyncClient(transport=self.transport,trust_env=False,follow_redirects=False,timeout=httpx.Timeout(60,connect=10))
             self.ledger.dispatch(rid)
             dispatched=True
-            response=await client.send(client.build_request('POST',self.settings.upstream_url.rstrip('/')+'/responses',content=payload,headers={'Authorization':'Bearer '+self.settings.upstream_key,'Content-Type':'application/json','Accept':'text/event-stream' if obj.get('stream') else 'application/json'}),stream=True)
+            response=await client.send(client.build_request('POST',self.settings.upstream_url.rstrip('/')+'/responses',content=payload,headers={'Authorization':'Bearer '+self.settings.upstream_key,'Content-Type':'application/json','Accept-Encoding':'identity','Accept':'text/event-stream' if obj.get('stream') else 'application/json'}),stream=True)
+            if response.headers.get('content-encoding','identity').strip().lower()!='identity':raise PlatformError(502,'invalid_upstream_response')
             if response.status_code!=200:raise PlatformError(502,'upstream_error')
             if obj.get('stream'):
                 return StreamingResponse(self.stream(response,client,rid),media_type='text/event-stream',headers={'X-Request-ID':rid})
@@ -138,7 +137,7 @@ class Gateway:
             try:result=json.loads(raw)
             except (ValueError,UnicodeError):raise PlatformError(502,'invalid_upstream_response') from None
             counts=self.usage(result)
-            if result.get('status') not in (None,'completed'):raise PlatformError(502,'upstream_error')
+            if result.get('status') not in (None,'completed') or result.get('error') is not None:raise PlatformError(502,'upstream_error')
             await self.close(response,client)
             self.ledger.settle(rid,*counts)
             return JSONResponse(result,headers={'X-Request-ID':rid})
@@ -182,7 +181,9 @@ class Gateway:
                         kind=value.get('type')
                         if name and name!='message' and name!=kind:raise PlatformError(502,'invalid_upstream_response')
                         if kind=='response.completed':
-                            counts=self.usage(value.get('response'))
+                            terminal=value.get('response')
+                            if not isinstance(terminal,dict) or terminal.get('status')!='completed' or terminal.get('error') is not None:raise PlatformError(502,'upstream_error')
+                            counts=self.usage(terminal)
                             await self.close(response,client)
                             self.ledger.settle(rid,*counts)
                             complete=True

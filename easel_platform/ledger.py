@@ -25,6 +25,21 @@ class Ledger:
             raise PlatformError(403,'entitlement_required')
         return r
 
+    def select_grant(self,db,owner,model):
+        """Freeze largest currently available budget; earliest expiry/id breaks ties."""
+        grants=db.execute("SELECT * FROM grants WHERE account_id=? AND status='active' AND starts_at<=? AND ends_at>?",(owner,self.store.clock(),self.store.clock())).fetchall()
+        grants=[g for g in grants if model in json.loads(g['models'])]
+        if not grants:raise PlatformError(403,'entitlement_required')
+        funded=[]
+        for g in grants:
+            used,reserved,active=db.execute("SELECT COALESCE(SUM(CASE WHEN state='settled' THEN input_tokens+output_tokens ELSE 0 END),0),COALESCE(SUM(CASE WHEN state IN ('reserved','dispatched','pending_reconciliation') THEN reserved ELSE 0 END),0),COALESCE(SUM(active),0) FROM requests WHERE owner=? AND grant_id=?",(owner,g['id'])).fetchone()
+            available=g['token_quota']-used-reserved
+            if available>0:funded.append((g,available,active))
+        if not funded:raise PlatformError(429,'quota_exceeded')
+        eligible=[(g,available) for g,available,active in funded if active<g['concurrency_limit']]
+        if not eligible:raise PlatformError(429,'concurrency_exceeded')
+        return min(eligible,key=lambda pair:(-pair[1],pair[0]['ends_at'],pair[0]['id']))[0]
+
     def reserve(self,*,owner,grant,key,body_hash,tokens,model='',session_id=None):
         if type(tokens) is not int or tokens<=0:raise PlatformError(400,'invalid_request')
         with self.store.transaction() as db:
@@ -81,7 +96,15 @@ class Ledger:
         return {'id':id,'state':'settled','input_tokens':input_tokens,'output_tokens':output_tokens}
 
     def snapshot(self,owner,grant=None):
-        with self.store.transaction() as db:
+        return self.read_snapshot(self.store,owner,grant)
+
+    @staticmethod
+    def read_snapshot(store,owner,grant=None):
+        with store.transaction() as db:
+            # Task1 standalone Store may precede gateway schema initialization.
+            if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='requests'").fetchone():
+                quota=db.execute('SELECT COALESCE(SUM(token_quota),0) FROM grants WHERE account_id=?'+(' AND id=?' if grant else ''),((owner,grant) if grant else (owner,))).fetchone()[0]
+                return {'usage':[],'used_tokens':0,'reserved_tokens':0,'remaining_tokens':quota,'pending_reconciliation':0}
             rows=db.execute('SELECT id,grant_id,model,state,reserved AS reserved_tokens,input_tokens,output_tokens,created_at,rule_version FROM requests WHERE owner=?'+(' AND grant_id=?' if grant else '')+' ORDER BY created_at,id',((owner,grant) if grant else (owner,))).fetchall()
             quota=db.execute('SELECT COALESCE(SUM(token_quota),0) FROM grants WHERE account_id=?'+(' AND id=?' if grant else ''),((owner,grant) if grant else (owner,))).fetchone()[0]
         usage=[dict(r) for r in rows]

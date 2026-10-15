@@ -123,9 +123,12 @@ class Store:
 
     def authenticate(self,token):
         with self.transaction() as db:
-            row=db.execute("SELECT a.*,s.id AS session_id FROM tokens t JOIN sessions s ON t.session_id=s.id JOIN accounts a ON s.account_id=a.id WHERE t.hash=? AND t.kind='access' AND t.used=0 AND t.expires_at>? AND s.revoked=0 AND s.refresh_expires_at>?",(digest(token),self.clock(),self.clock())).fetchone()
-            if not row: raise PlatformError(401,"invalid_authentication")
-            return {"account":self.account(row),"account_id":row["id"],"session_id":row["session_id"]}
+            return self.authenticate_in_transaction(db,token)
+
+    def authenticate_in_transaction(self,db,token):
+        row=db.execute("SELECT a.*,s.id AS session_id FROM tokens t JOIN sessions s ON t.session_id=s.id JOIN accounts a ON s.account_id=a.id WHERE t.hash=? AND t.kind='access' AND t.used=0 AND t.expires_at>? AND s.revoked=0 AND s.refresh_expires_at>?",(digest(token),self.clock(),self.clock())).fetchone()
+        if not row: raise PlatformError(401,"invalid_authentication")
+        return {"account":self.account(row),"account_id":row["id"],"session_id":row["session_id"]}
 
     def list_sessions(self,account_id):
         with self.transaction() as db:
@@ -174,5 +177,5 @@ class Store:
 
     def _usage(self,owner,grant):
         from .ledger import Ledger
-        snapshot=Ledger(self).snapshot(owner,grant)
+        snapshot=Ledger.read_snapshot(self,owner,grant)
         return {k:snapshot[k] for k in ("used_tokens","reserved_tokens","remaining_tokens")}

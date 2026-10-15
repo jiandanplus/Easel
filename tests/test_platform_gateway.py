@@ -208,3 +208,102 @@ def test_pre_dispatch_client_failure_releases_reservation(env,monkeypatch):
             assert app.state.ledger.snapshot(u['account']['id'])['reserved_tokens']==0
             assert calls==[]
     asyncio.run(go())
+
+
+@pytest.mark.parametrize('change',['rotate','expire'])
+def test_mint_revalidates_access_after_delayed_body(env,change):
+    async def go():
+        app,u,g,calls=env
+        async with await client(app) as c:
+            h={'Authorization':'Bearer '+u['access_token']}
+            issued=(await c.post('/v1/task-tokens',headers=h,json={'model':'alias'})).json()['token']
+            async def body():
+                yield b'{"model":'
+                if change=='rotate':app.state.store.refresh(u['refresh_token'])
+                else:app.state.store.clock=lambda:1901
+                yield b'"alias"}'
+            r=await c.post('/v1/task-tokens',headers=h,content=body())
+            assert r.status_code==401
+            r=await c.post('/v1/responses',headers={'Authorization':'Bearer '+issued},json={'model':'alias'})
+            assert r.status_code==200
+    asyncio.run(go())
+
+@pytest.mark.parametrize('old_state',['zero','exhausted','pending','busy'])
+def test_mint_selects_available_replacement_grant(env,old_state):
+    async def go():
+        app,u,g,calls=env;s=app.state.store;l=app.state.ledger;owner=u['account']['id']
+        if old_state=='zero':
+            with s.transaction() as db:db.execute('UPDATE grants SET token_quota=0 WHERE id=?',(g,))
+        else:
+            r=l.reserve(owner=owner,grant=g,key='old',body_hash='h',tokens=100000 if old_state!='busy' else 1)
+            if old_state=='exhausted':l.dispatch(r['id']);l.settle(r['id'],100000,0)
+            if old_state=='pending':l.pending(r['id'])
+        with s.transaction() as db:db.execute('UPDATE grants SET ends_at=2000 WHERE id=?',(g,))
+        new=s.grant('a@example.test','p','new')['id']
+        async with await client(app) as c:
+            t=(await c.post('/v1/task-tokens',headers={'Authorization':'Bearer '+u['access_token']},json={'model':'alias'})).json()['token']
+            assert app.state.gateway.authorize(t)['grant_id']==new
+            assert (await c.post('/v1/responses',headers={'Authorization':'Bearer '+t},json={'model':'alias'})).status_code==200
+    asyncio.run(go())
+
+@pytest.mark.parametrize('stream',[False,True])
+def test_encoded_upstream_rejected_without_read_or_decode(env,stream,monkeypatch):
+    import gzip
+    async def go():
+        app,u,g,calls=env
+        compressed=gzip.compress(b'x'*(3*1024*1024));assert len(compressed)<8192
+        class Unread(Bytes):
+            async def __aiter__(self):
+                pytest.fail('encoded stream must not be consumed')
+                yield b''
+        source=Unread([compressed])
+        original_decoder=httpx.Response._get_content_decoder
+        def decoder(response,*a,**k):
+            if response.headers.get('content-encoding')=='gzip':pytest.fail('decoder must not be called')
+            return original_decoder(response,*a,**k)
+        monkeypatch.setattr(httpx.Response,'_get_content_decoder',decoder)
+        def handler(r):
+            assert r.headers['accept-encoding']=='identity'
+            return httpx.Response(200,headers={'Content-Encoding':'gzip'},stream=source)
+        app.state.gateway.transport=httpx.MockTransport(handler)
+        async with await client(app) as c:
+            t=(await c.post('/v1/task-tokens',headers={'Authorization':'Bearer '+u['access_token']},json={'model':'alias'})).json()['token']
+            r=await c.post('/v1/responses',headers={'Authorization':'Bearer '+t},json={'model':'alias','stream':stream})
+            assert r.status_code==502 and r.json()['error']['code']=='invalid_upstream_response'
+            assert source.closed and app.state.ledger.snapshot(u['account']['id'])['pending_reconciliation']==1
+    asyncio.run(go())
+
+@pytest.mark.parametrize('terminal',[{'status':'failed'},{'status':'completed','error':{'message':'secret-key'}}])
+def test_contradictory_completed_terminal_is_sanitized(env,terminal):
+    async def go():
+        app,u,g,calls=env
+        wire=('data: '+json.dumps({'type':'response.completed','response':{**terminal,'usage':{'input_tokens':1,'output_tokens':1}}})+'\n\n').encode()
+        app.state.gateway.transport=httpx.MockTransport(lambda r:httpx.Response(200,stream=Bytes([wire])))
+        async with await client(app) as c:
+            t=(await c.post('/v1/task-tokens',headers={'Authorization':'Bearer '+u['access_token']},json={'model':'alias'})).json()['token']
+            r=await c.post('/v1/responses',headers={'Authorization':'Bearer '+t},json={'model':'alias','stream':True})
+            assert 'response.completed' not in r.text and 'secret-key' not in r.text and 'upstream_error' in r.text
+            assert app.state.ledger.snapshot(u['account']['id'])['pending_reconciliation']==1
+    asyncio.run(go())
+
+
+@pytest.mark.parametrize('condition,code',[('quota','quota_exceeded'),('busy','concurrency_exceeded')])
+def test_mint_no_eligible_grant_cannot_use_foreign_budget(env,condition,code):
+    async def go():
+        app,u,g,calls=env;s=app.state.store
+        s.register('foreign@example.test','long-password-123');s.grant('foreign@example.test','p','foreign')
+        if condition=='quota':
+            with s.transaction() as db:db.execute('UPDATE grants SET token_quota=0 WHERE id=?',(g,))
+        else:app.state.ledger.reserve(owner=u['account']['id'],grant=g,key='busy',body_hash='h',tokens=1)
+        async with await client(app) as c:
+            r=await c.post('/v1/task-tokens',headers={'Authorization':'Bearer '+u['access_token']},json={'model':'alias'})
+            assert r.status_code==429 and r.json()['error']['code']==code and calls==[]
+    asyncio.run(go())
+
+
+def test_mint_checks_actual_access_inside_its_transaction(env):
+    from easel_platform.auth import PlatformError
+    app,u,g,calls=env;s=app.state.store
+    s.authenticate(u['access_token']);s.refresh(u['refresh_token'])
+    with pytest.raises(PlatformError) as error:app.state.gateway.mint(u['access_token'],'alias')
+    assert error.value.code=='invalid_authentication'

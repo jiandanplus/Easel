@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from .auth import PlatformError
 from .store import Store
-from .gateway import Gateway, read_body
+from .gateway import Gateway, read_body, bearer
 
 MAX_BODY = 16384
 
@@ -108,7 +108,7 @@ def create_app(settings, *, transport=None, clock=None):
     async def task_tokens(request: Request):
         user=authenticated(request)
         data=await read_body(request,MAX_BODY)
-        return gateway.mint(user,data.get("model"))
+        return gateway.mint(bearer(request),data.get("model"))
 
     @app.post("/v1/responses")
     async def responses(request: Request):
