@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import plistlib
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -46,6 +47,29 @@ def verify_payload(root, records, *, bytecode=False):
                 raise ValueError('Payload link mismatch: '+relative)
         elif source.is_symlink() or digest(source) != (expected['sha256'] if isinstance(expected, dict) else expected):
             raise ValueError('Payload digest mismatch: '+relative)
+
+
+def copy_tracked_licenses(destination, tracked):
+    """Copy only authoritative tracked notices, rejecting links at every level."""
+    prefix = 'packaging/macos/licenses/'
+    sources = []
+    for relative in tracked:
+        if not relative.startswith(prefix):
+            continue
+        path = Path(relative)
+        if '..' in path.parts:
+            raise ValueError('Invalid tracked license path: '+relative)
+        source = ROOT/path
+        for parent in [source, *source.parents]:
+            if parent == ROOT:
+                break
+            mode = parent.lstat().st_mode
+            if stat.S_ISLNK(mode) or (parent == source and not stat.S_ISREG(mode)):
+                raise ValueError('Nonregular tracked license input: '+relative)
+        sources.append((source, destination/path.relative_to('packaging/macos/licenses')))
+    for source, target in sources:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
 
 
 def main():
@@ -88,7 +112,7 @@ def main():
     shutil.rmtree(site/'bin',ignore_errors=True)
     vendor = args.codex_root.resolve()
     shutil.copytree(vendor,resource/'native',symlinks=True)
-    shutil.copytree(inputs/'licenses',resource/'licenses')
+    copy_tracked_licenses(resource/'licenses', tracked)
     shutil.copy2(ROOT/'LICENSE',resource/'licenses/Easel-LICENSE')
     for name in ['core-requirements.txt','wheels-provenance.json','python-assets.json','python-runtime-files.json','codex-vendor-provenance.json','build-preparation-notes.json']:
         shutil.copy2(ROOT/'packaging/macos'/name,resource/name)

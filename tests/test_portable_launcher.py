@@ -163,3 +163,35 @@ def test_seed_existing_directory_is_preserved(tmp_path):
     (workspace/'skills/a').mkdir(parents=True)
     seed_workspace(resource, workspace)
     assert (workspace/'skills/a').is_dir()
+
+
+def test_builder_licenses_select_tracked_authority_only(tmp_path, monkeypatch):
+    from scripts.packaging import build_macos as builder
+    root = tmp_path/'repo'; authority = root/'packaging/macos/licenses'
+    authority.mkdir(parents=True)
+    (authority/'notice').write_text('authoritative')
+    (authority/'untracked-secret').write_text('secret')
+    prepared = root/'outputs/licenses'; prepared.mkdir(parents=True)
+    (prepared/'notice').write_text('mutated')
+    (prepared/'extra.pth').write_text('malicious')
+    (prepared/'linked-secret').symlink_to(authority/'untracked-secret')
+    monkeypatch.setattr(builder, 'ROOT', root)
+    target = tmp_path/'bundled'
+    builder.copy_tracked_licenses(target, ['packaging/macos/licenses/notice'])
+    assert {p.name for p in target.iterdir()} == {'notice'}
+    assert (target/'notice').read_text() == 'authoritative'
+
+
+@pytest.mark.parametrize('kind', ['file-link', 'directory-link', 'directory'])
+def test_builder_rejects_nonregular_tracked_license(tmp_path, monkeypatch, kind):
+    from scripts.packaging import build_macos as builder
+    root = tmp_path/'repo'; authority = root/'packaging/macos/licenses'
+    authority.mkdir(parents=True)
+    outside = tmp_path/'outside'; outside.mkdir(); (outside/'notice').write_text('secret')
+    if kind == 'file-link': (authority/'notice').symlink_to(outside/'notice')
+    elif kind == 'directory-link':
+        authority.rmdir(); authority.symlink_to(outside, target_is_directory=True)
+    else: (authority/'notice').mkdir()
+    monkeypatch.setattr(builder, 'ROOT', root)
+    with pytest.raises(ValueError):
+        builder.copy_tracked_licenses(tmp_path/'bundled', ['packaging/macos/licenses/notice'])
