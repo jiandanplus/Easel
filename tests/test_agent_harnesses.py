@@ -1149,3 +1149,45 @@ def test_profile_background_worker_retains_submitted_context(sandbox, monkeypatc
         assert status["state"] == "done" and status["log"] == "enhanced"
         assert not web._BG_TASKS and not web._HARNESS_TASKS
     asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("runtime", ["api", "openclaw"])
+@pytest.mark.parametrize("index_exists", [False, True])
+def test_failed_first_turn_deletion_clears_only_owned_easel_metadata(sandbox, monkeypatch, tmp_path, runtime, index_exists):
+    state = tmp_path / "external-state"
+    monkeypatch.setattr(web, "_oc_state_dir", lambda: state)
+    store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {"runtime": runtime})
+    native = state / "agents" / "main" / "sessions" / "external-native.jsonl"
+    native.parent.mkdir(parents=True)
+    native.write_text("preserve native transcript")
+    if index_exists:
+        store.write_json(native.parent / "sessions.json", {"agent:main:other": {"sessionId": "external-native"}})
+    store.bind(web.SESSIONS_DIR, "failed-first", runtime)
+    web._save_turn("web:failed-first", "done", "failed", {"stop_reason": "error"})
+    # No upstream transcript or native session index was created by the failed turn.
+    result = sandbox.delete("/api/session/failed-first").json()
+    assert result["deleted"] is True
+    assert not store.binding(web.SESSIONS_DIR, "failed-first")
+    assert not web._turn_file("web:failed-first").exists()
+    assert native.read_text() == "preserve native transcript"
+
+
+def test_deletion_does_not_remove_unowned_last_turn(sandbox, monkeypatch, tmp_path):
+    monkeypatch.setattr(web, "_oc_state_dir", lambda: tmp_path / "external-state")
+    web._save_turn("web:unowned", "done", "preserve")
+    before = web._turn_file("web:unowned").read_bytes()
+    result = sandbox.delete("/api/session/unowned").json()
+    assert result["deleted"] is False
+    assert web._turn_file("web:unowned").read_bytes() == before
+
+
+def test_native_deletion_preserves_external_transcript_policy(sandbox, tmp_path):
+    native = tmp_path / "native-transcript.jsonl"
+    native.write_text("native history remains")
+    store.bind(web.SESSIONS_DIR, "native-delete", "codex", "native-id")
+    web._save_turn("web:native-delete", "done", "answer")
+    result = sandbox.delete("/api/session/native-delete").json()
+    assert result == {"deleted": True, "nativeHistoryDeleted": False}
+    assert native.read_text() == "native history remains"
+    assert not store.binding(web.SESSIONS_DIR, "native-delete")
+    assert not web._turn_file("web:native-delete").exists()

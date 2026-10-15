@@ -5264,6 +5264,15 @@ async def api_delete_session(session_key: str):
         harness_store.binding_path(SESSIONS_DIR, session_key).unlink(missing_ok=True)
         _turn_file(f"web:{session_key}").unlink(missing_ok=True)
         return {"deleted": True, "nativeHistoryDeleted": False}
+
+    def missing_history(reason):
+        # A failed first turn can own Easel state before native history exists.
+        if record:
+            harness_store.binding_path(SESSIONS_DIR, session_key).unlink(missing_ok=True)
+            _turn_file(f"web:{session_key}").unlink(missing_ok=True)
+            return {"deleted": True, "nativeHistoryDeleted": False}
+        return {"deleted": False, "reason": reason}
+
     direct_history = history_path(SESSIONS_DIR, session_key)
     if direct_history.is_file():
         if session_key in _RUNNING_CHAT:
@@ -5273,10 +5282,10 @@ async def api_delete_session(session_key: str):
         _turn_file(f"web:{session_key}").unlink(missing_ok=True)
         return {"deleted": True}
     if _direct_api_enabled():
-        return {"deleted": False, "reason": "session not found"}
+        return missing_history("session not found")
     sessions_file = _oc_state_dir() / 'agents' / 'main' / 'sessions' / 'sessions.json'
     if not sessions_file.is_file():
-        return {'deleted': False, 'reason': 'sessions file not found'}
+        return missing_history("sessions file not found")
     data = json.loads(sessions_file.read_text(encoding="utf-8"))
     full_key = f'agent:main:{session_key}' if not session_key.startswith('agent:') else session_key
     for key in (full_key, session_key):
@@ -5286,7 +5295,7 @@ async def api_delete_session(session_key: str):
             harness_store.binding_path(SESSIONS_DIR, session_key).unlink(missing_ok=True)
             _turn_file(f"web:{session_key}").unlink(missing_ok=True)
             return {'deleted': True}
-    return {'deleted': False, 'reason': 'session not found'}
+    return missing_history("session not found")
 
 
 TREND_SOURCES: dict[str, tuple[str, str | None]] = {
