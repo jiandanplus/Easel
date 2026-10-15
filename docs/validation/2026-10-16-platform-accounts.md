@@ -34,7 +34,7 @@ Python 网络连接有 loopback 限制；原生使用指定127.0.0.1 provider、
 
 ## 回归命令与结果
 
-最终后端全量1541通过／6跳过／1项既有warning（67.18秒）；所有 Python 单元测试均使用 `scripts/validation/run_isolated_tests.py` 的临时 HOME／工作区和跟踪的公开 seed，不调用真实模型、原生账号或现有 profile。
+首次交付后端全量1541通过／6跳过／1项既有warning（67.18秒）；所有 Python 单元测试均使用 `scripts/validation/run_isolated_tests.py` 的临时 HOME／工作区和跟踪的公开 seed，不调用真实模型、原生账号或现有 profile。
 
 ```sh
 rtk proxy .venv/bin/python scripts/validation/run_isolated_tests.py --pytest-path /opt/anaconda3/lib/python3.12/site-packages tests -q --tb=short
@@ -45,10 +45,43 @@ rtk proxy ruff check scripts/validation/verify_platform.py --output-format conci
 rtk proxy git diff --check
 ```
 
-前端130／130通过；lint退出0，既有 linkifyOutputs.ts:27 的 no-useless-escape warning仍存在；构建通过，既有大于500kB chunk提示仍存在。首次后端全量1539通过／6跳过／2失败，失败为 CLI新增 proxy_headers=False 期望未更新，以及队列取消测试假设单个事件循环 tick 足够，而接受任务已异步offload；分别更新显式参数期望及等待真实排队 activity 的 Event，不修改产品逻辑。相应45项回归通过。既有 doctor.py:102 的 python_multipart PendingDeprecationWarning保留。
+首次交付前端130／130通过；lint退出0，既有 linkifyOutputs.ts:27 的 no-useless-escape warning仍存在；构建通过，既有大于500kB chunk提示仍存在。首次后端全量1539通过／6跳过／2失败，失败为 CLI新增 proxy_headers=False 期望未更新，以及队列取消测试假设单个事件循环 tick 足够，而接受任务已异步offload；分别更新显式参数期望及等待真实排队 activity 的 Event，不修改产品逻辑。相应45项回归通过。既有 doctor.py:102 的 python_multipart PendingDeprecationWarning保留。
 
 工具版本：Python3.12；Node24.14.0；Codex0.146.0；Vite8.1.4；FastAPI0.143.1、HTTPX0.28.1、Uvicorn0.54.0。新前端文件提交后重新构建，使 Vite源码回执包括它们。
 
 ## 后续边界
 
 未验收真实上游模型授权／视频图片产物、正式支付、公开托管／安全运营、邮箱验证及恢复、云端任务执行、Windows账号客户端或重新打包的macOS桌面包。此前发行包仍是历史产物，不能据本次源码验证宣称已有新账号功能。启动、测试权益和本机复验步骤见 [平台说明](../platform/README.md)。
+
+
+## 最终复核修订：普通原始凭证输出边界
+
+最终复核发现：同一 OS 用户下，原生工具可以普通 `cat`／`cp` 读取规定位置 `outputs/_harness/platform-session.json`（0600）；权限位不能隔离原生工具与本机桥。此修订保留该位置与信任关系，使用有界、仅进程内的敏感值上下文，在会话读写、刷新旋转、退出与原生准备时保留已观察的 access／refresh／task bearer 及既有 child credential。账号凭证不进入子进程环境、argv、RunRequest 新字段或公开 metadata。Codex 与 ACP/OpenCode 共用增量遮蔽，覆盖 token／thinking 分片、权限问题及协议／完成错误；当前 task bearer 遮蔽继续保留。
+
+公开 `/api/output`、`/api/media`、项目 `.easel.json` 展示与 ZIP 索引使用同一安全快照：macOS／Linux 逐组件用目录描述符拒绝符号链接／特殊文件；不支持目录描述符的平台使用普通文件兼容分支，对父目录、文件的 lstat／fstat 身份和 reparse 标记进行读前后验证，无法验证则拒绝。两条路径均固定已打开的普通文件，检查读前后修改状态，复制到内存最多1MiB、超出转私有0600临时文件的 spool，扫描全部原始字节后才返回；服务始终读取该已扫描快照。原文件后续替换不改变响应。先扫描完整文件再处理 Range，支持单区间／最多16个多区间；正常完成、发送失败、断线取消、扫描中取消均关闭快照。含已知原始凭证、敏感文件名／别名或普通凭证 JSON 值的产物拒绝，清洁文本／媒体／Range 下载保持可用。文本 JSON 接口限8MiB，较大清洁文件仍可用媒体下载接口；metadata JSON限64KiB。
+
+普通 ZIP／Office 压缩诊断也检查解压成员，不将“压缩复制的会话文件”当作任意编码豁免：中央目录最多2MiB、1000个成员、解压合计64MiB，不解压落盘。加密／ZIP64／嵌套 ZIP／不安全或超限压缩包拒绝，不回退到未检查下载。普通媒体不因固定扫描内存上限而设文件大小上限，但每次 Range 请求会先复制、扫描完整文件，增加磁盘 I/O 与首字节等待；大文件需足够临时磁盘空间。
+
+敏感上下文每工作区最多256个值、单值最多64KiB，全进程最多512个根与8MiB敏感值原始字节；旋转／退出不驱逐旧值，达到上限时明确失败并要求重启。上下文不写入日志或持久化历史；重启后当前会话重新读取，普通 access_token／refresh_token JSON 复制仍按凭证值识别，已撤销旧凭证的纯 token 复制若未被新进程观察，则不保证识别。操作系统同用户任意读取、模型输入中私有文件读取、任意编码／转换／隐写泄漏均不属于此防护声明；此实现不是原生 OS 沙箱或任意同用户数据外传防护。
+
+同时修复订阅目录 pending 后切回自定义服务导致原生“拉取模型”卡住：订阅加载状态独立。账号权益、目录、用量与设备独立读取；未加载／失败的权益显示未知与重试提示，只有成功读取的空列表显示“当前无测试权益”，不会因目录或用量失败伪造零授权。
+
+本轮没有重复真实原生模型验收或访问现有7860；新增验证均使用隔离测试运行器的临时 HOME／工作区与合成凭证、mock RPC 及实际本机 Web 路径。该范围与上文历史 native／浏览器证据分别记录。
+
+
+平台兼容分支在 macOS 通过合成 capability 切换验证普通匿名产物与 Range 保持可用，符号链接／reparse 标记／打开时文件替换被拒绝；未在真实 Windows 主机执行此验证，不新增 Windows 账号支持声明。自定义匿名原生运行不构造平台 HTTP 客户端，不创建账号文件，也不需要 fcntl。临时 spool 目录若配置在公开 outputs 内则明确拒绝，避免把扫描中的私有快照放入公开目录。
+
+
+本轮最终检查：后端全量 **1567通过／6跳过／1项既有 warning，67.99秒**，对应主体实现与26项新增隐私检查；其后仅增加兼容 capability 分支与公开临时目录防护，重新执行完整覆盖集 **289通过／1项同一 warning，5.36秒**（含最终30项隐私检查）。未因这两项有界后续修订重复后端全量。完整前端 Node **134通过／0失败，634ms**；lint／TypeScript＋Vite build退出0，仍只有前述既有 warning。新隐私模块、session、共享redactor和隐私测试的 ruff通过，git diff --check通过，12项外观文件 SHA256仍与冻结清单逐项一致。
+
+本轮精确覆盖命令（所有 Python 均通过隔离运行器）：
+
+```sh
+rtk proxy .venv/bin/python scripts/validation/run_isolated_tests.py --pytest-path /opt/anaconda3/lib/python3.12/site-packages tests/test_platform_client.py tests/test_subscription_execution.py tests/test_agent_harnesses.py tests/test_codex_completion_cleanup.py tests/test_bundled_provider.py tests/test_direct_api.py tests/test_output_privacy.py tests/test_output_paths.py tests/test_output_delete_protect.py tests/test_artifact_archive.py -q --tb=short
+rtk proxy .venv/bin/python scripts/validation/run_isolated_tests.py --pytest-path /opt/anaconda3/lib/python3.12/site-packages tests -q --tb=short
+rtk proxy node --test tests/frontend/*.test.mjs
+rtk proxy npm --prefix web/frontend run lint
+rtk proxy npm --prefix web/frontend run build
+rtk proxy ruff check easel/platform/privacy.py easel/platform/session.py easel/harnesses/secrets.py tests/test_output_privacy.py --output-format concise
+rtk proxy git diff --check
+```

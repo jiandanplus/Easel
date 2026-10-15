@@ -87,6 +87,8 @@ class SessionStore:
                     for k in ("expires_at", "refresh_expires_at")
                 ):
                     raise ValueError
+            from .privacy import remember_auth
+            remember_auth(self.root, value)
             return value
         except (OSError, ValueError, TypeError) as error:
             raise HarnessError(
@@ -95,6 +97,11 @@ class SessionStore:
 
     def write(self, data):
         self.check()
+        from .privacy import remember_auth
+        # Remember both sides before atomic replacement/logout, including callers
+        # that did not read this store themselves. No secret enters child state.
+        self.read()
+        remember_auth(self.root, data)
         descriptor, name = tempfile.mkstemp(
             dir=self.directory, prefix="platform-session-", suffix=".tmp"
         )

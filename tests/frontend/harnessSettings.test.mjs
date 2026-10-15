@@ -40,7 +40,7 @@ test('sidebar keeps its settings button unwrapped beside a truncated status', ()
 });
 
 function setup({ runtime = 'openclaw', locked = false, installed = true, saveError = '', modelError = '',
-  settingsErrors = [], origin, version, source = 'custom', gatewayReady = true } = {}) {
+  settingsErrors = [], origin, version, source = 'custom', gatewayReady = true, catalogPromise } = {}) {
   const state = [];
   let cursor = 0;
   const effects = [];
@@ -68,7 +68,7 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
       createElement: (type, props, ...children) => ({ type, props: props || {}, children: children.flat() }),
     },
     SettingsSelect: 'settings-select',
-    platformModels: async () => ({models:[{id:'platform-alias'}],ready:gatewayReady,reason:gatewayReady?'':'gateway_not_configured'}),
+    platformModels: async () => catalogPromise || ({models:[{id:'platform-alias'}],ready:gatewayReady,reason:gatewayReady?'':'gateway_not_configured'}),
     BundledProviderSettings: 'bundled-provider',
     useState: initial => {
       const index = cursor++;
@@ -377,4 +377,16 @@ test('subscription preview is explicit Codex/local only and restores independent
 test('subscription unavailable gateway shows human reason and source-aware authentication', async()=>{
  const view=setup({runtime:'codex',source:'subscription',gatewayReady:false});view.render();await settle();view.render();await settle();
  const value=text(view.render());assert.match(value,/平台模型网关尚未配置/);assert.doesNotMatch(value,/gateway_not_configured|外部引擎认证沿用/);assert.match(value,/平台账号/);
+});
+
+
+test('leaving pending subscription catalog restores custom native model loading', async () => {
+ let resolve; const catalogPromise = new Promise(done => { resolve = done; });
+ const view = setup({runtime:'codex',catalogPromise}); view.render(); await settle();
+ nodes(view.render(),'button').find(n=>text(n)==='订阅服务').props.onClick(); view.render();
+ nodes(view.render(),'button').find(n=>text(n)==='自定义服务').props.onClick(); view.render();
+ assert.equal(nodes(view.render(),'button').find(n=>text(n)==='拉取模型')?.props.disabled,false);
+ resolve({models:[],ready:true}); await settle();
+ nodes(view.render(),'button').find(n=>text(n)==='拉取模型').props.onClick(); await settle();
+ assert.deepEqual(view.modelRequests,['codex']);
 });

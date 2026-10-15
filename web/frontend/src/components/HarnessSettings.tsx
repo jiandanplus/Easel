@@ -13,6 +13,7 @@ export default function HarnessSettings({ onChange, onSelect }: {
   const [model, setModel] = useState('');
   const [source, setSource] = useState<'custom' | 'subscription'>('custom');
   const [subscriptionModel, setSubscriptionModel] = useState('');
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [subscriptionModels, setSubscriptionModels] = useState<{ id: string }[]>([]);
   const [sandbox, setSandbox] = useState('workspace-write');
   const [autoApprove, setAutoApprove] = useState(false);
@@ -49,15 +50,15 @@ export default function HarnessSettings({ onChange, onSelect }: {
   }, [onChange, onSelect, refresh]);
 
   useEffect(() => {
-    if (source !== 'subscription') return;
+    if (source !== 'subscription') { setSubscriptionLoading(false); return; }
     let alive = true;
-    setModelLoading(true); setModelNote(''); setSubscriptionModels([]);
+    setSubscriptionLoading(true); setModelNote(''); setSubscriptionModels([]);
     platformModels().then(value => {
       if (!alive) return;
       setSubscriptionModels(value.models);
       if (!value.ready || !value.models.length) setModelNote(value.reason === 'gateway_not_configured' ? '平台模型网关尚未配置，请联系运营者。' : '当前无可用订阅模型，请在账号与订阅中检查测试权益。');
     }).catch(error => { if (alive) setModelNote(error instanceof Error ? error.message : '读取订阅模型失败'); })
-      .finally(() => { if (alive) setModelLoading(false); });
+      .finally(() => { if (alive) setSubscriptionLoading(false); });
     return () => { alive = false; };
   }, [source, refresh]);
 
@@ -158,7 +159,7 @@ export default function HarnessSettings({ onChange, onSelect }: {
         </div>
         <p className="desc">自定义服务无需 Easel 账号；订阅服务当前仅支持 Codex。切换服务来源不会自动切换执行引擎，请明确选择 Codex 并保存。云端执行与订阅媒体通道暂未开放。</p>
         {source === 'subscription' && <>
-          <SettingsSelect label="订阅模型" value={subscriptionModel} disabled={modelLoading || busy || settings?.locked}
+          <SettingsSelect label="订阅模型" value={subscriptionModel} disabled={subscriptionLoading || busy || settings?.locked}
             options={[{ value: '', label: '请选择服务端授权模型' }, ...subscriptionModels.map(item => ({ value: item.id, label: item.id }))]} onChange={setSubscriptionModel} />
           {runtime !== 'codex' && <p role="status">请选择 Codex；其它引擎暂不支持订阅服务。</p>}
           {modelNote && <p role="status">{modelNote}</p>}

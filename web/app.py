@@ -1090,6 +1090,12 @@ def _file_meta(f: Path, rel: str) -> dict:
 def _private_output_path(path: Path) -> bool:
     """Keep managed runtime credentials out of generic output browsing/downloads."""
     root = OUTPUTS_DIR.resolve()
+    from easel.platform.privacy import sensitive_values
+    try:
+        if any(value in str(path) for value in sensitive_values(root.parent)):
+            return True
+    except HarnessError:
+        raise HTTPException(403, '敏感输出保护不可用，请检查本地账号状态') from None
     for candidate in (path.absolute(), path.resolve()):
         try:
             relative = candidate.relative_to(root)
@@ -1127,7 +1133,12 @@ def _read_project_meta(proj: Path) -> dict:
     if _private_output_path(mf) or not mf.is_file():
         return {}
     try:
-        data = json.loads(mf.read_text(encoding="utf-8"))
+        from easel.platform.privacy import safe_snapshot
+        with safe_snapshot(mf, OUTPUTS_DIR) as snapshot:
+            raw = snapshot.read(65537)
+            if len(raw) > 65536:
+                return {}
+            data = json.loads(raw)
     except Exception:
         return {}
     meta = {k: data.get(k) for k in
@@ -4260,7 +4271,8 @@ def api_artifact_archive(path: str):
                   '.ico', '.html', '.htm', '.mp4', '.webm', '.mov', '.m4v',
                   '.mp3', '.wav', '.ogg', '.m4a', '.flac', '.pdf'}
     try:
-        with zipfile.ZipFile(full) as archive:
+        from easel.platform.privacy import safe_snapshot
+        with safe_snapshot(full, OUTPUTS_DIR) as snapshot, zipfile.ZipFile(snapshot) as archive:
             entries = archive.infolist()
             if len(entries) > 1000:
                 raise HTTPException(400, '压缩包文件过多，暂不自动预览')
@@ -4292,24 +4304,39 @@ def api_artifact_archive(path: str):
 async def api_output(path: str):
     """文本产物内容。二进制/媒体返回 isBinary=true，前端改用 /api/media。"""
     full = _safe_output_path(path)
-    kind = _file_kind(full.name)
-    if kind not in ("text",):
-        return {"path": path, "content": "", "kind": kind, "isBinary": True}
-    try:
-        return {"path": path, "content": full.read_text(encoding="utf-8"), "kind": "text", "isBinary": False}
-    except UnicodeDecodeError:
-        return {"path": path, "content": "", "kind": "binary", "isBinary": True}
+    from easel.platform.privacy import safe_snapshot
+    with safe_snapshot(full, OUTPUTS_DIR) as snapshot:
+        kind = _file_kind(full.name)
+        if kind != "text":
+            return {"path": path, "content": "", "kind": kind, "isBinary": True}
+        # Text responses must fit a bounded browser JSON allocation; media/download
+        # continues to stream arbitrarily large clean files with bounded memory.
+        if snapshot.seek(0, 2) > 8 * 1024 * 1024:
+            raise HTTPException(413, '文本产物过大，请下载查看')
+        snapshot.seek(0)
+        try:
+            return {"path": path, "content": snapshot.read().decode("utf-8"), "kind": "text", "isBinary": False}
+        except UnicodeDecodeError:
+            return {"path": path, "content": "", "kind": "binary", "isBinary": True}
 
 
 @app.get("/api/media/{path:path}")
-async def api_media(path: str):
-    """原样输出媒体文件（图片/视频/音频/HTML/PDF），供 <img>/<video>/iframe/下载。"""
+async def api_media(path: str, request: Request):
+    """Serve a scanned immutable snapshot, including Range requests."""
+    from easel.platform.privacy import safe_snapshot, snapshot_response
     full = _safe_output_path(path)
-    # HTML 预览会在本地被就地重新生成（如 gzh-design 重排/内联图片），必须禁缓存，
-    # 否则浏览器/代理按启发式缓存旧版 → 内容库 iframe 打开的是过期预览（复制粘贴带旧图 URL）。
-    headers = ({"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache"}
-               if full.suffix.lower() in {".html", ".htm"} else {})
-    return FileResponse(full, headers=headers)
+    scan = asyncio.create_task(asyncio.to_thread(safe_snapshot, full, OUTPUTS_DIR))
+    try:
+        snapshot = await asyncio.shield(scan)
+    except asyncio.CancelledError:
+        def close_scanned(task):
+            try:
+                task.result().close()
+            except Exception:
+                pass  # retrieve failed scan too; it already closed its own spool
+        scan.add_done_callback(close_scanned)
+        raise
+    return snapshot_response(snapshot, full.name, request.headers.get("range", ""))
 
 
 # 系统数据目录/文件——不允许从内容库删除（删了会丢登录态/日历/发布记录）

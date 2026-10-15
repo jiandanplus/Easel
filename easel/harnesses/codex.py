@@ -11,24 +11,22 @@ from .runtime import prepare_codex
 from .permissions import can_auto_approve
 from .rpc import connection
 from .workspace import harness_instructions
+from .secrets import private_run
 
 
 class CodexAdapter:
     descriptor = Descriptor("codex", "Codex", "app-server", "npm install -g @openai/codex；codex login")
 
+    @private_run
     async def run(self, request: RunRequest, emit, ask, bind):
         if request.sandbox not in ("read-only", "workspace-write"):
             raise HarnessError("Codex 只允许只读或工作区写入权限")
         command = list(request.command) if request.command else base_command("codex") + ["app-server"]
+        from easel.platform.privacy import remember
         request, command = await asyncio.to_thread(prepare_codex, request, command)
-        from .secrets import StreamRedactor
-        redactor = StreamRedactor([value for key, value in request.env.items()
-                                  if any(marker in key.upper() for marker in ("KEY", "TOKEN", "SECRET", "PASSWORD"))], emit)
-        emit = redactor.emit
-        scrub = redactor.text
-        original_ask = ask
-        async def ask(questions):
-            return await original_ask(redactor.value(questions))
+        # Newly minted task credentials join the same transient output context.
+        remember(request.cwd, [value for key, value in request.env.items()
+                               if any(marker in key.upper() for marker in ("KEY", "TOKEN", "SECRET", "PASSWORD"))])
         completion = asyncio.get_running_loop().create_future()
         thread_id = request.native_id
         turn_id = ""
@@ -54,15 +52,13 @@ class CodexAdapter:
                 turn = params.get("turn") or {}
                 if turn.get("id") != turn_id or completion.done():
                     return
-                redactor.flush()
                 if turn.get("status") == "completed":
                     completion.set_result(None)
                 else:
                     error = turn.get("error") or {}
                     completion.set_exception(HarnessError(
-                        scrub(error.get("message") or f"Codex 本轮未完成：{turn.get('status')}")))
+                        error.get("message") or f"Codex 本轮未完成：{turn.get('status')}"))
             elif method == "error" and not params.get("willRetry", False):
-                redactor.flush()
                 if not completion.done():
                     completion.set_exception(HarnessError("Codex 执行失败，请检查原生登录与模型配置"))
 
@@ -142,7 +138,6 @@ class CodexAdapter:
                     pass
                 raise
             finally:
-                redactor.flush()
                 # Finalize before connection cleanup can deliver a late notification.
                 if not completion.done():
                     completion.cancel()

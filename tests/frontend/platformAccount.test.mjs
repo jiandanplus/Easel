@@ -12,7 +12,7 @@ const {outputText}=ts.transpileModule(fn.getText(parsed).replace('export default
 const settle=()=>new Promise(r=>setImmediate(r));
 function nodes(t,type){return !t||typeof t!=='object'?[]:[...(t.type===type?[t]:[]),...(t.children||[]).flatMap(n=>nodes(n,type))]}
 function text(t){return typeof t==='string'||typeof t==='number'?String(t):!t||typeof t!=='object'?'':(t.children||[]).map(text).join('')}
-function setup({authenticated=false,error='',errorCode='',grants=[],stale=false}={}){
+function setup({authenticated=false,error='',errorCode='',grants=[],stale=false,plansError=false,grantsError=false,usageError=false,entitlementsPromise}={}){
  const state=[];let cursor=0;const effects=[];let ec=0;const submitted=[];let logouts=0;
  const status={configured:true,url:'http://127.0.0.1:8790',authenticated,session_id:stale?'revoked-local-session':'',account:authenticated?{id:'a',email:'test@example.invalid',email_verified:false}:null};
  const component=runInNewContext(outputText,{Error,Date,Promise,React:{Fragment:'fragment',createElement:(type,props,...children)=>({type,props:props||{},children:children.flat()})},
@@ -21,8 +21,8 @@ function setup({authenticated=false,error='',errorCode='',grants=[],stale=false}
  platformStatus:async()=>status,platformConfigure:async()=>status,
  platformAuthenticate:async(mode,value)=>{submitted.push({mode,...value});if(error)throw Object.assign(new Error(error),{code:errorCode});return {...status,authenticated:true,account:{email:value.email}}},
  platformLogout:async()=>{logouts++;status.authenticated=false;status.session_id='';return status},platformRevoke:async()=>({ok:true}),
- platformPlans:async()=>({plans:[{id:'test',name:'Synthetic plan',tokens:8000,days:1,concurrency:1,models:['alias'],test_only:true}]}),
- platformEntitlements:async()=>({entitlements:grants}),platformUsage:async()=>({used_tokens:72,reserved_tokens:25,remaining_tokens:99999,pending_reconciliation:1}),platformDevices:async()=>({sessions:[]})});
+ platformPlans:async()=>{if(plansError)throw new Error('catalog unavailable');return {plans:[{id:'test',name:'Synthetic plan',tokens:8000,days:1,concurrency:1,models:['alias'],test_only:true}]};},
+ platformEntitlements:async()=>{if(entitlementsPromise)return entitlementsPromise;if(grantsError)throw new Error('grants unavailable');return {entitlements:grants}},platformUsage:async()=>{if(usageError)throw new Error('usage unavailable');return {used_tokens:72,reserved_tokens:25,remaining_tokens:99999,pending_reconciliation:1}},platformDevices:async()=>({sessions:[]})});
  return {submitted,get logouts(){return logouts},render(){cursor=0;ec=0;return component()}};
 }
 test('accessible register/login clears password even on safe backend error',async()=>{
@@ -75,4 +75,26 @@ test('settings account navigation mounts account panel without changing model se
  assert.equal(nodes(render(),'platform-account').length,1);
  nodes(render(),'button').find(n=>text(n).startsWith('模型配置')).props.onClick();
  assert.equal(nodes(render(),'platform-account').length,0);
+});
+
+
+test('failed entitlements remain unknown rather than confirmed zero or no grant',async()=>{
+ const view=setup({authenticated:true,grantsError:true});view.render();await settle();const value=text(view.render());
+ assert.doesNotMatch(value,/当前无测试权益|当前可用 tokens0/);assert.match(value,/权益.*(未知|无法|失败)/);assert.match(value,/累计已用 tokens72/);
+});
+test('catalog or usage failure does not suppress successful entitlement reads',async()=>{
+ const now=Date.now()/1000;
+ for(const failure of [{plansError:true},{usageError:true}]){
+  const view=setup({authenticated:true,...failure,grants:[{id:'grant',plan_id:'test',status:'active',starts_at:now-1,ends_at:now+100,remaining_tokens:321,used_tokens:0,reserved_tokens:0,models:['alias']}]});
+  view.render();await settle();assert.match(text(view.render()),/当前可用 tokens321/);assert.doesNotMatch(text(view.render()),/当前无测试权益/);
+ }
+});
+
+
+test('pending entitlements stay unknown until successful confirmed empty result',async()=>{
+ let resolve;const entitlementsPromise=new Promise(done=>{resolve=done});
+ const view=setup({authenticated:true,entitlementsPromise});view.render();await settle();
+ let value=text(view.render());assert.match(value,/当前可用 tokens未知/);assert.doesNotMatch(value,/当前无测试权益/);
+ resolve({entitlements:[]});await settle();value=text(view.render());
+ assert.match(value,/当前可用 tokens0/);assert.match(value,/当前无测试权益/);
 });
