@@ -32,7 +32,13 @@ export interface StatusResponse {
   personas: PersonaItem[];
 }
 
-export interface HarnessSettingsResponse {
+export type ServiceSource = 'custom' | 'subscription';
+export type ExecutionTarget = 'local' | 'cloud';
+export interface ServiceRoute { service_source: ServiceSource; execution_target: ExecutionTarget }
+export interface TaskRoute extends ServiceRoute { runtime: string; model: string; model_resolution: 'explicit' | 'native-default' | 'gateway-agent-default'; chat: boolean; tools: boolean }
+
+export interface HarnessSettingsResponse extends ServiceRoute {
+  availability: (ServiceRoute & { available: boolean; reason: string })[];
   runtime: string;
   models: Record<string, string>;
   sandbox: string;
@@ -55,11 +61,11 @@ export function fetchHarnessModels(runtime: string): Promise<{ runtime: string; 
   return request(`/api/settings/harness/models/${encodeURIComponent(runtime)}`, { method: 'POST' });
 }
 
-export function saveHarnessSettings(runtime: string, model: string, sandbox: string, codexAutoApprove?: boolean): Promise<HarnessSettingsResponse> {
+export function saveHarnessSettings(runtime: string, model: string, sandbox: string, codexAutoApprove?: boolean, route?: Partial<ServiceRoute>): Promise<HarnessSettingsResponse> {
   return request('/api/settings/harness', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ runtime, model, sandbox, codex_auto_approve: codexAutoApprove }),
+    body: JSON.stringify({ runtime, model, sandbox, codex_auto_approve: codexAutoApprove, ...route }),
   });
 }
 
@@ -602,6 +608,7 @@ export function streamChat(
   attachments: UploadedFile[] = [],
   onQuestion?: (q: ChatQuestion) => void,
   onHeartbeat?: (note: string) => void,
+  route?: Partial<ServiceRoute>,
 ): AbortController {
   const controller = new AbortController();
   let lastEventId = 0;
@@ -695,7 +702,7 @@ export function streamChat(
         const res = first
           ? await fetch(`${BASE}/api/chat/stream`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ message, persona: persona || undefined, sessionId, turnId, attachments }),
+              body: JSON.stringify({ message, persona: persona || undefined, sessionId, turnId, attachments, ...route }),
               signal: controller.signal,
             })
           : await fetch(`${BASE}/api/chat/jobs/${encodeURIComponent(turnId || '')}/stream?after=${lastEventId}`, {
@@ -730,7 +737,7 @@ export function streamChat(
 }
 
 /** 取某会话最近一轮的完整结果（SSE 断线后据此取回）。 */
-export function fetchLastTurn(sessionId: string, turnId?: string): Promise<{ status: string; text: string; turn_id?: string }> {
+export function fetchLastTurn(sessionId: string, turnId?: string): Promise<{ status: string; text: string; turn_id?: string; route?: TaskRoute }> {
   const query = turnId ? `?turn_id=${encodeURIComponent(turnId)}` : '';
   return request(`/api/chat/last/${encodeURIComponent(sessionId)}${query}`);
 }

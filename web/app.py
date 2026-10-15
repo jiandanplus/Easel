@@ -53,6 +53,7 @@ from easel.direct_api import (DirectAPIError, SYSTEM_PROMPT, api_config, api_mod
 from easel import harnesses
 from easel.harnesses import store as harness_store
 from easel.harnesses.base import HarnessError, RunRequest
+from easel.service_contracts import ServiceRoute, TaskContext, availability
 try:
     from easel.gateway_questions import (
         GatewayClient, GatewayQuestionError, GatewayUnsupportedError,
@@ -965,11 +966,13 @@ def _agent_thinking_level() -> str:
     return THINKING_LEVEL
 
 
-def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | None = None) -> str:
-    if _direct_api_enabled():
+def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | None = None,
+                   context: TaskContext | None = None) -> str:
+    direct = context.runtime == "api" if context else _direct_api_enabled()
+    if direct:
         raise HTTPException(409, "API 直连模式支持聊天；此操作需要具备文件和技能执行工具的 Agent 运行时")
     sk = session_id or f'web-{int(time.time() * 1000)}'
-    runtime = _chat_backend(session_id)
+    runtime = context.runtime if context else _chat_backend(session_id)
     if runtime not in ("api", "openclaw"):
         async def execute():
             request = ChatRequest(message=msg, sessionId=sk)
@@ -1711,6 +1714,8 @@ class ChatTransportRequest(BaseModel):
 
 
 class HarnessSettingsRequest(BaseModel):
+    service_source: str | None = None
+    execution_target: str | None = None
     runtime: str
     model: str = Field(default="", max_length=240)
     sandbox: str = "workspace-write"
@@ -1721,12 +1726,19 @@ class HarnessSettingsRequest(BaseModel):
 async def api_harness_settings():
     config = _harness_settings()
     agents = await asyncio.to_thread(lambda: [harnesses.describe(runtime) for runtime in harness_store.IDS])
-    return {**config, "agents": agents,
+    return {**config, "agents": agents, "availability": availability(),
             "locked": "EASEL_AGENT_RUNTIME" in read_settings(ENV_FILE)}
 
 
 @app.post("/api/settings/harness")
 async def api_harness_settings_save(req: HarnessSettingsRequest):
+    config = _harness_settings()
+    try:
+        route = ServiceRoute(req.service_source if "service_source" in req.model_fields_set else config["service_source"],
+                             req.execution_target if "execution_target" in req.model_fields_set else config["execution_target"])
+        route.require_available()
+    except HarnessError as error:
+        raise HTTPException(409, str(error)) from error
     if req.runtime not in harness_store.IDS:
         raise HTTPException(400, "未知 Agent 底座")
     if req.sandbox not in ("read-only", "workspace-write"):
@@ -1739,11 +1751,12 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
         raise HTTPException(409, "请等待当前任务完成或停止后切换底座")
     if req.runtime not in ("api", "openclaw") and not harnesses.describe(req.runtime)["installed"]:
         raise HTTPException(409, "请先在终端安装并配置对应 Agent CLI，再切换")
-    config = _harness_settings()
     if req.runtime == "openclaw" and api_mode(read_settings(ENV_FILE)):
         if "EASEL_CHAT_TRANSPORT" in os.environ:
             raise HTTPException(409, "运行环境已固定仅聊天模式，请修改 EASEL_CHAT_TRANSPORT 后重启")
         _write_env_direct({"EASEL_CHAT_TRANSPORT": "http"})
+    config["service_source"] = route.service_source
+    config["execution_target"] = route.execution_target
     config["runtime"] = req.runtime
     config["sandbox"] = req.sandbox
     if req.runtime == "codex" and req.codex_auto_approve is not None:
@@ -2018,6 +2031,8 @@ class ModelSaveRequest(BaseModel):
 async def api_settings_models_save(req: ModelSaveRequest):
     """保存模型通道：.env 就地更新（key 留空=不改）；chat 同步 openclaw；媒体通道写 provider 配置。"""
     ch0 = (req.channel or "").strip()
+    if ch0 == "chat" and (_RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS):
+        raise HTTPException(409, "请等待当前任务完成或停止后修改聊天模型")
     if ch0 == "chat" and _harness_settings()["runtime"] not in ("api", "openclaw"):
         raise HTTPException(409, "当前底座使用原生认证；模型覆盖请在 Agent 底座设置中保存")
     direct = _direct_api_enabled()
@@ -2560,11 +2575,43 @@ class AttachmentRef(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    service_source: str | None = None
+    execution_target: str | None = None
     message: str
     persona: str | None = None
     sessionId: str | None = None
     turnId: str | None = None
     attachments: list[AttachmentRef] = Field(default_factory=list)
+
+
+def _task_context(req: ChatRequest, runtime: str, config: dict, env: dict | None = None) -> TaskContext:
+    try:
+        model = config["models"].get(runtime, "")
+        if runtime == "api":
+            model = (env if env is not None else read_settings(ENV_FILE)).get("EASEL_DIRECT_API_MODEL", "").strip()
+        elif runtime == "openclaw":
+            # Gateway/CLI resolve their configured model. This selector preserves their routing.
+            model = "openclaw/default"
+        context = TaskContext(req.service_source if "service_source" in req.model_fields_set else config["service_source"],
+                              req.execution_target if "execution_target" in req.model_fields_set else config["execution_target"],
+                              runtime, model)
+        context.require_available()
+        if req.sessionId:
+            record = harness_store.binding(SESSIONS_DIR, req.sessionId)
+            if record and (record["service_source"] != context.service_source or record["execution_target"] != context.execution_target):
+                raise HarnessError("此会话属于其他服务来源或执行位置，请新建对话")
+        return context
+    except HarnessError as error:
+        raise HTTPException(409, str(error)) from error
+
+
+def _bind_task(sk: str, context: TaskContext, native_id: str = ""):
+    # Preserve the pre-existing API/OpenClaw compatibility exception in _chat_backend.
+    record = harness_store.binding(SESSIONS_DIR, sk)
+    if record.get("runtime") == "openclaw" and context.runtime == "api":
+        return
+    harness_store.bind(SESSIONS_DIR, sk, context.runtime, native_id,
+                       service_source=context.service_source, execution_target=context.execution_target)
 
 
 def _attachment_scope(session_id: str) -> str:
@@ -2926,7 +2973,8 @@ async def _harness_ask(sk: str, questions: list[dict], emit) -> dict:
 
 
 async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: str,
-                            config: dict, emit, timeout: int = TIMEOUT_CHAT, *, interactive=True) -> str:
+                            config: dict, emit, timeout: int = TIMEOUT_CHAT, *, interactive=True, context: TaskContext | None = None) -> str:
+    context = context or _task_context(req, runtime, config)
     pk = f"web:{sk}"
     turn_id = req.turnId or uuid.uuid4().hex
     full_text: list[str] = []
@@ -2966,24 +3014,22 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
                 await asyncio.sleep(0.2)
         if not acquired:
             raise HarnessError("此会话正在另一个窗口运行，请稍后再试")
-        if _chat_backend(sk) != runtime:
-            raise HarnessError("底座已切换，请使用新对话重试")
         record = harness_store.binding(SESSIONS_DIR, sk)
         native_id = record.get("native_id", "")
-        harness_store.bind(SESSIONS_DIR, sk, runtime, native_id)
+        _bind_task(sk, context, native_id)
         _STOPPED_CHAT.discard(sk)
         proc._task = task
         _RUNNING_CHAT[sk] = proc
-        _save_turn(pk, "running", "", {"turn_id": turn_id, "runtime": runtime})
+        _save_turn(pk, "running", "", {"turn_id": turn_id, "runtime": runtime, "route": context.metadata()})
         claimed = True
         env = {**read_settings(ENV_FILE), **_proxy_env(), "EASEL_AGENT_RUNTIME": runtime,
                "EASEL_ROOT": str(PROJECT_ROOT)}
         request = RunRequest(message, PROJECT_ROOT, env, native_id,
-                             config["models"].get(runtime, ""), config["sandbox"], timeout,
+                             context.model, config["sandbox"], timeout,
                              session_key=sk, codex_auto_approve=config.get("codex_auto_approve", False))
         await asyncio.wait_for(harnesses.adapter(runtime).run(
             request, receive, ask,
-            lambda identifier: harness_store.bind(SESSIONS_DIR, sk, runtime, identifier)), timeout)
+            lambda identifier: _bind_task(sk, context, identifier)), timeout)
         clean_end = True
         reason = "completed"
     except asyncio.CancelledError:
@@ -3003,7 +3049,7 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
         if claimed:
             snapshot = "".join(full_text) + (f"\n\n❌ {error_message}" if error_message else "")
             _save_turn(pk, "done", snapshot, {
-                "turn_id": turn_id, "runtime": runtime,
+                "turn_id": turn_id, "runtime": runtime, "route": context.metadata(),
                 "clean_end": clean_end, "stop_reason": reason})
         proc.finish()
         if _RUNNING_CHAT.get(sk) is proc:
@@ -3017,7 +3063,8 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
     return "".join(full_text)
 
 
-async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit) -> str:
+async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit, *,
+                           context: TaskContext | None = None, settings: dict | None = None) -> str:
     """Run one API turn with the same stop/recovery/session locking as Gateway chat."""
     pk = f"web:{sk}"
     turn_id = req.turnId or uuid.uuid4().hex
@@ -3031,7 +3078,9 @@ async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit
     acquired = False
     claimed = False
     locked = False
-    settings = read_settings(ENV_FILE)
+    settings = dict(settings if settings is not None else read_settings(ENV_FILE))
+    context = context or _task_context(req, "api", _harness_settings(), settings)
+    settings["EASEL_DIRECT_API_MODEL"] = context.model
     task = asyncio.current_task()
     _DIRECT_CHAT_TASKS.add(task)
     if lock.locked():
@@ -3056,7 +3105,8 @@ async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit
                 or (OPENCLAW_SESSIONS_DIR / f"{_openclaw_session_id(sk)}.jsonl").is_file()
                 or (OPENCLAW_SESSIONS_DIR / f"{_openclaw_session_id(pk)}.jsonl").is_file()):
             raise DirectAPIError("此会话属于 OpenClaw，请新建会话使用 API 直连")
-        _save_turn(pk, "running", "", {"turn_id": turn_id})
+        _bind_task(sk, context)
+        _save_turn(pk, "running", "", {"turn_id": turn_id, "route": context.metadata()})
         claimed = True
         proc._task = asyncio.current_task()
         _RUNNING_CHAT[sk] = proc
@@ -3079,7 +3129,7 @@ async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit
         reason = "user_stopped" if sk in _STOPPED_CHAT else "cancelled"
         if reason != "user_stopped":
             raise
-    except (DirectAPIError, asyncio.TimeoutError) as error:
+    except (DirectAPIError, HarnessError, asyncio.TimeoutError) as error:
         error_message = str(error) or "API 请求超时"
         emit("error", error_message)
     except OSError:
@@ -3091,7 +3141,7 @@ async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit
         try:
             if claimed:
                 _save_turn(pk, "done", snapshot, {
-                    "turn_id": turn_id, "clean_end": clean_end, "stop_reason": reason,
+                    "turn_id": turn_id, "clean_end": clean_end, "stop_reason": reason, "route": context.metadata(),
                 })
         finally:
             if _RUNNING_CHAT.get(sk) is proc:
@@ -3181,6 +3231,8 @@ async def api_chat_stream(req: ChatRequest):
     # 每轮末尾追加「先查技能库」提醒，抗长对话指令衰减（对用户不可见）
     runtime = _chat_backend(req.sessionId)
     config = _harness_settings()
+    task_settings = dict(read_settings(ENV_FILE))
+    context = _task_context(req, runtime, config, task_settings)
     direct = runtime == "api"
     alternate = runtime not in ("api", "openclaw")
     if direct:
@@ -3208,7 +3260,8 @@ async def api_chat_stream(req: ChatRequest):
 
         # Claim this turn before waiting for locks, so recovery cannot return the previous turn.
         if not direct and not alternate:
-            _save_turn(pk, "running", "", {"turn_id": turn_id})
+            _bind_task(sk, context)
+            _save_turn(pk, "running", "", {"turn_id": turn_id, "route": context.metadata()})
 
         event_path = _job_event_file(turn_id)
         try:
@@ -3236,7 +3289,7 @@ async def api_chat_stream(req: ChatRequest):
         if direct:
             try:
                 await _run_direct_chat(
-                    req.model_copy(update={"turnId": turn_id}), sk, content, system, to_client)
+                    req.model_copy(update={"turnId": turn_id}), sk, content, system, to_client, context=context, settings=task_settings)
             finally:
                 to_client("done", sessionKey=sk)
                 client_q.put_nowait(CLIENT_DONE)
@@ -3245,7 +3298,7 @@ async def api_chat_stream(req: ChatRequest):
         if alternate:
             try:
                 await _run_harness_chat(req.model_copy(update={"turnId": turn_id}),
-                                        sk, message, runtime, config, to_client)
+                                        sk, message, runtime, config, to_client, context=context)
             finally:
                 to_client("done", sessionKey=sk)
                 client_q.put_nowait(CLIENT_DONE)
@@ -3259,7 +3312,7 @@ async def api_chat_stream(req: ChatRequest):
             收尾由主循环统一负责（proc.poll() 兼容面）。
             """
             body = {
-                "model": "openclaw/default",
+                "model": context.model,
                 "stream": True,
                 "messages": [{"role": "user", "content": message}],
             }
@@ -3367,7 +3420,7 @@ async def api_chat_stream(req: ChatRequest):
         if not got:
             lock.release()
             _save_turn(pk, "done", "这个会话正在另一个窗口运行，请稍候再试。", {
-                "turn_id": turn_id, "clean_end": False, "stop_reason": "session_lock_timeout",
+                "turn_id": turn_id, "route": context.metadata(), "clean_end": False, "stop_reason": "session_lock_timeout",
             })
             to_client("activity", "⏳ 这个会话正在另一个窗口运行，请稍候再试")
             to_client("done", sessionKey=sk)
@@ -3390,7 +3443,7 @@ async def api_chat_stream(req: ChatRequest):
                 lock.release()
                 xlock.release()
                 _save_turn(pk, "done", "❌ 启动失败，请重试", {
-                    "turn_id": turn_id, "clean_end": False, "stop_reason": "spawn_failed",
+                    "turn_id": turn_id, "route": context.metadata(), "clean_end": False, "stop_reason": "spawn_failed",
                 })
                 to_client("error", "❌ 启动失败，请重试")
                 to_client("done", sessionKey=sk)
@@ -3717,7 +3770,7 @@ async def api_chat_stream(req: ChatRequest):
                 pass
             # 落盘完整结果：后端跑完整轮不依赖客户端连接，断线后前端用 /api/chat/last 取回
             _save_turn(pk, "done", "".join(full_text), {
-                "turn_id": turn_id,
+                "turn_id": turn_id, "route": context.metadata(),
                 "clean_end": run_info.get("last_ev") == "assistant_message_end",
                 "stop_reason": "user_stopped" if user_stopped else run_info.get("stop_reason"),
             })
@@ -3897,6 +3950,9 @@ async def api_chat_stop(req: StopRequest):
 async def api_chat(req: ChatRequest):
     """非流式对话（备选）。"""
     runtime = _chat_backend(req.sessionId)
+    config = _harness_settings()
+    task_settings = dict(read_settings(ENV_FILE))
+    context = _task_context(req, runtime, config, task_settings)
     if runtime not in ("api", "openclaw"):
         message = _chat_message(req)
         sk = req.sessionId or uuid.uuid4().hex
@@ -3904,8 +3960,8 @@ async def api_chat(req: ChatRequest):
         def emit(kind, text):
             if kind == "error":
                 errors.append(text)
-        result = await _run_harness_chat(req, sk, message, runtime, _harness_settings(), emit,
-                                         interactive=False)
+        result = await _run_harness_chat(req, sk, message, runtime, config, emit,
+                                         interactive=False, context=context)
         if errors:
             raise HTTPException(502, errors[0])
         return {"response": result, "sessionKey": sk}
@@ -3916,7 +3972,7 @@ async def api_chat(req: ChatRequest):
             if kind == "error":
                 errors.append(text)
         sk = req.sessionId or uuid.uuid4().hex
-        result = await _run_direct_chat(req, sk, content, system, emit)
+        result = await _run_direct_chat(req, sk, content, system, emit, context=context, settings=task_settings)
         if errors:
             raise HTTPException(502, errors[0])
         return {"response": result, "sessionKey": sk}
@@ -3926,7 +3982,16 @@ async def api_chat(req: ChatRequest):
     message = _chat_message(req)
     loop = asyncio.get_event_loop()
     # chat 可能中途触发制作层长任务 → 用 TIMEOUT_CHAT，与流式 /api/chat/stream 一致（勿用 300s）
-    result = await loop.run_in_executor(None, run_agent_sync, message, TIMEOUT_CHAT, req.sessionId)
+    sk = req.sessionId or uuid.uuid4().hex
+    _bind_task(sk, context)
+    _save_turn(f"web:{sk}", "running", "", {"route": context.metadata()})
+    task = asyncio.current_task()
+    _HARNESS_TASKS.add(task)
+    try:
+        result = await loop.run_in_executor(None, run_agent_sync, message, TIMEOUT_CHAT, sk, context)
+        _save_turn(f"web:{sk}", "done", result, {"route": context.metadata()})
+    finally:
+        _HARNESS_TASKS.discard(task)
     return {"response": result}
 
 
@@ -5133,7 +5198,7 @@ async def api_delete_session(session_key: str):
     if session_key in _RUNNING_CHAT or _session_lock(session_key).locked():
         raise HTTPException(409, "请先停止当前对话再删除")
     record = harness_store.binding(SESSIONS_DIR, session_key)
-    if record and record.get("runtime") != "openclaw":
+    if record and record.get("runtime") not in ("api", "openclaw"):
         from easel.harnesses.rpc import close_sessions
         await close_sessions(session_key)
         harness_store.binding_path(SESSIONS_DIR, session_key).unlink(missing_ok=True)
@@ -5144,6 +5209,7 @@ async def api_delete_session(session_key: str):
         if session_key in _RUNNING_CHAT:
             raise HTTPException(409, "请先停止当前对话再删除")
         direct_history.unlink()
+        harness_store.binding_path(SESSIONS_DIR, session_key).unlink(missing_ok=True)
         _turn_file(f"web:{session_key}").unlink(missing_ok=True)
         return {"deleted": True}
     if _direct_api_enabled():

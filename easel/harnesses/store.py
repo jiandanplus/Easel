@@ -40,6 +40,8 @@ def write_json(path: Path, data: dict) -> None:
 
 def settings(outputs: Path, env: dict[str, str]) -> dict:
     data = read_json(outputs / "_harness" / "config.json")
+    from easel.service_contracts import ServiceRoute
+    route = ServiceRoute(data.get("service_source", "custom"), data.get("execution_target", "local"))
     state_dir = Path(env.get("EASEL_OPENCLAW_STATE_DIR") or Path.home() / ".openclaw-easel")
     legacy = "EASEL_CHAT_TRANSPORT" in env or (state_dir / "openclaw.json").is_file()
     default = "openclaw" if legacy else "api"
@@ -62,7 +64,8 @@ def settings(outputs: Path, env: dict[str, str]) -> dict:
     if not isinstance(auto_approve, bool):
         raise HarnessError("Codex 自动授权设置必须为开关")
     return {"runtime": runtime, "models": models, "sandbox": sandbox,
-            "codex_auto_approve": auto_approve}
+            "codex_auto_approve": auto_approve,
+            "service_source": route.service_source, "execution_target": route.execution_target}
 
 
 def binding_path(sessions: Path, key: str) -> Path:
@@ -75,15 +78,27 @@ def binding(sessions: Path, key: str) -> dict:
     if record and (record.get("runtime") not in IDS
                    or not isinstance(record.get("native_id"), str)):
         raise HarnessError("Agent 会话记录格式无效，不会自动重置历史")
+    if record:
+        from easel.service_contracts import ServiceRoute
+        route = ServiceRoute(record.get("service_source", "custom"), record.get("execution_target", "local"))
+        record = {**record, "service_source": route.service_source, "execution_target": route.execution_target}
     return record
 
 
-def bind(sessions: Path, key: str, runtime: str, native_id: str = "") -> None:
+def bind(sessions: Path, key: str, runtime: str, native_id: str = "", *,
+         service_source: str = "custom", execution_target: str = "local") -> None:
+    from easel.service_contracts import ServiceRoute
+    route = ServiceRoute(service_source, execution_target)
+    route.require_available()
     if runtime not in IDS or not isinstance(native_id, str):
         raise HarnessError("Agent 会话绑定无效")
     current = binding(sessions, key)
     if current and current.get("runtime") != runtime:
         raise HarnessError("此会话属于其他 Agent 底座，请新建对话")
+    if current and (current["service_source"] != service_source or current["execution_target"] != execution_target):
+        raise HarnessError("此会话属于其他服务来源或执行位置，请新建对话")
+    native_id = native_id or current.get("native_id", "")
     if current.get("native_id") and current["native_id"] != native_id:
         raise HarnessError("Agent 返回了不同的原生会话 ID，不会替换已有历史")
-    write_json(binding_path(sessions, key), {"runtime": runtime, "native_id": native_id})
+    write_json(binding_path(sessions, key), {**current, "runtime": runtime, "native_id": native_id,
+               "service_source": service_source, "execution_target": execution_target})

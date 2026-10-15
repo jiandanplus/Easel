@@ -508,7 +508,8 @@ def test_existing_openclaw_install_keeps_its_engine(tmp_path, monkeypatch):
 def test_binding_is_hashed_durable_and_cannot_change_owner(tmp_path):
     store.bind(tmp_path, "../private/session", "codex", "native")
     assert store.binding_path(tmp_path, "../private/session").parent == tmp_path / "harness"
-    assert store.binding(tmp_path, "../private/session") == {"runtime": "codex", "native_id": "native"}
+    assert store.binding(tmp_path, "../private/session") == {"runtime": "codex", "native_id": "native",
+                                                                      "service_source": "custom", "execution_target": "local"}
     with pytest.raises(HarnessError):
         store.bind(tmp_path, "../private/session", "opencode", "replacement")
 
@@ -906,3 +907,101 @@ def test_web_question_answer_and_cancellation_cleanup(sandbox):
         assert not web._HARNESS_QUESTIONS
 
     asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("runtime", ["codex", "api", "openclaw"])
+@pytest.mark.parametrize("fields", [{"service_source": "subscription"}, {"execution_target": "cloud"}])
+def test_unavailable_routes_rejected_before_writes_and_attachments(sandbox, monkeypatch, fields, runtime):
+    path = web.OUTPUTS_DIR / "_harness" / "config.json"
+    store.write_json(path, {"runtime": runtime})
+    before, env = path.read_bytes(), web.ENV_FILE.read_bytes()
+    response = sandbox.post("/api/settings/harness", json={"runtime": "openclaw", **fields})
+    assert response.status_code == 409
+    assert path.read_bytes() == before and web.ENV_FILE.read_bytes() == env
+    monkeypatch.setattr(web, "_chat_message", Mock(side_effect=AssertionError("attachment read")))
+    monkeypatch.setattr(web, "_direct_chat_content", Mock(side_effect=AssertionError("attachment read")))
+    for endpoint in ("/api/chat", "/api/chat/stream"):
+        assert sandbox.post(endpoint, json={"message": "hello", **fields}).status_code == 409
+    assert not web.SESSIONS_DIR.exists()
+
+
+def test_settings_expose_route_availability_and_legacy_save(sandbox):
+    data = sandbox.get("/api/settings/harness").json()
+    assert data["service_source"] == "custom" and data["execution_target"] == "local"
+    assert len(data["availability"]) == 4
+    assert sum(row["available"] for row in data["availability"]) == 1
+    assert all(row["reason"] for row in data["availability"] if not row["available"])
+    result = sandbox.post("/api/settings/harness", json={"runtime": "codex"}).json()
+    assert result["service_source"] == "custom" and result["execution_target"] == "local"
+
+
+def test_submitted_native_context_survives_default_change_while_waiting(sandbox, monkeypatch):
+    async def exercise():
+        lock = web._session_lock("queued")
+        await lock.acquire()
+        requests = []
+        class Fake:
+            async def run(self, request, emit, ask, bind):
+                requests.append(request)
+                bind("queued-native")
+                emit("token", "done")
+        monkeypatch.setattr(web.harnesses, "adapter", lambda runtime: Fake())
+        response = await web.api_chat_stream(web.ChatRequest(message="hello", sessionId="queued"))
+        await asyncio.sleep(0)
+        store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {
+            "runtime": "opencode", "models": {"codex": "changed"},
+            "service_source": "subscription", "execution_target": "cloud"})
+        lock.release()
+        await asyncio.wait_for(asyncio.gather(*web._BG_TASKS), 2)
+        assert requests[0].model == "test-model"
+        assert requests[0].env["EASEL_AGENT_RUNTIME"] == "codex"
+        last = await web.api_chat_last("queued")
+        assert last["route"]["service_source"] == "custom"
+        assert last["route"]["execution_target"] == "local"
+        assert last["route"]["model"] == "test-model"
+        await response.body_iterator.aclose()
+    asyncio.run(exercise())
+
+
+def test_openclaw_model_save_cannot_reroute_accepted_task(sandbox, monkeypatch):
+    store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {"runtime": "openclaw"})
+    before = web.ENV_FILE.read_bytes()
+    monkeypatch.setattr(web, "_BG_TASKS", {"accepted-task"})
+    response = sandbox.post("/api/settings/models/save", json={"channel": "chat", "rows": []})
+    assert response.status_code == 409
+    assert web.ENV_FILE.read_bytes() == before
+
+
+@pytest.mark.parametrize("field,value", [("service_source", "subscription"), ("execution_target", "cloud")])
+def test_bound_route_conflict_rejected_before_attachment_read(sandbox, monkeypatch, field, value):
+    path = store.binding_path(web.SESSIONS_DIR, "owned")
+    store.write_json(path, {"runtime": "codex", "native_id": "keep", field: value})
+    before = path.read_bytes()
+    monkeypatch.setattr(web, "_chat_message", Mock(side_effect=AssertionError("attachment read")))
+    for endpoint in ("/api/chat", "/api/chat/stream"):
+        assert sandbox.post(endpoint, json={"sessionId": "owned", "message": "hello"}).status_code == 409
+    assert path.read_bytes() == before
+
+
+def test_model_can_change_between_turns_without_rebinding_session(sandbox, monkeypatch):
+    models = []
+    class Fake:
+        async def run(self, request, emit, ask, bind):
+            models.append(request.model)
+            bind("native")
+            emit("token", "ok")
+    monkeypatch.setattr(web.harnesses, "adapter", lambda runtime: Fake())
+    assert sandbox.post("/api/chat", json={"sessionId": "same", "message": "one"}).status_code == 200
+    assert sandbox.post("/api/settings/harness", json={"runtime": "codex", "model": "next"}).status_code == 200
+    assert sandbox.post("/api/chat", json={"sessionId": "same", "message": "two"}).status_code == 200
+    assert models == ["test-model", "next"]
+    assert store.binding(web.SESSIONS_DIR, "same")["native_id"] == "native"
+
+
+@pytest.mark.parametrize("fields", [{"service_source": "bogus"}, {"execution_target": None}])
+def test_invalid_request_routes_fail_closed(sandbox, fields):
+    path = web.OUTPUTS_DIR / "_harness" / "config.json"
+    before = path.read_bytes()
+    assert sandbox.post("/api/settings/harness", json={"runtime": "codex", **fields}).status_code == 409
+    assert sandbox.post("/api/chat", json={"message": "hello", **fields}).status_code == 409
+    assert path.read_bytes() == before

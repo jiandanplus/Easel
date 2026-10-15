@@ -529,3 +529,26 @@ oc_set() { printf '%s\\n' "$3" > "$PROVIDER_CAPTURE"; }
                                  "PROJECT_ROOT": str(tmp_path)}, capture_output=True, text=True, timeout=15)
     assert result.returncode == 0, result.stderr
     assert env_file.read_text() == "EASEL_CHAT_TRANSPORT=http\n"
+
+
+def test_submitted_direct_model_survives_waiting_defaults_change(sandbox, monkeypatch):
+    async def exercise():
+        lock = web._session_lock("queued")
+        await lock.acquire()
+        seen = []
+        async def fake_stream(settings, content, **kwargs):
+            seen.append(settings["EASEL_DIRECT_API_MODEL"])
+            yield "token", "done"
+            yield "finish", "stop"
+        monkeypatch.setattr(web, "stream_chat", fake_stream)
+        response = await web.api_chat_stream(web.ChatRequest(message="hello", sessionId="queued"))
+        await asyncio.sleep(0)
+        web.ENV_FILE.write_text("EASEL_DIRECT_API_MODEL=changed\n")
+        lock.release()
+        await asyncio.wait_for(asyncio.gather(*web._BG_TASKS), 2)
+        assert seen == ["gpt-6.1-sol"]
+        last = await web.api_chat_last("queued")
+        assert last["route"]["model"] == "gpt-6.1-sol"
+        assert last["route"]["tools"] is False
+        await response.body_iterator.aclose()
+    asyncio.run(exercise())
