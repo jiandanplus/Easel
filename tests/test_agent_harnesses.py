@@ -930,7 +930,7 @@ def test_settings_expose_route_availability_and_legacy_save(sandbox):
     data = sandbox.get("/api/settings/harness").json()
     assert data["service_source"] == "custom" and data["execution_target"] == "local"
     assert len(data["availability"]) == 4
-    assert sum(row["available"] for row in data["availability"]) == 1
+    assert sum(row["available"] for row in data["availability"]) == 2
     assert all(row["reason"] for row in data["availability"] if not row["available"])
     result = sandbox.post("/api/settings/harness", json={"runtime": "codex"}).json()
     assert result["service_source"] == "custom" and result["execution_target"] == "local"

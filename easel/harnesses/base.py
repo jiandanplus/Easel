@@ -35,6 +35,10 @@ class RunRequest:
     command: tuple[str, ...] = ()
     session_key: str = ""
     codex_auto_approve: bool = False
+    service_source: str = "custom"
+    execution_target: str = "local"
+    account_id: str = ""
+    platform_url: str = ""
 
 
 class Adapter(Protocol):

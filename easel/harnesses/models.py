@@ -19,6 +19,13 @@ def _valid_id(value):
 
 
 async def available_models(runtime: str, request: RunRequest) -> list[dict]:
+    if request.service_source == "subscription":
+        if runtime != "codex" or request.execution_target != "local":
+            raise HarnessError("订阅服务目前仅支持本地 Codex")
+        from easel.platform.client import PlatformClient
+        catalog = await asyncio.to_thread(PlatformClient(request.cwd).models)
+        return [{"id": item["id"], "label": item["id"], "default": False}
+                for item in catalog.get("models", []) if isinstance(item, dict) and _valid_id(item.get("id"))]
     if runtime == "codex":
         if resolve_codex().origin == "bundled":
             model = codex_model(request.cwd, request.model)

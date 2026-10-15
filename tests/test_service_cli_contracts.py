@@ -9,6 +9,8 @@ from easel.harnesses import store
 @pytest.mark.parametrize("runtime", ["api", "openclaw", "codex"])
 @pytest.mark.parametrize("source,target", [("subscription", "local"), ("custom", "cloud"), ("subscription", "cloud")])
 def test_actual_cli_preflights_before_side_effects(tmp_path, monkeypatch, capsys, module, command, runtime, source, target):
+    monkeypatch.setattr(module, "PROJECT_ROOT", tmp_path, raising=False)
+    monkeypatch.setattr("easel.paths.workspace_root", lambda: tmp_path)
     config = {"runtime": runtime, "models": {}, "service_source": source, "execution_target": target}
     monkeypatch.setattr(store, "settings", lambda *a: config)
     monkeypatch.setattr(cli.harnesses, "settings", lambda *a: config)
@@ -23,5 +25,5 @@ def test_actual_cli_preflights_before_side_effects(tmp_path, monkeypatch, capsys
     monkeypatch.setattr(cli.subprocess, "run", reject)
     monkeypatch.setattr(ping.urllib.request, "urlopen", reject)
     assert command(SimpleNamespace(name="x", input="x", profile="x")) == 1
-    assert "custom/local" in capsys.readouterr().out
+    assert "Agent 服务不可用" in capsys.readouterr().out
     assert not reject.called

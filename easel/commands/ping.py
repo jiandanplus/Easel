@@ -61,7 +61,7 @@ def cmd_ping(_args) -> int:
     root = workspace_root()
     try:
         config = harnesses.settings(root / "outputs", settings)
-        context = task_context(config)
+        context = task_context(config, root=root)
     except HarnessError as error:
         print(f"Agent 服务不可用：{error}")
         return 1
@@ -70,7 +70,7 @@ def cmd_ping(_args) -> int:
         try:
             asyncio.run(asyncio.wait_for(
                 harnesses.console_turn("请只回复 PONG，不执行任何工具", root, settings,
-                                       timeout=60, interactive=False, config=config), 60))
+                                       timeout=60, interactive=False, config=config, context=context), 60))
             print(f"\n{runtime} 连通性测试通过")
             return 0
         except (HarnessError, asyncio.TimeoutError) as error:

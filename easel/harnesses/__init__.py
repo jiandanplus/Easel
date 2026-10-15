@@ -53,16 +53,12 @@ def describe(runtime: str) -> dict:
 
 
 async def console_turn(prompt: str, root: Path, env: dict, native_id="", *,
-                       timeout=1800, interactive=True, on_bind=None, config=None) -> tuple[str, str]:
+                       timeout=1800, interactive=True, on_bind=None, config=None, context=None) -> tuple[str, str]:
     config = dict(config) if config is not None else settings(root / "outputs", env)
     runtime = config["runtime"]
-    from easel.service_contracts import TaskContext
-    if runtime == "codex":
-        from .runtime import codex_model
-        config["models"] = {**config["models"], "codex": codex_model(root, config["models"].get("codex", ""))}
-    context = TaskContext(config["service_source"], config["execution_target"], runtime,
-                          config["models"].get(runtime, ""))
-    context.require_available()
+    from easel.service_contracts import task_context
+    context = context or await asyncio.to_thread(task_context, config, root=root)
+    runtime = context.runtime
     full_text = []
     identifiers = [native_id]
 
@@ -87,7 +83,9 @@ async def console_turn(prompt: str, root: Path, env: dict, native_id="", *,
 
     request = RunRequest(prompt, root, {**env, "EASEL_AGENT_RUNTIME": runtime}, native_id,
                          context.model, config["sandbox"], timeout,
-                         codex_auto_approve=config["codex_auto_approve"])
+                         codex_auto_approve=config["codex_auto_approve"],
+                         service_source=context.service_source, execution_target=context.execution_target,
+                         account_id=context.account_id, platform_url=context.platform_url)
 
     def bind(value):
         identifiers[0] = value

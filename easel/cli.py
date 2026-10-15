@@ -94,7 +94,7 @@ def cmd_chat(_args) -> int:
     settings = read_settings()
     try:
         config = harnesses.settings(PROJECT_ROOT / "outputs", settings)
-        context = task_context(config)
+        context = task_context(config, root=PROJECT_ROOT)
     except HarnessError as error:
         print(f"Agent 服务不可用：{error}")
         return 1
@@ -158,7 +158,7 @@ def cmd_chat(_args) -> int:
                 if message:
                     _, native_id = asyncio.run(harnesses.console_turn(
                         chat_turn_message(message, selected_persona), PROJECT_ROOT,
-                        {**settings, **_proxy_env()}, native_id, on_bind=remember, config=config))
+                        {**settings, **_proxy_env()}, native_id, on_bind=remember, config=config, context=context))
                     print()
             except (EOFError, KeyboardInterrupt):
                 print()

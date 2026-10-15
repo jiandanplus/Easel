@@ -91,10 +91,10 @@ def resolve_codex() -> CodexResolution:
     return CodexResolution(None, "external")
 
 
-def codex_environment(env: dict[str, str], cwd: Path) -> dict[str, str]:
+def codex_environment(env: dict[str, str], cwd: Path, *, private=False) -> dict[str, str]:
     """Shared model/task environment seam; never import an external Codex home."""
     result = dict(env)
-    if resolve_codex().origin == "bundled":
+    if private or resolve_codex().origin == "bundled":
         home = cwd.resolve() / "outputs" / "_harness" / "codex-home"
         if home.is_symlink() or not home.resolve().is_relative_to(cwd.resolve()):
             raise HarnessError("内置 Codex 私有目录不能指向工作区外部")
@@ -118,6 +118,10 @@ def codex_model(cwd: Path, model: str, *, require_configured: bool = True) -> st
 
 def prepare_codex(request, command: list[str]):
     """Shared command, model and credential preparation for native Codex calls."""
+    if request.service_source == "subscription":
+        return prepare_subscription(request, command)
+    if request.execution_target != "local":
+        raise HarnessError("云端执行尚未开放")
     if resolve_codex().origin != "bundled":
         return request, command
     from dataclasses import replace
@@ -139,3 +143,27 @@ def prepare_codex(request, command: list[str]):
               'model_providers.easel-custom.requires_openai_auth=false']
     arguments = [part for value in config for part in ("-c", value)]
     return replace(request, env=env, model=model), [command[0], *arguments, *command[1:]]
+
+
+def prepare_subscription(request, command):
+    from dataclasses import replace
+    from easel.platform.client import PlatformClient
+    if request.execution_target != "local" or not request.account_id or not request.platform_url or not request.model:
+        raise HarnessError("订阅任务缺少已接受的账号或模型身份")
+    token = PlatformClient(request.cwd).task_credential(request.account_id, request.model, request.platform_url)
+    env = codex_environment(request.env, request.cwd, private=True)
+    for key in ("OPENAI_API_KEY", "OPENAI_ACCESS_TOKEN", "CODEX_API_KEY", "EASEL_BUNDLED_API_KEY",
+                "OPENAI_BASE_URL", "OPENAI_ORG_ID", "OPENAI_ORGANIZATION", "OPENAI_PROJECT_ID"):
+        env.pop(key, None)
+    for key in list(env):
+        if key.startswith("EASEL_PLATFORM_"):env.pop(key, None)
+    env["EASEL_SUBSCRIPTION_API_KEY"] = token
+    config = ['model_provider="easel-subscription"', "model=" + json.dumps(request.model),
+              'model_providers.easel-subscription.name="Easel subscription"',
+              "model_providers.easel-subscription.base_url=" + json.dumps(request.platform_url + "/v1"),
+              'model_providers.easel-subscription.env_key="EASEL_SUBSCRIPTION_API_KEY"',
+              'model_providers.easel-subscription.wire_api="responses"',
+              'model_providers.easel-subscription.requires_openai_auth=false',
+              'disable_response_storage=true']
+    arguments = [part for value in config for part in ("-c", value)]
+    return replace(request, env=env), [command[0], *arguments, *command[1:]]

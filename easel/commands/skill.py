@@ -151,7 +151,7 @@ def cmd_skill(args) -> int:
     settings = read_settings()
     try:
         config = harnesses.settings(PROJECT_ROOT / "outputs", settings)
-        context = task_context(config)
+        context = task_context(config, root=PROJECT_ROOT)
     except HarnessError as error:
         print(f"Agent 服务不可用：{error}")
         return 1
@@ -188,7 +188,7 @@ def cmd_skill(args) -> int:
 
     if runtime != "openclaw":
         try:
-            asyncio.run(harnesses.console_turn(message, PROJECT_ROOT, settings, timeout=timeout, config=config))
+            asyncio.run(harnesses.console_turn(message, PROJECT_ROOT, settings, timeout=timeout, config=config, context=context))
             print()
             return 0
         except (HarnessError, asyncio.TimeoutError) as error:

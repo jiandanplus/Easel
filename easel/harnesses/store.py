@@ -58,7 +58,7 @@ def settings(outputs: Path, env: dict[str, str]) -> dict:
             for key, value in models.items()):
         raise HarnessError("Agent 模型设置格式无效")
     from .runtime import resolve_codex
-    if resolve_codex().origin == "bundled":
+    if route.service_source == "custom" and resolve_codex().origin == "bundled":
         from .provider import provider_status
         provider = provider_status(outputs.parent)
         models = {**models, "codex": provider["model"] if provider["configured"] else ""}
@@ -70,7 +70,8 @@ def settings(outputs: Path, env: dict[str, str]) -> dict:
         raise HarnessError("Codex 自动授权设置必须为开关")
     return {"runtime": runtime, "models": models, "sandbox": sandbox,
             "codex_auto_approve": auto_approve,
-            "service_source": route.service_source, "execution_target": route.execution_target}
+            "service_source": route.service_source, "execution_target": route.execution_target,
+            "subscription_model": data.get("subscription_model", "")}
 
 
 def binding_path(sessions: Path, key: str) -> Path:
@@ -91,7 +92,7 @@ def binding(sessions: Path, key: str) -> dict:
 
 
 def bind(sessions: Path, key: str, runtime: str, native_id: str = "", *,
-         service_source: str = "custom", execution_target: str = "local") -> None:
+         service_source: str = "custom", execution_target: str = "local", account_id: str = "") -> None:
     from easel.service_contracts import ServiceRoute
     route = ServiceRoute(service_source, execution_target)
     route.require_available()
@@ -102,8 +103,10 @@ def bind(sessions: Path, key: str, runtime: str, native_id: str = "", *,
         raise HarnessError("此会话属于其他 Agent 底座，请新建对话")
     if current and (current["service_source"] != service_source or current["execution_target"] != execution_target):
         raise HarnessError("此会话属于其他服务来源或执行位置，请新建对话")
+    if service_source == "subscription" and (not account_id or (current and current.get("account_id") != account_id)):
+        raise HarnessError("此会话属于其他平台账号，请新建对话")
     native_id = native_id or current.get("native_id", "")
     if current.get("native_id") and current["native_id"] != native_id:
         raise HarnessError("Agent 返回了不同的原生会话 ID，不会替换已有历史")
     write_json(binding_path(sessions, key), {**current, "runtime": runtime, "native_id": native_id,
-               "service_source": service_source, "execution_target": execution_target})
+               "service_source": service_source, "execution_target": execution_target, **({"account_id": account_id} if account_id else {})})

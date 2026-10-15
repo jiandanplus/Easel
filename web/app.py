@@ -1219,7 +1219,12 @@ async def static_file(path: str):
 @app.get("/api/status")
 async def api_status():
     direct = _direct_api_enabled()
-    runtime = _harness_settings()["runtime"]
+    config = _harness_settings()
+    runtime = config["runtime"]
+    if config.get("service_source", "custom") == "subscription":
+        state = await _subscription_readiness(config)
+        return {"gateway": state["ready"], "transport": runtime, "runtime": runtime,
+                "skills": get_skills(), "personas": list_personas(), "authVerified": False}
     ready = False
     if direct:
         try:
@@ -1252,7 +1257,14 @@ async def api_settings_bootstrap():
         （_primary_model_routable）—— 只查 .env 查不出 provider 一个字没写的情况。
     """
     direct = _direct_api_enabled()
-    runtime = _harness_settings()["runtime"]
+    config = _harness_settings()
+    runtime = config["runtime"]
+    if config.get("service_source", "custom") == "subscription":
+        state = await _subscription_readiness(config)
+        ready = state["ready"]
+        return {"modelConfigured": ready, "envKeyOk": state["authenticated"], "routeOk": ready,
+                "routeDetail": state["detail"], "gatewayUp": ready, "openclawConfigExists": False,
+                "installWarnings": [], "runtime": runtime, "authVerified": False}
     if runtime not in ("api", "openclaw"):
         descriptor = harnesses.describe(runtime)
         installed = descriptor["installed"]
@@ -1773,6 +1785,7 @@ class HarnessSettingsRequest(BaseModel):
     model: str = Field(default="", max_length=240)
     sandbox: str = "workspace-write"
     codex_auto_approve: StrictBool | None = None
+    subscription_model: str | None = Field(default=None, max_length=240)
 
 
 class BundledProviderRequest(BaseModel):
@@ -1809,7 +1822,7 @@ async def api_bundled_provider_save(request: Request):
         raise HTTPException(400, "供应商请求格式无效，请检查地址、模型和 Key") from error
     try:
         _require_bundled_provider()
-        if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS:
+        if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes:
             raise HTTPException(409, "请等待当前任务完成或停止后修改供应商")
         result = save_provider(PROJECT_ROOT, **req.model_dump())
     except HarnessError as error:
@@ -1836,6 +1849,8 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
         route.require_available()
     except HarnessError as error:
         raise HTTPException(409, str(error)) from error
+    if route.service_source == "subscription" and req.runtime != "codex":
+        raise HTTPException(409, "订阅服务目前仅支持本地 Codex")
     if req.runtime not in harness_store.IDS:
         raise HTTPException(400, "未知 Agent 底座")
     if req.sandbox not in ("read-only", "workspace-write"):
@@ -1844,7 +1859,7 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
         raise HTTPException(400, "模型名称不能包含控制字符")
     if "EASEL_AGENT_RUNTIME" in read_settings(ENV_FILE):
         raise HTTPException(409, "启动环境固定了底座，请修改 EASEL_AGENT_RUNTIME 后重启")
-    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS:
+    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes:
         raise HTTPException(409, "请等待当前任务完成或停止后切换底座")
     if req.runtime not in ("api", "openclaw") and not harnesses.describe(req.runtime)["installed"]:
         raise HTTPException(409, "请先在终端安装并配置对应 Agent CLI，再切换")
@@ -1859,13 +1874,21 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
     if req.runtime == "codex" and req.codex_auto_approve is not None:
         config["codex_auto_approve"] = req.codex_auto_approve
     model = req.model.strip()
-    if req.runtime == "codex":
+    if route.service_source == "custom" and req.runtime == "codex":
         from easel.harnesses.runtime import codex_model
         try:
             model = codex_model(PROJECT_ROOT, model, require_configured=False)
         except HarnessError as error:
             raise HTTPException(400, str(error)) from error
-    config["models"] = {**config["models"], req.runtime: model}
+    if route.service_source == "subscription":
+        original = harness_store.read_json(OUTPUTS_DIR / "_harness" / "config.json")
+        config["models"] = original.get("models", config["models"])
+        selected = req.subscription_model if req.subscription_model is not None else model
+        if any(ord(c) < 32 for c in selected):
+            raise HTTPException(400, "模型名称不能包含控制字符")
+        config["subscription_model"] = selected
+    else:
+        config["models"] = {**config["models"], req.runtime: model}
     harness_store.write_json(OUTPUTS_DIR / "_harness" / "config.json", config)
     from easel.harnesses.rpc import close_sessions
     await close_sessions()
@@ -1880,7 +1903,7 @@ async def api_chat_transport_save(req: ChatTransportRequest):
         raise HTTPException(409, "启动环境固定了执行引擎，请修改 EASEL_AGENT_RUNTIME 后重启")
     if "EASEL_CHAT_TRANSPORT" in os.environ:
         raise HTTPException(409, "运行环境已指定 EASEL_CHAT_TRANSPORT，请修改启动环境后重启")
-    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS:
+    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes:
         raise HTTPException(409, "请等待当前对话完成或停止后切换模式")
     config = _harness_settings()
     _write_env_direct({"EASEL_CHAT_TRANSPORT": "api" if req.transport == "api" else "http"})
@@ -1908,7 +1931,8 @@ async def api_harness_models(runtime: str):
     from easel.harnesses.base import RunRequest
     from easel.harnesses.models import available_models
     request = RunRequest("", PROJECT_ROOT, {
-        **_proxy_env(), "EASEL_ROOT": str(PROJECT_ROOT), "EASEL_AGENT_RUNTIME": runtime})
+        **_proxy_env(), "EASEL_ROOT": str(PROJECT_ROOT), "EASEL_AGENT_RUNTIME": runtime},
+        service_source=_harness_settings()["service_source"])
     try:
         models = await asyncio.wait_for(available_models(runtime, request), 25)
     except asyncio.TimeoutError as error:
@@ -2132,7 +2156,7 @@ class ModelSaveRequest(BaseModel):
 
 
 def _guard_chat_model_mutation():
-    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS:
+    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes:
         raise HTTPException(409, "请等待当前任务完成或停止后修改聊天模型")
 
 
@@ -2696,23 +2720,22 @@ class ChatRequest(BaseModel):
 
 def _task_context(req: ChatRequest, runtime: str, config: dict, env: dict | None = None) -> TaskContext:
     try:
-        model = config["models"].get(runtime, "")
-        if runtime == "codex":
-            from easel.harnesses.runtime import codex_model
-            model = codex_model(PROJECT_ROOT, model)
-        if runtime == "api":
-            model = (env if env is not None else read_settings(ENV_FILE)).get("EASEL_DIRECT_API_MODEL", "").strip()
-        elif runtime == "openclaw":
-            # Gateway/CLI resolve their configured model. This selector preserves their routing.
-            model = "openclaw/default"
-        context = TaskContext(req.service_source if "service_source" in req.model_fields_set else config["service_source"],
-                              req.execution_target if "execution_target" in req.model_fields_set else config["execution_target"],
-                              runtime, model)
-        context.require_available()
+        from easel.service_contracts import task_context
+        selected = {**config, "runtime": runtime,
+                    "service_source": req.service_source if "service_source" in req.model_fields_set else config["service_source"],
+                    "execution_target": req.execution_target if "execution_target" in req.model_fields_set else config["execution_target"]}
+        context = task_context(selected, root=PROJECT_ROOT)
+        if context.service_source == "custom" and runtime in ("api", "openclaw"):
+            from dataclasses import replace
+            model = ((env if env is not None else read_settings(ENV_FILE)).get("EASEL_DIRECT_API_MODEL", "").strip()
+                     if runtime == "api" else "openclaw/default")
+            context = replace(context, model=model)
         if req.sessionId:
             record = harness_store.binding(SESSIONS_DIR, req.sessionId)
             if record and (record["service_source"] != context.service_source or record["execution_target"] != context.execution_target):
                 raise HarnessError("此会话属于其他服务来源或执行位置，请新建对话")
+            if record and context.service_source == "subscription" and record.get("account_id") != context.account_id:
+                raise HarnessError("此会话属于其他平台账号，请新建对话")
         return context
     except HarnessError as error:
         raise HTTPException(409, str(error)) from error
@@ -2724,7 +2747,7 @@ def _bind_task(sk: str, context: TaskContext, native_id: str = ""):
     if record.get("runtime") == "openclaw" and context.runtime == "api":
         return
     harness_store.bind(SESSIONS_DIR, sk, context.runtime, native_id,
-                       service_source=context.service_source, execution_target=context.execution_target)
+                       service_source=context.service_source, execution_target=context.execution_target, account_id=context.account_id)
 
 
 def _attachment_scope(session_id: str) -> str:
@@ -3088,7 +3111,7 @@ async def _harness_ask(sk: str, questions: list[dict], emit) -> dict:
 
 async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: str,
                             config: dict, emit, timeout: int = TIMEOUT_CHAT, *, interactive=True, context: TaskContext | None = None) -> str:
-    context = context or _task_context(req, runtime, config)
+    context = context or await _accept_task_context(req, runtime, config)
     if sk in _SYNC_SESSIONS and _SYNC_SESSIONS[sk][1] is not context:
         raise HTTPException(409, "这个会话上一条还在运行，请稍后再试")
     pk = f"web:{sk}"
@@ -3142,7 +3165,9 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
                "EASEL_ROOT": str(PROJECT_ROOT)}
         request = RunRequest(message, PROJECT_ROOT, env, native_id,
                              context.model, config["sandbox"], timeout,
-                             session_key=sk, codex_auto_approve=config.get("codex_auto_approve", False))
+                             session_key=sk, codex_auto_approve=config.get("codex_auto_approve", False),
+                             service_source=context.service_source, execution_target=context.execution_target,
+                             account_id=context.account_id, platform_url=context.platform_url)
         await asyncio.wait_for(harnesses.adapter(runtime).run(
             request, receive, ask,
             lambda identifier: _bind_task(sk, context, identifier)), timeout)
@@ -3197,7 +3222,7 @@ async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit
     claimed = False
     locked = False
     settings = dict(settings if settings is not None else read_settings(ENV_FILE))
-    context = context or _task_context(req, "api", _harness_settings(), settings)
+    context = context or await _accept_task_context(req, "api", _harness_settings(), settings)
     settings["EASEL_DIRECT_API_MODEL"] = context.model
     task = asyncio.current_task()
     _DIRECT_CHAT_TASKS.add(task)
@@ -3350,7 +3375,7 @@ async def api_chat_stream(req: ChatRequest):
     runtime = _chat_backend(req.sessionId)
     config = _harness_settings()
     task_settings = dict(read_settings(ENV_FILE))
-    context = _task_context(req, runtime, config, task_settings)
+    context = await _accept_task_context(req, runtime, config, task_settings)
     direct = runtime == "api"
     alternate = runtime not in ("api", "openclaw")
     if direct:
@@ -4142,7 +4167,7 @@ async def api_chat(req: ChatRequest):
     runtime = _chat_backend(req.sessionId)
     config = _harness_settings()
     task_settings = dict(read_settings(ENV_FILE))
-    context = _task_context(req, runtime, config, task_settings)
+    context = await _accept_task_context(req, runtime, config, task_settings)
     if runtime not in ("api", "openclaw"):
         message = _chat_message(req)
         sk = req.sessionId or uuid.uuid4().hex
@@ -4186,7 +4211,7 @@ class SkillRequest(BaseModel):
 @app.post("/api/skill")
 async def api_skill(req: SkillRequest):
     config = _harness_settings()
-    context = _task_context(ChatRequest(message=req.input), config["runtime"], config)
+    context = await _accept_task_context(ChatRequest(message=req.input), config["runtime"], config)
     if context.runtime == "api":
         raise HTTPException(409, "API 直连模式支持聊天；SKILL 执行需要具备本机工具的 Agent 运行时")
     skill_full = find_skill(req.skill)
@@ -5266,7 +5291,7 @@ async def api_profile_build(req: ProfileBuildRequest):
     if name.startswith(('.', '_')):
         raise HTTPException(400, '画像名不能以 . 或 _ 开头，请换个开头')
     config = _harness_settings()
-    context = _task_context(ChatRequest(message="profile enhancement"), config["runtime"], config)
+    context = await _accept_task_context(ChatRequest(message="profile enhancement"), config["runtime"], config)
     if context.runtime == "api":
         raise HTTPException(409, "画像增强需要具备本机工具的 Agent 运行时")
     pd = PROFILES_DIR / name
@@ -5722,6 +5747,49 @@ async def api_ideas_delete(iid: str):
     _write_ideas(new)
     return {"ok": True, "deleted": iid}
 
+
+# Focused private account bridge. Dynamic roots preserve workspace/test isolation.
+_PLATFORM_PREFLIGHTS = 0
+
+def _platform_change_guard():
+    if (_RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS
+            or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS):
+        raise HarnessError("请等待已接受或运行中的任务完成后修改平台账号")
+
+from easel.platform.web import create_router as _create_platform_router
+from easel.harnesses.rpc import close_sessions as _close_platform_sessions
+_platform_router = _create_platform_router(lambda: PROJECT_ROOT, _platform_change_guard, _close_platform_sessions)
+app.include_router(_platform_router)
+
+async def _accept_task_context(req, runtime, config, env=None):
+    global _PLATFORM_PREFLIGHTS
+    if _platform_router.platform_changes:
+        raise HTTPException(409, "平台账号正在修改，请稍后重新提交任务")
+    _PLATFORM_PREFLIGHTS += 1
+    try:
+        return await asyncio.to_thread(_task_context, req, runtime, config, env)
+    finally:
+        _PLATFORM_PREFLIGHTS -= 1
+
+async def _subscription_readiness(config):
+    from easel.platform.client import PlatformClient
+    def read():
+        client = PlatformClient(PROJECT_ROOT)
+        state = client.status()
+        ready = False
+        detail = "平台服务未配置" if not state["configured"] else "请登录平台并获得可用测试授权"
+        if state["authenticated"]:
+            try:
+                catalog = client.models()
+                grants = client.call("GET", "/v1/entitlements").get("entitlements", [])
+                model = config.get("subscription_model", "")
+                ready = bool(config["runtime"] == "codex" and config["execution_target"] == "local"
+                             and catalog.get("ready") and model in [x.get("id") for x in catalog.get("models", [])]
+                             and any(g.get("status") == "active" and model in g.get("models", []) and g.get("remaining_tokens", 0) > 0 for g in grants))
+                detail = "平台测试授权可用；真实上游认证尚未验证" if ready else "平台模型或测试授权不可用"
+            except HarnessError as error:detail = str(error)
+        return {"ready": ready, "authenticated": state["authenticated"], "detail": detail}
+    return await asyncio.to_thread(read)
 
 if __name__ == "__main__":
     import uvicorn

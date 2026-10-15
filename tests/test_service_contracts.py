@@ -9,7 +9,7 @@ from easel.harnesses.base import HarnessError
 @pytest.mark.parametrize("target", ["local", "cloud"])
 def test_routes_model_choices_but_only_custom_local_executes(source, target):
     route = contracts.ServiceRoute(source, target)
-    if (source, target) == ("custom", "local"):
+    if target == "local":
         route.require_available()
     else:
         with pytest.raises(HarnessError):
@@ -20,7 +20,7 @@ def test_context_is_immutable_and_nonsecret():
     context = contracts.TaskContext("custom", "local", "codex", "model")
     with pytest.raises(dataclasses.FrozenInstanceError):
         context.model = "changed"
-    assert context.metadata() == {"service_source": "custom", "execution_target": "local", "runtime": "codex", "model": "model", "model_resolution": "explicit", "chat": True, "tools": True}
+    assert context.metadata() == {"service_source": "custom", "execution_target": "local", "runtime": "codex", "model": "model", "account_id": "", "model_resolution": "explicit", "chat": True, "tools": True}
     with pytest.raises(HarnessError):
         contracts.TaskContext("custom", "local", "bad", "model")
 
