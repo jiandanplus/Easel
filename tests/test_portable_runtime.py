@@ -44,6 +44,29 @@ def test_roots_default_and_explicit(monkeypatch, tmp_path):
     assert resource_root() == tmp_path / "resources"
 
 
+def test_web_bootstrap_expands_quoted_tilde_roots(tmp_path, monkeypatch):
+    import ast
+    from easel.paths import workspace_root, resource_root
+
+    home = tmp_path / "temporary-home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("EASEL_WORKSPACE_ROOT", "~/portable-workspace")
+    monkeypatch.setenv("EASEL_RESOURCE_ROOT", "~/portable-resources")
+    # Execute only the bootstrap root assignments, avoiding app imports/startup.
+    app_path = Path(__file__).resolve().parents[1] / "web/app.py"
+    tree = ast.parse(app_path.read_text())
+    roots = ast.Module(body=[node for node in tree.body
+                            if isinstance(node, ast.Assign)
+                            and any(isinstance(target, ast.Name)
+                                    and target.id in {"PROJECT_ROOT", "RESOURCE_ROOT"}
+                                    for target in node.targets)], type_ignores=[])
+    namespace = {"Path": Path, "os": os, "__file__": str(app_path)}
+    exec(compile(roots, str(app_path), "exec"), namespace)
+    assert namespace["PROJECT_ROOT"] == workspace_root() == home / "portable-workspace"
+    assert namespace["RESOURCE_ROOT"] == resource_root() == home / "portable-resources"
+
+
 def test_resource_instructions_fallback(tmp_path, monkeypatch):
     from easel.harnesses.workspace import workspace_documents
     folder = tmp_path / "resources" / "agents" / "workspace"

@@ -36,8 +36,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, StrictBool
 from sse_starlette.sse import EventSourceResponse
 
-RESOURCE_ROOT = Path(os.environ.get("EASEL_RESOURCE_ROOT") or Path(__file__).resolve().parents[1]).resolve()
-PROJECT_ROOT = Path(os.environ.get("EASEL_WORKSPACE_ROOT") or Path(__file__).resolve().parents[1]).resolve()
+RESOURCE_ROOT = Path(os.environ.get("EASEL_RESOURCE_ROOT") or Path(__file__).resolve().parents[1]).expanduser().resolve()
+PROJECT_ROOT = Path(os.environ.get("EASEL_WORKSPACE_ROOT") or Path(__file__).resolve().parents[1]).expanduser().resolve()
 
 if str(RESOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(RESOURCE_ROOT))
