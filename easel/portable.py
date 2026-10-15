@@ -175,6 +175,7 @@ def main(argv=None):
     sock = socket.socket()
     token = None
     try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try: sock.bind(('127.0.0.1', args.port))
         except OSError as error: raise ValueError('端口已占用；未终止其他进程。请关闭自有实例或使用 --port') from error
         sock.listen(128)

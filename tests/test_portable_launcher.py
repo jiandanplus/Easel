@@ -214,7 +214,12 @@ def test_launcher_publishes_actual_port_before_web_import(tmp_path, monkeypatch,
     sockets = []
     class FakeSocket:
         def __init__(self): self.closed = False; sockets.append(self)
-        def bind(self, address): self.port = address[1] or 45678
+        def setsockopt(self, level, option, value):
+            assert (level, option, value) == (socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.reuse = True
+        def bind(self, address):
+            assert getattr(self, 'reuse', False), 'SO_REUSEADDR required before bind'
+            self.port = address[1] or 45678
         def getsockname(self): return ('127.0.0.1', self.port)
         def listen(self, *a): pass
         def close(self): self.closed = True
@@ -324,3 +329,49 @@ def test_launcher_reuses_only_authenticated_existing_instance(tmp_path, monkeypa
     monkeypatch.setattr(portable.socket, 'socket', lambda: pytest.fail('reuse must not bind another socket'))
     assert portable.main(['--workspace',str(workspace),'--no-browser'] + (['--stop'] if stop else [])) == 0
     assert calls == [('identity', workspace)] + ([('stop', workspace)] if stop else [])
+
+
+@pytest.mark.parametrize('occupied', [False, True])
+def test_launcher_real_socket_restart_and_foreign_listener(tmp_path, monkeypatch, occupied):
+    import builtins
+    import os
+    import socket
+    from types import SimpleNamespace
+    import easel.portable as portable
+    import easel.installation
+    monkeypatch.setattr(os, 'environ', os.environ.copy())
+    monkeypatch.setattr(os, 'chdir', lambda *a: None)
+    monkeypatch.setattr(portable, 'verify_inventory', lambda *a: None)
+    monkeypatch.setattr(portable, 'prepare_workspace', lambda *a: None)
+    monkeypatch.setattr(easel.installation, 'initialize_runtime', lambda *a: None)
+    class App:
+        def get(self, *a): return lambda fn: fn
+        def post(self, *a): return lambda fn: fn
+    class Server:
+        def __init__(self, config): self.started = False; self.should_exit = True
+        def run(self, sockets):
+            listener = sockets[0]
+            with socket.create_connection(listener.getsockname()) as client:
+                peer, _ = listener.accept()
+                peer.sendall(b'ok'); peer.close()  # active server close enters TIME_WAIT
+                assert client.recv(2) == b'ok'
+                assert client.recv(1) == b''
+    real_import = builtins.__import__
+    def intercept(name, *args, **kwargs):
+        if name == 'web.app': return SimpleNamespace(app=App())
+        if name == 'uvicorn': return SimpleNamespace(Server=Server, Config=lambda *a, **k: None)
+        return real_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, '__import__', intercept)
+    workspace = tmp_path/'workspace'
+    with socket.socket() as foreign:
+        foreign.bind(('127.0.0.1', 0)); port = foreign.getsockname()[1]
+        if occupied:
+            foreign.listen(1)
+            with pytest.raises(ValueError, match='端口已占用'):
+                portable.main(['--workspace',str(workspace),'--port',str(port),'--no-browser'])
+            assert foreign.getsockname()[1] == port
+            with socket.create_connection(('127.0.0.1',port)) as client:
+                peer, _ = foreign.accept(); peer.close()
+            return
+    for _ in range(2):
+        assert portable.main(['--workspace',str(workspace),'--port',str(port),'--no-browser']) == 0

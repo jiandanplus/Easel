@@ -95,17 +95,24 @@ def main():
         report['browser_origins'][0]['chat_sse_events'] = report['sse_events']
         dummy.stats['marker_verified'] = True
         assert dummy.TOKEN not in sse
-        report['native_python_sse']=True; report['dummy_stats']=dummy.stats
+        report['native_python_sse']=True; report['dummy_stats']=json.loads(json.dumps(dummy.stats))
         preserved=workspace/'profiles/user.txt'; preserved.write_text('preserve')
         stopped=subprocess.run([str(launcher),'--workspace',str(workspace),'--stop'],env=env,timeout=30)
         assert stopped.returncode==0; proc.wait(timeout=30)
         proc=launch(None); state=wait_ready(); browser_writes(state); assert state['port']==17860; assert preserved.read_text()=='preserve'
         report['restart_preservation']=True
         subprocess.run([str(launcher),'--workspace',str(workspace),'--stop'],env=env,check=True,timeout=30); proc.wait(timeout=30)
+        # Restart the default listener immediately, while its accepted sockets may be TIME_WAIT.
+        proc=launch(None); state=wait_ready(); browser_writes(state); assert state['port']==17860
+        assert preserved.read_text()=='preserve'; report['default_immediate_restart']=True
+        subprocess.run([str(launcher),'--workspace',str(workspace),'--stop'],env=env,check=True,timeout=30); proc.wait(timeout=30)
         with socket.socket() as chosen:
             chosen.bind(('127.0.0.1',0)); custom_port=chosen.getsockname()[1]
         proc=launch(custom_port); state=wait_ready(); browser_writes(state); assert state['port']==custom_port
         subprocess.run([str(launcher),'--workspace',str(workspace),'--stop'],env=env,check=True,timeout=30); proc.wait(timeout=30)
+        report['total_dummy_requests'] = dummy.stats['requests']
+        report['all_dummy_paths'] = list(dummy.stats['paths'])
+        assert dummy.stats['bearer_correct'] and all(path == '/v1/responses' for path in dummy.stats['paths'])
         report['port_matrix'] = ['ephemeral', 'default17860', 'explicit_custom']
         print(json.dumps(report,ensure_ascii=False,indent=2)); (root/'report.json').write_text(json.dumps(report,indent=2))
     finally:
