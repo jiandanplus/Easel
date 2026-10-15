@@ -27,6 +27,7 @@ from easel.persona import list_personas as _list_personas
 from easel.persona import persona_prefix
 from easel.persona import chat_turn_message
 from easel.persona import load_profile_text
+from easel.service_contracts import task_context
 from easel.direct_api import (DirectAPIError, SYSTEM_PROMPT, history_path,
                               read_settings, stream_chat)
 from easel.timeouts import TIMEOUT_CHAT
@@ -88,6 +89,15 @@ def cmd_chat(_args) -> int:
     print(f"  {CYAN}Easel{NC} — 社媒内容工作流")
     print()
 
+    settings = read_settings()
+    try:
+        config = harnesses.settings(PROJECT_ROOT / "outputs", settings)
+        context = task_context(config)
+    except HarnessError as error:
+        print(f"Agent 服务不可用：{error}")
+        return 1
+    runtime = context.runtime
+
     # ---- 选择画像 ----
     personas = _list_personas()
     selected_persona = None
@@ -130,8 +140,6 @@ def cmd_chat(_args) -> int:
 
     session_key = f"easel-{time.strftime('%m%d-%H%M%S')}"
 
-    settings = read_settings()
-    runtime = harnesses.settings(PROJECT_ROOT / "outputs", settings)["runtime"]
     if runtime not in ("api", "openclaw"):
         print(f"  Agent 底座：{runtime}（/exit 退出）")
         native_id = ""
@@ -148,7 +156,7 @@ def cmd_chat(_args) -> int:
                 if message:
                     _, native_id = asyncio.run(harnesses.console_turn(
                         chat_turn_message(message, selected_persona), PROJECT_ROOT,
-                        {**settings, **_proxy_env()}, native_id, on_bind=remember))
+                        {**settings, **_proxy_env()}, native_id, on_bind=remember, config=config))
                     print()
             except (EOFError, KeyboardInterrupt):
                 print()
@@ -162,7 +170,7 @@ def cmd_chat(_args) -> int:
             system += "\n\n当前画像：\n" + load_profile_text(selected_persona)
         async def reply(message):
             async for kind, text in stream_chat(
-                    read_settings(), message, system=system,
+                    settings, message, system=system,
                     history_file=history_path(PROJECT_ROOT / "outputs" / "_sessions", session_key),
                     timeout=TIMEOUT_CHAT):
                 if kind == "token":

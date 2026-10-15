@@ -966,6 +966,15 @@ def _agent_thinking_level() -> str:
     return THINKING_LEVEL
 
 
+class _SyncOutcome(str):
+    """Public string compatibility with explicit internal execution truth."""
+    def __new__(cls, text, *, clean_end=True, stop_reason="completed"):
+        result = super().__new__(cls, text)
+        result.clean_end = clean_end
+        result.stop_reason = stop_reason
+        return result
+
+
 def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | None = None,
                    context: TaskContext | None = None) -> str:
     config = _harness_settings() if context is None else None
@@ -991,7 +1000,9 @@ def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | No
             result = await _run_harness_chat(request, sk, msg, runtime, _harness_settings(), emit,
                                              timeout, interactive=False, context=context)
             if errors:
-                raise HTTPException(502, errors[0])
+                error = HTTPException(502, errors[0])
+                error.stop_reason = getattr(result, "stop_reason", "error")
+                raise error
             return result
         if _HARNESS_LOOP is not None and _HARNESS_LOOP.is_running():
             return asyncio.run_coroutine_threadsafe(execute(), _HARNESS_LOOP).result(timeout + 15)
@@ -1005,12 +1016,10 @@ def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | No
     # 跨进程锁：同一会话同时刻只跑一个 openclaw，防并发 takeover 崩溃（rc=1）
     xlock = _CrossProcLock(sk)
     if not xlock.acquire(timeout=min(timeout, 300)):
-        return '⏳ 这个会话正在另一个窗口运行，请稍候再试'
+        return _SyncOutcome('⏳ 这个会话正在另一个窗口运行，请稍候再试', clean_end=False, stop_reason='session_lock_timeout')
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, cwd=str(PROJECT_ROOT), timeout=timeout + 30, env=_proxy_env())
         out = clean_agent_output(r.stdout or '')
-        if out:
-            return out
         # 以前这里直接 `or '（无输出）'`：returncode 与 stderr 全部丢弃，于是子进程的
         # 任何失败（参数不被当前 OpenClaw 版本支持、配置校验不过、provider 报错）都长
         # 成同一句「（无输出）」，排查只能靠手动把整条命令行复现一遍。
@@ -1018,15 +1027,17 @@ def run_agent_sync(msg: str, timeout: int = TIMEOUT_DIRECT, session_id: str | No
         err = clean_agent_output(r.stderr or '')
         if r.returncode != 0:
             detail = _scrub_secrets(err)[-400:].strip() or f'退出码 {r.returncode}'
-            return f'❌ agent 执行失败（rc={r.returncode}）：{detail}'
+            return _SyncOutcome(f'❌ agent 执行失败（rc={r.returncode}）：{detail}', clean_end=False, stop_reason='error')
+        if out:
+            return _SyncOutcome(out)
         # rc=0 但没有任何产出：stderr 里通常有线索（如模型拒答、工具被拦）
         if err:
             return f'（无输出）\n\n{_scrub_secrets(err)[-400:].strip()}'
         return '（无输出）'
     except subprocess.TimeoutExpired:
-        return '⏱️ 请求超时'
+        return _SyncOutcome('⏱️ 请求超时', clean_end=False, stop_reason='timeout')
     except Exception as e:
-        return f'❌ {e}'
+        return _SyncOutcome(f'❌ {_scrub_secrets(str(e))}', clean_end=False, stop_reason='error')
     finally:
         xlock.release()
 
@@ -2952,6 +2963,7 @@ _RUNNING_CHAT: dict = {}
 # 被用户显式停止的会话 key：supervisor 据此把本轮当作正常「已停止」收尾（不报「被中断」、释放会话锁）。
 _STOPPED_CHAT: set = set()
 _HARNESS_TASKS: set = set()
+_SYNC_SESSIONS: dict[str, tuple[object, TaskContext]] = {}
 _HARNESS_QUESTIONS: dict = {}
 
 
@@ -2989,6 +3001,8 @@ async def _harness_ask(sk: str, questions: list[dict], emit) -> dict:
 async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: str,
                             config: dict, emit, timeout: int = TIMEOUT_CHAT, *, interactive=True, context: TaskContext | None = None) -> str:
     context = context or _task_context(req, runtime, config)
+    if sk in _SYNC_SESSIONS and _SYNC_SESSIONS[sk][1] is not context:
+        raise HTTPException(409, "这个会话上一条还在运行，请稍后再试")
     pk = f"web:{sk}"
     turn_id = req.turnId or uuid.uuid4().hex
     full_text: list[str] = []
@@ -3074,12 +3088,14 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
         if locked:
             lock.release()
         _HARNESS_TASKS.discard(task)
-    return "".join(full_text)
+    return _SyncOutcome("".join(full_text), clean_end=clean_end, stop_reason=reason)
 
 
 async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit, *,
                            context: TaskContext | None = None, settings: dict | None = None) -> str:
     """Run one API turn with the same stop/recovery/session locking as Gateway chat."""
+    if sk in _SYNC_SESSIONS and _SYNC_SESSIONS[sk][1] is not context:
+        raise HTTPException(409, "这个会话上一条还在运行，请稍后再试")
     pk = f"web:{sk}"
     turn_id = req.turnId or uuid.uuid4().hex
     full_text = []
@@ -3966,9 +3982,22 @@ def _submit_sync_task(message: str, timeout: int, context: TaskContext, *,
     """Own the thread until it actually exits, independent of request cancellation."""
     context.require_available()
     route = context.metadata()
+    owner = (object(), context)
+    if session_id:
+        if session_id in _SYNC_SESSIONS or session_id in _RUNNING_CHAT or _session_lock(session_id).locked():
+            raise HTTPException(409, "这个会话上一条还在运行，请稍后再试")
+        _SYNC_SESSIONS[session_id] = owner
 
     async def execute():
+        lock = _session_lock(session_id) if session_id and context.runtime == "openclaw" else None
+        locked = False
         try:
+            if lock is not None:
+                await lock.acquire()
+                locked = True
+            if session_id:
+                _bind_task(session_id, context)
+                _save_turn(f"web:{session_id}", "running", "", {"route": route})
             worker = asyncio.get_running_loop().run_in_executor(
                 None, run_agent_sync, message, timeout, session_id, context)
             while True:
@@ -3979,21 +4008,27 @@ def _submit_sync_task(message: str, timeout: int, context: TaskContext, *,
                     # Cancelling an asyncio waiter cannot stop the underlying thread.
                     # Keep ownership and settings protection until its real completion.
                     continue
+            clean_end = getattr(result, "clean_end", True)
+            reason = getattr(result, "stop_reason", "completed")
             if session_id:
                 _save_turn(f"web:{session_id}", "done", result, {
-                    "turn_id": turn_id, "route": route, "stop_reason": "completed", "clean_end": True})
+                    "turn_id": turn_id, "route": route, "stop_reason": reason, "clean_end": clean_end})
             if on_complete:
-                on_complete(True, result)
+                on_complete(clean_end, result)
             return result
-        except Exception:
+        except Exception as error:
             detail = "Agent 执行失败，请检查本机 CLI、登录和模型配置"
             if session_id:
                 _save_turn(f"web:{session_id}", "done", detail, {
-                    "turn_id": turn_id, "route": route, "stop_reason": "error", "clean_end": False})
+                    "turn_id": turn_id, "route": route, "stop_reason": getattr(error, "stop_reason", "error"), "clean_end": False})
             if on_complete:
                 on_complete(False, detail)
             raise HTTPException(502, detail) from None
         finally:
+            if locked:
+                lock.release()
+            if session_id and _SYNC_SESSIONS.get(session_id) is owner:
+                _SYNC_SESSIONS.pop(session_id, None)
             task = asyncio.current_task()
             _HARNESS_TASKS.discard(task)
             _BG_TASKS.discard(task)
@@ -4003,6 +4038,8 @@ def _submit_sync_task(message: str, timeout: int, context: TaskContext, *,
     _BG_TASKS.add(task)
     # Detached requests have no waiter to retrieve execution failures.
     def consume_error(done):
+        if session_id and _SYNC_SESSIONS.get(session_id) is owner:
+            _SYNC_SESSIONS.pop(session_id, None)
         _HARNESS_TASKS.discard(done)
         _BG_TASKS.discard(done)
         if not done.cancelled():
@@ -4047,8 +4084,6 @@ async def api_chat(req: ChatRequest):
     message = _chat_message(req)
     # chat 可能中途触发制作层长任务 → 用 TIMEOUT_CHAT，与流式 /api/chat/stream 一致（勿用 300s）
     sk = req.sessionId or uuid.uuid4().hex
-    _bind_task(sk, context)
-    _save_turn(f"web:{sk}", "running", "", {"route": context.metadata()})
     task = _submit_sync_task(message, TIMEOUT_CHAT, context, session_id=sk, turn_id=req.turnId)
     result = await asyncio.shield(task)
     return {"response": result}
@@ -5255,7 +5290,7 @@ def _write_baseline_profile(name: str, form: dict) -> None:
 @app.delete("/api/session/{session_key}")
 async def api_delete_session(session_key: str):
     """删除 OpenClaw 本地的 session 记录。"""
-    if session_key in _RUNNING_CHAT or _session_lock(session_key).locked():
+    if session_key in _SYNC_SESSIONS or session_key in _RUNNING_CHAT or _session_lock(session_key).locked():
         raise HTTPException(409, "请先停止当前对话再删除")
     record = harness_store.binding(SESSIONS_DIR, session_key)
     if record and record.get("runtime") not in ("api", "openclaw"):

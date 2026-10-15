@@ -10,6 +10,7 @@ import urllib.request
 
 from easel.gateway_endpoint import healthz_url, port_source, resolve_gateway_port
 from easel.openclaw_cmd import openclaw_base_cmd
+from easel.service_contracts import task_context
 from easel.direct_api import DirectAPIError, read_settings, stream_chat
 
 GREEN = "\033[0;32m"
@@ -57,12 +58,18 @@ def cmd_ping(_args) -> int:
     from easel import harnesses
     from easel.harnesses.base import HarnessError
     root = Path(__file__).resolve().parents[2]
-    runtime = harnesses.settings(root / "outputs", settings)["runtime"]
+    try:
+        config = harnesses.settings(root / "outputs", settings)
+        context = task_context(config)
+    except HarnessError as error:
+        print(f"Agent 服务不可用：{error}")
+        return 1
+    runtime = context.runtime
     if runtime not in ("api", "openclaw"):
         try:
             asyncio.run(asyncio.wait_for(
                 harnesses.console_turn("请只回复 PONG，不执行任何工具", root, settings,
-                                       timeout=60, interactive=False), 60))
+                                       timeout=60, interactive=False, config=config), 60))
             print(f"\n{runtime} 连通性测试通过")
             return 0
         except (HarnessError, asyncio.TimeoutError) as error:

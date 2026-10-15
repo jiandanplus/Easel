@@ -43,8 +43,8 @@ def describe(runtime: str) -> dict:
 
 
 async def console_turn(prompt: str, root: Path, env: dict, native_id="", *,
-                       timeout=1800, interactive=True, on_bind=None) -> tuple[str, str]:
-    config = settings(root / "outputs", env)
+                       timeout=1800, interactive=True, on_bind=None, config=None) -> tuple[str, str]:
+    config = dict(config) if config is not None else settings(root / "outputs", env)
     runtime = config["runtime"]
     from easel.service_contracts import TaskContext
     context = TaskContext(config["service_source"], config["execution_target"], runtime,

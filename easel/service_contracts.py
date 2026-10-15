@@ -48,3 +48,12 @@ class TaskContext(ServiceRoute):
                 "model_resolution": ("gateway-agent-default" if self.runtime == "openclaw" else
                                      "explicit" if self.model else "native-default"),
                 "chat": True, "tools": self.runtime != "api"}
+
+
+def task_context(config: dict) -> TaskContext:
+    """Freeze and validate the route before task entry side effects."""
+    runtime = config["runtime"]
+    context = TaskContext(config["service_source"], config["execution_target"], runtime,
+                          config["models"].get(runtime, ""))
+    context.require_available()
+    return context

@@ -22,6 +22,7 @@ from pathlib import Path
 from easel.openclaw_cmd import openclaw_base_cmd
 from easel.persona import persona_prefix, profile_exists
 from easel.timeouts import TIMEOUT_PRODUCE
+from easel.service_contracts import task_context
 from easel.direct_api import read_settings
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -146,7 +147,13 @@ def cmd_skill(args) -> int:
     from easel.harnesses.base import HarnessError
     import asyncio
     settings = read_settings()
-    runtime = harnesses.settings(PROJECT_ROOT / "outputs", settings)["runtime"]
+    try:
+        config = harnesses.settings(PROJECT_ROOT / "outputs", settings)
+        context = task_context(config)
+    except HarnessError as error:
+        print(f"Agent 服务不可用：{error}")
+        return 1
+    runtime = context.runtime
     if runtime == "api":
         print("[easel] API 直连支持聊天；SKILL 执行需要具备本机工具的 Agent 运行时")
         return 1
@@ -179,7 +186,7 @@ def cmd_skill(args) -> int:
 
     if runtime != "openclaw":
         try:
-            asyncio.run(harnesses.console_turn(message, PROJECT_ROOT, settings, timeout=timeout))
+            asyncio.run(harnesses.console_turn(message, PROJECT_ROOT, settings, timeout=timeout, config=config))
             print()
             return 0
         except (HarnessError, asyncio.TimeoutError) as error:
