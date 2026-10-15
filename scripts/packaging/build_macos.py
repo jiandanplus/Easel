@@ -54,11 +54,18 @@ def main():
     if not (dist/'index.html').is_file(): raise SystemExit('Prebuilt frontend missing')
     shutil.copytree(dist,resource/'web/frontend/dist',dirs_exist_ok=True)
     python = inputs/'python-download/cpython-3.12.13-macos-aarch64-none'
+    for relative, expected in json.loads((ROOT/'packaging/macos/python-runtime-files.json').read_text())['files'].items():
+        source = bounded(python, relative)
+        if 'symlink' in expected:
+            if not source.is_symlink() or str(source.readlink()) != expected['symlink']: raise ValueError('Python link mismatch: '+relative)
+        elif digest(source) != expected['sha256']: raise ValueError('Python digest mismatch: '+relative)
     shutil.copytree(python,resource/'python',symlinks=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
     site = resource/'python/lib/python3.12/site-packages'
     subprocess.run(['uv','pip','install','--offline','--no-index','--python',str(resource/'python/bin/python3'),'--require-hashes','--no-deps','--no-compile-bytecode','--target',str(site),'--find-links',str(inputs/'wheels'),'-r',str(inputs/'core-requirements.txt')],check=True, env={**os.environ,'UV_NO_CONFIG':'1'})
     shutil.rmtree(site/'bin',ignore_errors=True)
     vendor = args.codex_root.resolve()
+    for relative, expected in json.loads((ROOT/'packaging/macos/codex-vendor-provenance.json').read_text())['files'].items():
+        if digest(bounded(vendor,relative)) != expected: raise ValueError('Native digest mismatch: '+relative)
     shutil.copytree(vendor,resource/'native',symlinks=True)
     shutil.copytree(inputs/'licenses',resource/'licenses')
     shutil.copy2(ROOT/'LICENSE',resource/'licenses/Easel-LICENSE')
