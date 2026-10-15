@@ -35,6 +35,8 @@ stats = {
 }
 TOKEN = "easel-loopback-dummy-not-a-secret"
 MARKER = "EASEL_FAKE_GATEWAY_MARKER"
+# Optional owned tool command for packaged-runtime validation.
+TOOL_COMMAND = None
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -118,7 +120,7 @@ class Handler(BaseHTTPRequestHandler):
                 None,
             )
             stats["selected_tool"] = name
-            command = "printf '" + MARKER + "\\n' > marker.txt; cat marker.txt"
+            command = TOOL_COMMAND or ("printf '" + MARKER + "\\n' > marker.txt; cat marker.txt")
             args = (
                 {"cmd": command, "max_output_tokens": 100}
                 if name == "exec_command"

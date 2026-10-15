@@ -1,0 +1,13 @@
+# Easel Core Trial — macOS 15+ Apple Silicon
+
+Unsigned local trial. Open `Easel Core Trial.app`; browser opens after readiness at http://127.0.0.1:17860. Startup errors and server logs: `~/Library/Logs/Easel/launcher.log`. Use `Stop Easel.command` to authenticate and stop only this workspace's instance. An occupied foreign port produces an error without terminating any process.
+
+Workspace: `~/Library/Application Support/Easel/workspace`. Profiles, outputs and settings remain there across restart and app replacement. The app and workspace must not contain each other. Keep the app while it runs. Replace the stopped app to update; only unchanged managed skill/script seeds are updated. User edits remain. An unrelated `.venv` or malformed configuration is preserved and produces an error. `.venv` is an owned link to private Python; do not repurpose it.
+
+For isolated trials: `"Easel Core Trial.app/Contents/MacOS/Easel" --workspace /absolute/separate/path --port 0 --no-browser`; use the same workspace with `--stop`. Default fixed port preserves browser appearance preferences. Configure your custom Responses API URL, model and key in Settings → Agent runtime → bundled Codex provider. Keys stay in private workspace configuration and are masked in HTTP responses.
+
+Included core: private CPython 3.12.13, 25 pinned dependencies, native Codex 0.146.0, prebuilt Web UI, streaming custom Responses agent, workspace file/shell tools and ordinary Python scripts. No host Node/Python/uv installation is required. Media models, browser automation, publishing integrations, ffmpeg, pandoc and optional tool dependencies are outside the trial guarantee. Automatic dependency installation is disabled to preserve private Python.
+
+This local package has not been signed/notarized, verified on an independent clean Mac, or validated against a real upstream provider. Local proof uses only a loopback dummy Responses server with fake credentials, temporary HOME/workspace and denied non-loopback proxy. macOS 15 minimum follows the bundled native shell resource. Licenses and file inventories are inside Contents/Resources; compiled dependency notices are collected but are not a comprehensive legal audit.
+
+Build from a checkout with prebuilt frontend and prepared private Python/wheels using `python scripts/packaging/build_macos.py --inputs /prepared/inputs --codex-root /native/aarch64-apple-darwin --output /fresh/output`. The builder requires build-time uv only; pinned requirements, wheel hashes, license notices and runtime provenance are tracked under packaging/macos. Obtain prepared inputs matching those hashes; original Python archive SHA was not locally verified, while the provided runtime file inventory was recorded.

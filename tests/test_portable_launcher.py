@@ -50,3 +50,23 @@ def test_builder_uses_resource_allowlist():
     assert selected('easel/portable.py')
     for path in ['profiles/private/BIO.md','.env','outputs/key.json','skills/a/.env','skills/a/.token_cache.json','skills/a/node_modules/a.js','scripts/validation/verify_codex_gateway.py','untracked-credentials.json']:
         assert not selected(path), path
+
+
+def test_seed_does_not_overwrite_symlinked_user_file(tmp_path):
+    resource, workspace=tmp_path/'app',tmp_path/'data'
+    (resource/'seed/skills').mkdir(parents=True)
+    (resource/'seed/skills/a').write_text('old')
+    seed_workspace(resource,workspace)
+    profile=workspace/'BIO'; profile.write_text('old')
+    (workspace/'skills/a').unlink(); (workspace/'skills/a').symlink_to(profile)
+    (resource/'seed/skills/a').write_text('new')
+    seed_workspace(resource,workspace)
+    assert profile.read_text()=='old'
+
+
+def test_control_directory_symlink_rejected(tmp_path):
+    resource,workspace=tmp_path/'app',tmp_path/'data'
+    resource.mkdir(); workspace.mkdir(); outside=tmp_path/'outside'; outside.mkdir()
+    (workspace/'.easel-portable').symlink_to(outside)
+    with pytest.raises(ValueError): prepare_workspace(resource,workspace)
+    assert list(outside.iterdir())==[]

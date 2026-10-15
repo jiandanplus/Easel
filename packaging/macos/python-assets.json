@@ -1,0 +1,22 @@
+[
+  {
+    "name": "cpython-3.12.13+20260510-aarch64-apple-darwin-debug-full.tar.zst",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.12.13%2B20260510-aarch64-apple-darwin-debug-full.tar.zst",
+    "digest": "sha256:1239c3e41bbae5be03f747ebb1a9757e7f97c37eabd51a5e3c4693df2c727c7d"
+  },
+  {
+    "name": "cpython-3.12.13+20260510-aarch64-apple-darwin-install_only.tar.gz",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.12.13%2B20260510-aarch64-apple-darwin-install_only.tar.gz",
+    "digest": "sha256:5a30271f8d345a5b02b0c9e4e31e0f1e1455a8e4a04fba95cd9762472abc3b17"
+  },
+  {
+    "name": "cpython-3.12.13+20260510-aarch64-apple-darwin-install_only_stripped.tar.gz",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.12.13%2B20260510-aarch64-apple-darwin-install_only_stripped.tar.gz",
+    "digest": "sha256:55bc1a5edbc8ac4da0081f4f5731ed2d1ed10c57cb37a820b2a0dbc7cad742e9"
+  },
+  {
+    "name": "cpython-3.12.13+20260510-aarch64-apple-darwin-pgo+lto-full.tar.zst",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.12.13%2B20260510-aarch64-apple-darwin-pgo%2Blto-full.tar.zst",
+    "digest": "sha256:0750a735a09181ce203fb357df7221eab78d8ff4372d5cb6d58a2053765befdb"
+  }
+]

@@ -1,0 +1,35 @@
+{
+  "private_python": {
+    "version": "3.12.13",
+    "build": "20260510",
+    "source": "uv0.11.16 managed python-build-standalone",
+    "inventory": "python-runtime-files.json",
+    "archive_sha_verified": false
+  },
+  "core_wheels": {
+    "count": 25,
+    "lock": "core-requirements.txt",
+    "provenance": "wheels-provenance.json",
+    "sha256_verified": true
+  },
+  "native_codex": {
+    "version": "0.146.0",
+    "inventory": "codex-vendor-provenance.json"
+  },
+  "core_import": {
+    "path": "/usr/bin:/bin",
+    "home": "temporary",
+    "workspace": "temporary",
+    "stdout": "PRIVATE_CORE_WEB_IMPORT_OK",
+    "packages": 25
+  },
+  "privacy_patterns": {
+    "file": "source-privacy-patterns.json",
+    "findings": 0
+  },
+  "os": {
+    "build_host": "macOS26.4.1 arm64",
+    "native_zsh_minos": "15.0",
+    "trial_target": "macOS15+ ARM64"
+  }
+}

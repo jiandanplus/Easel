@@ -1,0 +1,150 @@
+[
+  {
+    "path": "frontend/sources.json",
+    "sha256": "c3b0ba78fb27dd3a39fc146d2383ffb786a892a6911473d70e98584bb0c3a627"
+  },
+  {
+    "path": "python/sources.json",
+    "sha256": "a61857f80e01ed74579c58751a4685c4c35d182cea0cc35f83026887eeeb502f"
+  },
+  {
+    "path": "python/LICENSE.libX11.txt",
+    "sha256": "5f21bceba40ab5ed5c67882905f98b1d1260df8083182312f66b7817c396282a"
+  },
+  {
+    "path": "python/LICENSE.openssl-1.1.txt",
+    "sha256": "c32913b33252e71190af2066f08115c69bc9fddadf3bf29296e20c835389841c"
+  },
+  {
+    "path": "python/LICENSE.openssl-3.txt",
+    "sha256": "ff420781e0005270cd1894a265e526dec4eb332f99df62a481b06672db202290"
+  },
+  {
+    "path": "python/LICENSE.mpdecimal.txt",
+    "sha256": "936fdebb3b47f8ff093ad51cda59182e675a8ac3924b45cac8db7b67ccdd0cef"
+  },
+  {
+    "path": "python/LICENSE",
+    "sha256": "393eaf2b92b3d49bea139e39b6fd205b6e99c499999986aec5554586a830dfdd"
+  },
+  {
+    "path": "python/LICENSE.cpython.txt",
+    "sha256": "7bcd2979fca5bd971ef0aa96ed601fc677c496106f7ac8799dd4e967c4ad6ff1"
+  },
+  {
+    "path": "python/LICENSE.libuuid.txt",
+    "sha256": "0d09b76c758279cc85b22c2bbfc9f9b05b7f9b5350444cfea7baf341e49bc6dc"
+  },
+  {
+    "path": "python/LICENSE.ncurses.txt",
+    "sha256": "57bc19443893a2596873fab0df71455b0bdb94eca60a013d2958f258e6df1eee"
+  },
+  {
+    "path": "python/LICENSE.libXau.txt",
+    "sha256": "767e17205b62a533fc8da8a468534ecd3339ec571d27fd511ada548cbdc7732d"
+  },
+  {
+    "path": "python/LICENSE.sqlite.txt",
+    "sha256": "c6687a8aaa5d226f76739c2ee07b33b7f8c0ec9eb9cf61337657c370a7060165"
+  },
+  {
+    "path": "python/LICENSE.libffi.txt",
+    "sha256": "97178df48ff3582d3345a4c9c46cff5c333e57aa325c0be33d1ed2507e5ecf48"
+  },
+  {
+    "path": "python/LICENSE.libxcb.txt",
+    "sha256": "db4d33f2759217c3c63e89bf32d9f74993fd6a5184544c6f0d4df2525c793f87"
+  },
+  {
+    "path": "python/LICENSE.tcl.txt",
+    "sha256": "419c03556fdef6380206f8086c6ac6188bd169f8e285a1b65625d0170a34b383"
+  },
+  {
+    "path": "python/LICENSE.expat.txt",
+    "sha256": "f5a27dfb32f62460f8379f95d8ded0895b8c875911fc44a7ccc52fa66e37aacf"
+  },
+  {
+    "path": "python/LICENSE.bzip2.txt",
+    "sha256": "e970b40f12f8e76cbfc5795ed490e201728819b748acb434b379bc8c6384d66f"
+  },
+  {
+    "path": "python/LICENSE.bdb.txt",
+    "sha256": "33d2859d8050270a31181f90ca88c1fa2eba00be4d9facad508d3d1b1522ae99"
+  },
+  {
+    "path": "python/LICENSE.tix.txt",
+    "sha256": "20da7f63745a1ddec320ee9ac9e793d87240a9c51659762f74d0806c0d669942"
+  },
+  {
+    "path": "python/LICENSE.zlib.txt",
+    "sha256": "e9da8efe5e5876fadcb38af76f9dfdf5c1f4626ededa003e01d0514fbc1077dd"
+  },
+  {
+    "path": "python/LICENSE.liblzma.txt",
+    "sha256": "7077627318f21493e72eadd9d7ec59f30a3007eaf91efe35a89c3bc79bfcc34a"
+  },
+  {
+    "path": "python/LICENSE.libedit.txt",
+    "sha256": "9da6c9c74987a36c84302982799d17d2f748ba1c1c0c471425716173c1d07649"
+  },
+  {
+    "path": "codex/RATATUI-LICENSE",
+    "sha256": "b690fa44acf2d425fc1d7b89bf6d95ef136adabe7b8f76c9e873053136413141"
+  },
+  {
+    "path": "codex/RIPGREP-COPYING",
+    "sha256": "80a5b7c7e5ed762170f957d6b680bc8e969fb1de8ca3cafb2bf028000ee6e4e5"
+  },
+  {
+    "path": "codex/ZSH-LICENCE",
+    "sha256": "b1b77e7ce62bfe23ae094c9059b13b5f958111a78893054be04366950a962252"
+  },
+  {
+    "path": "codex/RIPGREP-LICENSE-MIT",
+    "sha256": "5c00ef0ca99fafa52c323566c0dfaf1fa9e6eb0dda22703e99dc704c41ed8199"
+  },
+  {
+    "path": "codex/PCRE2-LICENCE",
+    "sha256": "762d126a3de59be68269d29d7ec258d3ff85eed108d50fa55d0c5e57e5cf5899"
+  },
+  {
+    "path": "codex/CODEX-NOTICE",
+    "sha256": "8b6db9c66bc81dba23ba1e4cd255bf9f2a1f799f532d97c1ef310f5e379407d7"
+  },
+  {
+    "path": "codex/CODEX-LICENSE",
+    "sha256": "fada9cda895b67af092f74f75ba23230e8d4eeef3d06af394a1dc79093d10787"
+  },
+  {
+    "path": "frontend/@types_trusted-types/LICENSE",
+    "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+  },
+  {
+    "path": "frontend/@types_dompurify/LICENSE",
+    "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+  },
+  {
+    "path": "frontend/marked/LICENSE",
+    "sha256": "8e3a3f82f59a60958f56ca08f445647c32a4733dc7ca6c2c46f6eb898471ab9c"
+  },
+  {
+    "path": "frontend/scheduler/LICENSE",
+    "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  },
+  {
+    "path": "frontend/react-dom/LICENSE",
+    "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  },
+  {
+    "path": "frontend/dompurify/LICENSE",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "path": "frontend/dompurify/LICENSE-MPL",
+    "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+  },
+  {
+    "path": "frontend/react/LICENSE",
+    "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  }
+]

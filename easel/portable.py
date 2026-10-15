@@ -9,6 +9,7 @@ import secrets
 import shutil
 import socket
 import sys
+import tempfile
 import threading
 import time
 import urllib.request
@@ -22,10 +23,21 @@ def digest(path):
 
 def atomic_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_suffix('.new')
-    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2))
-    temp.chmod(0o600)
-    temp.replace(path)
+    fd, name = tempfile.mkstemp(dir=path.parent, prefix=path.name+'.', suffix='.new')
+    try:
+        with os.fdopen(fd, 'w') as stream:
+            os.fchmod(stream.fileno(), 0o600)
+            json.dump(value, stream, ensure_ascii=False, indent=2)
+        os.replace(name, path)
+    finally:
+        if os.path.exists(name): os.unlink(name)
+
+
+def safe_state(workspace):
+    state = workspace/'.easel-portable'
+    if state.is_symlink() or not state.resolve().is_relative_to(workspace.resolve()):
+        raise ValueError('工作区控制目录不能是符号链接')
+    return state
 
 
 def bounded(root, relative):
@@ -43,7 +55,7 @@ def verify_inventory(resource):
 
 
 def seed_workspace(resource, workspace):
-    state = workspace/'.easel-portable/seed.json'
+    state = safe_state(workspace)/'seed.json'
     try:
         previous = json.loads(state.read_text()) if state.exists() else {}
         if not isinstance(previous, dict): raise ValueError('invalid seed state')
@@ -55,6 +67,8 @@ def seed_workspace(resource, workspace):
         if not source.is_file(): continue
         relative = source.relative_to(seed).as_posix()
         destination = bounded(workspace, relative)
+        if any(p.is_symlink() for p in [destination, *destination.parents] if p != workspace and p.is_relative_to(workspace)):
+            continue
         checksum = digest(source)
         if not destination.exists() or (destination.is_file() and digest(destination) == previous.get(relative)):
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -68,6 +82,7 @@ def seed_workspace(resource, workspace):
 
 def prepare_workspace(resource, workspace):
     resource, workspace = resource.resolve(), workspace.resolve()
+    safe_state(workspace)
     if workspace.is_relative_to(resource) or resource.is_relative_to(workspace):
         raise ValueError('工作区必须位于应用资源之外，且不能包含应用资源')
     link = workspace/'.venv'
@@ -83,18 +98,18 @@ def prepare_workspace(resource, workspace):
     if link.is_symlink(): link.unlink()
     link.symlink_to(target, target_is_directory=True)
     atomic_json(ownership, {'target':str(target)})
-    for name in ('profiles', 'outputs', '.easel-portable/codex-home'):
+    for name in ('profiles', 'outputs', 'outputs/_harness/codex-home'):
         (workspace/name).mkdir(parents=True, exist_ok=True)
 
 
-def instance_request(state, action):
+def instance_request(state, action, workspace):
     port = state['port']; token = state['token']
     if type(port) is not int or not 1 <= port <= 65535 or not isinstance(token, str) or len(token) != 64:
         raise ValueError('无效实例记录')
     request = urllib.request.Request(f'http://127.0.0.1:{port}/_easel/{action}', headers={'X-Easel-Token':token}, method='POST' if action == 'stop' else 'GET')
     with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request, timeout=2) as response:
         result = json.load(response)
-    if result.get('token') != token: raise ValueError('实例身份校验失败')
+    if result.get('workspace') != str(workspace) or result.get('token') != token: raise ValueError('实例身份校验失败')
     return result
 
 
@@ -107,11 +122,12 @@ def main(argv=None):
     args = parser.parse_args(argv)
     resource = Path(__file__).resolve().parents[1]
     workspace = args.workspace.expanduser().resolve()
-    state_path = workspace/'.easel-portable/instance.json'
+    state_path = safe_state(workspace)/'instance.json'
     if state_path.exists():
         try:
             state = json.loads(state_path.read_text())
-            instance_request(state, 'stop' if args.stop else 'identity')
+            instance_request(state, 'identity', workspace)
+            if args.stop: instance_request(state, 'stop', workspace)
             if not args.stop and not args.no_browser: webbrowser.open(f'http://127.0.0.1:{state["port"]}')
             return 0
         except (OSError, ValueError, KeyError):
@@ -129,7 +145,7 @@ def main(argv=None):
     except BlockingIOError: raise ValueError('此工作区已有正在启动或运行的 Easel 实例')
     prepare_workspace(resource, workspace)
     native = resource/'native'
-    os.environ.update(EASEL_WORKSPACE_ROOT=str(workspace), EASEL_ROOT=str(workspace), EASEL_RESOURCE_ROOT=str(resource), EASEL_RUNTIME_MANIFEST=str(resource/'runtime-manifest.json'), EASEL_PORTABLE='1', CODEX_HOME=str(workspace/'.easel-portable/codex-home'), PYTHONDONTWRITEBYTECODE='1', PATH=os.pathsep.join([str(resource/'python/bin'),str(native/'codex-path'),str(native/'bin'),'/usr/bin','/bin','/usr/sbin','/sbin']))
+    os.environ.update(EASEL_WORKSPACE_ROOT=str(workspace), EASEL_ROOT=str(workspace), EASEL_RESOURCE_ROOT=str(resource), EASEL_RUNTIME_MANIFEST=str(resource/'runtime-manifest.json'), EASEL_PORTABLE='1', CODEX_HOME=str(workspace/'outputs/_harness/codex-home'), PYTHONDONTWRITEBYTECODE='1', PATH=os.pathsep.join([str(resource/'python/bin'),str(native/'codex-path'),str(native/'bin'),'/usr/bin','/bin','/usr/sbin','/sbin']))
     os.chdir(workspace)
     from easel.installation import initialize_runtime
     initialize_runtime(workspace, 'codex')
@@ -142,12 +158,12 @@ def main(argv=None):
     @app.get('/_easel/identity')
     async def identity(request: Request):
         if not secrets.compare_digest(request.headers.get('X-Easel-Token',''), token): raise HTTPException(403)
-        return {'token':token}
+        return {'token':token,'workspace':str(workspace)}
     @app.post('/_easel/stop')
     async def stop(request: Request):
         if not secrets.compare_digest(request.headers.get('X-Easel-Token',''), token): raise HTTPException(403)
         server.should_exit = True
-        return {'token':token}
+        return {'token':token,'workspace':str(workspace)}
     sock = socket.socket()
     try: sock.bind(('127.0.0.1', args.port))
     except OSError as error: raise ValueError('端口已占用；未终止其他进程。请关闭自有实例或使用 --port') from error
