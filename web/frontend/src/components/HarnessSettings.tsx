@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { fetchHarnessModels, fetchHarnessSettings, saveHarnessSettings } from '../lib/api';
 import type { HarnessModel, HarnessSettingsResponse } from '../lib/api';
 import SettingsSelect from './SettingsSelect';
+import BundledProviderSettings from './BundledProviderSettings';
 
 export default function HarnessSettings({ onChange, onSelect }: {
   onChange: (runtime: string) => void;
@@ -43,6 +44,7 @@ export default function HarnessSettings({ onChange, onSelect }: {
   }, [onChange, onSelect, refresh]);
 
   const selected = settings?.agents.find((agent) => agent.id === runtime);
+  const bundled = runtime === 'codex' && selected?.origin === 'bundled';
   const nativeModels = catalogs[runtime] || [];
   const pullModels = async () => {
     const requested = runtime;
@@ -130,7 +132,12 @@ export default function HarnessSettings({ onChange, onSelect }: {
       </div>
       {runtime !== 'openclaw' && runtime !== 'api' && (
         <>
-          <div className="settings-field">
+          {bundled ? <BundledProviderSettings disabled={busy || settingsLoading || !selected?.installed}
+            version={selected?.version || ''} onSaved={(value) => {
+              setModel(value);
+              setCatalogs((previous) => ({ ...previous, codex: [] }));
+              setSettings((previous) => previous ? { ...previous, models: { ...previous.models, codex: value } } : previous);
+            }} /> : <div className="settings-field">
             <label className="settings-field-label" htmlFor="harness-model">模型覆盖</label>
             <div className="settings-field-body">
               {(runtime === 'codex' || runtime === 'opencode') && (
@@ -154,7 +161,7 @@ export default function HarnessSettings({ onChange, onSelect }: {
                 模型是否可用仍取决于当前账号、供应商和原生 CLI 支持。</p>
               {modelNote && <p className="desc" role="status">{modelNote}</p>}
             </div>
-          </div>
+          </div>}
           {runtime === 'codex' && (
             <>
             <div className="settings-field">
@@ -186,10 +193,12 @@ export default function HarnessSettings({ onChange, onSelect }: {
             </div>
             </>
           )}
+          {!bundled && <>
           <p className="desc">认证由原生 CLI 管理，Easel 不迁移密钥。未自动批准的额外权限需在对话中确认；
             OpenCode / 通用 ACP 使用其原生权限策略，不是 Codex 沙箱。</p>
           <p className="desc"><code>{selected?.install_hint}</code></p>
           <p className="desc">“已安装”仅表示找到 CLI，不代表模型已登录；保存后请发送消息验证。</p>
+          </>}
         </>
       )}
       {settings?.locked && <p className="desc">启动环境 EASEL_AGENT_RUNTIME 已固定底座，请修改启动环境后重启。</p>}

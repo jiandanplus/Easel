@@ -57,6 +57,9 @@ async def console_turn(prompt: str, root: Path, env: dict, native_id="", *,
     config = dict(config) if config is not None else settings(root / "outputs", env)
     runtime = config["runtime"]
     from easel.service_contracts import TaskContext
+    if runtime == "codex":
+        from .runtime import codex_model
+        config["models"] = {**config["models"], "codex": codex_model(root, config["models"].get("codex", ""))}
     context = TaskContext(config["service_source"], config["execution_target"], runtime,
                           config["models"].get(runtime, ""))
     context.require_available()

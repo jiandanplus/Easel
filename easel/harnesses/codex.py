@@ -7,8 +7,7 @@ from easel import __version__
 
 from .base import Descriptor, HarnessError, RunRequest
 from .commands import base_command
-from .runtime import codex_environment
-from dataclasses import replace
+from .runtime import prepare_codex
 from .permissions import can_auto_approve
 from .rpc import connection
 from .workspace import harness_instructions
@@ -20,7 +19,8 @@ class CodexAdapter:
     async def run(self, request: RunRequest, emit, ask, bind):
         if request.sandbox not in ("read-only", "workspace-write"):
             raise HarnessError("Codex 只允许只读或工作区写入权限")
-        request = replace(request, env=codex_environment(request.env, request.cwd))
+        command = list(request.command) if request.command else base_command("codex") + ["app-server"]
+        request, command = prepare_codex(request, command)
         completion = asyncio.get_running_loop().create_future()
         thread_id = request.native_id
         turn_id = ""
@@ -81,7 +81,6 @@ class CodexAdapter:
                 return {"answers": {key: {"answers": value} for key, value in answers.items()}}
             raise HarnessError("不支持的 Codex 客户端请求")
 
-        command = list(request.command) if request.command else base_command("codex") + ["app-server"]
         async with connection(request, command, notify, respond) as rpc:
             if rpc.initialized is None:
                 rpc.initialized = await rpc.call("initialize", {

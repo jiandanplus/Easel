@@ -57,6 +57,11 @@ def settings(outputs: Path, env: dict[str, str]) -> dict:
             or any(ord(character) < 32 for character in value)
             for key, value in models.items()):
         raise HarnessError("Agent 模型设置格式无效")
+    from .runtime import resolve_codex
+    if resolve_codex().origin == "bundled":
+        from .provider import provider_status
+        provider = provider_status(outputs.parent)
+        models = {**models, "codex": provider["model"] if provider["configured"] else ""}
     sandbox = data.get("sandbox", "workspace-write")
     if sandbox not in ("read-only", "workspace-write"):
         raise HarnessError("Agent 权限设置无效，只允许只读或工作区写入")

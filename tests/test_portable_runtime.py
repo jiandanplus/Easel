@@ -211,7 +211,15 @@ def test_model_and_task_use_same_bundle_and_private_home(tmp_path, monkeypatch, 
         raise StopProbe
         yield
 
-    request = RunRequest("never executes", tmp_path / "workspace", {"CODEX_HOME": "outside"})
+    from easel.harnesses.provider import save_provider
+    root = tmp_path / "workspace"
+    save_provider(root, base_url="http://127.0.0.1:9000/v1", model="easel-fake",
+                  secret_action="replace", api_key="loopback-dummy")
+    request = RunRequest("never executes", root, {"CODEX_HOME": "outside"})
+    if route == "models":
+        assert asyncio.run(models.available_models("codex", request)) == [
+            {"id": "easel-fake", "label": "easel-fake", "default": True}]
+        return
     async def run():
         with pytest.raises(StopProbe):
             if route == "task":
@@ -222,6 +230,10 @@ def test_model_and_task_use_same_bundle_and_private_home(tmp_path, monkeypatch, 
                 await models.available_models("codex", request)
     asyncio.run(run())
     effective, command = observed[0]
-    assert command == [str(executable), "app-server"]
+    assert command[0] == str(executable)
+    assert command[-1] == "app-server"
+    assert 'model_provider="easel-custom"' in command
+    assert effective.model == "easel-fake"
+    assert effective.env["EASEL_BUNDLED_API_KEY"] == "loopback-dummy"
     assert effective.env["CODEX_HOME"] == str(request.cwd / "outputs/_harness/codex-home")
     assert request.env["CODEX_HOME"] == "outside"

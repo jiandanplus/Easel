@@ -44,11 +44,23 @@ export interface HarnessSettingsResponse extends ServiceRoute {
   sandbox: string;
   codex_auto_approve: boolean;
   locked: boolean;
-  agents: { id: string; label: string; protocol: string; installed: boolean; install_hint: string }[];
+  agents: { id: string; label: string; protocol: string; installed: boolean; install_hint: string; origin?: 'bundled' | 'override' | 'external'; version?: string; resolution_error?: string }[];
 }
 
 export function fetchHarnessSettings(): Promise<HarnessSettingsResponse> {
   return request('/api/settings/harness');
+}
+
+export interface BundledProviderState {
+  configured: boolean; base_url: string; model: string; key_present: boolean;
+}
+export function fetchBundledProvider(): Promise<BundledProviderState> {
+  return request('/api/settings/harness/provider');
+}
+export function saveBundledProvider(value: { base_url: string; model: string; api_key: string;
+  secret_action: 'preserve' | 'replace' | 'clear' }): Promise<BundledProviderState> {
+  return request('/api/settings/harness/provider', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) });
 }
 
 export interface HarnessModel {

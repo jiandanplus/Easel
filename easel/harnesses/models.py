@@ -9,8 +9,7 @@ from easel import __version__
 
 from .base import HarnessError, RunRequest
 from .commands import base_command
-from .runtime import codex_environment
-from dataclasses import replace
+from .runtime import prepare_codex, resolve_codex, codex_model
 from .rpc import RPC
 
 
@@ -21,13 +20,16 @@ def _valid_id(value):
 
 async def available_models(runtime: str, request: RunRequest) -> list[dict]:
     if runtime == "codex":
-        request = replace(request, env=codex_environment(request.env, request.cwd))
+        if resolve_codex().origin == "bundled":
+            model = codex_model(request.cwd, request.model)
+            return [{"id": model, "label": model, "default": True}]
+        request, command = prepare_codex(request, base_command("codex") + ["app-server"])
         async def reject(method, params):
             raise HarnessError("读取模型列表时不允许执行工具")
 
         models = []
         cursor = None
-        async with RPC(request, base_command("codex") + ["app-server"],
+        async with RPC(request, command,
                        lambda method, params: None, reject) as rpc:
             await rpc.call("initialize", {
                 "clientInfo": {"name": "easel", "version": __version__},

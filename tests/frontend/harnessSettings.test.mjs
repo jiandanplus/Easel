@@ -40,7 +40,7 @@ test('sidebar keeps its settings button unwrapped beside a truncated status', ()
 });
 
 function setup({ runtime = 'openclaw', locked = false, installed = true, saveError = '', modelError = '',
-  settingsErrors = [] } = {}) {
+  settingsErrors = [], origin, version } = {}) {
   const state = [];
   let cursor = 0;
   const effects = [];
@@ -58,6 +58,7 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
     agents: ['api', 'openclaw', 'opencode', 'codex', 'acp'].map(id => ({
       id, label: id === 'api' ? '仅聊天模式' : id,
       installed: ['api', 'openclaw'].includes(id) || installed, install_hint: `install ${id}`,
+      ...(id === 'codex' ? { origin, version } : {}),
     })),
   };
   const component = runInNewContext(outputText, {
@@ -66,6 +67,7 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
       createElement: (type, props, ...children) => ({ type, props: props || {}, children: children.flat() }),
     },
     SettingsSelect: 'settings-select',
+    BundledProviderSettings: 'bundled-provider',
     useState: initial => {
       const index = cursor++;
       if (!(index in state)) state[index] = initial;
@@ -339,4 +341,19 @@ test('native model listing failure preserves the saved model and allows manual i
   assert.match(text(tree), /读取失败：(Error: )?CLI unavailable/);
   assert.equal(nodes(tree, 'input')[0].props.value, 'codex-model');
   assert.equal(view.saves.length, 0);
+});
+
+
+test('bundled Codex renders provider configuration and version without native model overrides', async () => {
+  const view = setup({ runtime: 'codex', origin: 'bundled', version: '0.146.0' });
+  view.render(); await settle();
+  let tree = view.render();
+  const provider = nodes(tree, 'bundled-provider')[0];
+  assert.equal(provider.props.version, '0.146.0');
+  assert.equal(nodes(tree, 'input').length, 0);
+  assert.equal(nodes(tree, 'button').some(node => text(node) === '拉取模型'), false);
+  provider.props.onSaved('new-model');
+  tree = view.render();
+  nodes(tree, 'button')[0].props.onClick(); await settle();
+  assert.equal(view.saves[0].model, 'new-model');
 });

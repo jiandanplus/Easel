@@ -1742,6 +1742,50 @@ class HarnessSettingsRequest(BaseModel):
     codex_auto_approve: StrictBool | None = None
 
 
+class BundledProviderRequest(BaseModel):
+    base_url: str = Field(max_length=2048)
+    model: str = Field(max_length=240)
+    api_key: str = Field(default="", max_length=16384)
+    secret_action: str = "preserve"
+
+
+def _require_bundled_provider():
+    from easel.harnesses.runtime import resolve_codex
+    if resolve_codex().origin != "bundled":
+        raise HTTPException(409, "此设置仅适用于内置 Codex")
+
+
+@app.get("/api/settings/harness/provider")
+async def api_bundled_provider():
+    from easel.harnesses.provider import provider_status
+    try:
+        _require_bundled_provider()
+        return provider_status(PROJECT_ROOT)
+    except HarnessError as error:
+        raise HTTPException(409, str(error)) from error
+
+
+@app.post("/api/settings/harness/provider")
+async def api_bundled_provider_save(request: Request):
+    from easel.harnesses.provider import save_provider
+    from pydantic import ValidationError
+    try:
+        req = BundledProviderRequest.model_validate(await request.json())
+    except (ValueError, ValidationError) as error:
+        # Pydantic default validation details include the submitted raw secret.
+        raise HTTPException(400, "供应商请求格式无效，请检查地址、模型和 Key") from error
+    try:
+        _require_bundled_provider()
+        if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS:
+            raise HTTPException(409, "请等待当前任务完成或停止后修改供应商")
+        result = save_provider(PROJECT_ROOT, **req.model_dump())
+    except HarnessError as error:
+        raise HTTPException(400, str(error)) from error
+    from easel.harnesses.rpc import close_sessions
+    await close_sessions()
+    return result
+
+
 @app.get("/api/settings/harness")
 async def api_harness_settings():
     config = _harness_settings()
@@ -1781,7 +1825,14 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
     config["sandbox"] = req.sandbox
     if req.runtime == "codex" and req.codex_auto_approve is not None:
         config["codex_auto_approve"] = req.codex_auto_approve
-    config["models"] = {**config["models"], req.runtime: req.model.strip()}
+    model = req.model.strip()
+    if req.runtime == "codex":
+        from easel.harnesses.runtime import codex_model
+        try:
+            model = codex_model(PROJECT_ROOT, model, require_configured=False)
+        except HarnessError as error:
+            raise HTTPException(400, str(error)) from error
+    config["models"] = {**config["models"], req.runtime: model}
     harness_store.write_json(OUTPUTS_DIR / "_harness" / "config.json", config)
     from easel.harnesses.rpc import close_sessions
     await close_sessions()
@@ -2613,6 +2664,9 @@ class ChatRequest(BaseModel):
 def _task_context(req: ChatRequest, runtime: str, config: dict, env: dict | None = None) -> TaskContext:
     try:
         model = config["models"].get(runtime, "")
+        if runtime == "codex":
+            from easel.harnesses.runtime import codex_model
+            model = codex_model(PROJECT_ROOT, model)
         if runtime == "api":
             model = (env if env is not None else read_settings(ENV_FILE)).get("EASEL_DIRECT_API_MODEL", "").strip()
         elif runtime == "openclaw":

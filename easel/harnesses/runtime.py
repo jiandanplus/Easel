@@ -102,3 +102,40 @@ def codex_environment(env: dict[str, str], cwd: Path) -> dict[str, str]:
         home.chmod(0o700)
         result["CODEX_HOME"] = str(home)
     return result
+
+
+def codex_model(cwd: Path, model: str, *, require_configured: bool = True) -> str:
+    """Resolve the actual bundled model; external overrides retain native behavior."""
+    if resolve_codex().origin != "bundled":
+        return model
+    from .provider import read_provider, require_provider
+    config = require_provider(cwd) if require_configured else read_provider(cwd)
+    selected = config.get("model", "") if config.get("api_key") else ""
+    if model and model != selected:
+        raise HarnessError("内置 Codex 仅使用供应商设置中的模型，请在内置供应商设置中更改")
+    return selected
+
+
+def prepare_codex(request, command: list[str]):
+    """Shared command, model and credential preparation for native Codex calls."""
+    if resolve_codex().origin != "bundled":
+        return request, command
+    from dataclasses import replace
+    from .provider import require_provider
+    data = require_provider(request.cwd)
+    model = codex_model(request.cwd, request.model)
+    env = codex_environment(request.env, request.cwd)
+    for key in ("OPENAI_API_KEY", "OPENAI_ACCESS_TOKEN", "CODEX_API_KEY", "EASEL_BUNDLED_API_KEY",
+                "OPENAI_BASE_URL", "OPENAI_ORG_ID", "OPENAI_ORGANIZATION", "OPENAI_PROJECT_ID"):
+        env.pop(key, None)
+    env["EASEL_BUNDLED_API_KEY"] = data["api_key"]
+    # JSON strings are also valid TOML basic strings; no key ever enters argv.
+    config = ["model_provider=" + json.dumps("easel-custom"),
+              "model=" + json.dumps(model),
+              'model_providers.easel-custom.name="Easel custom"',
+              "model_providers.easel-custom.base_url=" + json.dumps(data["base_url"]),
+              'model_providers.easel-custom.env_key="EASEL_BUNDLED_API_KEY"',
+              'model_providers.easel-custom.wire_api="responses"',
+              'model_providers.easel-custom.requires_openai_auth=false']
+    arguments = [part for value in config for part in ("-c", value)]
+    return replace(request, env=env, model=model), [command[0], *arguments, *command[1:]]
