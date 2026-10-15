@@ -1,0 +1,26 @@
+{
+  "variant": "B",
+  "page": "12",
+  "title": "新建画像",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-f8e2-7a90-9676-a91b8de1387f/exec-3c881aa5-ad8c-4082-8c10-df439f7857a7.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/12.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "新建画像",
+    "基础信息",
+    "社媒链接",
+    "运营意图",
+    "下一步"
+  ],
+  "status": "reviewed-required-labels-legible; active-sidebar-correct; extra-short-demo-copy",
+  "visuallyConfirmedLabels": [
+    "新建画像",
+    "基础信息",
+    "社媒链接",
+    "运营意图",
+    "下一步"
+  ],
+  "qaNotes": "Manual visual check confirms mandatory heading/control labels; not a guarantee for every decorative glyph",
+  "sha256": "cf1023d739b89d167b614727029799b299318aaa2c587af3d7af9fbc44a5c98f"
+}

@@ -1,0 +1,25 @@
+{
+  "variant": "E",
+  "page": "10",
+  "title": "画像",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-36172871-c89f-41e6-b9b2-755924cc524a.png",
+  "requiredLabels": [
+    "画像",
+    "身份定位",
+    "目标受众",
+    "偏好与红线",
+    "保存修改"
+  ],
+  "status": "visually-reviewed",
+  "width": 1586,
+  "height": 992,
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/E/10.png",
+  "visuallyConfirmedLabels": [
+    "画像",
+    "身份定位",
+    "目标受众",
+    "偏好与红线",
+    "保存修改"
+  ],
+  "sha256": "3b5e5801864cd6a75ab0c76a56e8a671db4303417a90b40fd8e91c2340afd8f1"
+}

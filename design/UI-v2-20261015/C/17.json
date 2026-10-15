@@ -1,0 +1,24 @@
+{
+  "variant": "C",
+  "page": "17",
+  "title": "视频",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-1c9cd944-8a34-4de2-a97b-0331da4a0243.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/C/17.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "视频",
+    "视频生成服务",
+    "主通道",
+    "备用通道",
+    "自测本通道",
+    "保存配置"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Both configured rows show primary selection; channel role must be calibrated during implementation"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "18cc736ef3877ce27a986724521193ace9c4e4637dbc734c8070a99f06ed6112"
+}

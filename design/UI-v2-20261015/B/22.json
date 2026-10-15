@@ -1,0 +1,21 @@
+{
+  "variant": "B",
+  "page": "22",
+  "title": "内容预览",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-214a6d3a-4028-4d2a-babb-e5ba0004438b.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/22.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "内容预览",
+    "文件信息",
+    "下载",
+    "用于发布",
+    "关闭"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "88bd1d4b1fc6672ac7cc08119e61453b4f1ab4840486b29cce5a00ee402d09cf"
+}

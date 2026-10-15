@@ -1,0 +1,28 @@
+{
+  "variant": "B",
+  "page": "15",
+  "title": "配音",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-f8e2-7a90-9676-a91b8de1387f/exec-95471a5b-24b0-4759-99a3-8f1338e118f4.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/15.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "配音",
+    "供应商",
+    "主通道",
+    "备用通道",
+    "自测本通道",
+    "保存配置"
+  ],
+  "status": "reviewed-required-labels-legible; active-sidebar-correct",
+  "visuallyConfirmedLabels": [
+    "配音",
+    "供应商",
+    "主通道",
+    "备用通道",
+    "自测本通道",
+    "保存配置"
+  ],
+  "qaNotes": "Manual visual check confirms mandatory heading/control labels; not a guarantee for every decorative glyph",
+  "sha256": "9c85c6401f783ec3c8063bbd818f7cd82aa0fcb57459da12e65422509b7c82c9"
+}

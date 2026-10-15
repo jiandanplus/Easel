@@ -1,0 +1,21 @@
+{
+  "variant": "D",
+  "page": "20",
+  "title": "更多设置",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-2c2cec1c-49b0-4cee-a13a-286bf91889db.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/D/20.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "更多设置",
+    "以下功能暂未开放",
+    "网关参数",
+    "语言设置",
+    "暂未开放"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "84333cf602a3f14b073fe0ae849eab529e3e42ee7bf558b7bbb8ecb8f575b65c"
+}

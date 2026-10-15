@@ -1,0 +1,42 @@
+Use case: ui-mockup. Re-render one single full-size Easel Chinese desktop web application page using the supplied previous board only as a VISUAL STYLE REFERENCE. IMPORTANT: do not copy its collage or its inaccurate tiny text. EXACTLY ONE PAGE, full canvas, LANDSCAPE 16:10, target 2560x1600 or highest native resolution. No surrounding presentation title/banner, no browser chrome, no device, no perspective, no contact sheet. Readability and correct Simplified Chinese spelling are the first priority.
+Design a usable polished app screenshot. A single desktop page with practical screen density. Main heading about 36px, body/labels about 20px, sidebar 18px at output size. Keep all letters crisp, normal glyphs, generous line height and no text below 16px. Use fewer short rows rather than cram tiny writing.
+Use SAME sidebar navigation in all pages: brand 'Easel'; group '创作': '工作台', '对话', '热点雷达', '选题库', '爆款拆解', '技能库'; group '内容运营': '内容库', '内容日历', '发布中心'; group '管理': '账号', '画像', '设置'. Footer only '本地运行'. Active page highlighted correctly. Simple top bar with search placeholder '搜索内容' and fictitious avatar '示例创作者'. No TEAM/COLLABORATION/PRO PLAN/BILLING/UPSELL menus; do not invent extra destinations.
+Chinese typography: legible standard printed Simplified Chinese glyphs, akin PingFang SC / Noto Sans CJK. Body labels must be copied EXACTLY from the whitelist below, no paraphrasing, no generated gibberish, no English translations beside Chinese, no microtext or extra decorative paragraphs. English technical provider names and numeric demo counts are allowed only as specified. If uncertain about a long text, omit the nonessential text rather than spell it incorrectly. All important labels and headings MUST appear verbatim. Render typography carefully with correct strokes. Never use the corrupted labels from the reference board.
+Retain existing Easel functionality only. Reference palette, spacing character, edges and overall aesthetic, but redraw all text at native readable size. Use realistic fictional demo content; no real credentials. All keys masked with bullets. No claims of actual external posting.
+VISUAL DIRECTION B: 极简效率台
+Exceptionally precise minimalist productivity software: pure white #FFFFFF and cool off-white #F5F7FA, graphite #20242D, cobalt blue #315EF7. Compact 208px grouped navigation, command/search bar at top, 8px subtle rounded rectangular controls, hairline borders, clean sans typography. Linear-like engineering precision without copying any branded product. Spacious usable data tables and modular panels, excellent hierarchy, no gradients or illustrations.
+PAGE: 技能库
+LAYOUT: Single searchable skill catalog, six category tabs; 8 concise rows/cards short 1line descriptions and readiness badges, favorites, no raw technical identifiers. Use correct categories and total114 count.
+EXACT TEXT WHITELIST:
+"技能库"
+"114 个创作技能"
+"搜索技能"
+"全部"
+"发现"
+"策划"
+"制作"
+"发布"
+"归因"
+"通用"
+"热榜选题"
+"发现适合你的热点"
+"竞品分析"
+"寻找差异化机会"
+"视频脚本"
+"从主题到完整脚本"
+"小红书卡组"
+"把文案做成图文卡片"
+"文案润色"
+"让表达更清晰自然"
+"多平台改编"
+"适配各平台内容"
+"发布前检查"
+"检查标题、封面和标签"
+"产物管理"
+"整理成品与素材"
+"已配置"
+"需配置"
+"查看详情"
+MANDATORY CLEAR LABELS:
+"技能库", "搜索技能", "发现", "制作", "发布", "已配置"
+Single full desktop page, style reference only. No unspecified dates, no extra paragraphs. ALL Chinese type must be large and correctly written.

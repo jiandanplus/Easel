@@ -1,0 +1,27 @@
+{
+  "variant": "E",
+  "page": "15",
+  "title": "配音",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-a0a33095-f31c-4a5f-ba65-1cba761dad42.png",
+  "requiredLabels": [
+    "配音",
+    "供应商",
+    "主通道",
+    "备用通道",
+    "自测本通道",
+    "保存配置"
+  ],
+  "status": "visually-reviewed",
+  "width": 1586,
+  "height": 992,
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/E/15.png",
+  "visuallyConfirmedLabels": [
+    "配音",
+    "供应商",
+    "主通道",
+    "备用通道",
+    "自测本通道",
+    "保存配置"
+  ],
+  "sha256": "e17ddc360f3fd23dc464af231740d079584845af1fbaaa3ffad660ae5d918722"
+}

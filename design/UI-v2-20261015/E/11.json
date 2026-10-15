@@ -1,0 +1,31 @@
+{
+  "variant": "E",
+  "page": "11",
+  "title": "发布中心",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-0c9648ef-979d-448b-8922-6a26f9adf566.png",
+  "requiredLabels": [
+    "发布中心",
+    "标题",
+    "正文",
+    "平台预览",
+    "发布前预检",
+    "一键发布"
+  ],
+  "status": "visually-reviewed-corrected",
+  "width": 1586,
+  "height": 992,
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/E/11.png",
+  "originalSource": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-65cf4f37-5af2-4311-9a5c-7bd1ed08ac67.png",
+  "visuallyConfirmedLabels": [
+    "发布中心",
+    "标题",
+    "正文",
+    "平台预览",
+    "发布前预检",
+    "一键发布"
+  ],
+  "qaNotes": [
+    "Preserve this Swiss orange/black publishing design and all existing exact Chinese labels. Add the missing outlined action button 发布前预检 in the bottom action bar, immediately before 存草稿并排期 and 一键发布. Make room by shortening the warning bar. The bottom action buttons must be three: 发布前预检, 存草稿并排期, 一键发布. All text crisp accurate Chinese; all three buttons fully visible."
+  ],
+  "sha256": "7fca3788275bdf32b3e6b3d0d212a12cd06499123a9e0324c6c1fd91dfe1b1f4"
+}

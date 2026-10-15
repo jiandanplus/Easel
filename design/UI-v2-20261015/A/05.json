@@ -1,0 +1,29 @@
+{
+  "variant": "A",
+  "page": "05",
+  "title": "内容日历",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-7e05a2c8-6de5-45bc-a125-5937650b6e71.png",
+  "requiredLabels": [
+    "内容日历",
+    "2026年10月",
+    "新建排期",
+    "周一",
+    "周日"
+  ],
+  "status": "reviewed-required-labels",
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked. A05 month-grid weekday/date alignment checked.",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/A/05.png",
+  "width": 1586,
+  "height": 992,
+  "visuallyConfirmedLabels": [
+    "内容日历",
+    "2026年10月",
+    "新建排期",
+    "周一",
+    "周日"
+  ],
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "calendarAlignmentVerified": "Seven weekdays; October 1 and 15 Thursday; 1-31 sequentially aligned.",
+  "sha256": "66105706ea412d444c3775db8cd6489dc0970c9ccb658c2658297eb824bb5d38"
+}

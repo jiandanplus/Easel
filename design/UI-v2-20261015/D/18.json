@@ -1,0 +1,23 @@
+{
+  "variant": "D",
+  "page": "18",
+  "title": "音乐",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-1b62a573-248e-4581-99dc-5becb8479db8.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/D/18.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "音乐",
+    "音乐生成服务",
+    "供应商",
+    "主通道",
+    "保存配置"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Decorative E letter beside Easel brand; both channel roles show primary selected"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "814bb6942870231d49b8fe61b5a5aa04dd6f3bc0fd53d582beaab1ae479faafc"
+}

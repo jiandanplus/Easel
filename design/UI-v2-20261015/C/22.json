@@ -1,0 +1,23 @@
+{
+  "variant": "C",
+  "page": "22",
+  "title": "内容预览",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-919485ea-5303-43e5-a5e2-e134ca3e4aac.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/C/22.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "内容预览",
+    "文件信息",
+    "下载",
+    "用于发布",
+    "关闭"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Content library sidebar active state omitted"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "b894dadc8c4b12e75b59d2fb96d40214a07c69dc41354146b2fea91ad1400ddb"
+}

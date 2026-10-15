@@ -1,0 +1,40 @@
+{
+  "variant": "D",
+  "page": "05",
+  "title": "内容日历",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-356d9f4f-37e6-475c-80f6-077ab0629351.png",
+  "requiredLabels": [
+    "内容日历",
+    "2026年10月",
+    "新建排期",
+    "周一",
+    "周日"
+  ],
+  "status": "reviewed-required-labels",
+  "visuallyConfirmedLabels": [
+    "内容日历",
+    "2026年10月",
+    "新建排期",
+    "周一",
+    "周日"
+  ],
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked. Calendar alignment checked where applicable.",
+  "ocr": {
+    "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-356d9f4f-37e6-475c-80f6-077ab0629351.ocr.json",
+    "requiredFound": [
+      "内容日历",
+      "2026年10月",
+      "新建排期",
+      "周一",
+      "周日"
+    ],
+    "requiredMissing": []
+  },
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/D/05.png",
+  "width": 1586,
+  "height": 992,
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "calendarAlignmentVerified": "Seven weekdays; October 1 and 15 Thursday; 1-31 sequentially aligned.",
+  "sha256": "b7b10207537e168cf6205711f1c8c4e59f5adc0f7c7dbcfefc306f11e845791b"
+}

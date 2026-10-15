@@ -1,0 +1,28 @@
+{
+  "variant": "A",
+  "page": "04",
+  "title": "选题库",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-a24474de-0c8a-450a-a492-999dfff7746e.png",
+  "requiredLabels": [
+    "选题库",
+    "新建选题",
+    "待做",
+    "进行中",
+    "已完成"
+  ],
+  "status": "reviewed-required-labels",
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked; A04 demo dates show 2024.",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/A/04.png",
+  "width": 1586,
+  "height": 992,
+  "visuallyConfirmedLabels": [
+    "选题库",
+    "新建选题",
+    "待做",
+    "进行中",
+    "已完成"
+  ],
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "sha256": "b78d832b4b032a5cb3caee840f9f15202999050511d97ace54ed6a776e330af1"
+}

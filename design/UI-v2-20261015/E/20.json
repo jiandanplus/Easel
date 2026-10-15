@@ -1,0 +1,25 @@
+{
+  "variant": "E",
+  "page": "20",
+  "title": "更多设置",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-6fb05022-2d1e-49bc-8c1e-60714d7b08f4.png",
+  "requiredLabels": [
+    "更多设置",
+    "以下功能暂未开放",
+    "网关参数",
+    "语言设置",
+    "暂未开放"
+  ],
+  "status": "visually-reviewed",
+  "width": 1586,
+  "height": 992,
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/E/20.png",
+  "visuallyConfirmedLabels": [
+    "更多设置",
+    "以下功能暂未开放",
+    "网关参数",
+    "语言设置",
+    "暂未开放"
+  ],
+  "sha256": "9d69d64e476e192fb69c99ac9fb28c9c9007dd02c00f0698d067d93f9d0b7339"
+}

@@ -1,0 +1,42 @@
+{
+  "variant": "B",
+  "page": "07",
+  "title": "技能库",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-b3202916-0bab-415f-908f-ed5b9b31d0e0.png",
+  "requiredLabels": [
+    "技能库",
+    "搜索技能",
+    "发现",
+    "制作",
+    "发布",
+    "已配置"
+  ],
+  "status": "reviewed-required-labels",
+  "visuallyConfirmedLabels": [
+    "技能库",
+    "搜索技能",
+    "发现",
+    "制作",
+    "发布",
+    "已配置"
+  ],
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked.",
+  "ocr": {
+    "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-b3202916-0bab-415f-908f-ed5b9b31d0e0.ocr.json",
+    "requiredFound": [
+      "技能库",
+      "搜索技能",
+      "发现",
+      "制作",
+      "发布",
+      "已配置"
+    ],
+    "requiredMissing": []
+  },
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/07.png",
+  "width": 1586,
+  "height": 992,
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "sha256": "b64838129eb08af60df04cc6876a5b197ba17bbd32ed24140157d1083ccde132"
+}

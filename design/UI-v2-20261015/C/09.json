@@ -1,0 +1,26 @@
+{
+  "variant": "C",
+  "page": "09",
+  "title": "账号",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-f8e2-7a90-9676-a91b8de1387f/exec-7f87db37-2e70-48e6-bb1b-3125948bd8be.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/C/09.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "账号",
+    "已登录",
+    "未登录",
+    "校验账号",
+    "扫码登录"
+  ],
+  "status": "reviewed-required-labels-legible; active-sidebar-correct; extra-short-demo-copy",
+  "visuallyConfirmedLabels": [
+    "账号",
+    "已登录",
+    "未登录",
+    "校验账号",
+    "扫码登录"
+  ],
+  "qaNotes": "Manual visual check confirms mandatory heading/control labels and current-page sidebar state; not a guarantee for every decorative glyph",
+  "sha256": "c37bb660fcaf178f7382c63a803b5b94d4ca47d41c1d5489aae01cddc2b28a04"
+}

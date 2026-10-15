@@ -1,0 +1,28 @@
+{
+  "variant": "A",
+  "page": "08",
+  "title": "内容库",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-f3c57e4d-3e5b-4f26-bb32-6608463ec6f3.png",
+  "requiredLabels": [
+    "内容库",
+    "搜索项目或文件",
+    "图文",
+    "视频",
+    "音频"
+  ],
+  "status": "reviewed-required-labels",
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked.",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/A/08.png",
+  "width": 1586,
+  "height": 992,
+  "visuallyConfirmedLabels": [
+    "内容库",
+    "搜索项目或文件",
+    "图文",
+    "视频",
+    "音频"
+  ],
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "sha256": "41171915c6a74b889a6a529fab624a58276861432374b2b59599311f87b68db1"
+}

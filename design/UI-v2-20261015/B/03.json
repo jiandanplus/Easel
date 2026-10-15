@@ -1,0 +1,28 @@
+{
+  "variant": "B",
+  "page": "03",
+  "title": "热点雷达",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-09beee93-7f1b-4705-ad09-1be5cfe89fce.png",
+  "requiredLabels": [
+    "热点雷达",
+    "搜索热点",
+    "热度",
+    "做内容",
+    "话题详情"
+  ],
+  "status": "reviewed-required-labels",
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked.",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/03.png",
+  "width": 1586,
+  "height": 992,
+  "visuallyConfirmedLabels": [
+    "热点雷达",
+    "搜索热点",
+    "热度",
+    "做内容",
+    "话题详情"
+  ],
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "sha256": "1c7f347e6a1ad48b44e0ba645f42ec9cee1fff742b860cf6456a8f7add5ea8a0"
+}

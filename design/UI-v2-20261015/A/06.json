@@ -1,0 +1,28 @@
+{
+  "variant": "A",
+  "page": "06",
+  "title": "爆款拆解",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-b93464ac-1b25-48a7-9f6c-a7fb8e05d5b0.png",
+  "requiredLabels": [
+    "爆款拆解",
+    "参考内容",
+    "开始拆解",
+    "开头钩子",
+    "可复用模板"
+  ],
+  "status": "reviewed-required-labels",
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked. A05 month-grid weekday/date alignment checked.",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/A/06.png",
+  "width": 1586,
+  "height": 992,
+  "visuallyConfirmedLabels": [
+    "爆款拆解",
+    "参考内容",
+    "开始拆解",
+    "开头钩子",
+    "可复用模板"
+  ],
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "sha256": "1b86c91acd14c555c759304ea6f15bd391b8dc845b273ccf63b592d94e4888cd"
+}

@@ -1,0 +1,23 @@
+{
+  "variant": "D",
+  "page": "19",
+  "title": "环境安装",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-4305397f-13a6-48b7-a90c-b48addc7f999.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/D/19.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "环境安装",
+    "环境体检",
+    "重新检测",
+    "已安装",
+    "未安装"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Additional explanatory copy outside whitelist"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "4544d8e57beb312481f405183a0db12bb1138893d8b0f5078e2d40f6268783ec"
+}

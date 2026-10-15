@@ -1,0 +1,1 @@
+Edit only the explanatory microcopy beside 永久通过授权. Replace the existing misleading sentence 长期授权，拥有完整操作权限 with exact correct sentence 保存后持续生效，可随时关闭. No full-access/unlimited-permissions claim. Preserve everything else precisely, independent OFF toggle, two sandbox choices and plain CLI informational note. Crisp readable Chinese. All mandatory labels unchanged.
