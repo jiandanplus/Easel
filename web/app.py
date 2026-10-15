@@ -205,7 +205,7 @@ def _heal_openclaw_session(sk: str) -> None:
 
 # 制作层/直接执行层/chat 超时统一走 easel/timeouts.py（CLI/Web/skill 三入口单一真相源）
 
-SHARED_SCRIPTS = RESOURCE_ROOT / "skills" / "shared" / "scripts"
+SHARED_SCRIPTS = (PROJECT_ROOT if os.environ.get("EASEL_PORTABLE") == "1" else RESOURCE_ROOT) / "skills" / "shared" / "scripts"
 if str(SHARED_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SHARED_SCRIPTS))
 
@@ -1505,6 +1505,8 @@ def _install_tool_ids() -> frozenset[str]:
 @app.post("/api/env/install")
 async def api_env_install(req: EnvInstallRequest):
     """后台安装（引擎 install）：立即返回 jobId，前端轮询进度。"""
+    if os.environ.get("EASEL_PORTABLE") == "1":
+        raise HTTPException(409, "内置核心试验包不支持自动安装扩展依赖；请使用源码环境配置媒体、浏览器或发布工具")
     tid = (req.id or "").strip()
     known = await asyncio.to_thread(_install_tool_ids)
     if tid not in known:
