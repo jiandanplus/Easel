@@ -57,6 +57,7 @@ def test_subscription_native_uses_scoped_env_private_home(tmp_path, monkeypatch)
     assert prepared.env["CODEX_HOME"].startswith(str(tmp_path / "outputs/_harness"))
     assert "SECRET" not in " ".join(argv)
     assert any("responses" in x for x in argv)
+    assert 'web_search="disabled"' in argv
     assert any("http://localhost:8790/v1" in x for x in argv)
 
 

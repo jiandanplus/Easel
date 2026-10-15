@@ -164,6 +164,7 @@ def prepare_subscription(request, command):
               'model_providers.easel-subscription.env_key="EASEL_SUBSCRIPTION_API_KEY"',
               'model_providers.easel-subscription.wire_api="responses"',
               'model_providers.easel-subscription.requires_openai_auth=false',
-              'disable_response_storage=true']
+              'disable_response_storage=true',
+              'web_search="disabled"']
     arguments = [part for value in config for part in ("-c", value)]
     return replace(request, env=env), [command[0], *arguments, *command[1:]]

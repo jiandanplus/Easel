@@ -307,3 +307,21 @@ def test_mint_checks_actual_access_inside_its_transaction(env):
     s.authenticate(u['access_token']);s.refresh(u['refresh_token'])
     with pytest.raises(PlatformError) as error:app.state.gateway.mint(u['access_token'],'alias')
     assert error.value.code=='invalid_authentication'
+
+
+def test_native_namespaced_client_function_tools_are_bounded_text(env):
+    async def go():
+        app, user, grant, calls = env
+        async with await client(app) as connection:
+            header = {"Authorization": "Bearer " + user["access_token"]}
+            token = (await connection.post("/v1/task-tokens", headers=header, json={"model": "alias"})).json()["token"]
+            scoped = {"Authorization": "Bearer " + token}
+            namespace = {"type": "namespace", "name": "functions", "description": "Local tools", "tools": [{"type": "function", "name": "shell", "parameters": {"type": "object"}}]}
+            response = await connection.post("/v1/responses", headers=scoped, json={"model": "alias", "input": [{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "hello"}]}], "tools": [namespace]})
+            assert response.status_code == 200
+            assert len(calls) == 1
+            for invalid in ([{"type": "namespace", "name": "functions", "tools": [{"type": "web_search"}]}], [{"type": "namespace", "name": "functions", "tools": "invalid"}], [{"type": "web_search"}], [{"type": "namespace", "name": "functions", "tools": [{"type": "namespace", "name": "nested", "tools": [{"type": "function", "name": "shell"}]}]}]):
+                rejected = await connection.post("/v1/responses", headers=scoped, json={"model": "alias", "input": "hello", "tools": invalid})
+                assert rejected.status_code == 400
+            assert len(calls) == 1
+    asyncio.run(go())

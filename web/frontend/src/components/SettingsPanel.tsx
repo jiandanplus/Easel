@@ -3,6 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import EnvBoard from './EnvBoard';
 import ThemeSettings from './ThemeSettings';
 import HarnessSettings from './HarnessSettings';
+import PlatformAccountSettings from './PlatformAccountSettings';
 import { OptionsDropdown } from './SettingsSelect';
 import type { JobView } from './EnvBoard';
 import {
@@ -21,7 +22,7 @@ interface Props {
   banner?: string;
 }
 
-type Sec = 'model' | 'theme' | 'env' | 'more';
+type Sec = 'model' | 'theme' | 'env' | 'more' | 'account';
 type Chan = 'chat' | 'transcribe' | 'speech' | 'image' | 'video' | 'music';
 
 const CHANNELS: { id: Chan; label: string }[] = [
@@ -649,7 +650,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
         <div className="settings-head">
           <div>
             <h2 className="settings-title">设置</h2>
-            <div className="settings-sub">模型配置 · 主题设置 · 环境安装 · 更多设置</div>
+            <div className="settings-sub">模型配置 · 账号与订阅 · 主题设置 · 环境安装 · 更多设置</div>
           </div>
           <div className="settings-actions">
             {sec === 'model' && <>
@@ -692,6 +693,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
             <button className={`snav${sec === 'model' ? ' active' : ''}`} onClick={() => setSec('model')}>
               <IconSlidersHorizontal size={16} />模型配置<small>六个通道</small>
             </button>
+            <button className={`snav${sec === 'account' ? ' active' : ''}`} onClick={() => setSec('account')}>账号与订阅</button>
             <button className={`snav${sec === 'theme' ? ' active' : ''}`} onClick={() => setSec('theme')}>
               <span aria-hidden="true">◐</span>主题设置<small>五套风格</small>
             </button>
@@ -704,6 +706,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
           </nav>
 
           <div className="settings-main">
+            {sec === 'account' && <PlatformAccountSettings />}
             {sec === 'theme' && <ThemeSettings />}
             {sec === 'model' && (
               <section className="st-sec active">

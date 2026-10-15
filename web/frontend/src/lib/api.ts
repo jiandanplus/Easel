@@ -6,6 +6,37 @@ function getBasePath(): string {
 
 const BASE = getBasePath();
 
+export function apiErrorMessage(value: unknown): string {
+  if (!value || typeof value !== 'object') return '';
+  const body = value as { detail?: unknown; message?: unknown };
+  const detail = body.detail ?? body.message;
+  if (typeof detail === 'string') return detail;
+  if (detail && typeof detail === 'object' && 'message' in detail && typeof detail.message === 'string') return detail.message;
+  return '';
+}
+
+export interface PlatformStatus {
+  configured: boolean; url: string; authenticated: boolean;
+  account: { id: string; email: string; email_verified: boolean } | null;
+  session_id?: string; expires_at?: number; refresh_expires_at?: number;
+  error?: { code: string; message: string };
+}
+export interface PlatformPlan { id: string; name: string; tokens: number; days: number; concurrency: number; models: string[]; test_only: boolean }
+export interface PlatformGrant { id: string; plan_id: string; status: string; starts_at: number; ends_at: number; remaining_tokens: number; used_tokens: number; reserved_tokens: number; models: string[] }
+export interface PlatformUsage { used_tokens: number; reserved_tokens: number; pending_reconciliation: number }
+export interface PlatformDevice { id: string; device_name: string; created_at: number; refresh_expires_at: number; revoked: boolean }
+const platformPost = <T,>(path: string, body?: unknown): Promise<T> => request(`/api/platform/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+export const platformStatus = (): Promise<PlatformStatus> => request('/api/platform/status');
+export const platformConfigure = (url: string): Promise<PlatformStatus> => platformPost('configure', { url });
+export const platformAuthenticate = (mode: 'login' | 'register', body: { email: string; password: string; device_name: string }): Promise<PlatformStatus> => platformPost(mode, body);
+export const platformLogout = (): Promise<PlatformStatus> => platformPost('logout');
+export const platformPlans = (): Promise<{ plans: PlatformPlan[] }> => request('/api/platform/plans');
+export const platformEntitlements = (): Promise<{ entitlements: PlatformGrant[] }> => request('/api/platform/entitlements');
+export const platformUsage = (): Promise<PlatformUsage> => request('/api/platform/usage');
+export const platformDevices = (): Promise<{ sessions: PlatformDevice[] }> => request('/api/platform/devices');
+export const platformRevoke = (id: string): Promise<{ ok: boolean }> => request(`/api/platform/devices/${encodeURIComponent(id)}`, { method: 'DELETE' });
+export const platformModels = (): Promise<{ models: { id: string }[]; ready: boolean; reason: string }> => request('/api/platform/models');
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   // 全部是动态应用接口（登录态/数据等），禁止浏览器 HTTP 缓存——否则 /api/accounts 等可能被启发式
   // 缓存住旧响应（曾表现为“扫码登录后卡片仍显示未登录”）。调用方可用 options.cache 覆盖。
@@ -13,13 +44,15 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   if (!res.ok) {
     // 优先显示后端返回的实质错误信息（FastAPI 的 {detail}），而不是无意义的 "API error: 400"
     let detail = '';
+    let code = '';
     try {
       const j = await res.json();
-      detail = (j && (j.detail || j.message)) || '';
+      detail = apiErrorMessage(j);
+      if (j?.detail && typeof j.detail === 'object' && typeof j.detail.code === 'string') code = j.detail.code;
     } catch {
       /* 响应体不是 JSON，忽略 */
     }
-    throw new Error(detail || `请求失败（${res.status} ${res.statusText}）`);
+    throw Object.assign(new Error(detail || `请求失败（${res.status} ${res.statusText}）`), { code });
   }
   return res.json() as Promise<T>;
 }
@@ -41,6 +74,7 @@ export interface HarnessSettingsResponse extends ServiceRoute {
   availability: (ServiceRoute & { available: boolean; reason: string })[];
   runtime: string;
   models: Record<string, string>;
+  subscription_model?: string;
   sandbox: string;
   codex_auto_approve: boolean;
   locked: boolean;
@@ -73,7 +107,7 @@ export function fetchHarnessModels(runtime: string): Promise<{ runtime: string; 
   return request(`/api/settings/harness/models/${encodeURIComponent(runtime)}`, { method: 'POST' });
 }
 
-export function saveHarnessSettings(runtime: string, model: string, sandbox: string, codexAutoApprove?: boolean, route?: Partial<ServiceRoute>): Promise<HarnessSettingsResponse> {
+export function saveHarnessSettings(runtime: string, model: string, sandbox: string, codexAutoApprove?: boolean, route?: Partial<ServiceRoute> & { subscription_model?: string }): Promise<HarnessSettingsResponse> {
   return request('/api/settings/harness', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -629,8 +663,8 @@ export function streamChat(
       if (!res.ok) {
         let detail = `Stream error: ${res.status}`;
         try {
-          const payload = await res.json() as { detail?: string };
-          if (payload.detail) detail = payload.detail;
+          const payload: unknown = await res.json();
+          detail = apiErrorMessage(payload) || detail;
         } catch { /* non-JSON error */ }
         const error = new Error(detail) as Error & { status?: number };
         error.status = res.status;

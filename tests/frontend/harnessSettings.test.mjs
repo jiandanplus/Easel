@@ -40,7 +40,7 @@ test('sidebar keeps its settings button unwrapped beside a truncated status', ()
 });
 
 function setup({ runtime = 'openclaw', locked = false, installed = true, saveError = '', modelError = '',
-  settingsErrors = [], origin, version } = {}) {
+  settingsErrors = [], origin, version, source = 'custom', gatewayReady = true } = {}) {
   const state = [];
   let cursor = 0;
   const effects = [];
@@ -52,6 +52,7 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
   const modelRequests = [];
   const settings = {
     runtime,
+    service_source: source, subscription_model: 'platform-alias',
     models: { codex: 'codex-model', opencode: 'provider/model' },
     sandbox: 'workspace-write',
     locked,
@@ -67,6 +68,7 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
       createElement: (type, props, ...children) => ({ type, props: props || {}, children: children.flat() }),
     },
     SettingsSelect: 'settings-select',
+    platformModels: async () => ({models:[{id:'platform-alias'}],ready:gatewayReady,reason:gatewayReady?'':'gateway_not_configured'}),
     BundledProviderSettings: 'bundled-provider',
     useState: initial => {
       const index = cursor++;
@@ -356,4 +358,23 @@ test('bundled Codex renders provider configuration and version without native mo
   tree = view.render();
   nodes(tree, 'button')[0].props.onClick(); await settle();
   assert.equal(view.saves[0].model, 'new-model');
+});
+
+test('subscription preview is explicit Codex/local only and restores independent custom model', async()=>{
+ const view=setup({runtime:'codex',origin:'bundled'});view.render();await settle();
+ nodes(view.render(),'button').find(n=>text(n)==='订阅服务').props.onClick();await settle();
+ let tree=view.render();assert.equal(nodes(tree,'bundled-provider').length,0);
+ assert.ok(nodes(tree,'settings-select').some(n=>n.props.label==='Codex 沙箱'));
+ assert.match(text(tree),/云端执行.*暂未开放/);
+ assert.ok(nodes(tree,'button').find(n=>text(n)==='云端执行（暂未开放）').props.disabled);
+ assert.equal(nodes(tree,'settings-select')[0].props.options.length,1);
+ assert.equal(view.saves.length,0);
+ nodes(tree,'button').find(n=>text(n)==='自定义服务').props.onClick();
+ tree=view.render();assert.equal(nodes(tree,'bundled-provider').length,1);
+ nodes(tree,'button')[0].props.onClick();await settle();assert.equal(view.saves[0].model,'codex-model');
+});
+
+test('subscription unavailable gateway shows human reason and source-aware authentication', async()=>{
+ const view=setup({runtime:'codex',source:'subscription',gatewayReady:false});view.render();await settle();view.render();await settle();
+ const value=text(view.render());assert.match(value,/平台模型网关尚未配置/);assert.doesNotMatch(value,/gateway_not_configured|外部引擎认证沿用/);assert.match(value,/平台账号/);
 });

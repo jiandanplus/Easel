@@ -81,7 +81,16 @@ class Gateway:
         def reject():raise PlatformError(400,'unsupported_request_shape')
         if any(k in obj for k in ('previous_response_id','conversation','prompt')) or obj.get('background',False) is not False:reject()
         tools=obj.get('tools',[])
-        if not isinstance(tools,list) or any(not isinstance(t,dict) or t.get('type') not in ('function','custom') for t in tools):reject()
+        if not isinstance(tools,list):reject()
+        for tool in tools:
+            if not isinstance(tool,dict):reject()
+            if tool.get('type') in ('function','custom'):continue
+            # Codex namespaced tools remain client-executed functions; hosted
+            # tools and further nested namespaces are deliberately unsupported.
+            children=tool.get('tools')
+            if (tool.get('type')!='namespace' or not isinstance(tool.get('name'),str)
+                or not tool['name'] or not isinstance(children,list) or not children
+                or any(not isinstance(child,dict) or child.get('type') not in ('function','custom') for child in children)):reject()
         choice=obj.get('tool_choice')
         if isinstance(choice,dict) and choice.get('type') not in ('function','custom'):reject()
         value=obj.get('input','')

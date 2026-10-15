@@ -427,8 +427,14 @@ def test_cancelled_queue_releases_tracking_without_overwriting_active_turn(sandb
         await lock.acquire()
         web._save_turn("web:queue", "running", "active", {"turn_id": "owner"})
         request = web.ChatRequest(message="queued", sessionId="queue")
-        queued = asyncio.create_task(web._run_direct_chat(request, "queue", "", "", lambda *args: None))
-        await asyncio.sleep(0)
+        waiting = asyncio.Event()
+        def emit(kind, text):
+            if kind == "activity":
+                waiting.set()
+        queued = asyncio.create_task(web._run_direct_chat(request, "queue", "", "", emit))
+        # Acceptance is offloaded before queue tracking; wait for the actual
+        # queued state rather than assuming one event-loop tick is sufficient.
+        await asyncio.wait_for(waiting.wait(), timeout=2)
         assert web._DIRECT_CHAT_TASKS
         with pytest.raises(web.HTTPException) as error:
             await web.api_chat_transport_save(web.ChatTransportRequest(transport="openclaw"))

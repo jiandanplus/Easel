@@ -40,7 +40,7 @@ def test_cli_operator_database_and_parser(tmp_path, capsys, monkeypatch):
     calls = []
     monkeypatch.setattr(uvicorn, "run", lambda app, **kw:calls.append(kw))
     main(["serve", "--database", db, "--host", "127.0.0.1", "--port", "9876"])
-    assert calls == [{"host":"127.0.0.1", "port":9876}]
+    assert calls == [{"host":"127.0.0.1", "port":9876, "proxy_headers":False}]
 
 
 def test_cli_subprocess_operator_commands(tmp_path):

@@ -31,7 +31,7 @@ def main(argv=None):
         settings=Settings(args.database,upstream_url=os.environ.get("EASEL_PLATFORM_UPSTREAM_URL",""),upstream_key=os.environ.get("EASEL_PLATFORM_UPSTREAM_KEY",""),upstream_model=os.environ.get("EASEL_PLATFORM_UPSTREAM_MODEL",""),public_model=os.environ.get("EASEL_PLATFORM_PUBLIC_MODEL",""))
         if args.command=="serve":
             import uvicorn
-            uvicorn.run(create_app(settings),host=args.host,port=args.port)
+            uvicorn.run(create_app(settings),host=args.host,port=args.port,proxy_headers=False)
         else:
             store=Store(settings)
             if args.command=="plan": result=store.create_plan(args.id,args.name,args.tokens,args.concurrency,args.days,args.model)
