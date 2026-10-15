@@ -25,6 +25,29 @@ def selected(relative):
     return path.parts[0] in {'easel','web','skills','agents','scripts'} and not (relative.startswith('web/frontend/') and not relative.startswith('web/frontend/dist/'))
 
 
+def verify_metadata(prepared, authoritative, names):
+    for name in names:
+        if (prepared/name).is_symlink() or (prepared/name).read_bytes() != (authoritative/name).read_bytes():
+            raise ValueError('Prepared metadata differs from tracked authority: '+name)
+
+
+def verify_payload(root, records, *, bytecode=False):
+    def excluded(path):
+        return bytecode and ('__pycache__' in path.parts or path.suffix == '.pyc')
+    records = {relative: expected for relative, expected in records.items() if not excluded(Path(relative))}
+    actual = {p.relative_to(root).as_posix() for p in root.rglob('*')
+              if (p.is_file() or p.is_symlink()) and not excluded(p.relative_to(root))}
+    if actual != set(records):
+        raise ValueError('Unpinned or missing payload files: '+str(sorted(actual ^ set(records))))
+    for relative, expected in records.items():
+        source = bounded(root, relative)
+        if isinstance(expected, dict) and 'symlink' in expected:
+            if not source.is_symlink() or str(source.readlink()) != expected['symlink']:
+                raise ValueError('Payload link mismatch: '+relative)
+        elif source.is_symlink() or digest(source) != (expected['sha256'] if isinstance(expected, dict) else expected):
+            raise ValueError('Payload digest mismatch: '+relative)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--inputs', type=Path, default=ROOT/'outputs/_run/portable-build')
@@ -38,6 +61,11 @@ def main():
     app = container/'Easel Core Trial.app'
     if app.exists(): raise SystemExit('Refusing to overwrite existing stage')
     resource = app/'Contents/Resources'
+    metadata = ['core-requirements.txt','wheels-provenance.json','python-assets.json','python-runtime-files.json','codex-vendor-provenance.json','build-preparation-notes.json']
+    verify_metadata(inputs, ROOT/'packaging/macos', metadata)
+    python = inputs/'python-download/cpython-3.12.13-macos-aarch64-none'
+    verify_payload(python, json.loads((ROOT/'packaging/macos/python-runtime-files.json').read_text())['files'], bytecode=True)
+    verify_payload(args.codex_root.resolve(), json.loads((ROOT/'packaging/macos/codex-vendor-provenance.json').read_text())['files'])
     resource.mkdir(parents=True)
     tracked = subprocess.check_output(['git','ls-files','-z'], cwd=ROOT).decode().split('\0')
     copied = []
@@ -54,23 +82,16 @@ def main():
     if not (dist/'index.html').is_file(): raise SystemExit('Prebuilt frontend missing')
     shutil.copytree(dist,resource/'web/frontend/dist',dirs_exist_ok=True)
     python = inputs/'python-download/cpython-3.12.13-macos-aarch64-none'
-    for relative, expected in json.loads((ROOT/'packaging/macos/python-runtime-files.json').read_text())['files'].items():
-        source = bounded(python, relative)
-        if 'symlink' in expected:
-            if not source.is_symlink() or str(source.readlink()) != expected['symlink']: raise ValueError('Python link mismatch: '+relative)
-        elif digest(source) != expected['sha256']: raise ValueError('Python digest mismatch: '+relative)
     shutil.copytree(python,resource/'python',symlinks=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
     site = resource/'python/lib/python3.12/site-packages'
-    subprocess.run(['uv','pip','install','--offline','--no-index','--python',str(resource/'python/bin/python3'),'--require-hashes','--no-deps','--no-compile-bytecode','--target',str(site),'--find-links',str(inputs/'wheels'),'-r',str(inputs/'core-requirements.txt')],check=True, env={**os.environ,'UV_NO_CONFIG':'1'})
+    subprocess.run(['uv','pip','install','--offline','--no-index','--python',str(resource/'python/bin/python3'),'--require-hashes','--no-deps','--no-compile-bytecode','--target',str(site),'--find-links',str(inputs/'wheels'),'-r',str(ROOT/'packaging/macos/core-requirements.txt')],check=True, env={**os.environ,'UV_NO_CONFIG':'1'})
     shutil.rmtree(site/'bin',ignore_errors=True)
     vendor = args.codex_root.resolve()
-    for relative, expected in json.loads((ROOT/'packaging/macos/codex-vendor-provenance.json').read_text())['files'].items():
-        if digest(bounded(vendor,relative)) != expected: raise ValueError('Native digest mismatch: '+relative)
     shutil.copytree(vendor,resource/'native',symlinks=True)
     shutil.copytree(inputs/'licenses',resource/'licenses')
     shutil.copy2(ROOT/'LICENSE',resource/'licenses/Easel-LICENSE')
     for name in ['core-requirements.txt','wheels-provenance.json','python-assets.json','python-runtime-files.json','codex-vendor-provenance.json','build-preparation-notes.json']:
-        shutil.copy2(inputs/name,resource/name)
+        shutil.copy2(ROOT/'packaging/macos'/name,resource/name)
     native = {p.relative_to(resource).as_posix():digest(p) for p in (resource/'native').rglob('*') if p.is_file()}
     manifest = {'schema_version':1,'platform':'darwin','architecture':'arm64','codex':{'version':'0.146.0','executable':'native/bin/codex','sha256':native['native/bin/codex']},'files':native}
     (resource/'runtime-manifest.json').write_text(json.dumps(manifest,indent=2))

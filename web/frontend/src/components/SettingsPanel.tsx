@@ -657,7 +657,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
               className="btn btn-sm btn-primary"
               onClick={() => void saveCurrent()}
               disabled={saving || modelLoading || sec !== 'model' || (chan === 'chat' && (selectedHarness !== harness || !['api', 'openclaw'].includes(harness)))}
-              title={chan === 'chat' && !['api', 'openclaw'].includes(harness) ? '请使用下方「保存底座」保存原生配置' : undefined}
+              title={chan === 'chat' && !['api', 'openclaw'].includes(harness) ? '请使用下方底座设置保存引擎配置；内置 Codex 的地址、模型和密钥由供应商设置保存' : undefined}
             >
               {saving ? '保存中…' : '保存配置'}
             </button>
@@ -665,7 +665,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
               className="btn btn-sm"
               onClick={() => void doSelftest(sec === 'model' ? chan : 'all')}
               disabled={testing || modelLoading || selectedHarness !== harness || (!['api', 'openclaw'].includes(harness) && (sec !== 'model' || chan === 'chat'))}
-              title={!['api', 'openclaw'].includes(harness) ? '原生对话请发送消息或运行 easel ping 验证' : undefined}
+              title={!['api', 'openclaw'].includes(harness) ? '请先完成下方引擎配置；内置 Codex 需保存供应商地址、模型和 API Key，再发送消息验证' : undefined}
             >
               {testing ? '自测中…' : '全部自测'}
             </button>
@@ -886,7 +886,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
         {sec === 'model' && <div className="settings-foot">
           {harness === 'api' || harness === 'openclaw'
             ? 'ⓘ 供应商配置保存到 .env；API 直连仅聊天、无工具。切换底座或对话模式后请新建对话。'
-            : 'ⓘ 原生 Agent 认证由其 CLI 管理；「保存底座」只保存底座、模型覆盖和权限设置。媒体通道仍单独配置。'}
+            : 'ⓘ 内置 Codex 请在上方配置自定义供应商地址、模型和 API Key；外部 Agent 认证由其 CLI 管理。「保存底座」保存引擎和权限设置，媒体通道仍单独配置。'}
         </div>}
       </div>
     </div>

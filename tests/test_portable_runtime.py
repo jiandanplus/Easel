@@ -143,10 +143,18 @@ def test_all_workspace_modules_honor_root(tmp_path, monkeypatch):
             vars(module).update(previous)
 
 
-def test_web_import_uses_resource_shared_modules(tmp_path):
-    # Verify the immutable Python import path separately from writable skills.
-    source = (Path(__file__).resolve().parents[1] / "web/app.py").read_text()
-    assert 'SHARED_SCRIPTS = RESOURCE_ROOT / "skills" / "shared" / "scripts"' in source
+@pytest.mark.parametrize('portable', [False, True])
+def test_web_import_uses_resource_shared_modules(tmp_path, monkeypatch, portable):
+    import ast
+    source = Path(__file__).resolve().parents[1]/'web/app.py'
+    tree = ast.parse(source.read_text())
+    assignments = ast.Module(body=[node for node in tree.body if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == 'SHARED_SCRIPTS' for target in node.targets)], type_ignores=[])
+    monkeypatch.setenv('EASEL_PORTABLE', '1' if portable else '0')
+    namespace = {'os': os, 'PROJECT_ROOT': tmp_path/'workspace', 'RESOURCE_ROOT': tmp_path/'resource'}
+    exec(compile(assignments, str(source), 'exec'), namespace)
+    expected = tmp_path/('workspace' if portable else 'resource')/'skills/shared/scripts'
+    assert namespace['SHARED_SCRIPTS'] == expected
 
 
 def test_web_launch_uses_immutable_script(tmp_path, monkeypatch):
@@ -237,3 +245,21 @@ def test_model_and_task_use_same_bundle_and_private_home(tmp_path, monkeypatch, 
     assert effective.env["EASEL_BUNDLED_API_KEY"] == "loopback-dummy"
     assert effective.env["CODEX_HOME"] == str(request.cwd / "outputs/_harness/codex-home")
     assert request.env["CODEX_HOME"] == "outside"
+
+
+def test_web_launch_normalizes_relative_root_environment(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    import easel.cli as cli
+    monkeypatch.chdir(tmp_path)
+    (tmp_path/'resources/web').mkdir(parents=True)
+    (tmp_path/'resources/web/app.py').write_text('# fixture')
+    (tmp_path/'data').mkdir()
+    monkeypatch.setenv('EASEL_WORKSPACE_ROOT', 'data')
+    monkeypatch.setenv('EASEL_RESOURCE_ROOT', 'resources')
+    monkeypatch.setattr(cli, 'PROJECT_ROOT', tmp_path/'data')
+    calls=[]
+    monkeypatch.setattr(cli.subprocess, 'run', lambda command, **kw: (calls.append(kw) or SimpleNamespace(returncode=0)))
+    assert cli.cmd_web(SimpleNamespace(port=1234)) == 0
+    assert calls[0]['env']['EASEL_WORKSPACE_ROOT'] == str(tmp_path/'data')
+    assert calls[0]['env']['EASEL_RESOURCE_ROOT'] == str(tmp_path/'resources')
+    assert calls[0]['cwd'] == str(tmp_path/'data')

@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import secrets
+import re
+import stat
 import shutil
 import socket
 import sys
@@ -37,6 +39,10 @@ def safe_state(workspace):
     state = workspace/'.easel-portable'
     if state.is_symlink() or not state.resolve().is_relative_to(workspace.resolve()):
         raise ValueError('工作区控制目录不能是符号链接')
+    for name in ('seed.json', 'venv.json', 'instance.json', 'launcher.lock'):
+        record = state/name
+        if record.is_symlink() or (record.exists() and not record.is_file()):
+            raise ValueError('工作区控制记录必须是普通文件：'+name)
     return state
 
 
@@ -57,22 +63,40 @@ def verify_inventory(resource):
 def seed_workspace(resource, workspace):
     state = safe_state(workspace)/'seed.json'
     try:
+        if state.exists() and state.stat().st_size > 16 * 1024 * 1024:
+            raise ValueError('工作区种子记录过大，请保留原文件并检查')
         previous = json.loads(state.read_text()) if state.exists() else {}
-        if not isinstance(previous, dict): raise ValueError('invalid seed state')
+        if not isinstance(previous, dict) or len(previous) > 100000:
+            raise ValueError('工作区种子记录损坏，请保留原文件并检查')
+        for key, value in previous.items():
+            if (not isinstance(key, str) or len(key) > 4096 or not key
+                    or any(ord(character) < 32 for character in key) or '\\' in key
+                    or key != Path(key).as_posix() or Path(key).is_absolute()
+                    or any(part in ('.', '..') for part in key.split('/'))
+                    or key.split('/')[0] not in {'skills', 'scripts', 'agents'}
+                    or not isinstance(value, str) or not re.fullmatch('[0-9a-f]{64}', value)):
+                raise ValueError('工作区种子记录损坏，请保留原文件并检查')
     except (OSError, json.JSONDecodeError) as error:
         raise ValueError('工作区种子记录损坏，请保留原文件并检查') from error
     current = {}
     seed = resource/'seed'
     for source in sorted(seed.rglob('*')):
-        if not source.is_file(): continue
+        if source.is_symlink() or not source.is_file(): continue
         relative = source.relative_to(seed).as_posix()
         destination = bounded(workspace, relative)
         if any(p.is_symlink() for p in [destination, *destination.parents] if p != workspace and p.is_relative_to(workspace)):
             continue
         checksum = digest(source)
-        if not destination.exists() or (destination.is_file() and digest(destination) == previous.get(relative)):
+        actual = digest(destination) if destination.is_file() else None
+        if not destination.exists() or (destination.is_file() and actual in (previous.get(relative), checksum)):
             destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
+            fd, temporary = tempfile.mkstemp(dir=destination.parent, prefix='.'+destination.name+'.')
+            os.close(fd)
+            try:
+                shutil.copy2(source, temporary)
+                os.replace(temporary, destination)
+            finally:
+                if os.path.exists(temporary): os.unlink(temporary)
             current[relative] = checksum
         else:
             # Keep old baseline: a user edit must stay a user edit on later updates.
@@ -140,7 +164,10 @@ def main(argv=None):
     (workspace/'.easel-portable').mkdir(parents=True, exist_ok=True)
     # Lock is per workspace, survives stale process state without PID-based killing.
     import fcntl
-    lock = (workspace/'.easel-portable/launcher.lock').open('a')
+    lock_fd = os.open(safe_state(workspace)/'launcher.lock', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    if not stat.S_ISREG(os.fstat(lock_fd).st_mode):
+        os.close(lock_fd); raise ValueError('启动锁必须是普通文件')
+    lock = os.fdopen(lock_fd, 'a')
     try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError: raise ValueError('此工作区已有正在启动或运行的 Easel 实例')
     prepare_workspace(resource, workspace)

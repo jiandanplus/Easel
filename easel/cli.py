@@ -217,6 +217,8 @@ def cmd_web(args) -> int:
     port = getattr(args, "port", 7860)
     env = web_environment(_proxy_env())
     env["EASEL_PORT"] = str(port)
+    for name, resolve in (("EASEL_WORKSPACE_ROOT", workspace_root), ("EASEL_RESOURCE_ROOT", resource_root)):
+        if os.environ.get(name): env[name] = str(resolve())
     script_root = resource_root() if (os.environ.get("EASEL_RESOURCE_ROOT") or os.environ.get("EASEL_WORKSPACE_ROOT")) else PROJECT_ROOT
     script = script_root / "web" / "app.py"
     if not script.is_file():

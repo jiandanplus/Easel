@@ -13,6 +13,21 @@ import urllib.request
 from http.server import ThreadingHTTPServer
 
 
+def assert_sse_success(stream, marker):
+    events = []
+    for block in stream.replace('\r\n', '\n').split('\n\n'):
+        event, data = None, []
+        for line in block.splitlines():
+            if line.startswith('event:'): event = line[6:].strip()
+            elif line.startswith('data:'): data.append(line[5:].strip())
+        if event: events.append((event, json.loads('\n'.join(data))))
+    assert not any(event == 'error' for event, _ in events), events
+    assert sum(event == 'done' for event, _ in events) == 1, events
+    assert events[-1][0] == 'done', events
+    assert marker in ''.join(data for event, data in events if event == 'token' and isinstance(data, str)), events
+    return {event: sum(name == event for name, _ in events) for event, _ in events}
+
+
 def main():
     parser = argparse.ArgumentParser(); parser.add_argument('app',type=Path); args = parser.parse_args()
     app = args.app.resolve()
@@ -48,7 +63,9 @@ def main():
     try:
         proc=launch(); state=wait_ready()
         report['http_index']= '<html' in request('/').lower()
-        report['static']=len(request('/static/easel-icon-transparent.png')) if False else bool(urllib.request.build_opener(urllib.request.ProxyHandler({})).open(f'http://127.0.0.1:{state["port"]}/static/easel-icon-transparent.png').read())
+        assert report['http_index'], 'HTTP index missing HTML'
+        report['static']=bool(urllib.request.build_opener(urllib.request.ProxyHandler({})).open(f'http://127.0.0.1:{state["port"]}/static/easel-icon-transparent.png').read())
+        assert report['static'], 'Static asset missing'
         provider={'base_url':f'http://127.0.0.1:{gateway.server_port}/v1','model':'easel-loopback-dummy','api_key':dummy.TOKEN,'secret_action':'replace'}
         saved=request('/api/settings/harness/provider',provider)
         assert dummy.TOKEN not in saved
@@ -56,7 +73,9 @@ def main():
         sse=request('/api/chat/stream',{'message':'Execute the supplied harmless local Python marker command.','sessionId':'portable-proof'})
         (root/'stream.txt').write_text(sse)
         assert (workspace/'marker.txt').read_text()==dummy.MARKER, sse
-        assert dummy.stats['tool_result_seen'] and dummy.stats['bearer_correct'],dummy.stats
+        assert dummy.stats['tool_result_seen'] and dummy.stats['tool_output_marker'] and dummy.stats['bearer_correct'],dummy.stats
+        report['sse_events'] = assert_sse_success(sse, dummy.MARKER)
+        dummy.stats['marker_verified'] = True
         assert dummy.TOKEN not in sse
         report['native_python_sse']=True; report['dummy_stats']=dummy.stats
         preserved=workspace/'profiles/user.txt'; preserved.write_text('preserve')

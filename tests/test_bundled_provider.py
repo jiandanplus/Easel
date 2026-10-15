@@ -195,3 +195,30 @@ def test_external_native_setup_keeps_installation_contract(sandbox, monkeypatch,
     assert "原生登录" in setup["routeDetail"]
     assert setup["authVerified"] is False
     assert sandbox.get("/api/status").json()["gateway"] is installed
+
+
+def test_private_harness_files_never_exposed_as_outputs(sandbox, tmp_path, monkeypatch):
+    import web.app as web
+    save(web.PROJECT_ROOT, secret_action='replace', api_key='dummy-private-output-key')
+    bundle(tmp_path, monkeypatch)
+    masked = sandbox.get('/api/settings/harness/provider')
+    assert masked.status_code == 200
+    assert 'dummy-private-output-key' not in masked.text
+    native = web.OUTPUTS_DIR/'_harness/codex-home/auth.json'
+    native.parent.mkdir(parents=True); native.write_text('{"key":"dummy-native-private"}')
+    project = web.OUTPUTS_DIR/'public'; project.mkdir()
+    (project/'alias.json').symlink_to(native)
+    (project/'private-directory').symlink_to(native.parent, target_is_directory=True)
+    (web.OUTPUTS_DIR/'alias').symlink_to(native.parent.parent, target_is_directory=True)
+    for path in ['_HARNESS/bundled-provider.json', '_hArNeSs/codex-home/auth.json', '_harness/bundled-provider.json', '_harness/codex-home/auth.json', 'public/alias.json', 'alias/bundled-provider.json']:
+        for prefix in ['/api/output/', '/api/media/']:
+            response = sandbox.get(prefix+path)
+            assert response.status_code == 403, (prefix, path, response.text)
+            assert 'dummy-private' not in response.text
+        assert sandbox.get('/api/artifacts/archive', params={'path':path}).status_code == 403
+    tree = sandbox.get('/api/outputs').json()
+    assert 'auth.json' not in json.dumps(tree)
+    assert 'alias.json' not in json.dumps(tree)
+    assert 'bundled-provider' not in json.dumps(tree)
+    inbox = web.OUTPUTS_DIR/'_inbox/test.txt'; inbox.parent.mkdir(); inbox.write_text('attachment')
+    assert sandbox.get('/api/output/_inbox/test.txt').status_code == 200

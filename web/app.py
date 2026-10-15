@@ -1075,12 +1075,25 @@ def _file_meta(f: Path, rel: str) -> dict:
     return {'name': f.name, 'path': rel, 'kind': _file_kind(f.name), 'mtime': mtime, 'size': size}
 
 
+def _private_output_path(path: Path) -> bool:
+    """Keep managed runtime credentials out of generic output browsing/downloads."""
+    root = OUTPUTS_DIR.resolve()
+    for candidate in (path.absolute(), path.resolve()):
+        try:
+            relative = candidate.relative_to(root)
+        except ValueError:
+            continue
+        if relative.parts and relative.parts[0].casefold() == '_harness':
+            return True
+    return False
+
+
 def _build_output_node(path: Path, rel: str) -> dict:
     """递归构建产物树节点：文件→file 节点；目录→dir 节点带 children + 递归 fileCount。"""
     if path.is_dir():
         children = []
         for c in sorted(path.iterdir()):
-            if c.name.startswith('.'):   # 嵌套层只跳隐藏文件；_base.mp4 等以 _ 开头的产物要保留
+            if c.name.startswith('.') or _private_output_path(c):   # 嵌套层只跳隐藏文件；_base.mp4 等以 _ 开头的产物要保留
                 continue
             children.append(_build_output_node(c, f'{rel}/{c.name}'))
         mtime = max((x['mtime'] for x in children), default=int(path.stat().st_mtime))
@@ -1099,7 +1112,7 @@ def _read_project_meta(proj: Path) -> dict:
     展示头声明的 cover → 首个成品媒体 → 目录内首张图/视频（兜底）。
     """
     mf = proj / ".easel.json"
-    if not mf.is_file():
+    if _private_output_path(mf) or not mf.is_file():
         return {}
     try:
         data = json.loads(mf.read_text(encoding="utf-8"))
@@ -1139,7 +1152,7 @@ def get_output_tree() -> list[dict]:
     for e in sorted(OUTPUTS_DIR.iterdir()):
         # 内容库只展示「项目目录」：跳过系统目录(_login/_publish/...)、隐藏项、
         # 以及根目录散文件（按新规约产物必在项目目录内，根散文件=系统状态/残渣）。
-        if e.name.startswith('.') or e.name.startswith('_'):
+        if e.name.startswith('.') or e.name.startswith('_') or _private_output_path(e):
             continue
         if not e.is_dir() or e.name in SYSTEM_TOPLEVEL_DIRS:
             continue
@@ -1154,6 +1167,8 @@ def get_output_tree() -> list[dict]:
 
 def _safe_output_path(rel: str) -> Path:
     '把相对路径解析到 outputs/ 内，防路径穿越。'
+    if _private_output_path(OUTPUTS_DIR / rel):
+        raise HTTPException(403, '运行时私有数据不可通过产物接口访问')
     full = (OUTPUTS_DIR / rel).resolve()
     root = OUTPUTS_DIR.resolve()
     if root != full and root not in full.parents:
@@ -4281,6 +4296,8 @@ def _unique_upload_path(dest: Path, filename: str) -> Path:
 def _safe_output_target(rel: str, *, must_exist: bool = True) -> Path:
     """解析到 outputs/ 内的文件或目录（防穿越）。与 _safe_output_path 不同：允许目录、
     可要求不必已存在（上传新文件时）。永远拒绝 outputs/ 根本身。"""
+    if _private_output_path(OUTPUTS_DIR / rel):
+        raise HTTPException(403, '运行时私有数据不可通过产物接口访问')
     full = (OUTPUTS_DIR / rel).resolve()
     root = OUTPUTS_DIR.resolve()
     if full == root or root not in full.parents:
