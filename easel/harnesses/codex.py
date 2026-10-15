@@ -130,5 +130,8 @@ class CodexAdapter:
                     pass
                 raise
             finally:
-                if completion.done() and not completion.cancelled():
+                # Finalize before connection cleanup can deliver a late notification.
+                if not completion.done():
+                    completion.cancel()
+                elif not completion.cancelled():
                     completion.exception()
