@@ -18,7 +18,7 @@ from easel.portable import digest, bounded
 
 def selected(relative):
     path = Path(relative)
-    if relative.startswith(('scripts/validation/', 'scripts/packaging/')): return False
+    if relative.startswith(('scripts/validation/', 'scripts/packaging/', 'web/frontend/')): return False
     excluded = {'.git','node_modules','__pycache__','.venv','profiles','outputs','.cache','models','cookies'}
     if any(part in excluded for part in path.parts): return False
     name = path.name.lower()
@@ -72,6 +72,52 @@ def copy_tracked_licenses(destination, tracked):
         shutil.copy2(source, target)
 
 
+def regular_input(path):
+    """Reject links before resolving, including any lexical ancestor."""
+    for current in [path, *path.parents]:
+        mode = current.lstat().st_mode
+        if stat.S_ISLNK(mode) or (current == path and not stat.S_ISREG(mode)):
+            raise ValueError('Nonregular frontend input: '+str(path))
+
+
+def copy_frontend(dist, destination, *, source_records=None):
+    """Accept only exact hashed outputs recorded by the frontend build hook."""
+    receipt = dist/'portable-assets.json'
+    regular_input(receipt)
+    data = json.loads(receipt.read_text())
+    if source_records is not None and data.get('source') != source_records:
+        raise ValueError('Frontend receipt is stale; rebuild frontend from current inputs')
+    records = data.get('files')
+    if data.get('schema_version') != 1 or not isinstance(records, dict) or 'index.html' not in records or len(records) > 10000:
+        raise ValueError('Invalid frontend build receipt')
+    actual = set()
+    # Walk without following links; reject directory links even if not listed.
+    for parent, dirs, files in os.walk(dist, followlinks=False):
+        for name in dirs:
+            if (Path(parent)/name).is_symlink(): raise ValueError('Frontend directory link')
+        for name in files:
+            path = Path(parent)/name
+            regular_input(path)
+            actual.add(path.relative_to(dist).as_posix())
+    if actual != set(records) | {'portable-assets.json'}:
+        raise ValueError('Unexpected or missing frontend assets')
+    sources = []
+    for relative, expected in records.items():
+        path = Path(relative)
+        if (not isinstance(relative, str) or not relative or path.is_absolute() or '..' in path.parts
+                or relative != path.as_posix() or '\\' in relative
+                or any(part.startswith('.') or part in {'node_modules', 'profiles', 'outputs', '__pycache__', 'cookies'} for part in path.parts)
+                or any(term in path.name.lower() for term in ('token', 'secret', 'credential', 'auth.json', 'cache'))):
+            raise ValueError('Private or invalid frontend asset: '+relative)
+        source = bounded(dist, relative)
+        regular_input(source)
+        if digest(source) != expected: raise ValueError('Frontend build hash mismatch: '+relative)
+        sources.append((source, destination/path))
+    for source, target in sources:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--inputs', type=Path, default=ROOT/'outputs/_run/portable-build')
@@ -103,8 +149,11 @@ def main():
     registry = resource/'skills/shared/scripts/model_registry.py'; registry.parent.mkdir(parents=True,exist_ok=True)
     shutil.copy2(ROOT/'skills/shared/scripts/model_registry.py',registry)
     dist = ROOT/'web/frontend/dist'
-    if not (dist/'index.html').is_file(): raise SystemExit('Prebuilt frontend missing')
-    shutil.copytree(dist,resource/'web/frontend/dist',dirs_exist_ok=True)
+    baseline_path = ROOT/'.git/sdd/preexisting-ui.json'
+    baseline = json.loads(baseline_path.read_text()) if baseline_path.exists() else {}
+    frontend_inputs = {p for p in [*tracked, *baseline] if p.startswith('web/frontend/') and not p.startswith('web/frontend/dist/')}
+    for relative in frontend_inputs: regular_input(ROOT/relative)
+    copy_frontend(dist, resource/'web/frontend/dist', source_records={p: digest(ROOT/p) for p in frontend_inputs})
     python = inputs/'python-download/cpython-3.12.13-macos-aarch64-none'
     shutil.copytree(python,resource/'python',symlinks=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
     site = resource/'python/lib/python3.12/site-packages'

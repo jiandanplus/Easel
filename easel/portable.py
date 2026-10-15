@@ -169,45 +169,53 @@ def main(argv=None):
         os.close(lock_fd); raise ValueError('启动锁必须是普通文件')
     lock = os.fdopen(lock_fd, 'a')
     try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError: raise ValueError('此工作区已有正在启动或运行的 Easel 实例')
-    prepare_workspace(resource, workspace)
-    native = resource/'native'
-    os.environ.update(EASEL_WORKSPACE_ROOT=str(workspace), EASEL_ROOT=str(workspace), EASEL_RESOURCE_ROOT=str(resource), EASEL_RUNTIME_MANIFEST=str(resource/'runtime-manifest.json'), EASEL_PORTABLE='1', CODEX_HOME=str(workspace/'outputs/_harness/codex-home'), PYTHONDONTWRITEBYTECODE='1', PATH=os.pathsep.join([str(resource/'python/bin'),str(native/'codex-path'),str(native/'bin'),'/usr/bin','/bin','/usr/sbin','/sbin']))
-    os.chdir(workspace)
-    from easel.installation import initialize_runtime
-    initialize_runtime(workspace, 'codex')
-    from web.app import app
-    import uvicorn
-    from fastapi import Request, HTTPException
-    globals()['Request'] = Request
-    token = secrets.token_hex(32)
-    server = None
-    @app.get('/_easel/identity')
-    async def identity(request: Request):
-        if not secrets.compare_digest(request.headers.get('X-Easel-Token',''), token): raise HTTPException(403)
-        return {'token':token,'workspace':str(workspace)}
-    @app.post('/_easel/stop')
-    async def stop(request: Request):
-        if not secrets.compare_digest(request.headers.get('X-Easel-Token',''), token): raise HTTPException(403)
-        server.should_exit = True
-        return {'token':token,'workspace':str(workspace)}
+    except BlockingIOError:
+        lock.close()
+        raise ValueError('此工作区已有正在启动或运行的 Easel 实例')
     sock = socket.socket()
-    try: sock.bind(('127.0.0.1', args.port))
-    except OSError as error: raise ValueError('端口已占用；未终止其他进程。请关闭自有实例或使用 --port') from error
-    sock.listen(128)
-    port = sock.getsockname()[1]
-    server = uvicorn.Server(uvicorn.Config(app, host='127.0.0.1', port=port, log_level='info'))
-    atomic_json(state_path, {'port':port,'token':token})
-    def ready():
-        while not server.started and not server.should_exit: time.sleep(.05)
-        if server.started:
-            print(f'EASEL_READY http://127.0.0.1:{port}', flush=True)
-            if not args.no_browser: webbrowser.open(f'http://127.0.0.1:{port}')
-    threading.Thread(target=ready, daemon=True).start()
-    try: server.run(sockets=[sock])
+    token = None
+    try:
+        try: sock.bind(('127.0.0.1', args.port))
+        except OSError as error: raise ValueError('端口已占用；未终止其他进程。请关闭自有实例或使用 --port') from error
+        sock.listen(128)
+        port = sock.getsockname()[1]
+        # web.app freezes its browser Origin allowlist at import time.
+        os.environ['EASEL_PORT'] = str(port)
+        prepare_workspace(resource, workspace)
+        native = resource/'native'
+        os.environ.update(EASEL_WORKSPACE_ROOT=str(workspace), EASEL_ROOT=str(workspace), EASEL_RESOURCE_ROOT=str(resource), EASEL_RUNTIME_MANIFEST=str(resource/'runtime-manifest.json'), EASEL_PORTABLE='1', CODEX_HOME=str(workspace/'outputs/_harness/codex-home'), PYTHONDONTWRITEBYTECODE='1', PATH=os.pathsep.join([str(resource/'python/bin'),str(native/'codex-path'),str(native/'bin'),'/usr/bin','/bin','/usr/sbin','/sbin']))
+        os.chdir(workspace)
+        from easel.installation import initialize_runtime
+        initialize_runtime(workspace, 'codex')
+        from web.app import app
+        import uvicorn
+        from fastapi import Request, HTTPException
+        globals()['Request'] = Request
+        token = secrets.token_hex(32)
+        server = None
+        @app.get('/_easel/identity')
+        async def identity(request: Request):
+            if not secrets.compare_digest(request.headers.get('X-Easel-Token',''), token): raise HTTPException(403)
+            return {'token':token,'workspace':str(workspace)}
+        @app.post('/_easel/stop')
+        async def stop(request: Request):
+            if not secrets.compare_digest(request.headers.get('X-Easel-Token',''), token): raise HTTPException(403)
+            server.should_exit = True
+            return {'token':token,'workspace':str(workspace)}
+        server = uvicorn.Server(uvicorn.Config(app, host='127.0.0.1', port=port, log_level='info'))
+        atomic_json(state_path, {'port':port,'token':token})
+        def ready():
+            while not server.started and not server.should_exit: time.sleep(.05)
+            if server.started:
+                print(f'EASEL_READY http://127.0.0.1:{port}', flush=True)
+                if not args.no_browser: webbrowser.open(f'http://127.0.0.1:{port}')
+        threading.Thread(target=ready, daemon=True).start()
+        server.run(sockets=[sock])
     finally:
         sock.close()
-        if state_path.exists() and json.loads(state_path.read_text()).get('token') == token: state_path.unlink()
+        lock.close()
+        if token is not None and state_path.exists() and json.loads(state_path.read_text()).get('token') == token:
+            state_path.unlink()
     return 0
 
 

@@ -195,3 +195,132 @@ def test_builder_rejects_nonregular_tracked_license(tmp_path, monkeypatch, kind)
     monkeypatch.setattr(builder, 'ROOT', root)
     with pytest.raises(ValueError):
         builder.copy_tracked_licenses(tmp_path/'bundled', ['packaging/macos/licenses/notice'])
+
+
+@pytest.mark.parametrize('requested', [17860, 43210, 0])
+def test_launcher_publishes_actual_port_before_web_import(tmp_path, monkeypatch, requested):
+    import builtins
+    import os
+    import socket
+    import easel.portable as portable
+    workspace = tmp_path/'workspace'
+    monkeypatch.setattr(os, 'environ', os.environ.copy())
+    monkeypatch.setattr(portable, 'verify_inventory', lambda *a: None)
+    monkeypatch.setattr(portable, 'prepare_workspace', lambda *a: None)
+    monkeypatch.setattr(os, 'chdir', lambda *a: None)
+    import easel.installation
+    monkeypatch.setattr(easel.installation, 'initialize_runtime', lambda *a: None)
+    real_import = builtins.__import__
+    sockets = []
+    class FakeSocket:
+        def __init__(self): self.closed = False; sockets.append(self)
+        def bind(self, address): self.port = address[1] or 45678
+        def getsockname(self): return ('127.0.0.1', self.port)
+        def listen(self, *a): pass
+        def close(self): self.closed = True
+    monkeypatch.setattr(socket, 'socket', FakeSocket)
+    def intercept(name, *args, **kwargs):
+        if name == 'web.app':
+            assert sockets and os.environ.get('EASEL_PORT') == str(requested or 45678)
+            raise RuntimeError('mock web startup failure')
+        return real_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, '__import__', intercept)
+    with pytest.raises(RuntimeError, match='mock web startup failure'):
+        portable.main(['--workspace', str(workspace), '--port', str(requested), '--no-browser'])
+    assert sockets[0].closed
+
+
+@pytest.mark.parametrize('extra', ['extra.js', '.env', 'assets/unrelated-12345678.js'])
+def test_frontend_inventory_rejects_unlisted_files(tmp_path, extra):
+    from scripts.packaging.build_macos import copy_frontend
+    from easel.portable import digest
+    dist = tmp_path/'dist'; dist.mkdir(); (dist/'index.html').write_text('built')
+    (dist/'portable-assets.json').write_text(json.dumps({'schema_version': 1, 'files': {'index.html': digest(dist/'index.html')}}))
+    path = dist/extra; path.parent.mkdir(exist_ok=True); path.write_text('dummy secret')
+    with pytest.raises(ValueError): copy_frontend(dist, tmp_path/'target')
+    assert not (tmp_path/'target').exists()
+
+
+@pytest.mark.parametrize('kind', ['file', 'directory', 'dist', 'ancestor'])
+def test_frontend_inventory_rejects_all_symlink_inputs(tmp_path, kind):
+    from scripts.packaging.build_macos import copy_frontend
+    from easel.portable import digest
+    actual = tmp_path/'actual'; actual.mkdir(); (actual/'index.html').write_text('built')
+    records = {'index.html': digest(actual/'index.html')}
+    if kind == 'file':
+        (actual/'alias.txt').symlink_to(actual/'index.html'); records['alias.txt'] = records['index.html']
+    if kind == 'directory':
+        (actual/'assets').symlink_to(tmp_path, target_is_directory=True)
+    (actual/'portable-assets.json').write_text(json.dumps({'schema_version': 1, 'files': records}))
+    dist = actual
+    if kind == 'dist':
+        dist = tmp_path/'dist'; dist.symlink_to(actual, target_is_directory=True)
+    if kind == 'ancestor':
+        alias = tmp_path/'alias'; alias.symlink_to(tmp_path, target_is_directory=True); dist = alias/'actual'
+    with pytest.raises(ValueError): copy_frontend(dist, tmp_path/'target')
+    assert not (tmp_path/'target').exists()
+
+
+def test_frontend_inventory_copies_exact_hashes_and_rejects_tamper(tmp_path):
+    from scripts.packaging.build_macos import copy_frontend
+    from easel.portable import digest
+    dist = tmp_path/'dist'; dist.mkdir(); (dist/'index.html').write_text('built')
+    (dist/'portable-assets.json').write_text(json.dumps({'schema_version': 1, 'files': {'index.html': digest(dist/'index.html')}}))
+    copy_frontend(dist, tmp_path/'target')
+    assert [p.name for p in (tmp_path/'target').iterdir()] == ['index.html']
+    (dist/'index.html').write_text('modified')
+    with pytest.raises(ValueError): copy_frontend(dist, tmp_path/'other')
+
+
+@pytest.mark.parametrize('port', [17860, 43210, 45678])
+def test_real_web_guard_uses_launch_port_and_rejects_foreign(port):
+    import os
+    import subprocess
+    import sys
+    code = """
+import asyncio
+from starlette.requests import Request
+from starlette.responses import Response
+from web.app import local_write_guard
+async def downstream(request): return Response(status_code=204)
+async def check():
+    for origin, expected in [('http://127.0.0.1:PORT', 204), ('http://localhost:PORT', 204), ('https://foreign.invalid', 403)]:
+        for path in ['/api/settings/harness/provider', '/api/settings/harness', '/api/chat/stream']:
+            req = Request({'type':'http', 'method':'POST', 'path':path, 'headers':[(b'origin', origin.encode())], 'server':('127.0.0.1', PORT), 'client':('127.0.0.1', 1), 'scheme':'http', 'query_string':b''})
+            assert (await local_write_guard(req, downstream)).status_code == expected
+asyncio.run(check())
+""".replace('PORT', str(port))
+    subprocess.run([sys.executable, '-c', code], env={**os.environ, 'EASEL_PORT':str(port)}, check=True, capture_output=True)
+
+
+@pytest.mark.parametrize('private', ['.env', 'assets/credential.json', 'assets/token_cache.js'])
+def test_frontend_receipt_cannot_authorize_private_names(tmp_path, private):
+    from scripts.packaging.build_macos import copy_frontend
+    from easel.portable import digest
+    dist = tmp_path/'dist'; dist.mkdir(); (dist/'index.html').write_text('built')
+    path = dist/private; path.parent.mkdir(exist_ok=True); path.write_text('dummy')
+    records = {p: digest(dist/p) for p in ['index.html', private]}
+    (dist/'portable-assets.json').write_text(json.dumps({'schema_version':1, 'files':records}))
+    with pytest.raises(ValueError): copy_frontend(dist, tmp_path/'target')
+    assert not (tmp_path/'target').exists()
+
+
+def test_frontend_receipt_must_match_current_source(tmp_path):
+    from scripts.packaging.build_macos import copy_frontend
+    from easel.portable import digest
+    dist = tmp_path/'dist'; dist.mkdir(); (dist/'index.html').write_text('built')
+    (dist/'portable-assets.json').write_text(json.dumps({'schema_version':1, 'files':{'index.html':digest(dist/'index.html')}, 'source':{'input':'old'}}))
+    with pytest.raises(ValueError, match='stale'):
+        copy_frontend(dist, tmp_path/'target', source_records={'input':'new'})
+
+
+@pytest.mark.parametrize('stop', [False, True])
+def test_launcher_reuses_only_authenticated_existing_instance(tmp_path, monkeypatch, stop):
+    import easel.portable as portable
+    workspace = tmp_path/'workspace'; state = workspace/'.easel-portable/instance.json'
+    state.parent.mkdir(parents=True); state.write_text(json.dumps({'port':43210, 'token':'x'*64}))
+    calls = []
+    monkeypatch.setattr(portable, 'instance_request', lambda data, action, root: calls.append((action, root)))
+    monkeypatch.setattr(portable.socket, 'socket', lambda: pytest.fail('reuse must not bind another socket'))
+    assert portable.main(['--workspace',str(workspace),'--no-browser'] + (['--stop'] if stop else [])) == 0
+    assert calls == [('identity', workspace)] + ([('stop', workspace)] if stop else [])

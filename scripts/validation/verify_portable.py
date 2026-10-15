@@ -10,6 +10,8 @@ import tempfile
 import threading
 import time
 import urllib.request
+import urllib.error
+import socket
 from http.server import ThreadingHTTPServer
 
 
@@ -41,8 +43,9 @@ def main():
     gateway = ThreadingHTTPServer(('127.0.0.1',0),dummy.Handler)
     threading.Thread(target=gateway.serve_forever,daemon=True).start()
     proc = None
-    def launch():
-        return subprocess.Popen([str(launcher),'--workspace',str(workspace),'--port','0','--no-browser'],env=env)
+    def launch(port=0):
+        options = [] if port is None else ['--port', str(port)]
+        return subprocess.Popen([str(launcher),'--workspace',str(workspace),*options,'--no-browser'],env=env)
     def wait_ready():
         state = workspace/'.easel-portable/instance.json'
         for _ in range(400):
@@ -57,33 +60,53 @@ def main():
         raise RuntimeError('startup timed out')
     def request(path, data=None, headers=None, state=None):
         state = state or json.loads((workspace/'.easel-portable/instance.json').read_text())
-        req=urllib.request.Request(f'http://127.0.0.1:{state["port"]}'+path,data=json.dumps(data).encode() if data is not None else None,headers={'Content-Type':'application/json',**(headers or {})})
+        req=urllib.request.Request(f'http://127.0.0.1:{state["port"]}'+path,data=json.dumps(data).encode() if data is not None else None,headers={'Content-Type':'application/json',**({'Origin':f'http://127.0.0.1:{state["port"]}'} if data is not None else {}),**(headers or {})})
         with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req,timeout=120) as response: return response.read().decode()
-    report = {'root':str(root)}
+    report = {'root':str(root), 'browser_origins':[]}
+    def browser_writes(state):
+        origin = f'http://127.0.0.1:{state["port"]}'
+        for path in ('/api/settings/harness/provider', '/api/settings/harness', '/api/chat/stream'):
+            try: request(path, {}, headers={'Origin':'https://foreign.invalid'}, state=state)
+            except urllib.error.HTTPError as error: assert error.code == 403, (path, error.code)
+            else: raise AssertionError('Foreign browser Origin accepted: '+path)
+        provider={'base_url':f'http://127.0.0.1:{gateway.server_port}/v1','model':'easel-loopback-dummy','api_key':dummy.TOKEN,'secret_action':'replace'}
+        saved=request('/api/settings/harness/provider',provider)
+        assert dummy.TOKEN not in saved
+        request('/api/settings/harness',{'runtime':'codex','sandbox':'workspace-write','codex_auto_approve':True,'service_source':'custom','execution_target':'local'})
+        entry = {'origin':origin,'provider_settings_saved':True,'foreign_write_403':True}
+        if len(report['browser_origins']):
+            stream = request('/api/chat/stream', {'message':'Return the harmless dummy marker.', 'sessionId':'origin-'+str(state['port'])})
+            entry['chat_sse_events'] = assert_sse_success(stream, dummy.MARKER)
+            assert dummy.TOKEN not in stream
+            (root/('stream-'+str(state['port'])+'.txt')).write_text(stream)
+        report['browser_origins'].append(entry)
     try:
         proc=launch(); state=wait_ready()
         report['http_index']= '<html' in request('/').lower()
         assert report['http_index'], 'HTTP index missing HTML'
         report['static']=bool(urllib.request.build_opener(urllib.request.ProxyHandler({})).open(f'http://127.0.0.1:{state["port"]}/static/easel-icon-transparent.png').read())
         assert report['static'], 'Static asset missing'
-        provider={'base_url':f'http://127.0.0.1:{gateway.server_port}/v1','model':'easel-loopback-dummy','api_key':dummy.TOKEN,'secret_action':'replace'}
-        saved=request('/api/settings/harness/provider',provider)
-        assert dummy.TOKEN not in saved
-        request('/api/settings/harness',{'runtime':'codex','sandbox':'workspace-write','codex_auto_approve':True,'service_source':'custom','execution_target':'local'})
+        browser_writes(state)
         sse=request('/api/chat/stream',{'message':'Execute the supplied harmless local Python marker command.','sessionId':'portable-proof'})
         (root/'stream.txt').write_text(sse)
         assert (workspace/'marker.txt').read_text()==dummy.MARKER, sse
         assert dummy.stats['tool_result_seen'] and dummy.stats['tool_output_marker'] and dummy.stats['bearer_correct'],dummy.stats
         report['sse_events'] = assert_sse_success(sse, dummy.MARKER)
+        report['browser_origins'][0]['chat_sse_events'] = report['sse_events']
         dummy.stats['marker_verified'] = True
         assert dummy.TOKEN not in sse
         report['native_python_sse']=True; report['dummy_stats']=dummy.stats
         preserved=workspace/'profiles/user.txt'; preserved.write_text('preserve')
         stopped=subprocess.run([str(launcher),'--workspace',str(workspace),'--stop'],env=env,timeout=30)
         assert stopped.returncode==0; proc.wait(timeout=30)
-        proc=launch(); wait_ready(); assert preserved.read_text()=='preserve'
+        proc=launch(None); state=wait_ready(); browser_writes(state); assert state['port']==17860; assert preserved.read_text()=='preserve'
         report['restart_preservation']=True
         subprocess.run([str(launcher),'--workspace',str(workspace),'--stop'],env=env,check=True,timeout=30); proc.wait(timeout=30)
+        with socket.socket() as chosen:
+            chosen.bind(('127.0.0.1',0)); custom_port=chosen.getsockname()[1]
+        proc=launch(custom_port); state=wait_ready(); browser_writes(state); assert state['port']==custom_port
+        subprocess.run([str(launcher),'--workspace',str(workspace),'--stop'],env=env,check=True,timeout=30); proc.wait(timeout=30)
+        report['port_matrix'] = ['ephemeral', 'default17860', 'explicit_custom']
         print(json.dumps(report,ensure_ascii=False,indent=2)); (root/'report.json').write_text(json.dumps(report,indent=2))
     finally:
         gateway.shutdown()
