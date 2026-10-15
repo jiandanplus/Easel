@@ -155,3 +155,43 @@ def test_provider_get_ignores_global_codex_credentials(tmp_path, monkeypatch):
     assert effective.env["CODEX_HOME"] != str(home)
     assert "global-secret" not in str(effective.env)
     assert "global-secret" not in str(command)
+
+
+@pytest.mark.parametrize("state,installed", [("empty", True), ("configured", True), ("cleared", True), ("configured", False)])
+def test_bundled_setup_reports_local_provider_readiness(sandbox, tmp_path, monkeypatch, state, installed):
+    import web.app as web
+    bundle(tmp_path, monkeypatch)
+    monkeypatch.setattr(web.harnesses, "describe", lambda runtime: {"origin": "bundled", "installed": installed})
+    if state != "empty":
+        save(web.PROJECT_ROOT, secret_action="replace", api_key="dummy-readiness-key")
+    if state == "cleared":
+        save(web.PROJECT_ROOT, secret_action="clear")
+    monkeypatch.setattr(web, "_harness_settings", lambda: {"runtime": "codex"})
+    monkeypatch.setattr(web, "_direct_api_enabled", lambda: False)
+    monkeypatch.setattr(web, "check_gateway", lambda: pytest.fail("bundled readiness must stay local"))
+    expected = state == "configured" and installed
+    setup = sandbox.get("/api/settings/bootstrap").json()
+    assert setup["modelConfigured"] is expected
+    assert setup["envKeyOk"] is (state == "configured")
+    assert setup["routeOk"] is expected
+    assert setup["gatewayUp"] is expected
+    assert setup["authVerified"] is False
+    assert "供应商" in setup["routeDetail"] and "设置" in setup["routeDetail"]
+    assert "原生登录" not in setup["routeDetail"]
+    assert "dummy-readiness-key" not in json.dumps(setup)
+    assert sandbox.get("/api/status").json()["gateway"] is expected
+
+
+@pytest.mark.parametrize("runtime,origin", [("codex", "external"), ("codex", "override"), ("opencode", "external"), ("acp", "external")])
+@pytest.mark.parametrize("installed", [True, False])
+def test_external_native_setup_keeps_installation_contract(sandbox, monkeypatch, runtime, origin, installed):
+    import web.app as web
+    monkeypatch.setattr(web, "_harness_settings", lambda: {"runtime": runtime})
+    monkeypatch.setattr(web, "_direct_api_enabled", lambda: False)
+    monkeypatch.setattr(web.harnesses, "describe", lambda selected: {"installed": installed, "origin": origin})
+    monkeypatch.setattr(provider(), "provider_status", lambda root: pytest.fail("external runtime must not read bundled settings"))
+    setup = sandbox.get("/api/settings/bootstrap").json()
+    assert all(setup[key] is installed for key in ("modelConfigured", "envKeyOk", "routeOk", "gatewayUp"))
+    assert "原生登录" in setup["routeDetail"]
+    assert setup["authVerified"] is False
+    assert sandbox.get("/api/status").json()["gateway"] is installed

@@ -1215,7 +1215,11 @@ async def api_status():
     elif runtime == "openclaw":
         ready = await asyncio.to_thread(check_gateway)
     else:
-        ready = harnesses.describe(runtime)["installed"]
+        descriptor = harnesses.describe(runtime)
+        ready = descriptor["installed"]
+        if runtime == "codex" and descriptor.get("origin") == "bundled":
+            from easel.harnesses.provider import provider_status
+            ready = bool(ready and provider_status(PROJECT_ROOT)["configured"])
     return {"gateway": ready, "transport": "api" if direct else (
                 CHAT_TRANSPORT if runtime == "openclaw" else runtime), "runtime": runtime,
             "skills": get_skills(), "personas": list_personas()}
@@ -1235,7 +1239,19 @@ async def api_settings_bootstrap():
     direct = _direct_api_enabled()
     runtime = _harness_settings()["runtime"]
     if runtime not in ("api", "openclaw"):
-        installed = harnesses.describe(runtime)["installed"]
+        descriptor = harnesses.describe(runtime)
+        installed = descriptor["installed"]
+        if runtime == "codex" and descriptor.get("origin") == "bundled":
+            from easel.harnesses.provider import provider_status
+            configured = provider_status(PROJECT_ROOT)["configured"]
+            ready = bool(installed and configured)
+            detail = ("内置供应商本地设置已完成；尚未验证上游认证，请发送消息验证模型可用性"
+                      if ready else "请在设置中配置内置供应商的地址、模型与 API Key")
+            if not installed:
+                detail += "；内置 CLI 不可用，请检查运行时安装"
+            return {"modelConfigured": ready, "envKeyOk": configured, "routeOk": ready,
+                    "routeDetail": detail, "gatewayUp": ready, "openclawConfigExists": False,
+                    "installWarnings": [], "runtime": runtime, "authVerified": False}
         return {"modelConfigured": installed, "envKeyOk": installed, "routeOk": installed,
                 "routeDetail": "CLI 已安装；请在终端完成原生登录，并发送消息验证模型可用性",
                 "gatewayUp": installed, "openclawConfigExists": False, "installWarnings": [],
