@@ -1,5 +1,6 @@
 import { verifiedArtifact } from './deliverables';
 import type { VerifiedArtifact } from './deliverables';
+import type { UpdateStatus } from './update';
 
 function getBasePath(): string {
   const path = window.location.pathname;
@@ -209,6 +210,11 @@ export const centralOrder = (id: string, signal?: AbortSignal): Promise<CentralO
 export const centralCreateOrder = (body: CentralCreateOrder, signal?: AbortSignal): Promise<CentralOrder> => request('/api/platform/central/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
 export const centralRefreshOrder = (id: string, signal?: AbortSignal): Promise<CentralOrder> => request(`/api/platform/central/orders/${encodeURIComponent(id)}/refresh`, { method: 'POST', signal });
 export const centralCloseOrder = (id: string, signal?: AbortSignal): Promise<CentralOrder> => request(`/api/platform/central/orders/${encodeURIComponent(id)}/close`, { method: 'POST', signal });
+
+export const updateStatus = (signal?: AbortSignal): Promise<UpdateStatus> => request('/api/update/status', { signal });
+export const checkUpdate = (): Promise<UpdateStatus> => request('/api/update/check', { method: 'POST' });
+export const downloadUpdate = (): Promise<UpdateStatus> => request('/api/update/download', { method: 'POST' });
+export const applyUpdate = (): Promise<{ state: string; version: number }> => request('/api/update/apply', { method: 'POST' });
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   // 全部是动态应用接口（登录态/数据等），禁止浏览器 HTTP 缓存——否则 /api/accounts 等可能被启发式

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import EnvBoard from './EnvBoard';
 import ThemeSettings from './ThemeSettings';
+import UpdateSettings from './UpdateSettings';
 import HarnessSettings from './HarnessSettings';
 import PlatformAccountSettings from './PlatformAccountSettings';
 import MediaGatewaySettings from './MediaGatewaySettings';
@@ -23,7 +24,7 @@ interface Props {
   banner?: string;
 }
 
-type Sec = 'model' | 'theme' | 'env' | 'more' | 'account';
+type Sec = 'model' | 'theme' | 'env' | 'more' | 'account' | 'update';
 type Chan = 'chat' | 'transcribe' | 'speech' | 'image' | 'video' | 'music';
 
 const CHANNELS: { id: Chan; label: string }[] = [
@@ -715,6 +716,9 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
             <button className={`snav${sec === 'env' ? ' active' : ''}`} onClick={() => setSec('env')}>
               <IconPackage size={16} />环境安装<small>{total ? (okCount === total ? '全就绪' : `${okCount}/${total}`) : '…'}</small>
             </button>
+            <button className={`snav${sec === 'update' ? ' active' : ''}`} onClick={() => setSec('update')}>
+              <span aria-hidden="true">↻</span>版本更新
+            </button>
             <button className={`snav${sec === 'more' ? ' active' : ''}`} onClick={() => setSec('more')}>
               <IconEllipsis size={16} />更多设置
             </button>
@@ -723,6 +727,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
           <div className="settings-main">
             {sec === 'account' && <PlatformAccountSettings />}
             {sec === 'theme' && <ThemeSettings />}
+            {sec === 'update' && <UpdateSettings />}
             {sec === 'model' && (
               <section className="st-sec active">
                 <MediaGatewaySettings onChange={onMediaGatewayChange} />

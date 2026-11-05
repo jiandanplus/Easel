@@ -130,9 +130,9 @@ def test_budget_keeps_extra_200_mib_and_fails_before_writing(builder, tmp_path, 
 def test_cli_copy_mode_is_explicit_and_defaults_to_normal(builder, tmp_path, monkeypatch, enabled):
     seen = []
     monkeypatch.setattr(builder, "build", lambda *args, **kwargs: seen.append(kwargs))
-    args = ["build_pi_macos.py", "--inputs", str(tmp_path), "--pi-root", str(tmp_path), "--output", str(tmp_path / "out")]
+    args = ["build_pi_macos.py", "--inputs", str(tmp_path), "--pi-root", str(tmp_path), "--output", str(tmp_path / "out"), "--version", "38"]
     if enabled:
         args.append("--copy-on-write")
     monkeypatch.setattr(sys, "argv", args)
     builder.main()
-    assert seen == [{"copy_on_write": enabled}]
+    assert seen == [{"copy_on_write": enabled, "version": 38}]

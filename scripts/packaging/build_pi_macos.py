@@ -312,7 +312,7 @@ exec "$HERE/python/bin/python3" -I -B -c 'import sys; sys.path.insert(0, sys.arg
 '''
 
 
-def build(inputs, pi_root, output, authority, *, copy_on_write=False):
+def build(inputs, pi_root, output, authority, *, copy_on_write=False, version=None):
     if output.exists():
         raise ValueError("Refusing existing delivery directory; choose fresh output")
     records = verified_sources(authority)
@@ -360,6 +360,9 @@ def build(inputs, pi_root, output, authority, *, copy_on_write=False):
         shutil.copy2(ROOT / "packaging/macos" / name, resource / name)
     shutil.copy2(authority, resource / "source-manifest.json")
     provenance = {"schema_version": 1, "engine": "pi", "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), "source_manifest_sha256": digest(authority), "pi_manifest_sha256": digest(pi_root / "runtime-manifest.json"), "frontend_receipt_sha256": digest(ROOT / "web/frontend/dist/portable-assets.json"), "python_archive_verified": python_proof["archive_verified"], "python_archive_sha256": python_proof["archive_sha256"], "python_source_provenance_sha256": python_proof["source_provenance_sha256"], "python_runtime_inventory_sha256": python_proof["runtime_inventory_sha256"], "python_runtime_inventory_verified": True, "copy_strategy": copy_strategy, "clonefile_flags": CLONEFILE_FLAGS if copy_on_write else None, "python_version": PYTHON_VERSION, "wheel_count": len(list((inputs / "wheels").glob("*.whl"))), "minimum_macos": "15.0", "unsigned": True, "notarized": False, "ui": "loopback web browser"}
+    if version is not None:
+        # In-app updates compare this number; it is covered by build-inventory.json.
+        provenance["version"] = version
     (resource / "build-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     macos = app / "Contents/MacOS"
     macos.mkdir()
@@ -401,13 +404,14 @@ def main():
     parser.add_argument("--source-manifest", type=Path, default=ROOT / "packaging/pi/source-manifest.json")
     parser.add_argument("--freeze-source-only", action="store_true")
     parser.add_argument("--copy-on-write", action="store_true", help="Use clonefile with no fallback for verified runtime trees")
+    parser.add_argument("--version", type=int, help="Release number used by in-app updates, e.g. 38")
     args = parser.parse_args()
     if args.freeze_source_only:
         print(json.dumps({"authority": str(args.source_manifest), "files": len(freeze_sources(args.source_manifest))}))
         return
-    if args.pi_root is None or args.output is None:
-        parser.error("--pi-root and --output required for build")
-    build(args.inputs.resolve(), args.pi_root.resolve(), args.output.resolve(), args.source_manifest, copy_on_write=args.copy_on_write)
+    if args.pi_root is None or args.output is None or args.version is None:
+        parser.error("--pi-root, --output and --version required for build")
+    build(args.inputs.resolve(), args.pi_root.resolve(), args.output.resolve(), args.source_manifest, copy_on_write=args.copy_on_write, version=args.version)
 
 if __name__ == "__main__":
     main()
