@@ -161,12 +161,24 @@ def instance_request(state, action, workspace):
     return result
 
 
+TEMPORARY_ROOTS = ('/tmp', '/private/tmp', '/var/tmp', '/private/var/tmp', '/private/var/folders')
+
+
+def temporary_location(path):
+    """System temp directories are emptied on reboot and by nightly maintenance."""
+    resolved = Path(os.path.realpath(path))
+    roots = {Path(os.path.realpath(root)) for root in (*TEMPORARY_ROOTS, tempfile.gettempdir())}
+    return any(resolved.is_relative_to(root) for root in roots)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--workspace', type=Path, default=Path.home()/'Library/Application Support/Easel/workspace')
     parser.add_argument('--port', type=int, default=17860)
     parser.add_argument('--no-browser', action='store_true')
     parser.add_argument('--stop', action='store_true')
+    # Only for isolated tests and diagnostics; a temp workspace is deleted by the OS.
+    parser.add_argument('--allow-temporary-workspace', action='store_true')
     args = parser.parse_args(argv)
     resource = Path(__file__).resolve().parents[1]
     workspace = args.workspace.expanduser().resolve()
@@ -183,6 +195,8 @@ def main(argv=None):
             if args.stop: raise ValueError('无法认证自有运行实例；未终止任何进程')
     elif args.stop:
         raise ValueError('没有自有运行实例记录')
+    if temporary_location(workspace) and not args.allow_temporary_workspace:
+        raise ValueError('工作区不能放在系统临时目录，重启或系统清理会删除其中的数据')
     verify_inventory(resource)
     if workspace.is_relative_to(resource) or resource.is_relative_to(workspace):
         raise ValueError('工作区与资源重叠')

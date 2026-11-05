@@ -232,7 +232,7 @@ def test_launcher_publishes_actual_port_before_web_import(tmp_path, monkeypatch,
         return real_import(name, *args, **kwargs)
     monkeypatch.setattr(builtins, '__import__', intercept)
     with pytest.raises(RuntimeError, match='mock web startup failure'):
-        portable.main(['--workspace', str(workspace), '--port', str(requested), '--no-browser'])
+        portable.main(['--workspace', str(workspace), '--port', str(requested), '--no-browser', '--allow-temporary-workspace'])
     assert sockets[0].closed
     assert initializations == [{'subscription_default': True}]
 
@@ -371,11 +371,45 @@ def test_launcher_real_socket_restart_and_foreign_listener(tmp_path, monkeypatch
         if occupied:
             foreign.listen(1)
             with pytest.raises(ValueError, match='端口已占用'):
-                portable.main(['--workspace',str(workspace),'--port',str(port),'--no-browser'])
+                portable.main(['--workspace',str(workspace),'--port',str(port),'--no-browser','--allow-temporary-workspace'])
             assert foreign.getsockname()[1] == port
             with socket.create_connection(('127.0.0.1',port)) as client:
                 peer, _ = foreign.accept(); peer.close()
             return
     for _ in range(2):
-        assert portable.main(['--workspace',str(workspace),'--port',str(port),'--no-browser']) == 0
+        assert portable.main(['--workspace',str(workspace),'--port',str(port),'--no-browser','--allow-temporary-workspace']) == 0
     assert initializations == [{'subscription_default': True}, {'subscription_default': False}]
+
+
+@pytest.mark.parametrize('location', ['/tmp/easel-x/workspace', '/private/tmp/easel-x/workspace',
+                                      '/var/tmp/easel-x/workspace', 'gettempdir'])
+def test_launcher_refuses_temporary_workspace_before_starting(tmp_path, monkeypatch, location):
+    # macOS empties these directories on reboot and in nightly maintenance; a live workspace there loses data.
+    import tempfile
+    import easel.portable as portable
+    workspace = Path(tempfile.gettempdir())/'easel-x/workspace' if location == 'gettempdir' else Path(location)
+    monkeypatch.setattr(portable, 'verify_inventory', lambda *a: pytest.fail('must refuse before startup'))
+    monkeypatch.setattr(portable.socket, 'socket', lambda: pytest.fail('must refuse before binding'))
+    with pytest.raises(ValueError, match='临时目录'):
+        portable.main(['--workspace', str(workspace), '--no-browser'])
+    assert not workspace.exists()
+
+
+def test_temporary_workspace_still_stops_existing_instance(monkeypatch):
+    import tempfile
+    import easel.portable as portable
+    workspace = Path(tempfile.mkdtemp())/'workspace'
+    state = workspace/'.easel-portable/instance.json'
+    state.parent.mkdir(parents=True); state.write_text(json.dumps({'port':43210, 'token':'x'*64}))
+    calls = []
+    monkeypatch.setattr(portable, 'instance_request', lambda data, action, root: calls.append(action))
+    assert portable.main(['--workspace', str(workspace), '--no-browser', '--stop']) == 0
+    assert calls == ['identity', 'stop']
+
+
+def test_temporary_workspace_requires_explicit_opt_in(monkeypatch):
+    import tempfile
+    import easel.portable as portable
+    assert portable.temporary_location(Path(tempfile.gettempdir())/'w')
+    assert portable.temporary_location(Path('/private/tmp/w'))
+    assert not portable.temporary_location(Path.home()/'Library/Application Support/Easel/workspace')
