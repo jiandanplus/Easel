@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import os
 import re
 import sys
 from urllib.parse import unquote
@@ -20,6 +21,9 @@ OLD_PATH_RE = re.compile(
     r"|openclaw[/\\](?:workspace|sync\.sh|openclaw\.json5))"
 )
 PLANNED_RE = re.compile(r"[ \t]*[-*][ \t]+Create:")
+LINE_SUFFIX_RE = re.compile(r":\d+(?:-\d+)?$")
+# 按日期留存的计划、设计与验收记录是历史快照，引用的文件可能已改名或从未创建；不做现行路径校验。
+HISTORICAL_DIRS = ("docs/superpowers", "docs/validation")
 RESOURCE_PREFIXES = ("scripts/", "references/", "assets/", "tools/", "docs/", "themes/")
 OPTIONAL_PATHS = {
     "skills/shared/scripts/models",
@@ -44,6 +48,7 @@ def documents(root: Path) -> list[Path]:
             if not set(path.relative_to(root).parts).intersection(
                 {"node_modules", ".git", "__pycache__", "dist"}
             )
+            and not any(path.is_relative_to(root / historical) for historical in HISTORICAL_DIRS)
         )
     return sorted(set(found))
 
@@ -66,7 +71,7 @@ def literal_path(value: str) -> str | None:
         return None
     if any(character.isspace() for character in value):
         return None
-    return value.replace("\\", "/")
+    return LINE_SUFFIX_RE.sub("", value.replace("\\", "/"))
 
 
 def resolve_reference(document: Path, root: Path, value: str, *, link: bool) -> Path | None:
@@ -76,13 +81,19 @@ def resolve_reference(document: Path, root: Path, value: str, *, link: bool) -> 
     if reference in OPTIONAL_PATHS:
         return None
     if link or reference.startswith(("../", "./")):
-        return document.parent / reference
+        candidate = Path(os.path.normpath(document.parent / reference))
+        # outputs/ 是被忽略的本机运行产物（含历史验收证据），相对链接写法同样不校验。
+        return None if candidate.is_relative_to(root / "outputs") else candidate
     if reference.startswith(("skills/", "agents/")):
         return root / reference
     if reference.startswith(RESOURCE_PREFIXES):
         if reference in RESOURCE_PREFIXES:
             return None
-        return resource_root(document, root) / reference
+        base = resource_root(document, root)
+        # 技能外的普通文档（如 docs/validation/assets/）也会就近存放资源。
+        if base == root and (document.parent / reference).exists():
+            return document.parent / reference
+        return base / reference
     return None
 
 
