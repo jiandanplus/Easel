@@ -169,6 +169,70 @@ jobs:
         run: node --test ../../tests/frontend/*.test.mjs
       - run: npm run build
 
+  # 中央服务是独立 uv 项目（Python 3.12 + PostgreSQL 16），根目录 pytest 不收集它。
+  # PG 测试缺 DSN 时按设计直接失败而非跳过，所以这里起一个仅 CI 内可见的临时 PG16。
+  # 媒体测试的库夹具要求 B2「自有容器授权」：镜像固定为下面的摘要，授权文件在运行时生成。
+  central-platform:
+    name: Central platform (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
+        env:
+          POSTGRES_PASSWORD: ci-only-not-a-secret-for-b2-tests
+          POSTGRES_DB: easel_s1_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d easel_s1_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      EASEL_CENTRAL_TEST_DSN: postgresql://postgres:ci-only-not-a-secret-for-b2-tests@127.0.0.1:5432/easel_s1_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: services/platform/frontend/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+      - name: Build Console (packaged into the wheel)
+        run: |
+          npm ci --prefix services/platform/frontend --ignore-scripts
+          npm test --prefix services/platform/frontend
+          python3 services/platform/scripts/build_console.py
+      - run: uv sync --project services/platform --python 3.12 --frozen --group test
+      - name: Create owned B2 test authority
+        env:
+          CONTAINER_ID: ${{ job.services.postgres.id }}
+        run: |
+          nonce=$(openssl rand -hex 16)
+          psql "$EASEL_CENTRAL_TEST_DSN" -qc "CREATE DATABASE easel_s1_test_b2_$nonce"
+          dir="$RUNNER_TEMP/easel-b2-owned-pg-$nonce"
+          mkdir -m 700 "$dir"
+          (umask 077; python3 - "$dir/authority.private.json" "$nonce" "$CONTAINER_ID" <<'PY'
+          import json, sys
+          path, nonce, container = sys.argv[1:]
+          json.dump({"format": "easel-b2-owned-test-pg-v1", "nonce": nonce, "container_id": container,
+                     "image": "postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97",
+                     "host": "127.0.0.1", "port": 5432, "database": f"easel_s1_test_b2_{nonce}",
+                     "user": "postgres", "password": "ci-only-not-a-secret-for-b2-tests"}, open(path, "w"))
+          PY
+          )
+          echo "EASEL_B2_TEST_AUTHORITY_FILE=$dir/authority.private.json" >> "$GITHUB_ENV"
+      # 从仓库根以 `python -m pytest` 运行：部分用例按 services.platform.tests.* 导入。
+      # 每 40 个文件一个进程：单进程跑全量会累积文件描述符，超过 select() 的 1024 上限后
+      # 后段用例成批报错。排除已冻结的 AV（需 Linux Docker 守护进程）与 B2/B3 恢复链路测试，
+      # 以及两条与 B2 维护许可耦合的图片功能开关用例，见
+      # docs/superpowers/plans/2026-11-05-optimized-roadmap.md。
+      - name: Central service tests
+        timeout-minutes: 40
+        run: |
+          ls services/platform/tests/test_*.py \
+            | grep -vE '/test_av_|/test_media_backup_b2_(capture_pg|integrated|pipeline)\.py$|/test_(settled|mixed)_media_restore_fixture\.py$|/test_media_restore_capture\.py$' \
+            | xargs -n 40 uv run --project services/platform --frozen --group test python -m pytest -q \
+                -k 'not (test_extension_uses_real_image_feature_gate_on_original_wallet_and_no_new_grant or test_live_image_cannot_claim_text_feature_even_as_legacy_misconfigured_catalog)'
+
   # 真·跑一遍安装。只在 nightly / 手动触发 / 打了 ci:full-install 标签的 PR 上跑：
   # 一次完整安装要下 ~1GB（pip 的 opencv/faster-whisper/rembg + npm + Chromium），
   # windows-latest 上 I/O 更慢且按 2 倍计费，挂在每个 PR 上并不现实。
