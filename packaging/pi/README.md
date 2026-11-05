@@ -18,3 +18,15 @@ Python 来自固定的 python-build-standalone CPython 3.12.13 归档及其离�
 构建：`python scripts/packaging/build_pi_macos.py --inputs /ABS/PREPARED/PYTHON --pi-root /ABS/NEW/pi-payload --output /ABS/NEW/delivery`。
 
 实际交付的 `artifact.json`、资源 `build-provenance.json`、`source-manifest.json` 与 `build-inventory.json` 记录该轮版本与哈希。构建成功与真实模型、中央扣点、干净设备验收是独立证据。
+
+## 应用内更新与发布
+
+受管安装布局为 `<根目录>/v<N>/Easel/Easel.app`，并由 `<根目录>/current` 链接指向正在使用的版本；启动、停止脚本都经由 `current`。只有这种布局支持应用内更新，旧版本目录保留，便于回滚。
+
+发布一个新版本：
+
+1. 构建时指定版本号：`python scripts/packaging/build_pi_macos.py --inputs /ABS/PYTHON-INPUTS --pi-root /ABS/PI-RUNTIME --output /ABS/NEW/delivery --version 38`。
+2. 生成并签名更新清单：`python scripts/packaging/publish_update.py --artifact /ABS/NEW/delivery/artifact.json --url https://github.com/jiandanplus/Easel/releases/download/v38/Easel-Pi-macOS15-arm64.zip --notes "更新说明" --key /ABS/PRIVATE/update-signing-key.pem --output /ABS/NEW/release`。工具会用应用内置的公钥复核签名，私钥不匹配时拒绝生成。
+3. 在 GitHub 创建 Release，上传 ZIP、`easel-update.json` 和 `easel-update.json.sig`。应用默认读取最新 Release 的清单；可用 `EASEL_UPDATE_MANIFEST_URL` 改为自有服务器（HTTPS）或本机 `file://` 地址。
+
+签名私钥只保存在发布者本机，不进入仓库或安装包；丢失后只能发布内置新公钥的版本，并让用户手动安装一次。
