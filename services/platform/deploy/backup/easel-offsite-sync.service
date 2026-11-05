@@ -1,5 +1,5 @@
 [Unit]
-Description=Easel: copy sealed backups to Cloudflare R2 and alert Feishu
+Description=Easel: copy sealed backups to Cloudflare R2
 After=network-online.target
 Wants=network-online.target
 

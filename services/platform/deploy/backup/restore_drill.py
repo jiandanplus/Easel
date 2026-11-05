@@ -10,8 +10,8 @@ Private config (~/Easel-build/backup-drill/drill.env, 0600):
   R2_REMOTE=r2:<bucket>/central
   RCLONE_CONFIG=~/Easel-build/backup-drill/rclone.conf   (read-only R2 token)
   PRIVATE_KEY=~/Easel-build/backup-keys/backup-private.pem
-  FEISHU_WEBHOOK=https://open.feishu.cn/open-apis/bot/v2/hook/...
-  FEISHU_SECRET=...                                        optional
+  FEISHU_USER=ou_...                                       lark-cli app bot direct message, or
+  FEISHU_WEBHOOK=https://open.feishu.cn/open-apis/bot/v2/hook/...  (+ FEISHU_SECRET)
 """
 import argparse
 import hashlib
@@ -188,7 +188,7 @@ def main():
     args = parser.parse_args()
     started = time.time()
     config = {key: os.path.expanduser(value) for key, value in _read_config(args.config).items()}
-    notify = lambda text: feishu.send(config["FEISHU_WEBHOOK"], text, config.get("FEISHU_SECRET") or None)
+    notify = feishu.notifier(config)
     work = Path(config.get("WORK_DIR", str(Path.home() / "Easel-build/backup-drill/work")))
     work.mkdir(mode=0o700, parents=True, exist_ok=True)
     local = None
@@ -230,7 +230,9 @@ def _read_config(path):
         if line and not line.startswith("#") and "=" in line:
             key, value = line.split("=", 1)
             values[key.strip()] = value.strip()
-    missing = [key for key in ("R2_REMOTE", "RCLONE_CONFIG", "PRIVATE_KEY", "FEISHU_WEBHOOK") if not values.get(key)]
+    missing = [key for key in ("R2_REMOTE", "RCLONE_CONFIG", "PRIVATE_KEY") if not values.get(key)]
+    if not (values.get("FEISHU_USER") or values.get("FEISHU_WEBHOOK")):
+        missing.append("FEISHU_USER 或 FEISHU_WEBHOOK")
     if missing:
         raise DrillError("配置缺少 " + "、".join(missing))
     return values

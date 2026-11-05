@@ -55,6 +55,28 @@ def test_feishu_send_reports_api_level_failure():
     assert feishu.send("http://insecure/hook", "t", post=lambda url, data: pytest.fail("no http")) is False
 
 
+def test_feishu_lark_bot_direct_message_needs_an_accepted_reply():
+    calls = []
+    def run(args, **kwargs):
+        calls.append(args)
+        return SimpleNamespace(returncode=0, stdout='{"ok": true, "identity": "bot"}')
+    assert feishu.send_lark("ou_abc", "备份失败", cli="/bin/lark-cli", run=run) is True
+    assert calls == [["/bin/lark-cli", "im", "+messages-send", "--as", "bot", "--user-id", "ou_abc", "--text", "备份失败"]]
+    refused = lambda args, **kwargs: SimpleNamespace(returncode=0, stdout='{"ok": false}')
+    garbled = lambda args, **kwargs: SimpleNamespace(returncode=0, stdout="WARN proxy")
+    def missing(args, **kwargs):
+        raise FileNotFoundError(args[0])
+    assert not any(feishu.send_lark("ou_abc", "t", run=r) for r in (refused, garbled, missing))
+    assert feishu.send_lark("someone@example.com", "t", run=lambda *a, **k: pytest.fail("not an open_id")) is False
+
+
+def test_feishu_notifier_prefers_lark_user_then_webhook():
+    assert feishu.notifier({}) is None
+    assert feishu.notifier({"FEISHU_USER": "", "FEISHU_WEBHOOK": ""}) is None
+    assert callable(feishu.notifier({"FEISHU_USER": "ou_abc"}))
+    assert callable(feishu.notifier({"FEISHU_WEBHOOK": "https://open.feishu.cn/hook/x"}))
+
+
 # ---- public-key-only sealing ----
 
 def fake_backup(payload=b"tar-bytes"):
@@ -192,9 +214,32 @@ def test_config_parser_ignores_comments_and_requires_keys(tmp_path):
     path = tmp_path / "backup.env"
     path.write_text("# 注释\nR2_REMOTE=r2:b/c\nFEISHU_WEBHOOK=https://open.feishu.cn/hook/x\n")
     assert offsite_sync.read_config(path)["R2_REMOTE"] == "r2:b/c"
-    path.write_text("R2_REMOTE=r2:b/c\n")
+    path.write_text("R2_REMOTE=r2:b/c\n")  # the server may leave Feishu to the Mac watch
+    assert offsite_sync.read_config(path)["STALE_HOURS"] == "30"
+    path.write_text("FEISHU_USER=ou_abc\n")
     with pytest.raises(offsite_sync.SyncError):
         offsite_sync.read_config(path)
+
+
+def test_watch_alerts_when_r2_goes_stale_or_unreadable_and_recovers(tmp_path):
+    now = 1_800_000_000
+    cfg = config(tmp_path)
+    sent = []
+    notify = lambda text: sent.append(text) or True
+    fresh = sealed_name(3, now)
+    assert offsite_sync.watch(cfg, rclone=FakeRclone(remote={fresh, "x.txt"}), now=lambda: now, notify=notify) == {
+        "problems": [], "newest": fresh}
+    assert sent == []
+    later = now + 40 * 3600
+    result = offsite_sync.watch(cfg, rclone=FakeRclone(remote={fresh}), now=lambda: later, notify=notify)
+    assert "43" in result["problems"][0] and len(sent) == 1 and "告警" in sent[0]
+    offsite_sync.watch(cfg, rclone=FakeRclone(fail=True), now=lambda: later + 3600, notify=notify)
+    assert len(sent) == 2 and "无法读取 R2" in sent[1]
+    newer = sealed_name(1, later + 7200)
+    offsite_sync.watch(cfg, rclone=FakeRclone(remote={fresh, newer}), now=lambda: later + 7200, notify=notify)
+    assert len(sent) == 3 and "恢复" in sent[2] and newer in sent[2]
+    offsite_sync.watch(cfg, rclone=FakeRclone(remote=set()), now=lambda: later + 9000, notify=notify)
+    assert "没有找到" in sent[3]
 
 
 # ---- restore drill pieces ----

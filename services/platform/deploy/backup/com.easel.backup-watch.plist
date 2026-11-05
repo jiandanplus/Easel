@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.easel.backup-watch</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__HOME__/Easel-build/backup-drill/venv/bin/python</string>
+    <string>__HOME__/Easel-build/backup-drill/offsite_sync.py</string>
+    <string>--watch</string>
+    <string>--config</string>
+    <string>__HOME__/Easel-build/backup-drill/drill.env</string>
+  </array>
+  <!-- 每小时检查 R2 最新备份是否超过 30 小时；登录后立即跑一次 -->
+  <key>StartInterval</key><integer>3600</integer>
+  <key>RunAtLoad</key><true/>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/Easel/backup-watch.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/Easel/backup-watch.log</string>
+</dict>
+</plist>

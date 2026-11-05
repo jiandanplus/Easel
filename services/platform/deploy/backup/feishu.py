@@ -1,12 +1,15 @@
-"""Feishu custom-bot text notifications.
+"""Feishu text notifications: a lark-cli app bot direct message, or a custom group-bot webhook.
 
-The webhook URL and the optional signing secret live only in private config
-files written by the operator; they are never logged.
+FEISHU_USER (an open_id, ou_...) sends through `lark-cli` as its app bot; the
+app secret stays in lark-cli's own store. FEISHU_WEBHOOK (+ optional
+FEISHU_SECRET) posts to a custom group bot. Both live only in private config
+files written by the operator and are never logged.
 """
 import base64
 import hashlib
 import hmac
 import json
+import subprocess
 import time
 import urllib.request
 
@@ -37,3 +40,24 @@ def send(webhook, text, secret=None, post=_post):
     except Exception:
         return False
     return isinstance(result, dict) and result.get("code", result.get("StatusCode")) == 0
+
+
+def send_lark(user_id, text, cli="lark-cli", run=subprocess.run):
+    """Direct message one user as the lark-cli app bot; True only when Feishu accepted it."""
+    if not isinstance(user_id, str) or not user_id.startswith("ou_"):
+        return False
+    try:
+        result = run([cli, "im", "+messages-send", "--as", "bot", "--user-id", user_id, "--text", text],
+                     capture_output=True, text=True, timeout=60)
+        return result.returncode == 0 and json.loads(result.stdout).get("ok") is True
+    except (OSError, subprocess.TimeoutExpired, ValueError, AttributeError):
+        return False
+
+
+def notifier(config):
+    """The configured channel as a text -> bool callable, or None when there is none."""
+    if config.get("FEISHU_USER"):
+        return lambda text: send_lark(config["FEISHU_USER"], text, cli=config.get("LARK_CLI") or "lark-cli")
+    if config.get("FEISHU_WEBHOOK"):
+        return lambda text: send(config["FEISHU_WEBHOOK"], text, config.get("FEISHU_SECRET") or None)
+    return None

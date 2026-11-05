@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
-"""Copy new sealed backups to Cloudflare R2 and alert Feishu when backups go stale or sync fails.
+"""Copy new sealed backups to Cloudflare R2, and watch R2 from another machine.
 
-Runs hourly. Uploads are add-only (`--immutable`, never deletes); the envelopes
-are already encrypted with the off-host public key. An alert is sent when the
-set of problems changes, repeated once a day while unresolved, and a recovery
-message is sent when everything is healthy again.
+Server (hourly, default): uploads are add-only (`--immutable`, never deletes);
+the envelopes are already encrypted with the off-host public key.
+Watch (`--watch`, hourly on the Mac that holds the private key): alerts when
+the newest backup in R2 is older than STALE_HOURS or R2 cannot be read, which
+also covers a server that has stopped backing up or syncing.
 
-Private config (/etc/easel-backup/backup.env, 0600):
+Either way an alert is sent when the set of problems changes, repeated once a
+day while unresolved, and a recovery message is sent when healthy again.
+
+Private config (server /etc/easel-backup/backup.env, Mac drill.env; 0600):
   R2_REMOTE=r2:<bucket>/central          rclone remote path
-  FEISHU_WEBHOOK=https://open.feishu.cn/open-apis/bot/v2/hook/...
-  FEISHU_SECRET=...                        optional signing secret
   RCLONE_CONFIG=/etc/easel-backup/rclone.conf
+  FEISHU_USER=ou_...                       lark-cli app bot direct message, or
+  FEISHU_WEBHOOK=https://open.feishu.cn/open-apis/bot/v2/hook/...  (+ FEISHU_SECRET)
+The server may leave Feishu unset; the Mac watch then reports for it.
 """
 import argparse
 import datetime as dt
@@ -24,7 +29,7 @@ from pathlib import Path
 import feishu
 
 NAME = re.compile(r"^(\d{8}T\d{6}Z)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.sealed$")
-REQUIRED = ("R2_REMOTE", "FEISHU_WEBHOOK")
+REQUIRED = ("R2_REMOTE",)
 DEFAULTS = {"BACKUP_DIR": "/var/backups/easel-encrypted", "STALE_HOURS": "30",
             "STATE_FILE": "/var/lib/easel-backup/state.json", "RCLONE_CONFIG": "/etc/easel-backup/rclone.conf"}
 REPEAT_SECONDS = 24 * 3600
@@ -34,8 +39,8 @@ class SyncError(Exception):
     pass
 
 
-def read_config(path):
-    values = dict(DEFAULTS)
+def read_config(path, defaults=DEFAULTS):
+    values = dict(defaults)
     for line in Path(path).read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if line and not line.startswith("#") and "=" in line:
@@ -101,7 +106,33 @@ def run(config, *, rclone, now=time.time, notify):
                 uploaded.append(name)
     except SyncError as error:
         problems["sync"] = f"同步到 R2 失败：{error}"
+    recovered = f"【Easel 备份恢复正常】最新备份 {local[-1]} 已同步到 R2" if local else ""
+    _report(config, problems, current, notify, recovered)
+    return {"problems": [problems[code] for code in sorted(problems)], "uploaded": uploaded, "local": len(local)}
 
+
+def watch(config, *, rclone, now=time.time, notify):
+    current = now()
+    stale = float(config["STALE_HOURS"])
+    problems, newest = {}, None
+    try:
+        names = sorted(name for name in rclone(["lsf", config["R2_REMOTE"].rstrip("/"), "--files-only"]).split()
+                       if NAME.match(name))
+    except SyncError as error:
+        problems["r2"] = f"无法读取 R2：{error}"
+    else:
+        if not names:
+            problems["no_remote"] = "R2 上没有找到备份"
+        else:
+            newest = names[-1]
+            if (age := age_hours(newest, current)) > stale:
+                problems["stale_remote"] = (f"R2 上最新备份已有 {int(age)} 小时，超过 {int(stale)} 小时"
+                                            "（服务器备份或同步可能已停止）")
+    _report(config, problems, current, notify, f"【Easel 备份恢复正常】R2 最新备份 {newest}")
+    return {"problems": [problems[code] for code in sorted(problems)], "newest": newest}
+
+
+def _report(config, problems, current, notify, recovered):
     state = _state(config["STATE_FILE"])
     previous = state.get("problems", [])
     codes = sorted(problems)
@@ -109,20 +140,29 @@ def run(config, *, rclone, now=time.time, notify):
         if notify("【Easel 备份告警】\n" + "\n".join(problems[code] for code in codes)):
             state["alerted_at"] = current
     elif not codes and previous:
-        notify(f"【Easel 备份恢复正常】最新备份 {local[-1]} 已同步到 R2")
+        notify(recovered)
         state.pop("alerted_at", None)
     state["problems"] = codes
     _save_state(config["STATE_FILE"], state)
-    return {"problems": [problems[code] for code in codes], "uploaded": uploaded, "local": len(local)}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--config", default="/etc/easel-backup/backup.env")
+    parser.add_argument("--watch", action="store_true", help="Check R2 freshness instead of uploading")
     args = parser.parse_args()
-    config = read_config(args.config)
-    notify = lambda text: feishu.send(config["FEISHU_WEBHOOK"], text, config.get("FEISHU_SECRET") or None)
-    result = run(config, rclone=rclone_runner(config["RCLONE_CONFIG"]), notify=notify)
+    if args.watch:
+        defaults = {**DEFAULTS, "STATE_FILE": str(Path.home() / "Easel-build/backup-drill/watch-state.json")}
+        config = {key: os.path.expanduser(value) for key, value in read_config(args.config, defaults).items()}
+    else:
+        config = read_config(args.config)
+    notify = feishu.notifier(config)
+    if notify is None:
+        if args.watch:
+            raise SyncError("配置缺少 FEISHU_USER 或 FEISHU_WEBHOOK")
+        notify = lambda text: False  # the Mac watch reports a server that stops syncing
+    task = watch if args.watch else run
+    result = task(config, rclone=rclone_runner(config["RCLONE_CONFIG"]), notify=notify)
     print(json.dumps(result, ensure_ascii=False))
     return 1 if result["problems"] else 0
 
