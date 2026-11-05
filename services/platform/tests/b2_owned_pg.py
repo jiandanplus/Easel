@@ -9,6 +9,8 @@ import pytest
 from platform_service.db import MIGRATIONS_DIR
 from b2_test_authority import selected_authority,read_identity_json
 
+_HARNESS_SELECTIONS=frozenset({"EASEL_CENTRAL_TEST_DSN","EASEL_CENTRAL_TEST_DSN_FILE","EASEL_B2_TEST_AUTHORITY_FILE"})
+
 def identity_fixture():
     """Validate fixed synthetic identity siblings against the cached authority."""
     authority=selected_authority()
@@ -49,8 +51,9 @@ class OwnedPG:
     def factory(self,role):return lambda:self.connection(role)
 def _owned_pg(count):
     authority=selected_authority()
+    # Keep the harness's own test selections: later PG tests in the same process need them.
     for key in tuple(os.environ):
-        if key.startswith("PG") or key.startswith("EASEL"):os.environ.pop(key,None)
+        if (key.startswith("PG") or key.startswith("EASEL")) and key not in _HARNESS_SELECTIONS:os.environ.pop(key,None)
     base=make_conninfo(host=authority.host,hostaddr=authority.host,port=str(authority.port),dbname=authority.database,user=authority.user,password=authority.password,connect_timeout="5",sslmode="disable",application_name="easel_b2_owned_tests")
     suffix=uuid4().hex[:16];name="easel_s1_test_b2r_"+suffix
     roles={kind:"b2r_"+kind+"_"+suffix for kind in ("owner","runtime","controller")}
