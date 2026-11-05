@@ -63,6 +63,9 @@ class MediaSettings:
     providers: dict[str, MediaProvider] = field(default_factory=dict, repr=False)
     storage_root: Path | None = field(default=None, repr=False)
     control_root: Path = field(default=Path('/var/lib/easel-central-control'),repr=False)
+    # "local": in-process media permits, no B2 control schema (default, see docs/decisions/0006).
+    # "control": the B2 database control and cross-process write barrier.
+    maintenance: str = "local"
     concurrency: int = 1
     timeout_seconds: int = 180
     heartbeat_seconds: int = 10
@@ -79,6 +82,8 @@ class MediaSettings:
         if not isinstance(self.control_root,Path) or not self.control_root.is_absolute() or '..' in self.control_root.parts:
             raise ValueError("invalid_media_configuration")
         if self.mode not in ("disabled", "test", "live") or not isinstance(self.providers, dict):
+            raise ValueError("invalid_media_configuration")
+        if self.maintenance not in ("local", "control"):
             raise ValueError("invalid_media_configuration")
         if type(self.worker_enabled) is not bool:
             raise ValueError("invalid_media_configuration")

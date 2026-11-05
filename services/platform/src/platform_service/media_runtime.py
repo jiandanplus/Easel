@@ -79,7 +79,10 @@ class MediaRuntime:
     async def start(self):
         if self.settings.mode=='disabled':return
         try:
-            if self.maintenance is None:
+            if self.maintenance is None and self.settings.maintenance=='local':
+                if self.settings.storage_root is None:raise MaintenanceError()
+                self.maintenance=RuntimeGeneration.local(self.service.db,storage_root=self.settings.storage_root)
+            elif self.maintenance is None:
                 self._control_lock=self._control_lock or ControlLock.from_path(str(self.settings.control_root),owner=(0,os.getegid()))
                 self._source_root=self._source_root or SourceRoot.from_path(str(self.settings.storage_root))
                 self.maintenance=RuntimeGeneration(self.service.db,self._control_lock,source=self._source_root)

@@ -63,6 +63,15 @@ class DatabaseControl:
         try:
             await connection.execute("SELECT easel_backup_control.validate_permit(%s,%s,%s,%s,%s,%s,%s)",(permit._raw_token,permit.epoch,binding.kind,binding.subject_id,binding.attempt_id,binding.worker.worker_id,binding.worker.generation))
         except Exception:raise MaintenanceError() from None
+    async def blob_writer_owned(self,connection,permit,storage_key):
+        row=await(await connection.execute('SELECT easel_backup_control.blob_writer_owned(%s,%s,%s) AS owned',(permit._raw_token,permit.epoch,storage_key))).fetchone()
+        return (row['owned'] if isinstance(row,dict) else row[0]) is True
+    def gc_idle_sql(self,column):
+        require(column in {'storage_key','b.storage_key'})
+        return 'easel_backup_control.gc_writer_idle('+column+')'
+    async def gc_writer_idle(self,connection,storage_key):
+        row=await(await connection.execute('SELECT easel_backup_control.gc_writer_idle(%s) AS idle',(storage_key,))).fetchone()
+        return (row['idle'] if isinstance(row,dict) else row[0]) is True
     async def finish_permit(self,permit,business_digest):
         await self._rpc("finish_permit",(permit._raw_token,permit.epoch,business_digest))
     async def observe_permit(self,permit):

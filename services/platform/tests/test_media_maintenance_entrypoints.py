@@ -183,7 +183,7 @@ async def test_missing_control_schema_rejects_media_write_and_keeps_text_read_pa
     from b2_owned_media import owned_media
     async with owned_media(tmp_path) as value:
         async with value['owner'].connection() as c:await c.execute('DROP SCHEMA easel_backup_control CASCADE')
-        settings=MediaSettings(mode='test',storage_root=tmp_path/'media',providers={'fixture':MediaProvider('1','http://127.0.0.1:19991/v1','synthetic-private',{'fixture-image':'synthetic-upstream'})})
+        settings=MediaSettings(mode='test',storage_root=tmp_path/'media',maintenance='control',providers={'fixture':MediaProvider('1','http://127.0.0.1:19991/v1','synthetic-private',{'fixture-image':'synthetic-upstream'})})
         runtime=MediaRuntime(value['db'],value['service'].identity,settings,service=value['service'],control_lock=value['locks'],source_root=value['source'])
         try:
             await runtime.start()
@@ -290,7 +290,7 @@ async def test_runtime_default_control_open_uses_trusted_effective_group(tmp_pat
         def actual_local_capability(path,*,owner=(0,0),**kwargs):
             seen.append((path,owner));value['locks'].verify();return value['locks']
         monkeypatch.setattr(ControlLock,'from_path',actual_local_capability)
-        runtime=MediaRuntime(value['db'],value['service'].identity,MediaSettings(mode='test',storage_root=tmp_path/'media',providers={'fixture':MediaProvider('1','http://127.0.0.1:19991/v1','synthetic-private',{'fixture-image':'synthetic-upstream'})}),service=value['service'],source_root=value['source'])
+        runtime=MediaRuntime(value['db'],value['service'].identity,MediaSettings(mode='test',storage_root=tmp_path/'media',maintenance='control',providers={'fixture':MediaProvider('1','http://127.0.0.1:19991/v1','synthetic-private',{'fixture-image':'synthetic-upstream'})}),service=value['service'],source_root=value['source'])
         try:
             await runtime.start()
             assert seen==[('/var/lib/easel-central-control',(0,os.getegid()))]

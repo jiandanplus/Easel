@@ -9,3 +9,4 @@
 | [0003](0003-signed-in-app-updates.md) | 应用内更新：离线签名清单 + 受管安装布局 |
 | [0004](0004-web-routes-by-domain.md) | 按领域拆分 web/app.py |
 | [0005](0005-b3-tests-per-process.md) | B3 测试逐文件单独进程运行 |
+| [0006](0006-media-maintenance-optional.md) | 媒体维护许可改为可选，默认关闭 |

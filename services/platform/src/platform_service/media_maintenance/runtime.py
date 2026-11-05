@@ -173,8 +173,7 @@ async def authorize_write(permit,metadata,*,action='write',connection=None):
         if permit.binding.kind=='upload':require(row['kind']=='asset' and row['invocation_id']==permit.binding.subject_id)
         else:require(row['kind']=='artifact' and row['job_id']==permit.binding.subject_id and row['attempt_id']==permit.binding.attempt_id)
         require(row['state'] in {'staged','attached'})
-        owner=await(await c.execute('SELECT easel_backup_control.blob_writer_owned(%s,%s,%s) AS owned',(permit._raw_token,permit.epoch,metadata['storage_key']))).fetchone()
-        require((owner['owned'] if isinstance(owner,dict) else owner[0]) is True)
+        require(await permit._control.blob_writer_owned(c,permit,metadata['storage_key']) is True)
         if action=='discard':require(row['state']=='staged' and row['attached_id'] is None)
         return _mint_write_fence(permit,{k:row[k]for k in required},action=action)
     if connection is not None:return await check(connection)
@@ -234,6 +233,16 @@ class RuntimeGeneration:
         self.database=database;self.locks=locks;self.source=source;self.identity=worker_identity()
         self.control=DatabaseControl(database.connection,locks=locks)
         self._permits={};self._gc_claimed=set();self._gc_rows={};self._started=False;self._closing=False;self._pid=os.getpid();self._admission=asyncio.Lock()
+    @classmethod
+    def local(cls,database,*,storage_root):
+        """Same generation API backed by in-process control (media maintenance="local")."""
+        from .local_control import LocalControl,LocalLocks,LocalSource
+        while type(database) is GuardedDatabase:database=database.database
+        self=cls.__new__(cls)
+        self.database=database;self.locks=LocalLocks();self.source=LocalSource(storage_root);self.identity=worker_identity()
+        self.control=LocalControl(database.connection,self.source)
+        self._permits={};self._gc_claimed=set();self._gc_rows={};self._started=False;self._closing=False;self._pid=os.getpid();self._admission=asyncio.Lock()
+        return self
     @property
     def permits(self):require(os.getpid()==self._pid);return tuple(self._permits.values())
     def _check(self):

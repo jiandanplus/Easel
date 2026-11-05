@@ -61,8 +61,7 @@ class StorageLifecycle:
             if any(old[k]!=v for k,v in owned.items()) or old['state'] not in {'staged','attached'}:
                 raise PlatformError(409,'media_storage_conflict')
             permit=current_permit()
-            origin=await(await c.execute('SELECT easel_backup_control.blob_writer_owned(%s,%s,%s) owned',(permit._raw_token,permit.epoch,metadata['storage_key']))).fetchone()
-            require(origin['owned'] is True)
+            require(await permit._control.blob_writer_owned(c,permit,metadata['storage_key']) is True)
             return old
         budget=None
         if job_id:
@@ -113,7 +112,7 @@ class StorageLifecycle:
         if not 1<=integer(limit,positive=True)<=1000:raise PlatformError(422,'invalid_limit')
         scan=current_permit()
         async with self.db.connection() as c:
-            rows=await(await c.execute("SELECT * FROM media_blobs b WHERE state IN ('staged','attached') AND expires_at<=clock_timestamp() AND NOT media_storage_pinned(b) AND easel_backup_control.gc_writer_idle(storage_key) AND (%s::text IS NULL OR storage_key=%s) ORDER BY expires_at,storage_key LIMIT %s",(scan.binding.subject_id if scan.binding.kind=='gc' else None,scan.binding.subject_id,limit))).fetchall()
+            rows=await(await c.execute("SELECT * FROM media_blobs b WHERE state IN ('staged','attached') AND expires_at<=clock_timestamp() AND NOT media_storage_pinned(b) AND "+self.maintenance.control.gc_idle_sql('storage_key')+" AND (%s::text IS NULL OR storage_key=%s) ORDER BY expires_at,storage_key LIMIT %s",(scan.binding.subject_id if scan.binding.kind=='gc' else None,scan.binding.subject_id,limit))).fetchall()
         prepared=[]
         for candidate in rows:
             try:
@@ -124,7 +123,7 @@ class StorageLifecycle:
             with operation(permit):
                 async with self.db.connection() as c:
                     await c.execute("SELECT pg_advisory_xact_lock(hashtextextended('media-storage-v1',0))")
-                    row=await(await c.execute("SELECT * FROM media_blobs b WHERE storage_key=%s AND state IN ('staged','attached') AND expires_at<=clock_timestamp() AND NOT media_storage_pinned(b) AND easel_backup_control.gc_writer_idle(storage_key) FOR UPDATE SKIP LOCKED",(candidate['storage_key'],))).fetchone()
+                    row=await(await c.execute("SELECT * FROM media_blobs b WHERE storage_key=%s AND state IN ('staged','attached') AND expires_at<=clock_timestamp() AND NOT media_storage_pinned(b) AND "+self.maintenance.control.gc_idle_sql('storage_key')+" FOR UPDATE SKIP LOCKED",(candidate['storage_key'],))).fetchone()
                     if row is None:continue
                     if row['attached_id']:
                         table='media_assets' if row['kind']=='asset' else 'media_artifacts'
@@ -141,7 +140,7 @@ class StorageLifecycle:
         if not 1<=integer(limit,positive=True)<=1000:raise PlatformError(422,'invalid_limit')
         scan=current_permit()
         async with self.db.connection() as c:
-            rows=await(await c.execute("SELECT * FROM media_blobs WHERE state='gc_pending' AND easel_backup_control.gc_writer_idle(storage_key) AND (gc_lease_until IS NULL OR gc_lease_until<=clock_timestamp()) AND (%s::text IS NULL OR storage_key=%s) ORDER BY expires_at,storage_key LIMIT %s",(scan.binding.subject_id if scan.binding.kind=='gc' else None,scan.binding.subject_id,limit))).fetchall()
+            rows=await(await c.execute("SELECT * FROM media_blobs WHERE state='gc_pending' AND "+self.maintenance.control.gc_idle_sql('storage_key')+" AND (gc_lease_until IS NULL OR gc_lease_until<=clock_timestamp()) AND (%s::text IS NULL OR storage_key=%s) ORDER BY expires_at,storage_key LIMIT %s",(scan.binding.subject_id if scan.binding.kind=='gc' else None,scan.binding.subject_id,limit))).fetchall()
         claimed=[]
         for candidate in rows:
             known=[p for p in self.maintenance.permits if p.binding.kind=='gc' and p.binding.subject_id==candidate['storage_key']]
@@ -156,7 +155,7 @@ class StorageLifecycle:
             with operation(permit):
                 async with self.db.connection() as c:
                     await c.execute("SELECT pg_advisory_xact_lock(hashtextextended('media-storage-v1',0))")
-                    row=await(await c.execute("SELECT * FROM media_blobs WHERE storage_key=%s AND state='gc_pending' AND easel_backup_control.gc_writer_idle(storage_key) AND (gc_lease_until IS NULL OR gc_lease_until<=clock_timestamp()) FOR UPDATE SKIP LOCKED",(candidate['storage_key'],))).fetchone()
+                    row=await(await c.execute("SELECT * FROM media_blobs WHERE storage_key=%s AND state='gc_pending' AND "+self.maintenance.control.gc_idle_sql('storage_key')+" AND (gc_lease_until IS NULL OR gc_lease_until<=clock_timestamp()) FOR UPDATE SKIP LOCKED",(candidate['storage_key'],))).fetchone()
                     if row is None:continue
                     claimed.append(await(await c.execute("UPDATE media_blobs SET gc_token=%s,gc_lease_until=clock_timestamp()+interval '60 seconds' WHERE storage_key=%s RETURNING *",(permit.binding.attempt_id,row['storage_key']))).fetchone())
         for row in claimed:
@@ -174,8 +173,7 @@ class StorageLifecycle:
                 require(row is not None and row['state']=='gc_pending' and row['gc_token']==claim['gc_token'])
                 keys=('storage_key','kind','scope','invocation_id','job_id','attempt_id','sha256','size','mime','properties','attached_id','expires_at','purged_at')
                 require(all(row[k]==claim[k] for k in keys))
-                idle=await(await c.execute('SELECT easel_backup_control.gc_writer_idle(%s) idle',(claim['storage_key'],))).fetchone()
-                require(idle['idle'] is True)
+                require(await permit._control.gc_writer_idle(c,claim['storage_key']) is True)
                 # Fresh DB clock under row ownership, immediately before issuing
                 # the physical fence. Conservatively count query latency too.
                 before=time.monotonic_ns()
