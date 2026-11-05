@@ -199,5 +199,13 @@
     "sha256": "3e6e1070df3f0f5d9cea81496de92dbb72f6721871d99748ece67441dd8b7997",
     "metadata_url": "https://pypi.org/pypi/sse-starlette/3.5.0/json",
     "verified_against_pypi_metadata": true
+  },
+  {
+    "name": "pillow",
+    "version": "12.3.0",
+    "filename": "pillow-12.3.0-cp312-cp312-macosx_11_0_arm64.whl",
+    "sha256": "ffd0c5368496f41b0944be820fcb7a838aa6e623d250b01acf2643939c3f99d7",
+    "metadata_url": "https://pypi.org/pypi/pillow/12.3.0/json",
+    "verified_against_pypi_metadata": true
   }
 ]

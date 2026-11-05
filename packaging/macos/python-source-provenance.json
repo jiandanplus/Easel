@@ -1,0 +1,33 @@
+{
+  "archive": {
+    "bytes": 24942229,
+    "name": "cpython-3.12.13+20260510-aarch64-apple-darwin-install_only_stripped.tar.gz",
+    "sha256": "55bc1a5edbc8ac4da0081f4f5731ed2d1ed10c57cb37a820b2a0dbc7cad742e9",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.12.13%2B20260510-aarch64-apple-darwin-install_only_stripped.tar.gz"
+  },
+  "derivation": {
+    "executable_sha256": "f63ec276fa13f8f392542a334c0f58f36833b24304831e5f4c221e2edf7a16f3",
+    "home_unchanged": true,
+    "method": "offline-local-archive",
+    "options": [
+      "--offline",
+      "--no-config",
+      "--no-bin",
+      "--no-registry"
+    ],
+    "preparation_receipt_sha256": "fb1495c6c18d8f6421c3f6df20326402284579ac70d336c053414f0f146e145e",
+    "recipe_sha256": "a37545f26538b1993298ddfe080f835ba480d75947febf946a07f5aca166d411",
+    "tool": "uv",
+    "upstream_source_tag": "0.11.16",
+    "version": "0.11.16"
+  },
+  "python": {
+    "architecture": "arm64",
+    "build": "20260510",
+    "platform": "darwin",
+    "version": "3.12.13"
+  },
+  "runtime_inventory_sha256": "25b1bb10c833bd8afca6106867d53cefd789ce88ed6de1dca2c0c761038a1ce0",
+  "schema_version": 1,
+  "verification_scope": "new independently verified archive and new offline runtime; historical delivery receipts remain unchanged"
+}
