@@ -32,7 +32,7 @@ Test first: temp roots, masking/permissions/atomic failure, invalid values, secr
 
 ### Task 3: Portable launcher, build and local artifact validation
 
-Implement managed seed/update/bootstrap and loopback launcher with own-instance stop, default managed workspace, explicit test overrides, safe `.venv` link ownership, browser-after-ready and actionable logs/errors. App resources stay immutable; source entry points remain supported. Copies of skills/scripts/agents use tracked allowlist with mutable credential/cache exclusions. Updates replace only unchanged prior seeded files. No user-data deletion or malformed config replacement. Isolate Codex home.
+Implement managed seed/update/bootstrap and loopback launcher with own-instance stop, default managed workspace, explicit test overrides, safe `.venv` link ownership, browser-after-ready and actionable logs/errors. App resources stay immutable; source entry points remain supported. Copies of skills, scripts and agents use tracked allowlist with mutable credential/cache exclusions. Updates replace only unchanged prior seeded files. No user-data deletion or malformed config replacement. Isolate Codex home.
 
 Create macOS ARM64 build tool with pinned standalone CPython and pinned core dependencies, copied native Codex version/platform resources, prebuilt frontend, licenses and provenance manifest. No Node or uv needed on target. Use ignored output staging, avoid copying source venv. Disk budget currently ~1.8GiB: one stage, no large redundant copies. Build archive with executable bits/symlinks preserved and validate contents. Record dirty appearance input hashes without staging those files. Include clear trial support matrix and startup/stop/data location documentation.
 

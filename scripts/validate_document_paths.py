@@ -19,6 +19,7 @@ OLD_PATH_RE = re.compile(
     r"(?<![\w/~\\.-])(?:skills[/\\]openclaw(?:/|\\)"
     r"|openclaw[/\\](?:workspace|sync\.sh|openclaw\.json5))"
 )
+PLANNED_RE = re.compile(r"[ \t]*[-*][ \t]+Create:")
 RESOURCE_PREFIXES = ("scripts/", "references/", "assets/", "tools/", "docs/", "themes/")
 OPTIONAL_PATHS = {
     "skills/shared/scripts/models",
@@ -112,6 +113,9 @@ def validate_document(document: Path, root: Path) -> tuple[list[PathIssue], int]
         if candidate is None:
             continue
         line = text.count("\n", 0, match.start()) + 1
+        # 计划文档用 `- Create: <path>` 声明待新建的文件，此时路径尚不存在属正常。
+        if PLANNED_RE.match(text, text.rfind("\n", 0, match.start()) + 1):
+            continue
         if (line, candidate) in seen:
             continue
         seen.add((line, candidate))

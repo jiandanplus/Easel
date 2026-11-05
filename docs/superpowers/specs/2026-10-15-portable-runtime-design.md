@@ -16,7 +16,7 @@
 
 ## Architecture
 
-`EASEL_WORKSPACE_ROOT` and `EASEL_RESOURCE_ROOT` provide explicit data/resource roots; existing source defaults and fixture monkeypatch points remain compatible. Backend code and web assets stay in app resources. Small skills/scripts/agents seed into the managed workspace using content hashes so scripts with relative state remain writable without touching the app. A `.venv` link exposes the private interpreter to existing skill instructions, with ownership checks.
+`EASEL_WORKSPACE_ROOT` and `EASEL_RESOURCE_ROOT` provide explicit data/resource roots; existing source defaults and fixture monkeypatch points remain compatible. Backend code and web assets stay in app resources. Small skills, scripts and agents seed into the managed workspace using content hashes so scripts with relative state remain writable without touching the app. A `.venv` link exposes the private interpreter to existing skill instructions, with ownership checks.
 
 A versioned runtime manifest identifies platform, architecture, Codex version, bounded relative payload paths and hashes. Command resolution uses an explicit external override in source mode, otherwise manifest-selected bundled executable, otherwise existing PATH lookup. Settings show origin and version. One shared provider preparation path supplies both inference and model discovery.
 

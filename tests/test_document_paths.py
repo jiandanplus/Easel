@@ -120,6 +120,18 @@ def test_documented_command_scripts_resolve_relative_to_skill_root(tmp_path, mon
     assert validate_skill_commands.resolve_script(document, "$ROOT/scripts/run.py") is None
 
 
+def test_planned_create_entries_are_not_missing_paths(tmp_path):
+    document = write_file(
+        tmp_path, "docs/plans/plan.md",
+        "- Create: `docs/validation/later.md`\n"
+        "  * Create: `scripts/validation/later.py`\n"
+        "- Modify: `docs/validation/missing.md`\n",
+    )
+    issues, checked = validate_document(document, tmp_path)
+    assert checked == 1
+    assert issues[0].line == 3
+
+
 def test_windows_repository_paths_are_checked_on_any_host(tmp_path):
     write_file(tmp_path, "agents/workspace/AGENTS.md")
     document = write_file(

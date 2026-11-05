@@ -151,7 +151,7 @@ rtk proxy uv run --project services/platform python -m platform_service.migratio
 
 新脚本尚需实施，运行时各自创建并清理资源，不能访问真实模型端点：
 
-```sh
+```text
 rtk proxy uv run --project services/platform --group test pytest services/platform/tests -q
 rtk proxy uv run --project services/platform python services/platform/scripts/verify_identity.py --fixture-only --evidence-dir /tmp/easel-owned-identity-evidence
 rtk proxy uv run --project services/platform python services/platform/scripts/verify_shared_credits.py --fixture-only --evidence-dir /tmp/easel-owned-credit-evidence
