@@ -1,11 +1,13 @@
 """Bounded, locked, atomic private session persistence."""
 
 from contextlib import contextmanager
+import errno
 import json
 import os
 from pathlib import Path
 import stat
 import tempfile
+import time
 
 try:
     import fcntl
@@ -14,11 +16,18 @@ except ImportError:  # Keep anonymous/custom desktop imports usable on Windows.
 from easel.harnesses.base import HarnessError
 
 
+class SessionLockTimeout(TimeoutError):
+    """The caller's read budget expired without ownership of session state."""
+
+
 class SessionStore:
+    filename = "platform-session"
+    version = 1
+
     def __init__(self, root):
         self.root = Path(root).resolve()
         self.directory = self.root / "outputs" / "_harness"
-        self.path = self.directory / "platform-session.json"
+        self.path = self.directory / (self.filename + ".json")
 
     def check(self):
         for path in (self.root / "outputs", self.directory, self.path):
@@ -28,7 +37,9 @@ class SessionStore:
             raise HarnessError("平台账号目录无效")
 
     @contextmanager
-    def locked(self):
+    def locked(self, *, deadline=None):
+        if deadline is not None and time.monotonic() >= deadline:
+            raise SessionLockTimeout()
         if fcntl is None:
             raise HarnessError(
                 "当前系统暂不支持平台账号安全文件锁；自定义服务可继续使用"
@@ -36,7 +47,7 @@ class SessionStore:
         self.check()
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.directory.chmod(0o700)
-        lock = self.directory / "platform-session.lock"
+        lock = self.directory / (self.filename + ".lock")
         try:
             descriptor = os.open(
                 lock, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600
@@ -45,9 +56,26 @@ class SessionStore:
                 os.close(descriptor)
                 raise HarnessError("平台账号锁必须为普通文件")
             with os.fdopen(descriptor, "a") as stream:
-                fcntl.flock(stream, fcntl.LOCK_EX)
+                if deadline is None:
+                    fcntl.flock(stream, fcntl.LOCK_EX)
+                else:
+                    while True:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise SessionLockTimeout()
+                        try:
+                            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                            break
+                        except OSError as error:
+                            if error.errno not in (errno.EACCES, errno.EAGAIN):
+                                raise
+                        time.sleep(min(.01, remaining))
+                    if time.monotonic() >= deadline:
+                        raise SessionLockTimeout()
                 self.check()
                 yield
+        except SessionLockTimeout:
+            raise
         except OSError as error:
             raise HarnessError("无法安全读取平台账号文件") from error
 
@@ -66,7 +94,7 @@ class SessionStore:
             value = json.loads(raw)
             if (
                 not isinstance(value, dict)
-                or value.get("version") != 1
+                or value.get("version") != self.version
                 or not isinstance(value.get("url"), str)
             ):
                 raise ValueError
@@ -103,7 +131,7 @@ class SessionStore:
         self.read()
         remember_auth(self.root, data)
         descriptor, name = tempfile.mkstemp(
-            dir=self.directory, prefix="platform-session-", suffix=".tmp"
+            dir=self.directory, prefix=self.filename + "-", suffix=".tmp"
         )
         try:
             with os.fdopen(descriptor, "w", encoding="utf-8") as stream:

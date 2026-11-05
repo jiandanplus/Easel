@@ -126,6 +126,30 @@ def prepare_workspace(resource, workspace):
         (workspace/name).mkdir(parents=True, exist_ok=True)
 
 
+def configure_runtime(resource, workspace):
+    """Select the shipped engine; schema-1 packages retain their Codex behavior."""
+    pi_manifest = resource/'runtime/pi/runtime-manifest.json'
+    common = dict(EASEL_WORKSPACE_ROOT=str(workspace), EASEL_ROOT=str(workspace),
+                  EASEL_RESOURCE_ROOT=str(resource), EASEL_PORTABLE='1',
+                  PYTHONDONTWRITEBYTECODE='1')
+    if pi_manifest.exists():
+        os.environ.pop('EASEL_RUNTIME_MANIFEST', None)
+        os.environ.pop('EASEL_CODEX_EXECUTABLE', None)
+        os.environ.pop('CODEX_HOME', None)
+        common['EASEL_PI_RUNTIME_MANIFEST'] = str(pi_manifest)
+        paths = [resource/'python/bin', resource/'runtime/pi/node/bin']
+        engine = 'pi'
+    else:
+        os.environ.pop('EASEL_PI_RUNTIME_MANIFEST', None)
+        common.update(EASEL_RUNTIME_MANIFEST=str(resource/'runtime-manifest.json'),
+                      CODEX_HOME=str(workspace/'outputs/_harness/codex-home'))
+        paths = [resource/'python/bin', resource/'native/codex-path', resource/'native/bin']
+        engine = 'codex'
+    common['PATH'] = os.pathsep.join([*(str(p) for p in paths), '/usr/bin', '/bin', '/usr/sbin', '/sbin'])
+    os.environ.update(common)
+    return engine
+
+
 def instance_request(state, action, workspace):
     port = state['port']; token = state['token']
     if type(port) is not int or not 1 <= port <= 65535 or not isinstance(token, str) or len(token) != 64:
@@ -146,6 +170,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     resource = Path(__file__).resolve().parents[1]
     workspace = args.workspace.expanduser().resolve()
+    fresh_workspace = not workspace.exists()
     state_path = safe_state(workspace)/'instance.json'
     if state_path.exists():
         try:
@@ -183,11 +208,10 @@ def main(argv=None):
         # web.app freezes its browser Origin allowlist at import time.
         os.environ['EASEL_PORT'] = str(port)
         prepare_workspace(resource, workspace)
-        native = resource/'native'
-        os.environ.update(EASEL_WORKSPACE_ROOT=str(workspace), EASEL_ROOT=str(workspace), EASEL_RESOURCE_ROOT=str(resource), EASEL_RUNTIME_MANIFEST=str(resource/'runtime-manifest.json'), EASEL_PORTABLE='1', CODEX_HOME=str(workspace/'outputs/_harness/codex-home'), PYTHONDONTWRITEBYTECODE='1', PATH=os.pathsep.join([str(resource/'python/bin'),str(native/'codex-path'),str(native/'bin'),'/usr/bin','/bin','/usr/sbin','/sbin']))
+        default_engine = configure_runtime(resource, workspace)
         os.chdir(workspace)
         from easel.installation import initialize_runtime
-        initialize_runtime(workspace, 'codex')
+        initialize_runtime(workspace, default_engine, subscription_default=fresh_workspace)
         from web.app import app
         import uvicorn
         from fastapi import Request, HTTPException

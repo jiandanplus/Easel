@@ -61,8 +61,10 @@ def remember(root, values):
 def sensitive_values(root):
     # Atomic bounded read only, no platform HTTP, no file creation or POSIX lock.
     from .session import SessionStore
+    from .central_session import CentralSessionStore
 
     SessionStore(root).read()
+    CentralSessionStore(root).read()
     key = str(Path(root).resolve())
     with _lock:
         if _saturated or key in _failed:

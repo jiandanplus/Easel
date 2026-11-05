@@ -63,8 +63,16 @@ def provider_status(root: Path) -> dict:
 def require_provider(root: Path) -> dict:
     data = read_provider(root)
     if not data.get("api_key"):
-        raise HarnessError("请先在设置 → Agent 底座 → 内置 Codex 供应商填写 API 地址、模型和 Key")
+        raise HarnessError("请先在设置 → Agent 底座 → 内置智能体供应商填写 API 地址、模型和 Key")
     return data
+
+
+def pi_model(root: Path, model: str = "", *, require_configured: bool = True) -> str:
+    data = require_provider(root) if require_configured else read_provider(root)
+    selected = data.get("model", "") if data.get("api_key") else ""
+    if model and model != selected:
+        raise HarnessError("内置 Pi 使用供应商设置中的模型，请在供应商设置中更改")
+    return selected
 
 
 def save_provider(root: Path, *, base_url: str, model: str, secret_action: str = "preserve", api_key: str = "") -> dict:

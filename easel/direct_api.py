@@ -82,9 +82,12 @@ async def _sse_payloads(response: httpx.Response):
 
 async def stream_chat(settings: dict[str, str], content: str | list, *,
                       system: str = SYSTEM_PROMPT, history_file: Path | None = None,
-                      timeout: float = 300):
+                      timeout: float = 300, reasoning_effort: str = "", reasoning_efforts: tuple[str, ...] = ()):
     """Yield (token/thinking/finish, text); persist only complete exchanges."""
     base, model, key = api_config(settings)
+    from easel.chat_models import EFFORTS
+    if reasoning_effort and (reasoning_effort not in EFFORTS or reasoning_effort not in reasoning_efforts):
+        raise DirectAPIError("当前模型接口不支持所选推理强度")
     history = []
     if history_file is not None and history_file.is_file():
         try:
@@ -96,6 +99,8 @@ async def stream_chat(settings: dict[str, str], content: str | list, *,
     user = {"role": "user", "content": content}
     body = {"model": model, "stream": True,
             "messages": [{"role": "system", "content": system}, *history, user]}
+    if reasoning_effort:
+        body["reasoning_effort"] = reasoning_effort
     headers = {"Authorization": f"Bearer {key}"} if key else {}
     text = []
     finish_reason = None

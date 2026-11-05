@@ -479,7 +479,7 @@ def test_corrupt_settings_fail_closed(tmp_path, config):
 
 
 @pytest.mark.parametrize(("saved", "env", "expected"), [
-    ({}, {}, "api"),
+    ({}, {}, "pi"),
     ({}, {"EASEL_CHAT_TRANSPORT": "http"}, "openclaw"),
     ({}, {"EASEL_CHAT_TRANSPORT": "cli"}, "openclaw"),
     ({}, {"EASEL_CHAT_TRANSPORT": "api"}, "api"),
@@ -502,7 +502,7 @@ def test_existing_openclaw_install_keeps_its_engine(tmp_path, monkeypatch):
     (state_dir / "openclaw.json").write_text("{}", encoding="utf-8")
     assert store.settings(tmp_path / "outputs", {})["runtime"] == "openclaw"
     assert store.settings(tmp_path / "outputs", {
-        "EASEL_OPENCLAW_STATE_DIR": str(tmp_path / "new-profile")})["runtime"] == "api"
+        "EASEL_OPENCLAW_STATE_DIR": str(tmp_path / "new-profile")})["runtime"] == "pi"
 
 
 def test_binding_is_hashed_durable_and_cannot_change_owner(tmp_path):

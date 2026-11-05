@@ -145,26 +145,49 @@ def prepare_codex(request, command: list[str]):
     return replace(request, env=env, model=model), [command[0], *arguments, *command[1:]]
 
 
-def prepare_subscription(request, command):
+def prepare_subscription(request, command, *, proxy_url=None, proxy_token=None):
     from dataclasses import replace
     from easel.platform.client import PlatformClient
     if request.execution_target != "local" or not request.account_id or not request.platform_url or not request.model:
         raise HarnessError("订阅任务缺少已接受的账号或模型身份")
-    token = PlatformClient(request.cwd).task_credential(request.account_id, request.model, request.platform_url)
+    central = request.subscription_backend == "central"
+    if central:
+        if not proxy_url or not proxy_token:
+            raise HarnessError("中央执行需要本次运行的私有代理")
+        token, base_url = proxy_token, proxy_url
+    elif request.subscription_backend == "legacy":
+        token = PlatformClient(request.cwd).task_credential(request.account_id, request.model, request.platform_url)
+        base_url = request.platform_url + "/v1"
+    else:
+        raise HarnessError("无效的订阅后端")
     env = codex_environment(request.env, request.cwd, private=True)
     for key in ("OPENAI_API_KEY", "OPENAI_ACCESS_TOKEN", "CODEX_API_KEY", "EASEL_BUNDLED_API_KEY",
                 "OPENAI_BASE_URL", "OPENAI_ORG_ID", "OPENAI_ORGANIZATION", "OPENAI_PROJECT_ID"):
         env.pop(key, None)
     for key in list(env):
-        if key.startswith("EASEL_PLATFORM_"):env.pop(key, None)
+        if key.startswith("EASEL_PLATFORM_"):
+            env.pop(key, None)
+    if central:
+        allowed = {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "TMP", "TEMP", "LANG", "LC_ALL",
+                   "SYSTEMROOT", "WINDIR", "PATHEXT", "CODEX_HOME", "PYTHONPATH", "EASEL_ROOT"}
+        env = {key: value for key, value in env.items() if key in allowed}
+        env["NO_PROXY"] = env["no_proxy"] = "127.0.0.1,localhost,::1"
+        env["EASEL_SERVICE_SOURCE"] = "subscription"
+        env["EASEL_SUBSCRIPTION_BACKEND"] = "central"
     env["EASEL_SUBSCRIPTION_API_KEY"] = token
     config = ['model_provider="easel-subscription"', "model=" + json.dumps(request.model),
               'model_providers.easel-subscription.name="Easel subscription"',
-              "model_providers.easel-subscription.base_url=" + json.dumps(request.platform_url + "/v1"),
+              "model_providers.easel-subscription.base_url=" + json.dumps(base_url),
               'model_providers.easel-subscription.env_key="EASEL_SUBSCRIPTION_API_KEY"',
               'model_providers.easel-subscription.wire_api="responses"',
               'model_providers.easel-subscription.requires_openai_auth=false',
               'disable_response_storage=true',
               'web_search="disabled"']
+    if central:
+        config.extend(['model_providers.easel-subscription.request_max_retries=0',
+                       'model_providers.easel-subscription.stream_max_retries=0',
+                       'model_providers.easel-subscription.supports_websockets=false',
+                       'check_for_update_on_startup=false'])
     arguments = [part for value in config for part in ("-c", value)]
-    return replace(request, env=env), [command[0], *arguments, *command[1:]]
+    # Keep Node + script + subcommand together so -c reaches Codex, not Node.
+    return replace(request, env=env), [*command, *arguments]

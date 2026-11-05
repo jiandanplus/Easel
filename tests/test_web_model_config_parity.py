@@ -25,8 +25,11 @@ import app  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def openclaw_engine(monkeypatch):
+def openclaw_engine(monkeypatch, tmp_path):
     monkeypatch.setenv("EASEL_AGENT_RUNTIME", "openclaw")
+    monkeypatch.setattr(app, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(app, "_oc_config_path", lambda: tmp_path / "absent-openclaw.json")
+    monkeypatch.setattr(app, "check_gateway", lambda: False)
 
 
 @pytest.fixture

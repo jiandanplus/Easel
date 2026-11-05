@@ -209,7 +209,8 @@ def test_launcher_publishes_actual_port_before_web_import(tmp_path, monkeypatch,
     monkeypatch.setattr(portable, 'prepare_workspace', lambda *a: None)
     monkeypatch.setattr(os, 'chdir', lambda *a: None)
     import easel.installation
-    monkeypatch.setattr(easel.installation, 'initialize_runtime', lambda *a: None)
+    initializations = []
+    monkeypatch.setattr(easel.installation, 'initialize_runtime', lambda *a, **kw: initializations.append(kw))
     real_import = builtins.__import__
     sockets = []
     class FakeSocket:
@@ -233,6 +234,7 @@ def test_launcher_publishes_actual_port_before_web_import(tmp_path, monkeypatch,
     with pytest.raises(RuntimeError, match='mock web startup failure'):
         portable.main(['--workspace', str(workspace), '--port', str(requested), '--no-browser'])
     assert sockets[0].closed
+    assert initializations == [{'subscription_default': True}]
 
 
 @pytest.mark.parametrize('extra', ['extra.js', '.env', 'assets/unrelated-12345678.js'])
@@ -343,7 +345,8 @@ def test_launcher_real_socket_restart_and_foreign_listener(tmp_path, monkeypatch
     monkeypatch.setattr(os, 'chdir', lambda *a: None)
     monkeypatch.setattr(portable, 'verify_inventory', lambda *a: None)
     monkeypatch.setattr(portable, 'prepare_workspace', lambda *a: None)
-    monkeypatch.setattr(easel.installation, 'initialize_runtime', lambda *a: None)
+    initializations = []
+    monkeypatch.setattr(easel.installation, 'initialize_runtime', lambda *a, **kw: initializations.append(kw))
     class App:
         def get(self, *a): return lambda fn: fn
         def post(self, *a): return lambda fn: fn
@@ -375,3 +378,4 @@ def test_launcher_real_socket_restart_and_foreign_listener(tmp_path, monkeypatch
             return
     for _ in range(2):
         assert portable.main(['--workspace',str(workspace),'--port',str(port),'--no-browser']) == 0
+    assert initializations == [{'subscription_default': True}, {'subscription_default': False}]

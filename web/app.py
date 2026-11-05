@@ -16,6 +16,7 @@ import re
 import shutil
 import signal
 import socket
+import stat
 import subprocess
 import sys
 import threading
@@ -26,6 +27,8 @@ import urllib.request
 import uuid
 import zipfile
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
+from functools import wraps
 import ipaddress
 from pathlib import Path
 
@@ -55,6 +58,7 @@ from easel import harnesses
 from easel.harnesses import store as harness_store
 from easel.harnesses.base import HarnessError, RunRequest
 from easel.service_contracts import ServiceRoute, TaskContext, availability
+from easel.workbench import WorkbenchState, WorkbenchError, identifier as _workbench_identifier, digest as _workbench_digest
 try:
     from easel.gateway_questions import (
         GatewayClient, GatewayQuestionError, GatewayUnsupportedError,
@@ -210,6 +214,9 @@ if str(SHARED_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SHARED_SCRIPTS))
 
 from model_registry import model_group
+from media_gateway import (GATEWAY_ENV_KEYS, gateway_managed,
+                           gateway_readiness, gateway_settings, gateway_updates,
+                           refresh_gateway_environment, validate_gateway_env)
 
 BROWSER_PROFILES = Path.home() / ".easel-browser-profiles"
 LOGIN_DIR = OUTPUTS_DIR / "_login"
@@ -418,6 +425,7 @@ SKILL_API_REQUIREMENTS: dict[str, dict] = {
 _ENV_ALLOWLIST: set[str] = {
     "EASEL_DIRECT_API_BASE_URL", "EASEL_DIRECT_API_KEY", "EASEL_DIRECT_API_MODEL",
 }
+_ENV_ALLOWLIST.update(GATEWAY_ENV_KEYS)
 for _spec in SKILL_API_REQUIREMENTS.values():
     for _key in _spec.get("settings", []):
         _ENV_ALLOWLIST.add(_key["env"])
@@ -442,6 +450,7 @@ async def _lifespan(_app: FastAPI):
     global _HARNESS_LOOP
     _HARNESS_LOOP = asyncio.get_running_loop()
     yield
+    await _central_platform_router.shutdown()
     tasks = list(_HARNESS_TASKS)
     for task in tasks:
         task.cancel()
@@ -668,6 +677,11 @@ def _proxy_env() -> dict[str, str]:
     return env
 
 
+def _fresh_media_gateway_env(env: dict[str, str]) -> dict[str, str]:
+    """Refresh only gateway settings for a new task; vendor aliases stay per-script."""
+    return refresh_gateway_environment(env, _read_env())
+
+
 def _publish_env() -> dict[str, str]:
     """发布子进程 env：在 _proxy_env 基础上禁用脚本侧日历自动记录——
     发布页由 web 自己回流 _schedule.json，脚本再记一次会重复。对话页 Agent 直跑
@@ -782,6 +796,11 @@ def _skill_api_configured(skill: str, env: dict[str, str] | None = None) -> bool
     if not spec:
         return True
     env = _read_env() if env is None else env
+    group = {"ai-image-gen": "image", "ecom-details-image": "image",
+             "short-drama": "image", "ai-video-gen": "video",
+             "ai-music": "music", "voice-clone": "voice"}.get(skill)
+    if group and gateway_managed(group, env):
+        return gateway_readiness(group, env)["configured"]
     for prov in spec['providers']:
         if all(_key_configured(k, env) for k in prov['keys'] if k['required']):
             return True
@@ -870,6 +889,54 @@ def _harness_settings() -> dict:
         raise HTTPException(409, str(error)) from error
 
 
+def _workbench_state():
+    return WorkbenchState(SESSIONS_DIR, PROJECT_ROOT)
+
+
+def _workbench_contract(config=None):
+    """A stable owner/configuration boundary; never a model availability probe."""
+    config = dict(config or _harness_settings())
+    source = {"config": config}
+    runtime = config.get("runtime", "openclaw")
+    try:
+        if config.get("service_source", "custom") == "subscription":
+            if config.get("subscription_backend", "legacy") == "central":
+                from easel.platform.central import CentralClient
+                client = CentralClient(PROJECT_ROOT)
+                with client.store.locked():
+                    state = client._state()
+            else:
+                from easel.platform.client import PlatformClient
+                client = PlatformClient(PROJECT_ROOT)
+                with client.store.locked():
+                    state = client.store.read()
+            auth = json.loads(json.dumps(state.get("auth") or {}))
+            for field in ("access_token", "refresh_token", "expires_at", "refresh_expires_at"):
+                auth.pop(field, None)
+            source["identity"] = {"url": state.get("url"), "auth": auth}
+        elif runtime == "pi":
+            from easel.harnesses.provider import read_provider
+            source["provider"] = read_provider(PROJECT_ROOT)
+        elif runtime == "api":
+            source["provider"] = {key: value for key, value in read_settings(ENV_FILE).items()
+                                  if key.startswith("EASEL_DIRECT_API_")}
+        elif runtime == "codex":
+            if harnesses.describe(runtime).get("origin") == "bundled":
+                from easel.harnesses.provider import read_provider
+                source["provider"] = read_provider(PROJECT_ROOT)
+            else:
+                from easel.chat_models import native_config_binding
+                source["native"] = native_config_binding({**os.environ, **read_settings(ENV_FILE)})
+        elif runtime == "openclaw":
+            path = _oc_config_path()
+            source["native"] = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else ""
+        build = hashlib.sha256(Path(__file__).read_bytes()
+                               + ((REACT_DIR / "index.html").read_bytes() if (REACT_DIR / "index.html").is_file() else b"")).hexdigest()
+        return _workbench_state().contract(source, build)
+    except (WorkbenchError, HarnessError, OSError):
+        raise HTTPException(503, "工作台状态暂不可用") from None
+
+
 def _chat_backend(session_id: str | None) -> str:
     selected = "api" if _direct_api_enabled() else _harness_settings()["runtime"]
     if not session_id:
@@ -911,6 +978,15 @@ def _write_env(updates: dict[str, str]) -> None:
     '就地更新命中的 KEY、其余行原样保留，未命中的追加末尾；空串则删除该行。原子写。'
     updates = {k: v for k, v in updates.items() if k in _ENV_ALLOWLIST}
     _guard_env_values(updates)
+    if set(updates).intersection(GATEWAY_ENV_KEYS):
+        current = _read_env()
+        try:
+            # An explicitly re-entered key authorizes retaining the same key at a
+            # new address. Without one, validate against the previous endpoint.
+            previous = {**current, "NEW_API_KEY": ""} if updates.get("NEW_API_KEY", "").strip() else current
+            validate_gateway_env({**current, **updates}, previous=previous)
+        except ValueError as error:
+            raise HTTPException(400, str(error)) from None
     if not updates:
         return
     lines = ENV_FILE.read_text(encoding='utf-8').splitlines() if ENV_FILE.is_file() else []
@@ -1114,7 +1190,7 @@ def _private_output_path(path: Path) -> bool:
             relative = candidate.relative_to(root)
         except ValueError:
             continue
-        if relative.parts and relative.parts[0].casefold() == '_harness':
+        if relative.parts and relative.parts[0].casefold() in {'_harness', '_sessions'}:
             return True
     return False
 
@@ -1257,11 +1333,15 @@ async def api_status():
     direct = _direct_api_enabled()
     config = _harness_settings()
     runtime = config["runtime"]
+    workbench = _workbench_contract(config)
     if config.get("service_source", "custom") == "subscription":
         state = await _subscription_readiness(config)
         return {"gateway": state["ready"], "transport": runtime, "runtime": runtime,
-                "skills": get_skills(), "personas": list_personas(), "authVerified": False}
+                "runtime_detail": state.get("detail", "订阅配置待完善"),
+                "skills": get_skills(), "personas": list_personas(), "authVerified": False,
+                "workbench": workbench}
     ready = False
+    runtime_detail = ""
     if direct:
         try:
             api_config(read_settings(ENV_FILE))
@@ -1273,12 +1353,17 @@ async def api_status():
     else:
         descriptor = harnesses.describe(runtime)
         ready = descriptor["installed"]
-        if runtime == "codex" and descriptor.get("origin") == "bundled":
+        if runtime == "pi" and not ready:
+            runtime_detail = "内置 Pi 运行时不可用，请重新安装完整应用"
+        if runtime == "pi" or (runtime == "codex" and descriptor.get("origin") == "bundled"):
             from easel.harnesses.provider import provider_status
             ready = bool(ready and provider_status(PROJECT_ROOT)["configured"])
+            if runtime == "pi" and descriptor["installed"]:
+                runtime_detail = "内置 Pi 供应商已配置；认证与模型可用性待验证" if ready else "内置 Pi 供应商未配置"
     return {"gateway": ready, "transport": "api" if direct else (
                 CHAT_TRANSPORT if runtime == "openclaw" else runtime), "runtime": runtime,
-            "skills": get_skills(), "personas": list_personas()}
+            "runtime_detail": runtime_detail, "skills": get_skills(), "personas": list_personas(),
+            "workbench": workbench}
 
 
 @app.get("/api/settings/bootstrap")
@@ -1298,20 +1383,20 @@ async def api_settings_bootstrap():
     if config.get("service_source", "custom") == "subscription":
         state = await _subscription_readiness(config)
         ready = state["ready"]
-        return {"modelConfigured": ready, "envKeyOk": state["authenticated"], "routeOk": ready,
+        return {"modelConfigured": state["configured"], "envKeyOk": state["authenticated"], "routeOk": ready,
                 "routeDetail": state["detail"], "gatewayUp": ready, "openclawConfigExists": False,
                 "installWarnings": [], "runtime": runtime, "authVerified": False}
     if runtime not in ("api", "openclaw"):
         descriptor = harnesses.describe(runtime)
         installed = descriptor["installed"]
-        if runtime == "codex" and descriptor.get("origin") == "bundled":
+        if runtime == "pi" or (runtime == "codex" and descriptor.get("origin") == "bundled"):
             from easel.harnesses.provider import provider_status
             configured = provider_status(PROJECT_ROOT)["configured"]
             ready = bool(installed and configured)
             detail = ("内置供应商本地设置已完成；尚未验证上游认证，请发送消息验证模型可用性"
                       if ready else "请在设置中配置内置供应商的地址、模型与 API Key")
             if not installed:
-                detail += "；内置 CLI 不可用，请检查运行时安装"
+                detail += "；内置运行时不可用，请重新安装完整 Easel 应用"
             return {"modelConfigured": ready, "envKeyOk": configured, "routeOk": ready,
                     "routeDetail": detail, "gatewayUp": ready, "openclawConfigExists": False,
                     "installWarnings": [], "runtime": runtime, "authVerified": False}
@@ -1492,6 +1577,28 @@ async def api_skill_detail(name: str):
 
 class EnvUpdateRequest(BaseModel):
     updates: dict[str, str]
+
+
+@app.get("/api/settings/media-gateway")
+async def api_media_gateway_settings():
+    """Saved media routes and configuration readiness; never an inference test."""
+    return gateway_settings(_read_env())
+
+
+@app.put("/api/settings/media-gateway")
+async def api_media_gateway_save(req: Request):
+    try:
+        payload = await req.json()
+        updates = gateway_updates(payload, _read_env())
+    except (ValueError, TypeError):
+        # Keep malformed input and credentials out of diagnostics.
+        raise HTTPException(400, "统一媒体网关设置无效，请检查模式、地址、模型与密钥；更换地址需重新填写密钥，清除密钥前须全部切回自定义") from None
+    try:
+        _guard_env_values(updates)
+    except HTTPException:
+        raise HTTPException(400, "统一媒体网关设置包含不允许的字符") from None
+    _write_env(updates)
+    return {"ok": True, **gateway_settings(_read_env())}
 
 
 @app.post("/api/env")
@@ -1765,6 +1872,7 @@ def _model_channels(runtime: str | None = None) -> dict:
          "result": "已配置" if sf else "缺 key"},
     ]
     channels: dict = {"chat": {"rows": chat_rows}, "transcribe": {"rows": trans_rows}}
+    env = _fresh_media_gateway_env(env)
     try:
         import model_registry as _mr  # skills/shared/scripts 已在 sys.path 上
         _setting_env = {"video": "VIDEO_PROVIDER", "music": "MUSIC_PROVIDER", "voice": "VOICE_PROVIDER"}
@@ -1803,6 +1911,19 @@ def _model_channels(runtime: str | None = None) -> dict:
                     "baseEditable": _bk is not None,
                     "baseOptional": (_bk is None) or (not _bk["required"]),
                 })
+            if gateway_managed(_gid, env):
+                _ready = gateway_readiness(_gid, env)
+                _gateway = gateway_settings(env)
+                for _row in _rows:
+                    _row["role"] = "保留"
+                _rows.insert(0, {
+                    "slot": "new-api", "order": 0, "name": "统一媒体网关",
+                    "sub": "配置完整度；尚未验证模型调用", "type": _ready["provider"],
+                    "model": _ready["model"], "baseUrl": _gateway["baseUrl"],
+                    "keyMasked": _gateway["keyMasked"], "role": "主",
+                    "result": "已配置" if _ready["configured"] else "缺配置",
+                    "modelEditable": False, "baseEditable": False, "baseOptional": False,
+                })
             channels[_ch] = {"rows": _rows}
     except Exception:  # noqa: BLE001
         pass
@@ -1822,6 +1943,7 @@ class HarnessSettingsRequest(BaseModel):
     sandbox: str = "workspace-write"
     codex_auto_approve: StrictBool | None = None
     subscription_model: str | None = Field(default=None, max_length=240)
+    subscription_backend: str | None = None
 
 
 class BundledProviderRequest(BaseModel):
@@ -1833,8 +1955,10 @@ class BundledProviderRequest(BaseModel):
 
 def _require_bundled_provider():
     from easel.harnesses.runtime import resolve_codex
+    if harnesses.describe("pi").get("installed"):
+        return
     if resolve_codex().origin != "bundled":
-        raise HTTPException(409, "此设置仅适用于内置 Codex")
+        raise HTTPException(409, "此设置适用于完整安装包的内置 Pi 或 Codex；请检查运行时安装")
 
 
 @app.get("/api/settings/harness/provider")
@@ -1858,7 +1982,7 @@ async def api_bundled_provider_save(request: Request):
         raise HTTPException(400, "供应商请求格式无效，请检查地址、模型和 Key") from error
     try:
         _require_bundled_provider()
-        if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes:
+        if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes or _central_platform_router.platform_changes:
             raise HTTPException(409, "请等待当前任务完成或停止后修改供应商")
         result = save_provider(PROJECT_ROOT, **req.model_dump())
     except HarnessError as error:
@@ -1885,8 +2009,12 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
         route.require_available()
     except HarnessError as error:
         raise HTTPException(409, str(error)) from error
-    if route.service_source == "subscription" and req.runtime != "codex":
-        raise HTTPException(409, "订阅服务目前仅支持本地 Codex")
+    from easel.harnesses.capabilities import supports_subscription
+    backend = req.subscription_backend if req.subscription_backend is not None else config.get("subscription_backend", "legacy")
+    if backend not in ("legacy", "central"):
+        raise HTTPException(400, "无效的订阅后端")
+    if route.service_source == "subscription" and not supports_subscription(req.runtime, backend):
+        raise HTTPException(409, "此引擎不支持当前订阅渠道；内置 Pi 支持中央订阅，Codex 保留旧版订阅")
     if req.runtime not in harness_store.IDS:
         raise HTTPException(400, "未知 Agent 底座")
     if req.sandbox not in ("read-only", "workspace-write"):
@@ -1895,14 +2023,15 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
         raise HTTPException(400, "模型名称不能包含控制字符")
     if "EASEL_AGENT_RUNTIME" in read_settings(ENV_FILE):
         raise HTTPException(409, "启动环境固定了底座，请修改 EASEL_AGENT_RUNTIME 后重启")
-    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes:
+    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes or _central_platform_router.platform_changes:
         raise HTTPException(409, "请等待当前任务完成或停止后切换底座")
     if req.runtime not in ("api", "openclaw") and not harnesses.describe(req.runtime)["installed"]:
-        raise HTTPException(409, "请先在终端安装并配置对应 Agent CLI，再切换")
+        raise HTTPException(409, "内置 Pi 请重新安装完整 Easel 应用；外部引擎请先安装并配置后再切换" if req.runtime == "pi" else "请先在终端安装并配置对应 Agent CLI，再切换")
     if req.runtime == "openclaw" and api_mode(read_settings(ENV_FILE)):
         if "EASEL_CHAT_TRANSPORT" in os.environ:
             raise HTTPException(409, "运行环境已固定仅聊天模式，请修改 EASEL_CHAT_TRANSPORT 后重启")
         _write_env_direct({"EASEL_CHAT_TRANSPORT": "http"})
+    config["subscription_backend"] = backend
     config["service_source"] = route.service_source
     config["execution_target"] = route.execution_target
     config["runtime"] = req.runtime
@@ -1917,6 +2046,12 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
         from easel.harnesses.runtime import codex_model
         try:
             model = codex_model(PROJECT_ROOT, model, require_configured=False)
+        except HarnessError as error:
+            raise HTTPException(400, str(error)) from error
+    elif route.service_source == "custom" and req.runtime == "pi":
+        from easel.harnesses.provider import pi_model
+        try:
+            model = pi_model(PROJECT_ROOT, model, require_configured=False)
         except HarnessError as error:
             raise HTTPException(400, str(error)) from error
     if route.service_source == "subscription":
@@ -1942,7 +2077,7 @@ async def api_chat_transport_save(req: ChatTransportRequest):
         raise HTTPException(409, "启动环境固定了执行引擎，请修改 EASEL_AGENT_RUNTIME 后重启")
     if "EASEL_CHAT_TRANSPORT" in os.environ:
         raise HTTPException(409, "运行环境已指定 EASEL_CHAT_TRANSPORT，请修改启动环境后重启")
-    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes:
+    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes or _central_platform_router.platform_changes:
         raise HTTPException(409, "请等待当前对话完成或停止后切换模式")
     config = _harness_settings()
     _write_env_direct({"EASEL_CHAT_TRANSPORT": "api" if req.transport == "api" else "http"})
@@ -1965,13 +2100,14 @@ async def api_settings_models(runtime: str | None = None):
 
 @app.post("/api/settings/harness/models/{runtime}")
 async def api_harness_models(runtime: str):
-    if runtime not in ("codex", "opencode"):
+    if runtime not in ("pi", "codex", "opencode"):
         raise HTTPException(400, "此底座不支持原生模型列表")
     from easel.harnesses.base import RunRequest
     from easel.harnesses.models import available_models
     request = RunRequest("", PROJECT_ROOT, {
         **_proxy_env(), "EASEL_ROOT": str(PROJECT_ROOT), "EASEL_AGENT_RUNTIME": runtime},
-        service_source=_harness_settings()["service_source"])
+        service_source=_harness_settings()["service_source"],
+        subscription_backend=_harness_settings().get("subscription_backend", "legacy"))
     try:
         models = await asyncio.wait_for(available_models(runtime, request), 25)
     except asyncio.TimeoutError as error:
@@ -2195,7 +2331,7 @@ class ModelSaveRequest(BaseModel):
 
 
 def _guard_chat_model_mutation():
-    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes:
+    if _RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes or _central_platform_router.platform_changes:
         raise HTTPException(409, "请等待当前任务完成或停止后修改聊天模型")
 
 
@@ -2227,6 +2363,8 @@ async def api_settings_models_save(req: ModelSaveRequest):
         _env0 = _read_env()
         for _row in req.rows:
             _pid = (_row.slot or "").strip()
+            if _pid == "new-api":
+                raise HTTPException(400, "统一媒体网关请使用独立设置卡片保存")
             _p0 = _by_id.get(_pid)
             if not _p0:
                 raise HTTPException(400, f"不认识的服务商：{_pid or '（空）'}")
@@ -2668,6 +2806,9 @@ async def api_models_available(req: ModelsFetchRequest):
 async def api_models_selftest(req: SelftestRequest):
     """真自测：对已配置的 OpenAI 兼容通道发 GET {base}/models 并计耗时。"""
     channel = (req.channel or "all").strip()
+    _group = {"image": "image", "video": "video", "music": "music", "speech": "voice"}.get(channel)
+    if _group and gateway_managed(_group, _read_env()):
+        raise HTTPException(409, "统一媒体网关显示配置完整度；此旧接口不验证媒体调用")
     if channel in ("chat", "all") and _harness_settings()["runtime"] not in ("api", "openclaw"):
         raise HTTPException(409, "此底座使用原生模型配置，请新建对话或运行 easel ping 验证")
     direct = _direct_api_enabled()
@@ -2755,6 +2896,120 @@ class ChatRequest(BaseModel):
     sessionId: str | None = None
     turnId: str | None = None
     attachments: list[AttachmentRef] = Field(default_factory=list)
+    model: str | None = Field(default=None, max_length=240)
+    reasoning_effort: str | None = Field(default=None, max_length=32)
+    catalog_revision: str | None = Field(default=None, max_length=160)
+
+
+class AttachmentValidationRequest(BaseModel):
+    session_id: str = Field(max_length=160)
+    attachments: list[AttachmentRef] = Field(default_factory=list, max_length=32)
+
+
+def _validated_attachment(attachment, session_id):
+    """Uploads belong to one session; explicit output references to one source."""
+    rel = Path(attachment.path)
+    if rel.is_absolute() or ".." in rel.parts or "\\" in attachment.path:
+        raise HTTPException(403, "附件不可用")
+    normalized = rel.as_posix()
+    if normalized.startswith("_inbox/"):
+        scope = _attachment_scope(session_id)
+        if (len(rel.parts) != 4 or rel.parts[1] != scope
+                or attachment.id != _attachment_id(scope, normalized)):
+            raise HTTPException(403, "附件不属于当前会话")
+        full = _safe_output_target(normalized)
+        if not full.is_file():
+            raise HTTPException(404, "附件不存在")
+        return full
+    source = _workbench_contract()["source_scope"]
+    expected = _workbench_state().reference_id(normalized, source)
+    import hmac
+    if not hmac.compare_digest(attachment.id, expected):
+        raise HTTPException(403, "附件不可用")
+    return _safe_output_path(normalized)
+
+
+@app.post("/api/workbench/attachments/validate")
+async def api_workbench_attachments(req: AttachmentValidationRequest):
+    require_local_http()
+    try:
+        _workbench_identifier(req.session_id)
+    except WorkbenchError:
+        raise HTTPException(400, "无效的会话标识") from None
+    items = []
+    for attachment in req.attachments:
+        state = "available"
+        try:
+            _validated_attachment(attachment, req.session_id)
+        except HTTPException as error:
+            state = "missing" if error.status_code == 404 else "forbidden"
+        items.append({**attachment.model_dump(), "state": state})
+    return {"version": 1, "session_id": req.session_id, "attachments": items}
+
+
+@app.get("/api/artifacts/reference")
+async def api_artifact_reference(path: str, session_id: str | None = None):
+    require_local_http()
+    if len(path) > 2048 or "\\" in path:
+        raise HTTPException(400, "无效的文件标识")
+    if session_id is not None:
+        try:
+            _workbench_identifier(session_id)
+        except WorkbenchError:
+            raise HTTPException(400, "无效的会话标识") from None
+    full = _safe_output_path(path)
+    if _is_protected(full):
+        raise HTTPException(403, "文件不可用")
+    normalized = full.relative_to(OUTPUTS_DIR.resolve()).as_posix()
+    source = _workbench_contract()["source_scope"]
+    return JSONResponse({"id": _workbench_state().reference_id(normalized, source), "path": normalized,
+                         "name": full.name, "size": full.stat().st_size,
+                         "kind": "text" if full.suffix.lower() in TEXT_EXTS else "file", "state": "available"},
+                        headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/chat/models")
+async def api_chat_models(refresh: bool = False, session_id: str | None = None):
+    from easel.chat_models import catalogs
+    config = _harness_settings()
+    try:
+        if session_id:
+            if len(session_id) > 256 or any(ord(c) < 32 for c in session_id):
+                raise HarnessError("无效的会话标识")
+            config = {**config, "runtime": _chat_backend(session_id)}
+            record = harness_store.binding(SESSIONS_DIR, session_id)
+            if record and (record["service_source"] != config["service_source"]
+                           or record["execution_target"] != config["execution_target"]):
+                raise HarnessError("此对话属于其他服务来源或执行位置，请新建对话；原历史保持不变")
+            if record and config["service_source"] == "subscription":
+                backend = config.get("subscription_backend", "legacy")
+                if record.get("subscription_backend", "legacy") != backend:
+                    raise HarnessError("此对话属于其他订阅渠道，请新建对话；原历史保持不变")
+                if backend == "central":
+                    from easel.platform.central import CentralClient
+                    client = CentralClient(PROJECT_ROOT)
+                    with client.store.locked():
+                        state = client._state()
+                    auth = state.get("auth") or {}
+                    if (record.get("platform_url") != state.get("url")
+                            or record.get("central_scope") != auth.get("scope")
+                            or record.get("account_id") != auth.get("scope", {}).get("user_id")):
+                        raise HarnessError("此对话属于其他订阅账号或平台，请新建对话；原历史保持不变")
+                else:
+                    from easel.platform.client import PlatformClient
+                    client = PlatformClient(PROJECT_ROOT)
+                    with client.store.locked():
+                        state = client.store.read()
+                    if record.get("account_id") != (state.get("auth") or {}).get("account", {}).get("id"):
+                        raise HarnessError("此对话属于其他订阅账号，请新建对话；原历史保持不变")
+        result = await asyncio.to_thread(catalogs.catalog, PROJECT_ROOT, config, read_settings(ENV_FILE), refresh=refresh)
+    except (HarnessError, HTTPException) as error:
+        result = {"revision": "", "source_revision": "", "expires_in": 0,
+                  "runtime": config["runtime"], "service_source": config["service_source"],
+                  "subscription_backend": config.get("subscription_backend", "legacy"),
+                  "selected_model": "", "switchable": False, "ready": False, "models": [],
+                  "reason": _scrub_secrets(str(error.detail if isinstance(error, HTTPException) else error))}
+    return JSONResponse(result, headers={"Cache-Control": "no-store"})
 
 
 def _task_context(req: ChatRequest, runtime: str, config: dict, env: dict | None = None) -> TaskContext:
@@ -2763,10 +3018,20 @@ def _task_context(req: ChatRequest, runtime: str, config: dict, env: dict | None
         selected = {**config, "runtime": runtime,
                     "service_source": req.service_source if "service_source" in req.model_fields_set else config["service_source"],
                     "execution_target": req.execution_target if "execution_target" in req.model_fields_set else config["execution_target"]}
+        selection = None
+        has_model = "model" in req.model_fields_set
+        has_revision = "catalog_revision" in req.model_fields_set
+        has_effort = "reasoning_effort" in req.model_fields_set
+        if has_model or has_revision or has_effort:
+            if not has_model or not has_revision:
+                raise HarnessError("请选择当前模型目录中的模型后重试")
+            from easel.chat_models import catalogs
+            selection = catalogs.select(PROJECT_ROOT, selected, env if env is not None else read_settings(ENV_FILE),
+                                        req.model, req.catalog_revision, req.reasoning_effort or "")
         if selected["service_source"] == "subscription":
             require_local_http()
-        context = task_context(selected, root=PROJECT_ROOT)
-        if context.service_source == "custom" and runtime in ("api", "openclaw"):
+        context = task_context(selected, root=PROJECT_ROOT, selection=selection)
+        if selection is None and context.service_source == "custom" and runtime in ("api", "openclaw"):
             from dataclasses import replace
             model = ((env if env is not None else read_settings(ENV_FILE)).get("EASEL_DIRECT_API_MODEL", "").strip()
                      if runtime == "api" else "openclaw/default")
@@ -2775,7 +3040,12 @@ def _task_context(req: ChatRequest, runtime: str, config: dict, env: dict | None
             record = harness_store.binding(SESSIONS_DIR, req.sessionId)
             if record and (record["service_source"] != context.service_source or record["execution_target"] != context.execution_target):
                 raise HarnessError("此会话属于其他服务来源或执行位置，请新建对话")
-            if record and context.service_source == "subscription" and record.get("account_id") != context.account_id:
+            if record and context.service_source == "subscription" and (
+                    record.get("account_id") != context.account_id
+                    or record.get("subscription_backend", "legacy") != context.subscription_backend
+                    or (context.subscription_backend == "central" and (
+                        record.get("platform_url") != context.platform_url
+                        or record.get("central_scope") != context.central_scope))):
                 raise HarnessError("此会话属于其他平台账号，请新建对话")
         return context
     except HarnessError as error:
@@ -2788,7 +3058,9 @@ def _bind_task(sk: str, context: TaskContext, native_id: str = ""):
     if record.get("runtime") == "openclaw" and context.runtime == "api":
         return
     harness_store.bind(SESSIONS_DIR, sk, context.runtime, native_id,
-                       service_source=context.service_source, execution_target=context.execution_target, account_id=context.account_id)
+                       service_source=context.service_source, execution_target=context.execution_target, account_id=context.account_id,
+                       subscription_backend=context.subscription_backend, platform_url=context.platform_url,
+                       central_scope=context.central_scope)
 
 
 def _attachment_scope(session_id: str) -> str:
@@ -2814,17 +3086,8 @@ def _attachment_context(req: ChatRequest) -> str:
     rows: list[str] = []
     seen: set[str] = set()
     for attachment in req.attachments:
-        rel = Path(attachment.path)
-        if rel.is_absolute() or ".." in rel.parts or len(rel.parts) != 4:
-            raise HTTPException(400, "附件路径无效")
-        if rel.parts[0] != "_inbox" or rel.parts[1] != scope:
-            raise HTTPException(403, "附件不属于当前会话")
-        normalized = rel.as_posix()
-        if attachment.id != _attachment_id(scope, normalized):
-            raise HTTPException(403, "附件标识校验失败")
-        full = _safe_output_target(normalized)
-        if not full.is_file():
-            raise HTTPException(404, f"附件不存在：{attachment.name}")
+        full = _validated_attachment(attachment, req.sessionId)
+        normalized = full.relative_to(OUTPUTS_DIR.resolve()).as_posix()
         if normalized in seen:
             continue
         seen.add(normalized)
@@ -3044,20 +3307,34 @@ def _turn_file(sk: str) -> Path:
 def _job_event_file(turn_id: str) -> Path:
     """Per-turn append-only event log used to resume SSE without restarting the agent."""
     safe = re.sub(r"[^A-Za-z0-9_.-]", "_", turn_id)[:160]
+    # Preserve old replay files while avoiding sanitizer collisions for new IDs.
+    if ":" in turn_id and not (SESSIONS_DIR / "jobs" / f"{safe}.jsonl").exists():
+        safe = hashlib.sha256(turn_id.encode()).hexdigest()
     return SESSIONS_DIR / "jobs" / f"{safe}.jsonl"
 
 
 def _read_job_events(turn_id: str, after: int = 0) -> list[dict]:
     path = _job_event_file(turn_id)
-    if not path.is_file():
-        return []
     events = []
     try:
-        for line in path.read_text(encoding="utf-8").splitlines():
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd, "rb") as stream:
+            info = os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_size > 16 * 1024 * 1024:
+                return []
+            raw = stream.read(16 * 1024 * 1024 + 1)
+        if len(raw) > 16 * 1024 * 1024:
+            return []
+        for index, line in enumerate(raw.splitlines()):
+            if index >= 100000:
+                return []
             event = json.loads(line)
-            if int(event.get("id", 0)) > after:
+            if (not isinstance(event, dict) or type(event.get("id")) is not int
+                    or event["id"] <= 0 or not isinstance(event.get("event"), str)):
+                return []
+            if event["id"] > after:
                 events.append(event)
-    except (OSError, ValueError, json.JSONDecodeError):
+    except (OSError, ValueError, UnicodeError):
         return []
     return events
 
@@ -3101,13 +3378,166 @@ def _save_turn(sk: str, status: str, text: str, extra: dict | None = None) -> No
         tmp = _turn_file(sk).with_suffix(".tmp")
         tmp.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, _turn_file(sk))
+        if sk.startswith("web:") and extra and extra.get("turn_id"):
+            _workbench_state().save_snapshot(sk[4:], extra["turn_id"], payload)
     except Exception:
         pass
+
+
+def _guard_uncertain_central_turn(session_id: str | None) -> None:
+    """Do not turn an uncertain paid turn into another model dispatch.
+
+    This reads server-owned task metadata, not browser error text. It is checked
+    before account authorization and again under the native session lock.
+    """
+    if not session_id:
+        return
+    path = _turn_file(f"web:{session_id}")
+    message = ("上一轮中央订阅结果或费用尚未确认，请到设置 → 账号与订阅 → 中断请求状态查询。"
+               "原请求和历史已保留，不会重新派发；如需发起独立任务，请新建对话。")
+    try:
+        binding = harness_store.binding(SESSIONS_DIR, session_id)
+    except HarnessError:
+        raise HTTPException(409, "无法确认会话归属，请保留原历史并新建对话。") from None
+    known_central = (binding.get("service_source") == "subscription"
+                     and binding.get("subscription_backend") == "central")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    except (OSError, ValueError):
+        payload = {}
+    payload = payload if isinstance(payload, dict) else {}
+    route = payload.get("route", {})
+    central_route = (isinstance(route, dict) and route.get("service_source") == "subscription"
+                     and route.get("subscription_backend") == "central")
+    if ((known_central or central_route)
+            and (payload.get("status") != "done" or payload.get("clean_end") is not True)):
+        raise HTTPException(409, message)
 
 
 # 后台 supervisor 任务集合：持有强引用防被 GC；每个对话流的 openclaw run 跑在这里，
 # 与客户端 SSE 连接解耦（断线不杀 run）。
 _BG_TASKS: set = set()
+_WORKBENCH_TURNS: dict = {}
+
+
+def _workbench_turn_live(turn_id):
+    task = _WORKBENCH_TURNS.get((str(SESSIONS_DIR), turn_id))
+    return task is not None and not task.done()
+
+
+def _workbench_receipt(session_id, turn_id):
+    try:
+        return _workbench_state().owned(session_id, turn_id, _workbench_contract()["source_scope"])
+    except WorkbenchError as error:
+        raise HTTPException(error.status, str(error)) from None
+
+
+def _workbench_completion(session_id, turn_id):
+    """Only a durable exact-turn snapshot can confirm execution termination."""
+    result = {"version": 1, "session_id": session_id, "turn_id": turn_id,
+              "state": "unknown", "clean_end": False, "stop_reason": "unknown"}
+    try:
+        snapshot = _workbench_state().snapshot(turn_id)
+    except WorkbenchError:
+        snapshot = None
+    if snapshot is not None and snapshot.get("status") == "done":
+        clean = snapshot.get("clean_end") is True
+        reason = snapshot.get("stop_reason", "unknown")
+        result.update(clean_end=clean, stop_reason=reason,
+                      state="completed" if clean else "stopped" if reason in ("stopped", "user_stopped") else "failed")
+    return result
+
+
+def _snapshot_artifacts(snapshot, session_id, turn_id):
+    """Return only additive exact-turn references, never infer them from text."""
+    from easel.harnesses.pi_tools import validate_artifact_descriptor
+    values = snapshot.get("artifacts")
+    if not isinstance(values, list):
+        return []
+    found = {}
+    fields = {"version", "path", "name", "size", "sha256", "session_id", "turn_id"}
+    for value in values[:16]:
+        if (type(value) is not dict or set(value) != fields
+                or value.get("session_id") != session_id or value.get("turn_id") != turn_id):
+            continue
+        serialized = json.dumps(value, ensure_ascii=False)
+        if _scrub_secrets(serialized) != serialized:
+            continue
+        base = {key: value[key] for key in fields - {"session_id", "turn_id"}}
+        if validate_artifact_descriptor(base) is None:
+            continue
+        found[value["path"]] = dict(value)
+    return list(found.values())
+
+
+@app.get("/api/chat/turns/{session_id}/{turn_id}")
+async def api_chat_turn(session_id: str, turn_id: str):
+    require_local_http()
+    record = _workbench_receipt(session_id, turn_id)
+    result = {"version": 1, "session_id": session_id, "turn_id": turn_id, "state": "unknown", "accepted": record is not None}
+    if record is None:
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+    result.update(_workbench_state().public_receipt(record))
+    if record["decision"] == "rejected":
+        result.update(state="rejected", accepted=False, not_dispatched=True)
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+    try:
+        snapshot = _workbench_state().snapshot(turn_id)
+    except WorkbenchError:
+        snapshot = None
+    if snapshot is not None:
+        for field in ("text", "clean_end", "stop_reason", "central_recovery"):
+            if field in snapshot:
+                result[field] = snapshot[field]
+        if "artifacts" in snapshot:
+            result["artifacts"] = _snapshot_artifacts(snapshot, session_id, turn_id)
+        if snapshot.get("status") == "done":
+            result["state"] = ("completed" if snapshot.get("clean_end") is True else
+                               "stopped" if snapshot.get("stop_reason") in ("stopped", "user_stopped") else "failed")
+        elif _workbench_turn_live(turn_id):
+            result["state"] = "running"
+    elif _workbench_turn_live(turn_id):
+        result["state"] = "accepted"
+    batch = _read_job_events(turn_id)
+    result["last_event_id"] = max((int(event.get("id", 0)) for event in batch), default=0)
+    return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+
+class WithdrawRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    request_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+
+
+@app.post("/api/chat/turns/{session_id}/{turn_id}/withdraw")
+async def api_chat_withdraw(session_id: str, turn_id: str, body: WithdrawRequest, request: Request):
+    """An explicit local withdrawal fences an undecided submission permanently."""
+    require_local_http()
+    origin = request.headers.get("origin")
+    expected = f"{request.url.scheme}://{request.headers.get('host', '')}"
+    if origin not in (None, expected) or request.headers.get("sec-fetch-site") == "cross-site":
+        raise HTTPException(403, "请求来源不允许")
+    try:
+        _workbench_identifier(session_id)
+        _workbench_identifier(turn_id)
+        ledger = _workbench_state()
+        scope = _workbench_contract()["source_scope"]
+        record = ledger.owned(session_id, turn_id, scope)
+        if record is None and _job_event_file(turn_id).exists():
+            # An old event log cannot be converted to a safe rejection merely
+            # because it predates versioned durable acceptance decisions.
+            record = ledger.owned(session_id, turn_id, scope)
+            if record is None:
+                raise WorkbenchError("原任务状态待确认", 409)
+        if record is not None and record["request_hash"] != body.request_hash:
+            raise WorkbenchError("任务标识已用于其他内容", 409)
+        # A racing accept keeps its original receipt; a winning rejection is
+        # permanent. Neither branch changes money or dispatches another model.
+        ledger.reject(session_id, turn_id, scope, body.request_hash)
+    except WorkbenchError as error:
+        raise HTTPException(error.status, str(error)) from None
+    return await api_chat_turn(session_id, turn_id)
+
+
 _DIRECT_CHAT_TASKS: set = set()
 
 # 正在跑的对话 openclaw 进程（sk→proc），供用户**显式「停止」**终止；断线**不**经此路径（断线不杀）。
@@ -3157,7 +3587,13 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
         raise HTTPException(409, "这个会话上一条还在运行，请稍后再试")
     pk = f"web:{sk}"
     turn_id = req.turnId or uuid.uuid4().hex
+    recovery_metadata = {}
+    if context.service_source == "subscription" and context.subscription_backend == "central":
+        from easel.platform.execution_records import operation_turn_key
+        operation_turn_key(sk, turn_id)
+        recovery_metadata["central_recovery"] = {"version": 1, "turn_id": turn_id}
     full_text: list[str] = []
+    artifacts: list[dict] = []
     clean_end = False
     reason = "error"
     error_message = ""
@@ -3172,6 +3608,31 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
 
     def receive(kind, text):
         safe = _scrub_secrets(text)
+        if kind == "artifact":
+            from easel.harnesses.pi_tools import validate_artifact_descriptor
+            try:
+                if not isinstance(safe, str) or len(safe.encode()) > 8192:
+                    return
+                descriptor = validate_artifact_descriptor(json.loads(safe))
+            except (ValueError, UnicodeError, TypeError):
+                return
+            if descriptor is None:
+                return
+            bound = {**descriptor, "session_id": sk, "turn_id": turn_id}
+            index = next((i for i, value in enumerate(artifacts) if value["path"] == bound["path"]), None)
+            if index is not None:
+                if artifacts[index] == bound:
+                    return
+                artifacts[index] = bound
+            elif len(artifacts) < 16:
+                artifacts.append(bound)
+            else:
+                return
+            _save_turn(pk, "running", "".join(full_text), {
+                "turn_id": turn_id, "runtime": runtime, "route": context.metadata(),
+                **recovery_metadata, "artifacts": list(artifacts)})
+            emit(kind, json.dumps(bound, ensure_ascii=False))
+            return
         if kind == "token":
             full_text.append(safe)
         emit(kind, safe)
@@ -3194,21 +3655,26 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
                 await asyncio.sleep(0.2)
         if not acquired:
             raise HarnessError("此会话正在另一个窗口运行，请稍后再试")
+        _guard_uncertain_central_turn(sk)
         record = harness_store.binding(SESSIONS_DIR, sk)
         native_id = record.get("native_id", "")
         _bind_task(sk, context, native_id)
         _STOPPED_CHAT.discard(sk)
         proc._task = task
         _RUNNING_CHAT[sk] = proc
-        _save_turn(pk, "running", "", {"turn_id": turn_id, "runtime": runtime, "route": context.metadata()})
+        _save_turn(pk, "running", "", {"turn_id": turn_id, "runtime": runtime, "route": context.metadata(), **recovery_metadata})
         claimed = True
-        env = {**read_settings(ENV_FILE), **_proxy_env(), "EASEL_AGENT_RUNTIME": runtime,
-               "EASEL_ROOT": str(PROJECT_ROOT)}
+        env = _fresh_media_gateway_env({**read_settings(ENV_FILE), **_proxy_env(), "EASEL_AGENT_RUNTIME": runtime,
+                                       "EASEL_ROOT": str(PROJECT_ROOT)})
         request = RunRequest(message, PROJECT_ROOT, env, native_id,
                              context.model, config["sandbox"], timeout,
                              session_key=sk, codex_auto_approve=config.get("codex_auto_approve", False),
                              service_source=context.service_source, execution_target=context.execution_target,
-                             account_id=context.account_id, platform_url=context.platform_url)
+                             account_id=context.account_id, platform_url=context.platform_url,
+                             subscription_backend=context.subscription_backend, central_scope=context.central_scope,
+                             invocation_key=context.invocation_key, reasoning_effort=context.reasoning_effort,
+                             reasoning_efforts=context.reasoning_efforts, selection_verified=context.selection_verified,
+                             provider_binding=context.provider_binding, turn_id=turn_id)
         await asyncio.wait_for(harnesses.adapter(runtime).run(
             request, receive, ask,
             lambda identifier: _bind_task(sk, context, identifier)), timeout)
@@ -3232,7 +3698,8 @@ async def _run_harness_chat(req: ChatRequest, sk: str, message: str, runtime: st
             snapshot = "".join(full_text) + (f"\n\n❌ {error_message}" if error_message else "")
             _save_turn(pk, "done", snapshot, {
                 "turn_id": turn_id, "runtime": runtime, "route": context.metadata(),
-                "clean_end": clean_end, "stop_reason": reason})
+                "clean_end": clean_end, "stop_reason": reason, **recovery_metadata,
+                **({"artifacts": list(artifacts)} if artifacts else {})})
         proc.finish()
         if _RUNNING_CHAT.get(sk) is proc:
             _RUNNING_CHAT.pop(sk, None)
@@ -3300,7 +3767,9 @@ async def _run_direct_chat(req: ChatRequest, sk: str, content, system: str, emit
             nonlocal clean_end, reason
             async for kind, text in stream_chat(
                     settings, content, system=system,
-                    history_file=history_path(SESSIONS_DIR, sk), timeout=TIMEOUT_CHAT):
+                    history_file=history_path(SESSIONS_DIR, sk), timeout=TIMEOUT_CHAT,
+                    **({"reasoning_effort": context.reasoning_effort, "reasoning_efforts": context.reasoning_efforts}
+                       if context.reasoning_effort else {})):
                 if kind == "finish":
                     clean_end, reason = True, text
                 else:
@@ -3349,6 +3818,13 @@ async def api_chat_last(session_id: str, turn_id: str | None = None):
         payload = json.loads(f.read_text(encoding="utf-8"))
         if turn_id and payload.get("turn_id") != turn_id:
             return {"status": "stale", "text": "", "turn_id": payload.get("turn_id")}
+        if "artifacts" in payload:
+            try:
+                owned = _workbench_receipt(session_id, payload.get("turn_id"))
+            except (HTTPException, TypeError, ValueError):
+                owned = None
+            payload["artifacts"] = (_snapshot_artifacts(payload, session_id, payload.get("turn_id"))
+                                    if owned is not None else [])
         return payload
     except Exception:
         return {"status": "none", "text": ""}
@@ -3359,6 +3835,16 @@ async def api_chat_job_stream(turn_id: str, after: int = 0):
     """Replay missed events, then tail this turn until its terminal event arrives."""
     # A stale browser-side pendingTurnId must fail promptly instead of receiving
     # heartbeats forever. The frontend can then recover from the final snapshot.
+    require_local_http()
+    try:
+        _workbench_identifier(turn_id)
+        receipt = _workbench_state().receipt(turn_id)
+    except WorkbenchError as error:
+        raise HTTPException(error.status, str(error)) from None
+    if receipt is not None:
+        _workbench_receipt(receipt["session_id"], turn_id)
+        if receipt["decision"] == "rejected":
+            raise HTTPException(409, "本次请求未提交")
     if not _job_event_file(turn_id).is_file():
         raise HTTPException(404, "对话任务记录不存在或已失效")
 
@@ -3366,6 +3852,12 @@ async def api_chat_job_stream(turn_id: str, after: int = 0):
         cursor = max(0, after)
         idle_since = time.monotonic()
         while True:
+            if receipt is not None:
+                try:
+                    _workbench_receipt(receipt["session_id"], turn_id)
+                except HTTPException:
+                    yield {"event": "task_state", "data": json.dumps({"version": 1, "turn_id": turn_id, "state": "unknown"})}
+                    return
             batch = _read_job_events(turn_id, cursor)
             if batch:
                 idle_since = time.monotonic()
@@ -3377,7 +3869,7 @@ async def api_chat_job_stream(turn_id: str, after: int = 0):
                     # 转义 → 前端 JSON.parse 拿到字符串而非对象 → ask_user 选项
                     # 卡片渲染成空壳。其余事件存原文/dict，与实时流的 dumps 规则
                     # 一致。因此仅 question 按实时流规则原样透传。
-                    if event["event"] == "question" and isinstance(raw, str):
+                    if event["event"] in ("question", "artifact") and isinstance(raw, str):
                         data_out = raw
                     else:
                         data_out = json.dumps(raw, ensure_ascii=False)
@@ -3386,9 +3878,12 @@ async def api_chat_job_stream(turn_id: str, after: int = 0):
                         "event": event["event"],
                         "data": data_out,
                     }
-                    if event["event"] in ("done", "error"):
+                    if event["event"] == "done" or (event["event"] == "error" and receipt is None):
                         return
             else:
+                if receipt is not None and not _workbench_turn_live(turn_id):
+                    yield {"event": "task_state", "data": json.dumps({"version": 1, "turn_id": turn_id, "state": "unknown"})}
+                    return
                 # Keep proxy connections active; reconnecting remains safe if it still drops.
                 if time.monotonic() - idle_since >= 15:
                     yield {"event": "ping", "data": "{}"}
@@ -3402,7 +3897,44 @@ async def api_chat_job_stream(turn_id: str, after: int = 0):
     })
 
 
+_CHAT_ACCEPTANCE_PHASE = ContextVar("chat_acceptance_phase", default=None)
+
+
+def _with_submission_rejection(handler):
+    @wraps(handler)
+    async def wrapped(req):
+        phase = {"claim_started": False, "scope": None}
+        token = _CHAT_ACCEPTANCE_PHASE.set(phase)
+        try:
+            return await handler(req)
+        except HTTPException as error:
+            # A precise rejected request is different from a network error or
+            # absent GET result. A claim attempt can never get this assertion.
+            rejection = None
+            if (400 <= error.status_code < 500 and not phase["claim_started"] and phase["scope"]
+                    and req.sessionId and req.turnId):
+                try:
+                    require_local_http()
+                    _workbench_identifier(req.sessionId)
+                    _workbench_identifier(req.turnId)
+                    # A rejection permanently wins or loses the same atomic
+                    # decision as claim. Absence alone proves nothing.
+                    if not _job_event_file(req.turnId).exists():
+                        rejection = _workbench_state().reject(req.sessionId, req.turnId, phase["scope"],
+                                                              _workbench_digest(req.model_dump()))
+                except (WorkbenchError, HTTPException):
+                    pass
+            if rejection is not None:
+                return JSONResponse({"detail": error.detail, "rejection": rejection}, status_code=error.status_code,
+                                    headers={**(error.headers or {}), "Cache-Control": "no-store"})
+            raise
+        finally:
+            _CHAT_ACCEPTANCE_PHASE.reset(token)
+    return wrapped
+
+
 @app.post("/api/chat/stream")
+@_with_submission_rejection
 async def api_chat_stream(req: ChatRequest):
     """SSE 真流式对话。
 
@@ -3412,11 +3944,56 @@ async def api_chat_stream(req: ChatRequest):
     记下该文件尾偏移、实时 tail 之后追加的行，用 runId 闩锁隔离本轮，把 assistant_text_stream 的
     token delta 转成 SSE `token`、thinking delta 转成 `thinking`。stdout 仅留作错误/兜底。
     """
+    # Reject unavailable/invalid routes before creating even private acceptance
+    # state, retaining the existing no-side-effects rejection contract.
+    phase = _CHAT_ACCEPTANCE_PHASE.get()
+    configured = _harness_settings()
+    try:
+        ServiceRoute(req.service_source if "service_source" in req.model_fields_set else configured["service_source"],
+                     req.execution_target if "execution_target" in req.model_fields_set else configured["execution_target"]).require_available()
+        if ((req.service_source is not None and req.service_source != configured["service_source"])
+                or (req.execution_target is not None and req.execution_target != configured["execution_target"])):
+            raise HarnessError("当前服务已变化，请重新选择")
+    except HarnessError as error:
+        raise HTTPException(409, str(error)) from None
+    accepted_session = req.sessionId or f"web-{int(time.time() * 1000)}"
+    accepted_turn = req.turnId or uuid.uuid4().hex
+    try:
+        _workbench_identifier(accepted_session)
+        _workbench_identifier(accepted_turn)
+    except WorkbenchError:
+        raise HTTPException(400, "无效的任务标识") from None
+    phase["scope"] = _workbench_contract(configured)["source_scope"]
+    ledger = _workbench_state()
+    request_hash = _workbench_digest({**req.model_dump(), "sessionId": accepted_session, "turnId": accepted_turn})
+    try:
+        previous_receipt = ledger.receipt(accepted_turn)
+        if previous_receipt is not None:
+            ledger.owned(accepted_session, accepted_turn, phase["scope"])
+            if previous_receipt["request_hash"] != request_hash:
+                raise WorkbenchError("任务标识已用于其他内容", 409)
+            if previous_receipt["decision"] == "rejected":
+                return JSONResponse({"detail": "本次请求未提交", "rejection": ledger.public_rejection(previous_receipt)},
+                                    status_code=409, headers={"Cache-Control": "no-store"})
+            return await api_chat_job_stream(accepted_turn)
+    except WorkbenchError as error:
+        raise HTTPException(error.status, str(error)) from None
+    if _job_event_file(accepted_turn).exists():
+        raise HTTPException(409, "任务标识已有记录")
+    _guard_uncertain_central_turn(req.sessionId)
     # 每轮末尾追加「先查技能库」提醒，抗长对话指令衰减（对用户不可见）
     runtime = _chat_backend(req.sessionId)
     config = _harness_settings()
     task_settings = dict(read_settings(ENV_FILE))
     context = await _accept_task_context(req, runtime, config, task_settings)
+    central_recovery = (context.service_source == "subscription"
+                        and context.subscription_backend == "central")
+    if central_recovery:
+        from easel.platform.execution_records import operation_turn_key
+        try:
+            operation_turn_key(accepted_session, accepted_turn)
+        except ValueError:
+            raise HTTPException(400, "本次对话标识无效，请新建对话。") from None
     direct = runtime == "api"
     alternate = runtime not in ("api", "openclaw")
     if direct:
@@ -3427,18 +4004,43 @@ async def api_chat_stream(req: ChatRequest):
             raise HTTPException(409, "此会话属于 API 直连，请新建会话使用 OpenClaw")
         message = _chat_message(req)
 
+    # Acceptance is durable before any agent task is created. A concurrent or
+    # disconnected duplicate only reads this same receipt and original log.
+    initial_scope = _workbench_contract(config)["source_scope"]
+    if initial_scope != phase["scope"]:
+        raise HTTPException(409, "当前账号或服务已变化")
+    try:
+        phase["claim_started"] = True
+        receipt, created = ledger.claim(accepted_session, accepted_turn, initial_scope, request_hash)
+        if not created:
+            if receipt["decision"] == "rejected":
+                return JSONResponse({"detail": "本次请求未提交", "rejection": ledger.public_rejection(receipt)},
+                                    status_code=409, headers={"Cache-Control": "no-store"})
+            return await api_chat_job_stream(accepted_turn)
+        event_path = _job_event_file(accepted_turn)
+        ledger._directory(event_path.parent)
+        accepted_event = {"id": 1, "event": "accepted", "data": ledger.public_receipt(receipt)}
+        with event_path.open("x", encoding="utf-8") as stream:
+            os.chmod(event_path, 0o600)
+            stream.write(json.dumps(accepted_event, ensure_ascii=False) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+    except (WorkbenchError, OSError) as error:
+        raise HTTPException(error.status if isinstance(error, WorkbenchError) else 503, "任务记录暂不可用") from None
+
     # supervisor（跑 openclaw run）与 forward（转发 SSE 给浏览器）之间的事件通道。
     # 关键：run 跑在独立后台任务里，客户端断开只结束 forward，不取消 supervisor →
     # openclaw 照常跑到底、结果落盘，前端断线后 /api/chat/last 取回。
     loop = asyncio.get_event_loop()
     client_q: asyncio.Queue = asyncio.Queue()
     CLIENT_DONE = object()
+    client_q.put_nowait({"t": "accepted", "text": ledger.public_receipt(receipt), "id": 1})
 
     async def supervisor():
-        sk = req.sessionId or f"web-{int(time.time() * 1000)}"
+        sk = accepted_session
         pk = f"web:{sk}"                 # 落盘 key（与 /api/chat/last 一致）
-        turn_id = req.turnId or uuid.uuid4().hex
-        event_seq = 0
+        turn_id = accepted_turn
+        event_seq = 1
         full_text: list[str] = []        # 累积完整回答，供断线取回
         timed_out = False                # 只有真·超时才 terminate 进程；断线绝不杀
 
@@ -3448,18 +4050,15 @@ async def api_chat_stream(req: ChatRequest):
             _save_turn(pk, "running", "", {"turn_id": turn_id, "route": context.metadata()})
 
         event_path = _job_event_file(turn_id)
-        try:
-            event_path.parent.mkdir(parents=True, exist_ok=True)
-            event_path.write_text("", encoding="utf-8")
-        except OSError:
-            pass
 
         def publish(kind, text=None, **extra):
             nonlocal event_seq
             if kind == "token" and not direct and not alternate:
                 full_text.append(text)
             event_seq += 1
-            data = ({"sessionKey": extra.get("sessionKey")} if kind == "done" else text)
+            data = ({"sessionKey": extra.get("sessionKey"), **_workbench_completion(sk, turn_id)} if kind == "done" else text)
+            if kind == "done":
+                extra["completion"] = data
             event = {"id": event_seq, "event": kind, "data": data}
             try:
                 with event_path.open("a", encoding="utf-8") as ef:
@@ -3481,6 +4080,10 @@ async def api_chat_stream(req: ChatRequest):
 
         # 秒级反馈：发出即亮「已收到」，不等 agent 冷启动（首个 SSE 事件，随流回放必达）
         to_client("activity", "⏳ 已收到…" if direct else "⏳ 已收到，正在唤醒 agent…")
+        if central_recovery:
+            # A safe reference to this accepted turn, never a financial result
+            # or an authorization grant. Old clients ignore the additive event.
+            publish("central_recovery", {"version": 1, "turn_id": turn_id})
 
         if direct:
             try:
@@ -3977,13 +4580,17 @@ async def api_chat_stream(req: ChatRequest):
     # 把 run 跑在独立后台任务里（持强引用防 GC）——客户端断开不取消它。
     task = asyncio.create_task(supervisor())
     _BG_TASKS.add(task)
+    _WORKBENCH_TURNS[(str(SESSIONS_DIR), accepted_turn)] = task
 
     def _bg_done(t):
         _BG_TASKS.discard(t)
+        _WORKBENCH_TURNS.pop((str(SESSIONS_DIR), accepted_turn), None)
         try:
             exc = t.exception()   # 取出异常避免「never retrieved」告警
-        except Exception:
+        except (Exception, asyncio.CancelledError):
             exc = None
+        if t.cancelled():
+            client_q.put_nowait(CLIENT_DONE)
         if exc is not None:
             # supervisor 意外崩溃：解锁 forward，别让它空等
             try:
@@ -4022,12 +4629,18 @@ async def api_chat_stream(req: ChatRequest):
                 yield {"id": str(item["id"]), "event": "thinking", "data": json.dumps(item["text"], ensure_ascii=False)}
             elif t == "activity":
                 yield {"id": str(item["id"]), "event": "activity", "data": json.dumps(item["text"], ensure_ascii=False)}
+            elif t == "artifact":
+                yield {"id": str(item["id"]), "event": "artifact", "data": item["text"]}
+            elif t == "central_recovery":
+                yield {"id": str(item["id"]), "event": "central_recovery", "data": json.dumps(item["text"], ensure_ascii=False)}
+            elif t == "accepted":
+                yield {"id": str(item["id"]), "event": "accepted", "data": json.dumps(item["text"], ensure_ascii=False)}
             elif t == "question":
                 yield {"id": str(item["id"]), "event": "question", "data": item["text"]}
             elif t == "error":
                 yield {"id": str(item["id"]), "event": "error", "data": json.dumps(item["text"], ensure_ascii=False)}
             elif t == "done":
-                yield {"id": str(item["id"]), "event": "done", "data": json.dumps({"sessionKey": item.get("sessionKey")}, ensure_ascii=False)}
+                yield {"id": str(item["id"]), "event": "done", "data": json.dumps(item.get("completion", {"sessionKey": item.get("sessionKey")}), ensure_ascii=False)}
 
     return EventSourceResponse(forward(), headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no", "Content-Encoding": "identity"})
 
@@ -4110,6 +4723,7 @@ async def api_question_status(req: QuestionStatusRequest):
 
 class StopRequest(BaseModel):
     sessionId: str | None = None
+    turnId: str | None = None
 
 
 @app.post("/api/chat/stop")
@@ -4117,6 +4731,37 @@ async def api_chat_stop(req: StopRequest):
     """用户显式停止当前会话正在跑的对话 agent：终止进程 → supervisor 收尾释放会话锁 →
     下一句立刻能发（不再卡「上一条还在跑」）。仅此显式入口会杀进程；客户端断线不经此路径。"""
     sk = (req.sessionId or "").strip()
+    target = None
+    if req.turnId:
+        require_local_http()
+        target = _workbench_receipt(sk, req.turnId)
+        if target is None:
+            return {"stopped": False, "state": "unknown", "turn_id": req.turnId}
+        task = _WORKBENCH_TURNS.get((str(SESSIONS_DIR), req.turnId))
+        current = {}
+        try:
+            current = json.loads(_turn_file(f"web:{sk}").read_text())
+        except (OSError, ValueError):
+            pass
+        if current.get("turn_id") != req.turnId:
+            # Accepted but still queued: cancel that supervisor, never the
+            # different turn currently holding this session's process lock.
+            if task is not None and not task.done():
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+                payload = {"turn_id": req.turnId, "status": "done", "text": "", "clean_end": False, "stop_reason": "stopped"}
+                _workbench_state().save_snapshot(sk, req.turnId, payload)
+                batch = _read_job_events(req.turnId)
+                if not any(event.get("event") in ("done", "error") for event in batch):
+                    with _job_event_file(req.turnId).open("a", encoding="utf-8") as stream:
+                        stream.write(json.dumps({"id": max((int(event.get("id", 0)) for event in batch), default=0) + 1,
+                                                 "event": "done", "data": {"sessionKey": sk, **_workbench_completion(sk, req.turnId)}}) + "\n")
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                return {"stopped": True, "state": "stopped", "turn_id": req.turnId}
+            response = await api_chat_turn(sk, req.turnId)
+            state = json.loads(response.body)["state"]
+            return {"stopped": state == "stopped", "state": state, "turn_id": req.turnId}
     proc = _RUNNING_CHAT.get(sk) if sk else None
     if proc is not None and proc.poll() is None:
         _STOPPED_CHAT.add(sk)          # 标记为用户停止，供 supervisor 正常收尾（不报「被中断」）
@@ -4136,8 +4781,18 @@ async def api_chat_stop(req: StopRequest):
         deadline = time.monotonic() + 5
         while _RUNNING_CHAT.get(sk) is proc and time.monotonic() < deadline:
             await asyncio.sleep(0.05)
-        return {"stopped": True}
-    return {"stopped": False}          # 没有在跑（可能已结束）→ 前端照常清理即可
+        if _RUNNING_CHAT.get(sk) is proc:
+            return {"stopped": False, "state": "stopping", **({"turn_id": req.turnId} if req.turnId else {})}
+        if target is not None:
+            response = await api_chat_turn(sk, req.turnId)
+            state = json.loads(response.body)["state"]
+            return {"stopped": state == "stopped", "state": state, "turn_id": req.turnId}
+        return {"stopped": True, "state": "stopped"}
+    if target is not None:
+        response = await api_chat_turn(sk, req.turnId)
+        state = json.loads(response.body)["state"]
+        return {"stopped": state == "stopped", "state": state, "turn_id": req.turnId}
+    return {"stopped": False, "state": "unknown"}
 
 
 def _submit_sync_task(message: str, timeout: int, context: TaskContext, *,
@@ -4215,6 +4870,7 @@ def _submit_sync_task(message: str, timeout: int, context: TaskContext, *,
 @app.post("/api/chat")
 async def api_chat(req: ChatRequest):
     """非流式对话（备选）。"""
+    _guard_uncertain_central_turn(req.sessionId)
     runtime = _chat_backend(req.sessionId)
     config = _harness_settings()
     task_settings = dict(read_settings(ENV_FILE))
@@ -5833,10 +6489,13 @@ from easel.platform.web import create_router as _create_platform_router
 from easel.harnesses.rpc import close_sessions as _close_platform_sessions
 _platform_router = _create_platform_router(lambda: PROJECT_ROOT, _platform_change_guard, _close_platform_sessions)
 app.include_router(_platform_router)
+from easel.platform.central_web import create_router as _create_central_platform_router
+_central_platform_router = _create_central_platform_router(lambda: PROJECT_ROOT, _platform_change_guard, _close_platform_sessions)
+app.include_router(_central_platform_router)
 
 async def _accept_task_context(req, runtime, config, env=None):
     global _PLATFORM_PREFLIGHTS
-    if _platform_router.platform_changes:
+    if _platform_router.platform_changes or _central_platform_router.platform_changes:
         raise HTTPException(409, "平台账号正在修改，请稍后重新提交任务")
     _PLATFORM_PREFLIGHTS += 1
     try:
@@ -5846,7 +6505,25 @@ async def _accept_task_context(req, runtime, config, env=None):
 
 async def _subscription_readiness(config):
     from easel.platform.client import PlatformClient
+    from easel.harnesses.capabilities import supports_subscription
     def read():
+        if config.get("subscription_backend", "legacy") == "central":
+            from easel.platform.central import CentralClient
+            client = CentralClient(PROJECT_ROOT)
+            state = client.status()
+            ready = False
+            detail = "请登录中央账号并选择可用文本模型"
+            if state["authenticated"]:
+                try:
+                    models = client.models()["models"]
+                    selected = next((item for item in models if item["id"] == config.get("subscription_model")), None)
+                    ready = bool(supports_subscription(config["runtime"], "central") and config["execution_target"] == "local" and selected
+                                 and harnesses.describe(config["runtime"])["installed"])
+                    detail = ("中央测试文本执行可用（模拟供应商）" if selected and selected["test_only"] else
+                              "中央文本执行可用") if ready else "中央文本执行尚未开放或当前账号无可用模型授权"
+                except HarnessError as error:
+                    detail = str(error)
+            return {"configured": state["configured"], "ready": ready, "authenticated": state["authenticated"], "detail": detail}
         client = PlatformClient(PROJECT_ROOT)
         state = client.status()
         ready = False
@@ -5856,12 +6533,12 @@ async def _subscription_readiness(config):
                 catalog = client.models()
                 grants = client.call("GET", "/v1/entitlements").get("entitlements", [])
                 model = config.get("subscription_model", "")
-                ready = bool(config["runtime"] == "codex" and config["execution_target"] == "local"
+                ready = bool(supports_subscription(config["runtime"], "legacy") and config["execution_target"] == "local"
                              and catalog.get("ready") and model in [x.get("id") for x in catalog.get("models", [])]
                              and any(g.get("status") == "active" and model in g.get("models", []) and g.get("remaining_tokens", 0) > 0 for g in grants))
                 detail = "平台测试授权可用；真实上游认证尚未验证" if ready else "平台模型或测试授权不可用"
             except HarnessError as error:detail = str(error)
-        return {"ready": ready, "authenticated": state["authenticated"], "detail": detail}
+        return {"configured": state["configured"], "ready": ready, "authenticated": state["authenticated"], "detail": detail}
     return await asyncio.to_thread(read)
 
 if __name__ == "__main__":

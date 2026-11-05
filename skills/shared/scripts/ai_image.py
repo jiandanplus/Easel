@@ -27,12 +27,16 @@
 
 from __future__ import annotations
 
+from media_gateway import require_media_available
+require_media_available()
+
 import argparse
 import base64
 import binascii
 import http.client
 import json
 import os
+import tempfile
 import sys
 import time
 import urllib.error
@@ -115,12 +119,14 @@ def find_default_env_file() -> Path | None:
 
 
 def load_env_file(env_file: Path | None) -> None:
+    require_media_available()
     if env_file is None:
         return
     try:
         lines = env_file.read_text(encoding="utf-8").splitlines()
     except OSError as exc:
         fail(f"无法读取 .env 文件：{exc}")
+    saved_gateway = {}
     for line_number, raw_line in enumerate(lines, start=1):
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -133,11 +139,18 @@ def load_env_file(env_file: Path | None) -> None:
             continue
         key, value = line.split("=", 1)
         key = key.strip()
+        saved_gateway[key] = strip_env_value(value)
         if not key:
             print(f"警告：.env 第 {line_number} 行缺少变量名，已跳过。", file=sys.stderr)
             continue
         if key not in os.environ:
             os.environ[key] = strip_env_value(value)
+
+    from media_gateway import GATEWAY_ENV_KEYS, refresh_gateway_environment
+    effective = refresh_gateway_environment(os.environ, saved_gateway)
+    for name in GATEWAY_ENV_KEYS:
+        os.environ.pop(name, None)
+    os.environ.update(effective)
 
 
 def resolve_config(name: str) -> tuple[str, str | None]:
@@ -174,6 +187,11 @@ def load_and_require() -> tuple[str, str, str, argparse.Namespace | None]:
 # ── 模式检测 / 尺寸 ──────────────────────────────────────────
 
 def detect_mode(base_url: str, explicit_mode: str | None) -> str:
+    from media_gateway import gateway_managed
+    if gateway_managed("image", os.environ):
+        if explicit_mode and explicit_mode != "sync":
+            fail("统一图片网关使用标准同步接口；显式异步模式与网关配置冲突，未提交请求。")
+        return "sync"
     if explicit_mode in ("sync", "async"):
         return explicit_mode
     if urllib.parse.urlsplit(base_url).hostname in {
@@ -191,6 +209,9 @@ def detect_provider(base_url: str) -> str:
     输入图放在 extra_body.image（官方文档：docs/agnes-image-21-flash）。
     未识别的 base_url 一律返回 "openai"，走原有标准分支，零影响。
     """
+    from media_gateway import gateway_managed
+    if gateway_managed("image", os.environ):
+        return "openai"
     # 已知 Agnes 域名（官方文档 api.agnes-ai.cn；apihub.agnes-ai.com 见仓库内引用）。
     AGNES_DOMAINS = ("agnes-ai.cn", "agnes-ai.com")
     host = (urllib.parse.urlsplit(base_url).hostname or "").lower()
@@ -320,8 +341,18 @@ def _use_direct() -> bool:
 
 
 def _open(req: urllib.request.Request, timeout: int):
+    from media_gateway import gateway_managed
+    if gateway_managed("image", os.environ):
+        return urllib.request.build_opener(_NewAPIImageNoRedirect()).open(req, timeout=timeout)
     fn = _NO_PROXY_OPENER.open if _use_direct() else urllib.request.urlopen
     return fn(req, timeout=timeout)
+
+
+def _remote_detail(value) -> str:
+    from media_gateway import gateway_managed
+    if gateway_managed("image", os.environ):
+        return "网关响应详情已隐藏，避免回显业务密钥。"
+    return str(value)
 
 
 def _auth_header(api_key: str) -> dict[str, str]:
@@ -354,15 +385,15 @@ def http_post(url: str, api_key: str, payload: dict[str, Any], timeout: int = 12
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
-        fail(f"接口返回 HTTP {exc.code}：{detail}")
+        fail(f"接口返回 HTTP {exc.code}：{_remote_detail(detail)}")
     except urllib.error.URLError as exc:
-        fail(f"无法连接接口：{exc.reason}")
+        fail(f"无法连接接口：{_remote_detail(exc.reason)}")
     except (http.client.RemoteDisconnected, TimeoutError):
         fail("接口连接失败或超时，请稍后重试。")
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
-        fail(f"接口返回的不是有效 JSON：{raw[:500]}")
+        fail(f"接口返回的不是有效 JSON：{_remote_detail(raw[:500])}")
         return {}
     if not isinstance(parsed, dict):
         fail("接口返回格式不正确：顶层结果不是对象。")
@@ -378,13 +409,13 @@ def http_get(url: str, api_key: str, timeout: int = 30) -> dict[str, Any]:
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
-        fail(f"查询接口返回 HTTP {exc.code}：{detail}")
+        fail(f"查询接口返回 HTTP {exc.code}：{_remote_detail(detail)}")
     except (urllib.error.URLError, http.client.RemoteDisconnected, TimeoutError):
         fail("查询接口连接失败或超时。")
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
-        fail(f"查询接口返回的不是有效 JSON：{raw[:500]}")
+        fail(f"查询接口返回的不是有效 JSON：{_remote_detail(raw[:500])}")
         return {}
     return parsed
 
@@ -408,7 +439,7 @@ def _download_to(image_url: str, out_path: Path) -> None:
         with _open(dl_req, 120) as resp:
             out_path.write_bytes(resp.read())
     except urllib.error.URLError as exc:
-        fail(f"无法下载图片：{getattr(exc, 'reason', exc)}")
+        fail(f"无法下载图片：{_remote_detail(getattr(exc, 'reason', exc))}")
     except TimeoutError:
         fail("下载图片超时。")
 
@@ -439,7 +470,7 @@ def save_sync_data(result: dict[str, Any], output: str, fmt: str) -> list[Path]:
     """保存 OpenAI 同步风格返回（data: [{b64_json | url}]）。"""
     data = result.get("data")
     if not isinstance(data, list) or not data:
-        fail(f"接口返回中没有 data 图片数组：{json.dumps(result)[:300]}")
+        fail(f"接口返回中没有 data 图片数组：{_remote_detail(json.dumps(result)[:300])}")
     paths = _out_paths(output, len(data), fmt)
     for index, item in enumerate(data):
         if not isinstance(item, dict):
@@ -634,15 +665,15 @@ def _post_edits_multipart(base_url: str, api_key: str, model: str,
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
-        fail(f"图生图接口返回 HTTP {exc.code}：{detail}")
+        fail(f"图生图接口返回 HTTP {exc.code}：{_remote_detail(detail)}")
     except urllib.error.URLError as exc:
-        fail(f"无法连接图生图接口：{exc.reason}")
+        fail(f"无法连接图生图接口：{_remote_detail(exc.reason)}")
     except (http.client.RemoteDisconnected, TimeoutError):
         fail("图生图接口连接失败或超时。")
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
-        fail(f"图生图接口返回的不是有效 JSON：{raw[:500]}")
+        fail(f"图生图接口返回的不是有效 JSON：{_remote_detail(raw[:500])}")
         return {}
     if not isinstance(parsed, dict):
         fail("图生图接口返回格式不正确：顶层不是对象。")
@@ -670,7 +701,158 @@ def _encode_multipart(fields: dict[str, str],
 
 # ── 子命令：variations ────────────────────────────────────
 
+class _NewAPIImageNoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None  # Surface 3xx locally; never replay a POST or forward its key.
+
+
+def _image_api_mode() -> str:
+    mode = os.environ.get("IMAGE_API_MODE", "").strip() or "custom"
+    if mode not in ("custom", "new-api"):
+        fail("IMAGE_API_MODE 仅支持 custom 或 new-api，不按域名猜测变体协议。")
+    return mode
+
+
+def _new_api_image_origin(url: str) -> tuple[str, str, int]:
+    try:
+        parsed = urllib.parse.urlsplit(url)
+        if (parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username
+                or parsed.password or parsed.fragment):
+            raise ValueError
+        return parsed.scheme, parsed.hostname.lower(), parsed.port or (443 if parsed.scheme == "https" else 80)
+    except (ValueError, TypeError):
+        fail("New API 图片 URL 格式不合法，不能包含凭据或 fragment。")
+    raise AssertionError("unreachable")
+
+
+def _new_api_image_config() -> tuple[str, str, tuple[str, str, int]]:
+    base = os.environ.get("NEW_API_BASE_URL", "").strip().rstrip("/")
+    key = os.environ.get("NEW_API_KEY", "").strip()
+    missing = [name for name, value in (("NEW_API_BASE_URL", base), ("NEW_API_KEY", key)) if not value]
+    if missing:
+        fail("缺少配置 " + "、".join(missing) + "；私有变体不会复用 IMG_* 供应商凭据。")
+    origin = _new_api_image_origin(base)
+    if (urllib.parse.urlsplit(base).query or (origin[0] != "https" and origin[1] not in ("127.0.0.1", "localhost", "::1"))
+            or any(character in key for character in "\r\n")):
+        fail("New API 图片配置需要 HTTPS 网关根地址（回环开发可用 HTTP），key 不能包含换行。")
+    return base, key, origin
+
+
+def _new_api_image_request(url, key, origin, *, body=None, content_type=None, timeout=180):
+    same_origin = _new_api_image_origin(url) == origin
+    if body is not None and not same_origin:
+        fail("拒绝向其他 origin 提交 New API 图片请求。")
+    headers = {"User-Agent": UA}
+    if same_origin:
+        headers["Authorization"] = "Bearer " + key
+    if content_type:
+        headers["Content-Type"] = content_type
+    request = urllib.request.Request(url, data=body, headers=headers, method="POST" if body is not None else "GET")
+    opener = urllib.request.build_opener(_NewAPIImageNoRedirect())
+    try:
+        with opener.open(request, timeout=timeout) as response:
+            if response.status != 200:
+                fail("New API 图片请求未返回 HTTP 200；未继续下载或重新提交。")
+            declared_size = response.headers.get("Content-Length")
+            if declared_size is not None and (not declared_size.strip().isdigit() or int(declared_size) > 16 << 20):
+                fail("New API 图片 Content-Length 不合法或超过大小限制。")
+            raw = response.read((16 << 20) + 1)
+            mime = response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+    except urllib.error.HTTPError as error:
+        error.close()
+        fail(f"New API 图片 HTTP {error.code}；未回退核心接口或重新提交。")
+    except (urllib.error.URLError, http.client.RemoteDisconnected, http.client.IncompleteRead, TimeoutError, OSError):
+        fail("New API 图片连接失败或结果未知；未重新提交收费 POST。")
+    if len(raw) > 16 << 20:
+        fail("New API 图片响应超过客户端大小限制。")
+    if declared_size is not None and len(raw) != int(declared_size):
+        fail("New API 图片响应发生 Content-Length 短读或长度不一致；未覆盖输出。")
+    return raw, mime
+
+
+def _new_api_image_format(raw: bytes) -> str:
+    if (len(raw) >= 24 and raw.startswith(b"\x89PNG\r\n\x1a\n") and raw[12:16] == b"IHDR"
+            and int.from_bytes(raw[16:20], "big") > 0 and int.from_bytes(raw[20:24], "big") > 0):
+        return "png"
+    if len(raw) >= 4 and raw.startswith(b"\xff\xd8") and raw.endswith(b"\xff\xd9"):
+        return "jpeg"
+    if len(raw) >= 12 and raw[:4] == b"RIFF" and raw[8:12] == b"WEBP":
+        return "webp"
+    fail("New API 变体不是可识别的 PNG/JPEG/WebP 图片；未覆盖输出。")
+    raise AssertionError("unreachable")
+
+
+def _run_new_api_variations(args: argparse.Namespace) -> list[Path]:
+    base, key, origin = _new_api_image_config()
+    if type(args.n) is not int or not 1 <= args.n <= 10 or args.size not in ("256x256", "512x512", "1024x1024"):
+        fail("私有 variations 仅支持 n=1..10 与 256/512/1024 方图。")
+    if args.mode == "async" or args.prompt:
+        fail("私有 variations 是同步旧协议，不支持 --mode async 或 --prompt；不会偷换为编辑/生成。")
+    if not 0 < args.timeout <= 600:
+        fail("New API 变体 --timeout 必须为 1..600 秒。")
+    path, mime = _check_image(args.image)
+    try:
+        if mime != "image/png" or not 0 < path.stat().st_size <= 4 << 20:
+            fail("私有 variations 需要一张不超过 4 MiB 的本地 PNG。")
+        with path.open("rb") as stream:
+            source = stream.read((4 << 20) + 1)
+    except OSError:
+        fail("无法读取私有 variations 的输入 PNG。")
+    if len(source) > 4 << 20 or _new_api_image_format(source) != "png" or any(c in path.name for c in '\\"\r\n'):
+        fail("私有 variations 输入必须为安全文件名的真实 PNG。")
+    fields = {"model": "easel-image-variations", "n": str(args.n), "size": args.size, "response_format": "url"}
+    body, content_type = _encode_multipart(fields, [("image", path.name, "image/png", source)])
+    raw, _ = _new_api_image_request(base + "/easel/openai/v1/images/variations", key, origin,
+                                   body=body, content_type=content_type, timeout=args.timeout)
+    try:
+        result = json.loads(raw)
+    except (json.JSONDecodeError, UnicodeError):
+        fail("New API 变体未返回有效 JSON；未重新提交。")
+    if not isinstance(result, dict) or result.get("error") or result.get("code") or result.get("success") is False:
+        fail("New API 变体返回业务错误；未回退或重新提交。")
+    data = result.get("data")
+    if not isinstance(data, list) or not 1 <= len(data) <= 10:
+        fail("私有变体未返回原生 data 图片数组；未构造未知任务轮询。")
+    images = []
+    for item in data:
+        if not isinstance(item, dict):
+            fail("New API 变体 data 包含不合法项目。")
+        if isinstance(item.get("b64_json"), str) and item["b64_json"]:
+            try:
+                image_bytes = base64.b64decode(item["b64_json"], validate=True)
+            except (ValueError, binascii.Error):
+                fail("New API 变体 b64_json 不是合法 Base64。")
+        elif isinstance(item.get("url"), str) and item["url"]:
+            url = item["url"]
+            if _new_api_image_origin(url)[0] != "https":
+                fail("私有 variations 的原生图片 URL 必须为 HTTPS。")
+            image_bytes, download_mime = _new_api_image_request(url, key, origin, timeout=args.timeout)
+            if download_mime and not (download_mime.startswith("image/") or download_mime == "application/octet-stream"):
+                fail("New API 变体下载响应不是图片；未覆盖输出。")
+        else:
+            fail("New API 变体缺少明确的 url 或 b64_json。")
+        images.append((image_bytes, _new_api_image_format(image_bytes)))
+    # The plugin declares immediate data, no artifact hooks or upstream polling.
+    # Finish validation/downloads before touching any existing output file.
+    paths = _out_paths(args.output, len(images), images[0][1])
+    for index, (image_bytes, format) in enumerate(images):
+        target = paths[index].with_suffix("." + format)
+        descriptor, temporary = tempfile.mkstemp(prefix=".variation-", dir=target.parent)
+        try:
+            with os.fdopen(descriptor, "wb") as stream:
+                stream.write(image_bytes)
+            os.replace(temporary, target)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+        paths[index] = target
+    return paths
+
+
 def cmd_variations(args: argparse.Namespace) -> None:
+    if _image_api_mode() == "new-api":
+        _print_results(_run_new_api_variations(args))
+        return
     base_url, model, api_key, _ = load_and_require()
     mode = detect_mode(base_url, args.mode)
     print(f"[variations] 模式={mode} base_url={base_url} model={model} image={args.image}",
@@ -732,6 +914,25 @@ def cmd_variations(args: argparse.Namespace) -> None:
 # ── 子命令：check（离线，不发请求）──────────────────────────
 
 def cmd_check(args: argparse.Namespace) -> None:
+    from media_gateway import gateway_managed, resolve_media_environment
+    if gateway_managed("image", os.environ):
+        try:
+            effective = resolve_media_environment("image", os.environ)
+        except ValueError as error:
+            fail(str(error))
+        print("=== 统一图片网关配置检查（离线，未验证真实模型可用性）===")
+        print("  model: " + effective["IMG_MODEL"])
+        print("  base_url: " + effective["IMG_BASE_URL"])
+        print("  NEW_API_KEY: 已设置")
+        print("[就绪] text2img / img2img 使用标准网关接口，variations 使用私有入口。")
+        return
+    if _image_api_mode() == "new-api":
+        print("=== New API 私有 variations 配置检查（离线）===")
+        for name in ("NEW_API_BASE_URL", "NEW_API_KEY"):
+            print(f"  [{'已设置' if os.environ.get(name, '').strip() else '缺失'}] {name}")
+        _new_api_image_config()
+        print("[就绪] 仅 variations 使用私有入口；text2img/img2img 继续使用 IMG_*。")
+        return
     base_url, base_from = resolve_config(ENV_BASE_URL)
     model, model_from = resolve_config(ENV_MODEL)
     api_key, key_from = resolve_config(ENV_API_KEY)
@@ -838,6 +1039,11 @@ def main(argv: list[str] | None = None) -> None:
         args.output = str(validate_output_path(args.output))
     env_file = Path(args.env_file) if getattr(args, "env_file", None) else find_default_env_file()
     load_env_file(env_file)
+    from media_gateway import resolve_media_environment
+    try:
+        os.environ.update(resolve_media_environment("image", os.environ))
+    except ValueError as error:
+        fail(str(error))
     args.func(args)
 
 
