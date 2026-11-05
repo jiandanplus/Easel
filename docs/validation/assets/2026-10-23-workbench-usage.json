@@ -1,0 +1,262 @@
+{
+  "checks": {
+    "gift_exactly_once": true,
+    "initial_gift_wallet_10m": true,
+    "invocation_counters_match_jobs": true,
+    "issued_remains_10m": true,
+    "job_checks": true,
+    "payment_rows_zero": true,
+    "receipt_set_matches_settled_jobs": true,
+    "reservation_set_matches_jobs": true,
+    "wallet_available_matches": true,
+    "wallet_conserved": true,
+    "wallet_held_matches_jobs": true,
+    "wallet_matches_immutable_entries": true,
+    "wallet_spent_matches_jobs": true
+  },
+  "correlation": {
+    "exact_matches": 0,
+    "exact_one_to_one_proven": false,
+    "gateway_rows": 4,
+    "matches": [
+      {
+        "basis": "token_usage_candidates_only_not_identity_proof",
+        "exact_identity_match": false,
+        "job_id": "21334900-337c-48b4-a971-2ce78222d56b",
+        "usage_candidate_log_ids": [
+          41
+        ]
+      },
+      {
+        "basis": "token_usage_candidates_only_not_identity_proof",
+        "exact_identity_match": false,
+        "job_id": "ef354c87-b473-4be4-b381-98d330b80c05",
+        "usage_candidate_log_ids": [
+          42
+        ]
+      },
+      {
+        "basis": "token_usage_candidates_only_not_identity_proof",
+        "exact_identity_match": false,
+        "job_id": "9a54b3c8-a473-4f52-9d8c-55281eca3333",
+        "usage_candidate_log_ids": [
+          43
+        ]
+      },
+      {
+        "basis": "token_usage_candidates_only_not_identity_proof",
+        "exact_identity_match": false,
+        "job_id": "e3d7d034-e827-4bc7-854e-b820e823012b",
+        "usage_candidate_log_ids": [
+          44
+        ]
+      }
+    ],
+    "platform_receipts": 4,
+    "unmatched_gateway_log_ids": [
+      41,
+      42,
+      43,
+      44
+    ]
+  },
+  "environment_id": "wb-20261023-e6467e17dc33",
+  "financial_checks_pass": true,
+  "gateway_identifier_columns_available": [
+    "request_id",
+    "upstream_request_id"
+  ],
+  "gateway_is_settlement_authority": false,
+  "gateway_rows": [
+    {
+      "channel": 4,
+      "completion_tokens": 166,
+      "created_at": 1792754864,
+      "id": 41,
+      "model": "glm-5.3",
+      "prompt_tokens": 627,
+      "quota": 29738,
+      "request_id": "202610231127300622356818268d9d6yPVE5eKg",
+      "token_id": 1,
+      "upstream_request_id": "202610231127311114036798268d9d6mzD0EZZx"
+    },
+    {
+      "channel": 4,
+      "completion_tokens": 585,
+      "created_at": 1792754955,
+      "id": 42,
+      "model": "glm-5.3",
+      "prompt_tokens": 699,
+      "quota": 48150,
+      "request_id": "202610231128341256133978268d9d6NSFHdl2x",
+      "token_id": 1,
+      "upstream_request_id": "202610231128343042809508268d9d6zq4saCuq"
+    },
+    {
+      "channel": 4,
+      "completion_tokens": 24,
+      "created_at": 1792754969,
+      "id": 43,
+      "model": "glm-5.3",
+      "prompt_tokens": 744,
+      "quota": 28800,
+      "request_id": "202610231129155780971618268d9d6D5xo4mzP",
+      "token_id": 1,
+      "upstream_request_id": "202610231129157739391818268d9d6OvhL981L"
+    },
+    {
+      "channel": 4,
+      "completion_tokens": 45,
+      "created_at": 1792755002,
+      "id": 44,
+      "model": "glm-5.3",
+      "prompt_tokens": 780,
+      "quota": 30938,
+      "request_id": "202610231129298564850928268d9d6wwbSlKhV",
+      "token_id": 1,
+      "upstream_request_id": "20261023112930495584558268d9d6GgmNnMSy"
+    }
+  ],
+  "gift_audit_count": 1,
+  "immutable_entry_total": "0",
+  "job_count": 4,
+  "jobs": [
+    {
+      "actual": 563,
+      "amount": 9728,
+      "bounded_output": true,
+      "created_at": "2026-10-23T11:27:30.011263+00:00",
+      "dispatched_at": "2026-10-23T11:27:30.034972+00:00",
+      "expected_actual": 563,
+      "funding_mode": "live",
+      "id": "21334900-337c-48b4-a971-2ce78222d56b",
+      "invocation_id": "2ba8b6e6-bdcf-476e-b499-e0e21bae6c45",
+      "model": "easel-glm53-internal-v1",
+      "rate_matches": true,
+      "receipt": {
+        "actual": 563,
+        "evidence_hash": "64bdf5bbe597f675f8222c2959f3270fd2ce3b80f98d090e005d2778842a733d",
+        "input_tokens": 627,
+        "output_tokens": 166,
+        "provider_response_id": "chatcmpl-202610231127300622356818268d9d6yPVE5eKg",
+        "terminal_status": "completed"
+      },
+      "receipt_matches": true,
+      "reservation_id": "505a0940-6c5d-4b44-a760-7d80abece0cd",
+      "reservation_matches": true,
+      "scope_matches": true,
+      "status": "settled"
+    },
+    {
+      "actual": 1227,
+      "amount": 9728,
+      "bounded_output": true,
+      "created_at": "2026-10-23T11:28:34.084953+00:00",
+      "dispatched_at": "2026-10-23T11:28:34.103895+00:00",
+      "expected_actual": 1227,
+      "funding_mode": "live",
+      "id": "ef354c87-b473-4be4-b381-98d330b80c05",
+      "invocation_id": "f58373ec-05c2-4ea6-b218-91810dc6d3ce",
+      "model": "easel-glm53-internal-v1",
+      "rate_matches": true,
+      "receipt": {
+        "actual": 1227,
+        "evidence_hash": "627f7ade0cf0f9bdb0d818721a6a3801d845018a60b28486cf0725d23f3d355b",
+        "input_tokens": 699,
+        "output_tokens": 585,
+        "provider_response_id": "chatcmpl-202610231128341256133978268d9d6NSFHdl2x",
+        "terminal_status": "completed"
+      },
+      "receipt_matches": true,
+      "reservation_id": "7e6bea36-8cfe-43af-be5b-b54f3a05a935",
+      "reservation_matches": true,
+      "scope_matches": true,
+      "status": "settled"
+    },
+    {
+      "actual": 408,
+      "amount": 9728,
+      "bounded_output": true,
+      "created_at": "2026-10-23T11:29:15.541802+00:00",
+      "dispatched_at": "2026-10-23T11:29:15.557598+00:00",
+      "expected_actual": 408,
+      "funding_mode": "live",
+      "id": "9a54b3c8-a473-4f52-9d8c-55281eca3333",
+      "invocation_id": "f58373ec-05c2-4ea6-b218-91810dc6d3ce",
+      "model": "easel-glm53-internal-v1",
+      "rate_matches": true,
+      "receipt": {
+        "actual": 408,
+        "evidence_hash": "3ec933f642aba22b9dd7467816e9437b32738d37efce9c035858d188a36ba3f4",
+        "input_tokens": 744,
+        "output_tokens": 24,
+        "provider_response_id": "chatcmpl-202610231129155780971618268d9d6D5xo4mzP",
+        "terminal_status": "completed"
+      },
+      "receipt_matches": true,
+      "reservation_id": "e980eacb-e20b-4015-a5f8-1bff0f0cc98d",
+      "reservation_matches": true,
+      "scope_matches": true,
+      "status": "settled"
+    },
+    {
+      "actual": 458,
+      "amount": 9728,
+      "bounded_output": true,
+      "created_at": "2026-10-23T11:29:29.817079+00:00",
+      "dispatched_at": "2026-10-23T11:29:29.835215+00:00",
+      "expected_actual": 458,
+      "funding_mode": "live",
+      "id": "e3d7d034-e827-4bc7-854e-b820e823012b",
+      "invocation_id": "f58373ec-05c2-4ea6-b218-91810dc6d3ce",
+      "model": "easel-glm53-internal-v1",
+      "rate_matches": true,
+      "receipt": {
+        "actual": 458,
+        "evidence_hash": "b9017cfc606bee7fd6dfb9f90cb9086ec313a63ade5729f3b60e9a2cc7af7bf5",
+        "input_tokens": 780,
+        "output_tokens": 45,
+        "provider_response_id": "chatcmpl-202610231129298564850928268d9d6wwbSlKhV",
+        "terminal_status": "completed"
+      },
+      "receipt_matches": true,
+      "reservation_id": "37734e02-c311-477e-b2d3-01c81e668f84",
+      "reservation_matches": true,
+      "scope_matches": true,
+      "status": "settled"
+    }
+  ],
+  "model_requests": 0,
+  "mutations": 0,
+  "nonsettled_held_total": "0",
+  "observed_at": "2026-10-23T11:31:48.474315+00:00",
+  "payment_rows": {
+    "billing_orders": 0,
+    "payment_events": 0,
+    "payment_transactions": 0
+  },
+  "pending_reconciliation_held_total": "0",
+  "private_identity_or_credentials_exported": false,
+  "read_only": true,
+  "schema_version": 1,
+  "settled_actual_total": "2656",
+  "since": "2026-10-23T11:23:47.552184+00:00",
+  "success": true,
+  "unknown_usage_zeroed": false,
+  "wallet_after": {
+    "available": "9997344",
+    "expired": "0",
+    "held": "0",
+    "issued": "10000000",
+    "refunded": "0",
+    "spent": "2656"
+  },
+  "wallet_before": {
+    "available": "10000000",
+    "entry_total": "0",
+    "held": "0",
+    "issued": "10000000",
+    "spent": "0"
+  },
+  "wallet_sha256": "76c7709ad5a46af9641f42b48e82ed8a0cfd631822858248d94a9444ed57abed"
+}

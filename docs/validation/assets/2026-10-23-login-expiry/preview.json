@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "url": "http://127.0.0.1:17868/",
+  "port": 17868,
+  "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v6/Easel/Easel.app",
+  "launcher_pid": 16230,
+  "listener_pid": 16230,
+  "previous_listener_pid": 66824,
+  "same_workspace": "/private/tmp/easel-pi-20261023/user-preview/workspace",
+  "same_home": "/private/tmp/easel-pi-20261023/user-preview/home",
+  "minimal_path": "/usr/bin:/bin:/usr/sbin:/sbin",
+  "owned_old_instance_authenticated_stop": true,
+  "new_instance_identity_verified": true,
+  "login_pending_before_stop": false,
+  "login_pending_after_start": false,
+  "central_authenticated_after_start": false,
+  "preserved_file_sha256": {
+    "outputs/_harness/bundled-provider.json": "bc36a4ad692e1fd3289926f827d7ea251e026232c0110450681fb36b19b875d0",
+    "outputs/_harness/central-platform-session.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "outputs/_harness/config.json": "260e801ad26b9ce59d32bfb3c9da471d2ac52870608e26dcd151252b72e13ff2"
+  },
+  "preserved_files_unchanged": true,
+  "central_session_files_before": {
+    "outputs/_harness/central-platform-session.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "central_session_file_count": 1,
+  "central_session_files_unchanged": true,
+  "custom_provider": {
+    "configured": true,
+    "model": "glm-5.3"
+  },
+  "custom_provider_unchanged": true,
+  "other_previews_untouched": true,
+  "browser_untouched": true,
+  "new_login_started": false,
+  "server_untouched": true,
+  "central_public_preset": "http://127.0.0.1:18874",
+  "package_sha256": "9cad3d2dcb1370268ab713c809376b80d7de918fd0981f03964b4b2ac5b80725",
+  "model_requests": 0,
+  "profile_file_count": 0,
+  "central_session_credential_file_present": false,
+  "central_session_lock_only": true
+}

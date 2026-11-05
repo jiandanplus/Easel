@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "read_only": true,
+  "gateway_calls": 0,
+  "business_token_id": 1,
+  "exact_request_id_count": 12,
+  "model_allowlist": [
+    "glm-5.3",
+    "MiniMax-H3",
+    "minimax-m2.7"
+  ],
+  "sources": {
+    "old_pi": {
+      "request_ids": [
+        "202610230836575179713008268d9d6uOlKssjb",
+        "202610230837064431838518268d9d6z4aNTwmQ",
+        "202610230837092435831288268d9d6Ddxi9lvc",
+        "202610230837121044027748268d9d6anWBNPy9",
+        "202610230837144067991838268d9d6yrbjSFJu"
+      ],
+      "physical_posts": 5,
+      "dispatch_sha256": "04e84cbc11a791eadcf42568b5377984c72653889c9aa06926b34f496d9f56a9"
+    },
+    "glm_pi": {
+      "request_ids": [
+        "202610230854537884900288268d9d65bpUmyBk",
+        "202610230855378554771988268d9d6UfDx8lT4",
+        "202610230856191992618038268d9d6H6s9hkyu",
+        "202610230856434554438628268d9d6I9PbHX9A",
+        "202610230859170023332968268d9d6zwVszIIo",
+        "202610230902001324985548268d9d6IvUFWVFT",
+        "202610230902093126052388268d9d6KfpI8s5u"
+      ],
+      "physical_posts": 7,
+      "dispatch_sha256": "52da3773062c8a5ef30381c825fbeb53b83989a77cf302f33551848efbb26655"
+    }
+  },
+  "upstream_request_id_column_available": true,
+  "matched_log_rows": 12,
+  "matched_distinct_request_ids": 12,
+  "unmatched_request_ids": [],
+  "metering_rows": [
+    {
+      "id": 29,
+      "type": 2,
+      "channel_id": 3,
+      "model_name": "minimax-m2.7",
+      "token_id": 1,
+      "prompt_tokens": 527,
+      "completion_tokens": 112,
+      "quota": 39,
+      "request_id": "202610230836575179713008268d9d6uOlKssjb",
+      "upstream_request_id": "202610230836596583600638268d9d6s29gkgyW"
+    },
+    {
+      "id": 30,
+      "type": 2,
+      "channel_id": 3,
+      "model_name": "minimax-m2.7",
+      "token_id": 1,
+      "prompt_tokens": 568,
+      "completion_tokens": 157,
+      "quota": 48,
+      "request_id": "202610230837064431838518268d9d6z4aNTwmQ",
+      "upstream_request_id": "202610230837066530434038268d9d6QFXGN8jw"
+    },
+    {
+      "id": 31,
+      "type": 2,
+      "channel_id": 3,
+      "model_name": "minimax-m2.7",
+      "token_id": 1,
+      "prompt_tokens": 637,
+      "completion_tokens": 116,
+      "quota": 44,
+      "request_id": "202610230837092435831288268d9d6Ddxi9lvc",
+      "upstream_request_id": "202610230837094652048208268d9d6cVPeQE9m"
+    },
+    {
+      "id": 32,
+      "type": 2,
+      "channel_id": 3,
+      "model_name": "minimax-m2.7",
+      "token_id": 1,
+      "prompt_tokens": 693,
+      "completion_tokens": 83,
+      "quota": 41,
+      "request_id": "202610230837121044027748268d9d6anWBNPy9",
+      "upstream_request_id": "202610230837123548451028268d9d6QBBxX9nb"
+    },
+    {
+      "id": 33,
+      "type": 5,
+      "channel_id": 3,
+      "model_name": "minimax-m2.7",
+      "token_id": 1,
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "quota": 0,
+      "request_id": "202610230837144067991838268d9d6yrbjSFJu",
+      "upstream_request_id": "202610230837146562187898268d9d646gdmL3I"
+    },
+    {
+      "id": 34,
+      "type": 2,
+      "channel_id": 4,
+      "model_name": "glm-5.3",
+      "token_id": 1,
+      "prompt_tokens": 469,
+      "completion_tokens": 8,
+      "quota": 17888,
+      "request_id": "202610230854537884900288268d9d65bpUmyBk",
+      "upstream_request_id": "202610230854546697788798268d9d6oBFWNmMP"
+    },
+    {
+      "id": 35,
+      "type": 2,
+      "channel_id": 4,
+      "model_name": "glm-5.3",
+      "token_id": 1,
+      "prompt_tokens": 511,
+      "completion_tokens": 185,
+      "quota": 26100,
+      "request_id": "202610230855378554771988268d9d6UfDx8lT4",
+      "upstream_request_id": "20261023085538731317738268d9d6qOwk0hgr"
+    },
+    {
+      "id": 36,
+      "type": 2,
+      "channel_id": 4,
+      "model_name": "glm-5.3",
+      "token_id": 1,
+      "prompt_tokens": 547,
+      "completion_tokens": 16,
+      "quota": 21113,
+      "request_id": "202610230856191992618038268d9d6H6s9hkyu",
+      "upstream_request_id": "202610230856194051712918268d9d6jJrxMXoS"
+    },
+    {
+      "id": 37,
+      "type": 2,
+      "channel_id": 4,
+      "model_name": "glm-5.3",
+      "token_id": 1,
+      "prompt_tokens": 574,
+      "completion_tokens": 38,
+      "quota": 22950,
+      "request_id": "202610230856434554438628268d9d6I9PbHX9A",
+      "upstream_request_id": "202610230856436686551228268d9d60r0oyKep"
+    },
+    {
+      "id": 38,
+      "type": 2,
+      "channel_id": 4,
+      "model_name": "glm-5.3",
+      "token_id": 1,
+      "prompt_tokens": 427,
+      "completion_tokens": 166,
+      "quota": 22238,
+      "request_id": "202610230859170023332968268d9d6zwVszIIo",
+      "upstream_request_id": "202610230859177271131168268d9d6LklurOew"
+    },
+    {
+      "id": 39,
+      "type": 2,
+      "channel_id": 4,
+      "model_name": "glm-5.3",
+      "token_id": 1,
+      "prompt_tokens": 503,
+      "completion_tokens": 104,
+      "quota": 22763,
+      "request_id": "202610230902001324985548268d9d6IvUFWVFT",
+      "upstream_request_id": "202610230902003503404618268d9d6HDsNq74e"
+    },
+    {
+      "id": 40,
+      "type": 2,
+      "channel_id": 4,
+      "model_name": "glm-5.3",
+      "token_id": 1,
+      "prompt_tokens": 549,
+      "completion_tokens": 40,
+      "quota": 22088,
+      "request_id": "202610230902093126052388268d9d6KfpI8s5u",
+      "upstream_request_id": "202610230902094895946668268d9d6SmFjmMJd"
+    }
+  ],
+  "unknown_usage_is_not_zeroed": true,
+  "settlement_authority": "central receipts; gateway rows are correlation evidence only",
+  "secret_left_server": false
+}

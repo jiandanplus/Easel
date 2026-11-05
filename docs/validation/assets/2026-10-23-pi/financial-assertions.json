@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "replay": {
+    "financial_snapshot_identical": true,
+    "jobs_identical": true,
+    "receipts_identical": true,
+    "provider_dispatches_identical": true,
+    "source_receipt": {
+      "http_status": 200,
+      "provider_posts_before": 4,
+      "provider_posts_after": 4
+    }
+  },
+  "final": {
+    "new_provider_posts": 7,
+    "old_provider_posts": 5,
+    "combined_provider_posts": 12,
+    "wallet": {
+      "issued": 100000000,
+      "available": 99989865,
+      "held": 8960,
+      "spent": 1175
+    },
+    "custom_python_did_not_add_central_job_or_debit": true,
+    "protected_previous_wallets_unchanged": true
+  }
+}

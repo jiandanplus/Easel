@@ -1,0 +1,47 @@
+{
+  "app_during_proof": "/private/tmp/easel-pi-20261023/package-proof-v3/中文 空间/Easel.app",
+  "workspace": "/private/tmp/easel-pi-20261023/package-proof-v3/独立工作区",
+  "home": "/private/tmp/easel-pi-20261023/package-proof-v3/home",
+  "path": "/usr/bin:/bin",
+  "fixture": "noncommercial local Responses; no external provider or billing",
+  "http_index": true,
+  "http_static_icon": true,
+  "bootstrap": {
+    "modelConfigured": false,
+    "envKeyOk": false,
+    "routeOk": false,
+    "routeDetail": "请在设置中配置内置供应商的地址、模型与 API Key",
+    "gatewayUp": false,
+    "openclawConfigExists": false,
+    "installWarnings": [],
+    "runtime": "pi",
+    "authVerified": false
+  },
+  "initial_runtime_detail": "内置 Pi 供应商未配置",
+  "foreign_origin_403": true,
+  "configured_runtime_detail": "内置 Pi 供应商已配置；认证与模型可用性待验证",
+  "actual_pi_sdk_file_roundtrip": true,
+  "fixture_stats": {
+    "requests": 3,
+    "paths": [
+      "/v1/responses",
+      "/v1/responses",
+      "/v1/responses"
+    ],
+    "bearer_correct": true,
+    "tool_result_seen": true,
+    "read_result_seen": true
+  },
+  "private_runtime_tools": {
+    "python": "/private/tmp/easel-pi-20261023/package-proof-v3/中文 空间/Easel.app/Contents/Resources/python/bin/python3",
+    "node": "/private/tmp/easel-pi-20261023/package-proof-v3/中文 空间/Easel.app/Contents/Resources/runtime/pi/node/bin/node",
+    "worker": "/private/tmp/easel-pi-20261023/package-proof-v3/中文 空间/Easel.app/Contents/Resources/runtime/pi/worker.mjs",
+    "sandbox_python_tool": true,
+    "tool_output": "/private/tmp/easel-pi-20261023/package-proof-v3/中文 空间/Easel.app/Contents/Resources/python/bin/python3",
+    "inventory_verified": true
+  },
+  "immediate_restart_and_user_state": true,
+  "seed_user_edit_preserved": true,
+  "foreign_listener_preserved": true,
+  "success": true
+}

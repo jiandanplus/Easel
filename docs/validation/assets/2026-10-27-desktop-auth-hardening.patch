@@ -1,0 +1,454 @@
+--- /dev/null
++++ b/easel/platform/auth_refresh.py
+@@ -0,0 +1,115 @@
++"""One serialized refresh with a durable fence for an unknown response.
++
++Callers hold the existing central session file lock. No token or response body
++is logged, and an uncertain refresh is never automatically submitted again.
++"""
++from hashlib import sha256
++import json
++import logging
++import os
++import re
++import time
++from uuid import uuid4
++
++from easel.harnesses.base import HarnessError
++from .client import PlatformError
++
++GUARD='refresh_guard'
++AUTH_FAILURES=frozenset({'invalid_authentication','session_invalid','refresh_replayed'})
++ACCESS_FAILURES=frozenset({'invalid_authentication','session_invalid'})
++
++
++class RefreshUncertain(PlatformError):
++    def __init__(self):
++        super().__init__('refresh_uncertain',409)
++        self.args=('登录状态待确认，请重新登录',)
++
++
++def scope_hash(scope):
++    return sha256(json.dumps(scope,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
++
++
++def diagnostic(code,status,path,scope):
++    # Constant/validated metadata only. Never log exceptions, URLs, query, body,
++    # access/refresh hashes or credentials, including on transport failures.
++    code=code if isinstance(code,str)and re.fullmatch(r'[a-z_]{1,64}',code)else'auth_unavailable'
++    path=path.split('?',1)[0]
++    if not re.fullmatch(r'/v2/[A-Za-z0-9/_-]{1,240}',path):path='/v2/auth'
++    status=status if type(status)is int and 100<=status<=599 else 0
++    logging.getLogger('easel.auth').warning(json.dumps({'code':code,'status':status,'path':path,
++        'scope_hash':scope_hash(scope),'time':time.time()},separators=(',',':')))
++
++
++def guard_present(state):
++    # Unknown/malformed guard contents also fail closed. Only an explicit local
++    # logout/new login or a successful fenced replacement can remove one.
++    return GUARD in state
++
++
++def guard_matches(state):
++    marker=state.get(GUARD);auth=state.get('auth')
++    return bool(isinstance(marker,dict)and isinstance(auth,dict)
++        and marker.get('scope_hash')==scope_hash(auth.get('scope'))
++        and marker.get('origin_hash')==sha256(state.get('url','').encode()).hexdigest()
++        and isinstance(auth.get('refresh_token'),str)
++        and marker.get('refresh_hash')==sha256(auth['refresh_token'].encode()).hexdigest())
++
++
++def write_durable(store,value):
++    store.write(value)
++    if os.name!='nt':
++        descriptor=os.open(store.directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
++        try:os.fsync(descriptor)
++        finally:os.close(descriptor)
++
++
++def access(central,state,*,send,clock,force=False):
++    auth=state.get('auth')
++    if not auth:raise PlatformError('invalid_authentication',401)
++    central._validate_auth(auth)
++    if guard_present(state):raise RefreshUncertain()
++    if auth['refresh_expires_at']<=clock():raise PlatformError('invalid_authentication',401)
++    if not force and auth['expires_at']>clock()+30:return auth['access_token']
++    marker={'version':1,'state':'sending','operation_id':str(uuid4()),'scope_hash':scope_hash(auth['scope']),
++            'origin_hash':sha256(state['url'].encode()).hexdigest(),
++            'refresh_hash':sha256(auth['refresh_token'].encode()).hexdigest(),'started_at':clock()}
++    marked={**state,GUARD:marker}
++    try:write_durable(central.store,marked)
++    except(HarnessError,OSError,ValueError):
++        diagnostic('refresh_guard_unavailable',503,'/v2/auth/refresh',auth['scope'])
++        raise RefreshUncertain()from None
++    state[GUARD]=marker
++    try:
++        fresh=send(auth['refresh_token'])
++        central._validate_auth(fresh)
++        if fresh['scope']!=auth['scope']or fresh['account']['id']!=auth['account']['id']:
++            raise PlatformError('account_changed',409)
++    except Exception as error:
++        if isinstance(error,PlatformError)and error.status==401 and error.code in AUTH_FAILURES:
++            state.pop('auth',None);state.pop(GUARD,None)
++            write_durable(central.store,state)
++            diagnostic(error.code,error.status,'/v2/auth/refresh',auth['scope'])
++            raise
++        uncertain={**marked,GUARD:{**marker,'state':'uncertain'}}
++        try:write_durable(central.store,uncertain);state[GUARD]=uncertain[GUARD]
++        except(HarnessError,OSError,ValueError):pass
++        diagnostic('refresh_uncertain',getattr(error,'status',0),'/v2/auth/refresh',auth['scope'])
++        if isinstance(error,(KeyboardInterrupt,SystemExit)):raise
++        raise RefreshUncertain()from None
++    replacement={**state,'auth':fresh};replacement.pop(GUARD,None)
++    try:write_durable(central.store,replacement)
++    except(HarnessError,OSError,ValueError):
++        # Do not roll back to old credentials: replace/fsync may already have
++        # committed. The actual file contains either new auth or the pre-POST
++        # fence; a restart reads that outcome and cannot resend the old refresh.
++        diagnostic('refresh_save_uncertain',503,'/v2/auth/refresh',auth['scope'])
++        raise RefreshUncertain()from None
++    state.clear();state.update(replacement)
++    diagnostic('refresh_completed',200,'/v2/auth/refresh',auth['scope'])
++    return fresh['access_token']
++
++
++def access_error(error):
++    if isinstance(error,PlatformError)and error.status==401:
++        error.auth_phase='access'
++    return error
+--- a/easel/platform/central.py
++++ b/easel/platform/central.py
+@@ -15,6 +15,8 @@
+ from .privacy import remember_auth, sensitive_values
+ from .transport import require_local_http
+ from .execution_records import operation_owner, operation_turn_key, read_operations
++from .auth_refresh import (access as refresh_access, access_error, ACCESS_FAILURES,
++                           guard_present, guard_matches, GUARD, RefreshUncertain, write_durable, diagnostic)
+ 
+ _BILLING_MESSAGES = {
+     "execution_unavailable": "中央文本执行尚未开放或模型当前不可用",
+@@ -124,7 +126,10 @@
+     def _forget_invalid(self, state, error):
+         # The caller owns the file lock. Only explicit authentication failure
+         # permits removing persisted credentials; outages retain recoverable state.
++        if getattr(error, "auth_phase", None) == "access":
++            return False
+         if error.status == 401 and error.code in _AUTH_INVALID:
++            state.pop(GUARD, None)
+             if state.pop("auth", None):
+                 self.store.write(state)
+             return True
+@@ -181,6 +186,10 @@
+     def begin(self, callback_uri, challenge, state):
+         with self.store.locked():
+             current = self._state()
++            if guard_present(current):
++                if not guard_matches(current):raise HarnessError("中央账号已改变，请先退出当前账号")
++                current.pop("auth", None); current.pop(GUARD, None)
++                write_durable(self.store, current)
+             if current.get("auth"):
+                 if current["auth"]["refresh_expires_at"] <= self.clock():
+                     self._forget_invalid(current, CentralError("invalid_authentication", 401))
+@@ -225,23 +234,34 @@
+             state = self._state()
+             if state.get("auth"):
+                 raise HarnessError("中央账号已改变，请重新登录")
++            state.pop(GUARD, None)
+             self.store.write({**state, "auth": auth})
+ 
+-    def _access(self, state, *, deadline=None):
+-        auth = state.get("auth")
+-        if not auth or auth["refresh_expires_at"] <= self.clock():
+-            raise PlatformError("invalid_authentication", 401)
+-        self._validate_auth(auth)
+-        if auth["expires_at"] <= self.clock() + 30:
++    def _access(self, state, *, deadline=None, force=False):
++        def send(refresh):
+             options = {} if deadline is None else {"timeout": max(.001, min(15, deadline - time.monotonic())), "deadline": deadline}
+-            fresh = self._request(state, "POST", "/v2/auth/refresh", {"refresh_token": auth["refresh_token"]}, **options)
+-            self._validate_auth(fresh)
+-            if fresh["scope"] != auth["scope"] or fresh["account"]["id"] != auth["account"]["id"]:
+-                raise PlatformError("account_changed", 409)
+-            state["auth"] = fresh
+-            self.store.write(state)
+-            auth = fresh
+-        return auth["access_token"]
++            if deadline is not None and deadline <= time.monotonic():raise CentralError()
++            return self._request(state, "POST", "/v2/auth/refresh", {"refresh_token": refresh}, **options)
++        return refresh_access(self, state, send=send, clock=self.clock, force=force)
++
++    def _get(self, state, path, *, timeout=15, deadline=None):
++        deadline=min(deadline,time.monotonic()+timeout) if deadline is not None else time.monotonic()+timeout
++        initial=(state.get("auth") or {}).get("access_token")
++        token=self._access(state, deadline=deadline)
++        renewed=token!=initial
++        def request():
++            remaining=deadline-time.monotonic()
++            if remaining<=0:raise CentralError()
++            return self._request(state,"GET",path,token=token,timeout=min(timeout,remaining),deadline=deadline)
++        try:return request()
++        except PlatformError as error:
++            diagnostic(error.code,error.status,path,(state.get("auth") or {}).get("scope"))
++            if error.status!=401 or error.code not in ACCESS_FAILURES or renewed:raise access_error(error)
++        token=self._access(state, deadline=deadline, force=True)
++        try:return request()
++        except PlatformError as error:
++            diagnostic(error.code,error.status,path,(state.get("auth") or {}).get("scope"))
++            raise access_error(error)
+ 
+     def status(self, *, verify=True):
+         with self.store.locked():
+@@ -249,14 +269,15 @@
+             auth, failure = state.get("auth"), None
+             if auth:
+                 self._validate_auth(auth)
+-                if auth["refresh_expires_at"] <= self.clock():
++                if guard_present(state):
++                    failure = RefreshUncertain()
++                elif auth["refresh_expires_at"] <= self.clock():
+                     failure = CentralError("invalid_authentication", 401)
+                     self._forget_invalid(state, failure)
+                     auth = None
+-            if auth and verify:
++            if auth and verify and failure is None:
+                 try:
+-                    token = self._access(state)
+-                    me = self._safe(self._request(state, "GET", "/v2/me", token=token))
++                    me = self._safe(self._get(state, "/v2/me"))
+                     auth = state["auth"]
+                     if me.get("scope") != auth["scope"] or me.get("account", {}).get("id") != auth["account"]["id"]:
+                         raise PlatformError("account_changed", 409)
+@@ -290,8 +311,14 @@
+         with self.store.locked():
+             state = self._state()
+             try:
+-                token = None if public else self._access(state)
+-                value = self._safe(self._request(state, method, path, body, token=token))
++                if not public and method == "GET":
++                    value = self._safe(self._get(state, path))
++                else:
++                    token = None if public else self._access(state)
++                    try:value = self._safe(self._request(state, method, path, body, token=token))
++                    except PlatformError as error:
++                        if not public:access_error(error)
++                        raise
+                 if path in ("/v2/products/easel/models", "/v2/executions"):
+                     return self._execution_view(path, value)
+                 if path == "/v2/wallet":
+@@ -305,11 +332,18 @@
+     def logout(self):
+         with self.store.locked():
+             state = self._state()
++            if guard_present(state):
++                # Explicit local logout must not replay an uncertain refresh.
++                state.pop("auth", None); state.pop(GUARD, None)
++                write_durable(self.store, state)
+             if state.get("auth"):
+                 try:
+                     self._request(state, "POST", "/v2/auth/logout", token=self._access(state))
+                 except PlatformError as error:
+-                    if not self._forget_invalid(state, error):
++                    if guard_present(state):
++                        state.pop("auth", None); state.pop(GUARD, None)
++                        write_durable(self.store, state)
++                    elif not self._forget_invalid(state, error):
+                         raise
+                 self.store.write({"version": 2, "url": state["url"]})
+         return self.status(verify=False)
+@@ -429,9 +463,8 @@
+         with self.store.locked():
+             state = self._state()
+             try:
+-                token = self._access(state, deadline=deadline)
++                me = self._safe(self._get(state, "/v2/me", timeout=2, deadline=deadline))
+                 auth = state["auth"]
+-                me = self._safe(self._request(state, "GET", "/v2/me", token=token, timeout=2, deadline=deadline))
+                 if me.get("scope") != auth["scope"] or me.get("account", {}).get("id") != auth["account"]["id"]:
+                     raise PlatformError("account_changed", 409)
+                 records, truncated = read_operations(self.store.root, operation_owner(state["url"], auth["scope"]), turn_key)
+@@ -444,8 +477,8 @@
+                     else:
+                         try:
+                             query = urlencode({"invocation_id": record["invocation_id"], "operation_key": record["operation_key"]})
+-                            value = self._safe(self._request(state, "GET", "/v2/execution-operations?" + query,
+-                                                             token=token, timeout=min(2, remaining), deadline=deadline))
++                            value = self._safe(self._get(state, "/v2/execution-operations?" + query,
++                                                       timeout=min(2, remaining), deadline=deadline))
+                             row.update(lookup_status="found", execution=self._operation_view(value))
+                         except PlatformError as error:
+                             # No partial rows survive account/authentication failure.
+@@ -465,12 +498,11 @@
+     def authorize(self, model):
+         with self.store.locked():
+             state = self._state()
+-            token = self._access(state)
+-            me = self._safe(self._request(state, "GET", "/v2/me", token=token))
++            me = self._safe(self._get(state, "/v2/me"))
+             scope = state["auth"]["scope"]
+             if me.get("scope") != scope:
+                 raise PlatformError("account_changed", 409)
+-            catalog = self._execution_view("/v2/products/easel/models", self._safe(self._request(state, "GET", "/v2/products/easel/models", token=token)))
++            catalog = self._execution_view("/v2/products/easel/models", self._safe(self._get(state, "/v2/products/easel/models")))
+             if not model or not any(item.get("id") == model for item in catalog.get("models", [])):
+                 raise HarnessError("中央模型不可用，请从当前中央目录重新选择")
+             return {"account_id": scope["user_id"], "platform_url": state["url"], "scope": dict(scope)}
+--- a/easel/platform/media.py
++++ b/easel/platform/media.py
+@@ -22,6 +22,8 @@
+ from .client import PlatformError, validate_url
+ from .execution_records import operation_owner, operation_turn_key
+ from .media_records import MediaRecords, MediaRecordError, digest
++from .auth_refresh import (access as refresh_access, access_error, ACCESS_FAILURES,
++                           guard_present, RefreshUncertain, diagnostic)
+ 
+ MAX_JSON = 2 * 1024 * 1024
+ MAX_IMAGE = 20 * 1024 * 1024
+@@ -40,6 +42,7 @@
+     "invalid_authentication": "请重新登录",
+     "session_invalid": "请重新登录",
+     "refresh_replayed": "请重新登录",
++    "refresh_uncertain": "登录状态待确认，请重新登录",
+ }
+ 
+ 
+@@ -133,9 +136,11 @@
+         with self.central.store.locked():
+             state = self.central._state()
+             auth = state.get("auth")
++            if guard_present(state):raise MediaError("refresh_uncertain",409)
+             if (not auth or state["url"] != snapshot["url"] or auth.get("scope") != snapshot["scope"]
+                     or auth.get("refresh_expires_at", 0) <= self.clock()):
+                 raise MediaError("account_changed", 409)
++            snapshot["token"] = auth["access_token"]
+ 
+     @contextmanager
+     def publication(self, snapshot):
+@@ -143,31 +148,19 @@
+         with self.central.store.locked():
+             state = self.central._state()
+             auth = state.get("auth")
++            if guard_present(state):raise MediaError("refresh_uncertain",409)
+             if (not auth or state["url"] != snapshot["url"] or auth.get("scope") != snapshot["scope"]
+                     or auth.get("refresh_expires_at", 0) <= self.clock()):
+                 raise MediaError("account_changed", 409)
+             yield
+ 
+-    def _access(self, state, *, deadline=None):
++    def _access(self, state, *, deadline=None, force=False):
+         """Keep the original serialized refresh semantics with bounded async I/O."""
+-        auth = state.get("auth")
+-        if not auth or auth["refresh_expires_at"] <= self.clock():
+-            raise MediaError("invalid_authentication", 401)
+-        self.central._validate_auth(auth)
+-        if auth["expires_at"] <= self.clock() + 30:
+-            try:
+-                fresh = self._fetch({"url": state["url"], "scope": auth["scope"], "token": ""},
+-                    "POST", "/v2/auth/refresh", {"refresh_token": auth["refresh_token"]}, deadline=deadline)
+-                self.central._validate_auth(fresh)
+-                if fresh["scope"] != auth["scope"] or fresh["account"]["id"] != auth["account"]["id"]:
+-                    raise MediaError("account_changed", 409)
+-            except PlatformError as error:
+-                self.central._forget_invalid(state, error)
+-                raise
+-            state["auth"] = fresh
+-            self.central.store.write(state)
+-            auth = fresh
+-        return auth["access_token"]
++        def send(refresh):
++            return self._fetch({"url":state["url"],"scope":state["auth"]["scope"],"token":""},
++                "POST","/v2/auth/refresh",{"refresh_token":refresh},deadline=deadline)
++        try:return refresh_access(self.central,state,send=send,clock=self.clock,force=force)
++        except RefreshUncertain:raise MediaError("refresh_uncertain",409)from None
+ 
+     def _forget(self, snapshot, error):
+         with self.central.store.locked():
+@@ -180,6 +173,7 @@
+     def _snapshot(self, *, expected_scope=None, expected_url=None, deadline=None):
+         with self.central.store.locked():
+             state = self.central._state()
++            initial=(state.get("auth") or {}).get("access_token")
+             token = self._access(state, deadline=deadline)
+             scope = dict(state["auth"]["scope"])
+             if ((expected_scope is not None and scope != expected_scope)
+@@ -187,8 +181,8 @@
+                 raise MediaError("account_changed", 409)
+             snapshot = {"url": state["url"], "scope": scope, "token": token}
+         try:
+-            me = self._fetch(snapshot, "GET", "/v2/me", deadline=deadline,
+-                             timeout=2 if deadline is not None else 15)
++            me = self._get(snapshot, "/v2/me", deadline=deadline,
++                           timeout=2 if deadline is not None else 15, already_renewed=token!=initial)
+         except PlatformError as error:
+             self._forget(snapshot, error)
+             raise
+@@ -196,6 +190,30 @@
+             raise MediaError("account_changed", 409)
+         self._current(snapshot)
+         return snapshot
++
++    def _get(self,snapshot,path,*,already_renewed=False,**options):
++        deadline=options.get("deadline")
++        options["deadline"]=(min(deadline,time.monotonic()+options.get("timeout",15))
++                             if deadline is not None else time.monotonic()+options.get("timeout",15))
++        self._current(snapshot)
++        used=snapshot["token"]
++        try:return self._fetch(snapshot,"GET",path,**options)
++        except PlatformError as error:
++            diagnostic(error.code,error.status,path,snapshot["scope"])
++            if error.status!=401 or error.code not in ACCESS_FAILURES or already_renewed:
++                raise access_error(error)
++        with self.central.store.locked():
++            state=self.central._state();auth=state.get("auth")
++            if not auth or state["url"]!=snapshot["url"] or auth.get("scope")!=snapshot["scope"]:
++                raise MediaError("account_changed",409)
++            if guard_present(state):raise MediaError("refresh_uncertain",409)
++            token=(self._access(state,deadline=options.get("deadline"),force=True)
++                   if auth["access_token"]==used else self._access(state,deadline=options.get("deadline")))
++            snapshot["token"]=token
++        try:return self._fetch(snapshot,"GET",path,**options)
++        except PlatformError as error:
++            diagnostic(error.code,error.status,path,snapshot["scope"])
++            raise access_error(error)
+ 
+     def _fetch(self, snapshot, method, path, body=None, *, task_token=None, operation_key=None,
+                timeout=15, binary=False, maximum=MAX_JSON, deadline=None):
+@@ -236,7 +254,7 @@
+ 
+     def catalog(self, *, snapshot=None):
+         snapshot = snapshot or self._snapshot()
+-        value = self._fetch(snapshot, "GET", "/v2/products/easel/media-models")
++        value = self._get(snapshot, "/v2/products/easel/media-models")
+         self._current(snapshot)
+         try:
+             rows = value["models"]
+@@ -303,7 +321,7 @@
+ 
+     def job(self, snapshot, job_id, *, timeout=15, deadline=None):
+         _uuid(job_id)
+-        value = self._fetch(snapshot, "GET", "/v2/media/jobs/" + job_id, timeout=timeout, deadline=deadline)
++        value = self._get(snapshot, "/v2/media/jobs/" + job_id, timeout=timeout, deadline=deadline)
+         self._current(snapshot)
+         try: row = _job(value)
+         except (KeyError, ValueError, TypeError): raise MediaError() from None
+@@ -313,7 +331,7 @@
+     def lookup(self, snapshot, record, *, timeout=15, deadline=None):
+         if record["invocation_id"] is None: return None
+         query = urlencode({"invocation_id": record["invocation_id"], "operation_key": record["operation_key"]})
+-        value = self._fetch(snapshot, "GET", "/v2/media/operations?" + query, timeout=timeout, deadline=deadline)
++        value = self._get(snapshot, "/v2/media/operations?" + query, timeout=timeout, deadline=deadline)
+         self._current(snapshot)
+         try:
+             row = _job(value, artifact_detail=False)
+@@ -521,10 +539,10 @@
+                     or timestamp(metadata["expires_at"]) <= self.client.clock()
+                     or metadata.get("job_id", job["id"]) != job["id"]
+                     or any(metadata["properties"][key] != 1024 for key in ("width", "height"))): raise ValueError
+-            current = _artifact(self.client._fetch(snapshot, "GET", "/v2/media/artifacts/" + artifact_id))
++            current = _artifact(self.client._get(snapshot, "/v2/media/artifacts/" + artifact_id))
+             if (any(current[k] != metadata[k] for k in ("id", "sha256", "size", "mime", "properties", "expires_at"))
+                     or current.get("job_id", job["id"]) != job["id"] or current.get("purged_at") is not None): raise ValueError
+-            raw, headers = self.client._fetch(snapshot, "GET", "/v2/media/artifacts/" + artifact_id + "/content",
++            raw, headers = self.client._get(snapshot, "/v2/media/artifacts/" + artifact_id + "/content",
+                 binary=True, maximum=metadata["size"], timeout=45)
+             self._active()
+             self.client._current(snapshot)

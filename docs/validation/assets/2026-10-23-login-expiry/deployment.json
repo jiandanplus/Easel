@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "environment_id": "wb-20261023-e6467e17dc33",
+  "wrapper_pid": 78140,
+  "health_ok": true,
+  "owned_server_verified": true,
+  "source_sha256": "9f9f8d2c5ccbefd92dda3786f8fb1fadcf6138a81a0b9b0328d366af5482be6b",
+  "updated_public_files": {
+    "app.py": "c0e1536d48fd74f6a4154ee04c846708d37af6fbffff84f2a4b0d2bad65adfb5"
+  },
+  "private_configuration_hashes_unchanged": true,
+  "database_counts_before": {
+    "identity_sessions": 0,
+    "identity_handoffs": 0,
+    "internal_grants": 0,
+    "execution_invocations": 0,
+    "billing_orders": 0
+  },
+  "database_counts_after": {
+    "identity_sessions": 0,
+    "identity_handoffs": 0,
+    "internal_grants": 0,
+    "execution_invocations": 0,
+    "billing_orders": 0
+  },
+  "browser_error_html_verified": true,
+  "json_error_contract_preserved": true,
+  "old_authorization_code_replayed": false,
+  "model_calls": 0
+}

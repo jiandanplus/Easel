@@ -1,0 +1,1398 @@
+--- a/services/platform/src/platform_service/internal_features.py
++++ b/services/platform/src/platform_service/internal_features.py
+@@ -0,0 +1,83 @@
++"""Owner-operated, non-financial extensions of an existing internal grant."""
++from uuid import uuid4
++from .contracts import OperatorIdentity
++from .credits import active_plans, bounded
++from .errors import PlatformError
++
++
++async def feature_memberships(c, scope, funding_mode, feature, *, memberships=None):
++    plans = await active_plans(c, scope, funding_mode) if memberships is None else memberships
++    selected = [p for p in plans if feature in p['definition']['features']]
++    if feature != 'image' or funding_mode == 'test':
++        return selected
++    extended = await (await c.execute("""SELECT g.membership_id FROM internal_feature_extensions e
++        JOIN internal_grants g ON g.id=e.grant_id
++        JOIN tenants t ON t.id=e.tenant_id AND t.owner_user_id=e.user_id
++        WHERE e.user_id=%s AND e.tenant_id=%s AND e.billing_account_id=%s
++          AND e.product_id=%s AND e.feature='image'
++          AND e.starts_at<=clock_timestamp() AND e.expires_at>clock_timestamp()""",
++        (scope.user_id,scope.tenant_id,scope.billing_account_id,scope.product_id))).fetchall()
++    identifiers = {row['membership_id'] for row in extended}
++    return [p for p in plans if p in selected or (not p['definition']['test_only'] and p['id'] in identifiers)]
++
++
++async def entitled_features(c, scope, memberships):
++    features = {f for p in memberships for f in p['definition']['features']}
++    if await feature_memberships(c,scope,None,'image',memberships=memberships):
++        features.add('image')
++    return sorted(features)
++
++
++def view(row):
++    return {key:(value.isoformat() if hasattr(value,'isoformat') else value) for key,value in row.items()}
++
++
++class InternalFeatureService:
++    """No HTTP route and no runtime INSERT privilege. Never issues credit."""
++    def __init__(self, db):
++        self.db = db
++
++    async def extend(self, operator, *, environment, grant_id, product, feature, key, reason):
++        if not isinstance(operator,OperatorIdentity) or 'internal:extend_features' not in operator.capabilities:
++            raise PlatformError(403,'operator_capability_required')
++        for value in (environment,grant_id,product,feature,key,reason,operator.id):
++            bounded(value)
++            if any(ord(char)<32 or ord(char)==127 for char in value):
++                raise PlatformError(422,'invalid_internal_feature_parameter')
++        if product!='easel' or feature!='image':
++            raise PlatformError(403,'internal_feature_scope_denied')
++        async with self.db.connection() as c:
++            owner=await (await c.execute("""SELECT current_user=session_user AND n.nspowner=r.oid AS owner
++                FROM pg_namespace n JOIN pg_roles r ON r.rolname=current_user
++                WHERE n.nspname=current_schema()""")).fetchone()
++            if not owner or not owner['owner']:
++                raise PlatformError(403,'internal_owner_required')
++            await c.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',
++                ('internal-feature:'+environment+':'+key,))
++            grant=await (await c.execute('SELECT * FROM internal_grants WHERE id=%s AND environment_id=%s',(grant_id,environment))).fetchone()
++            if not grant:raise PlatformError(403,'internal_grant_required')
++            await c.execute('SELECT id FROM billing_accounts WHERE id=%s FOR UPDATE',(grant['billing_account_id'],))
++            old=await (await c.execute("""SELECT * FROM internal_feature_extensions WHERE environment_id=%s
++                AND (issuance_key=%s OR (grant_id=%s AND product_id=%s AND feature=%s))""",
++                (environment,key,grant_id,product,feature))).fetchall()
++            if old:
++                if len(old)!=1 or (old[0]['grant_id'],old[0]['product_id'],old[0]['feature'],old[0]['issuance_key'],old[0]['reason'])!=(grant_id,product,feature,key,reason):
++                    raise PlatformError(409,'idempotency_conflict')
++                return view(old[0])
++            current=await (await c.execute("""SELECT g.id FROM internal_grants g
++                JOIN users u ON u.id=g.user_id AND u.active
++                JOIN tenants t ON t.id=g.tenant_id AND t.owner_user_id=g.user_id
++                JOIN tenant_members tm ON tm.user_id=g.user_id AND tm.tenant_id=g.tenant_id AND tm.active
++                JOIN products p ON p.id=%s AND p.enabled
++                JOIN memberships m ON m.id=g.membership_id AND m.billing_account_id=g.billing_account_id
++                WHERE g.id=%s AND g.starts_at<=clock_timestamp() AND g.expires_at>clock_timestamp()
++                  AND NOT EXISTS(SELECT 1 FROM membership_revocations r WHERE r.membership_id=m.id)
++                FOR SHARE OF u,t,tm,p,m""",(product,grant_id))).fetchone()
++            if not current:raise PlatformError(403,'internal_grant_inactive')
++            row=await (await c.execute("""INSERT INTO internal_feature_extensions(
++                id,grant_id,environment_id,user_id,tenant_id,billing_account_id,product_id,feature,
++                starts_at,expires_at,operator_id,issuance_key,reason)
++                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
++                (str(uuid4()),grant_id,environment,grant['user_id'],grant['tenant_id'],grant['billing_account_id'],product,feature,
++                 grant['starts_at'],grant['expires_at'],operator.id,key,reason))).fetchone()
++            return view(row)
+--- a/services/platform/src/platform_service/media_config.py
++++ b/services/platform/src/platform_service/media_config.py
+@@ -44,6 +44,7 @@
+     download_origins: tuple[str, ...] = ()
+     legacy_variations: bool = False
+     response_format: str | None = None
++    response_profile: str | None = None
+ 
+ 
+ @dataclass(frozen=True)
+@@ -85,12 +86,16 @@
+                     or not isinstance(provider.version, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,128}", provider.version)
+                     or not isinstance(provider.secret, str) or not 1 <= len(provider.secret) <= 4096
+                     or not provider.secret.isascii() or any(not 33 <= ord(c) <= 126 for c in provider.secret)
+-                    or provider.response_format not in (None, "b64_json", "url")):
++                    or provider.response_format not in (None, "b64_json", "url")
++                    or provider.response_profile not in (None, "newapi_images_v1")):
+                 raise ValueError("invalid_media_configuration")
+             origin(provider.base_url, mode=self.mode)
+             if (not isinstance(provider.capabilities, (tuple, list)) or not provider.capabilities
+                     or any(cap not in IMAGE_CAPABILITIES for cap in provider.capabilities)
+                     or ("image.variation" in provider.capabilities and not provider.legacy_variations)):
++                raise ValueError("invalid_media_configuration")
++            if provider.response_profile == "newapi_images_v1" and (tuple(provider.capabilities) != ("image.generate",)
++                    or provider.response_format is not None):
+                 raise ValueError("invalid_media_configuration")
+             if not isinstance(provider.download_origins, (tuple, list)) or len(provider.download_origins) > 8:
+                 raise ValueError("invalid_media_configuration")
+@@ -112,6 +117,10 @@
+                 frozen = [self.mode, name, provider.version, provider.base_url, hashlib.sha256(provider.secret.encode()).hexdigest(),
+                           model, upstream, provider.adapter, provider.protocol_version, list(provider.capabilities),
+                           list(provider.download_origins), provider.legacy_variations, provider.response_format]
++                # A missing profile retains every legacy binding byte. Explicit
++                # gateway interpretation becomes part of the immutable binding.
++                if provider.response_profile is not None:
++                    frozen.append(provider.response_profile)
+                 result[model] = {"provider_id": name, "provider_version": provider.version, "adapter": provider.adapter,
+                                  "protocol_version": provider.protocol_version,
+                                  "binding_hash": hashlib.sha256(json.dumps(frozen, separators=(",", ":")).encode()).hexdigest()}
+--- a/services/platform/src/platform_service/media_runtime.py
++++ b/services/platform/src/platform_service/media_runtime.py
+@@ -16,9 +16,14 @@
+                                ("input_token", "provider_usage_v1"), ("output_token", "provider_usage_v1")})
+ 
+ 
+-def supported_metering(definition):
++def allowed_meters(provider):
++    return frozenset({("image", "verified_delivery_v1")}) if provider.response_profile == "newapi_images_v1" else SUPPORTED_METERS
++
++
++def supported_metering(definition, provider=None):
+     meters = definition.get("rate", {}).get("meters")
+-    return bool(isinstance(meters, list) and meters and all((meter.get("unit"), meter.get("basis")) in SUPPORTED_METERS for meter in meters))
++    allowed = allowed_meters(provider) if provider is not None else SUPPORTED_METERS
++    return bool(isinstance(meters, list) and meters and all((meter.get("unit"), meter.get("basis")) in allowed for meter in meters))
+ 
+ 
+ def digest(value):
+@@ -58,26 +63,34 @@
+         value = await self.service.catalog(scope, mode=self.settings.mode, bindings=self.bindings)
+         rows = []
+         for row in value.get("models", []):
+-            try: self._provider(row["id"], row["capability"])
++            try: provider = self._provider(row["id"], row["capability"])
+             except (PlatformError, KeyError): continue
+-            if supported_metering(row): rows.append(row)
++            if supported_metering(row, provider): rows.append(row)
+         return {"models": rows}
+ 
+     async def _model(self, scope, model):
+         rows = (await self.service.catalog(scope, mode=self.settings.mode, bindings=self.bindings)).get("models", [])
+         row = next((row for row in rows if row.get("id") == model), None)
+         if row is None: raise PlatformError(503, "media_capability_closed")
+-        if not supported_metering(row): raise PlatformError(503, "media_metering_unsupported")
++        if not supported_metering(row, self._provider(row["id"], row["capability"])): raise PlatformError(503, "media_metering_unsupported")
+         return row
+ 
+     async def capabilities(self, product_id):
+-        available = {}
++        groups = {}
+         for model,binding in self.bindings.items():
+             try: provider=self._provider(model,self.settings.providers[binding["provider_id"]].capabilities[0])
+             except (PlatformError,KeyError):continue
+-            available[model]=provider.capabilities
+-        ready = self.settings.mode != "disabled" and bool(self.bindings) and await self.service.readiness(product_id, mode=self.settings.mode, bindings=self.bindings,
+-            supported_meters=SUPPORTED_METERS, supported_capabilities=available)
++            meters = allowed_meters(provider)
++            group = groups.setdefault(meters, {"bindings": {}, "capabilities": {}})
++            group["bindings"][model] = binding
++            group["capabilities"][model] = provider.capabilities
++        ready = False
++        if self.settings.mode != "disabled":
++            for meters, group in groups.items():
++                if await self.service.readiness(product_id, mode=self.settings.mode, bindings=group["bindings"],
++                        supported_meters=meters, supported_capabilities=group["capabilities"]):
++                    ready = True
++                    break
+         return {"media_execution_enabled": bool(ready and self.settings.mode == "live"),
+                 "test_media_execution_enabled": bool(ready and self.settings.mode == "test"),
+                 "media_execution_stage": self.settings.mode}
+@@ -170,8 +183,8 @@
+             async with self._semaphore:
+                 async with asyncio.timeout(self.settings.timeout_seconds):
+                     request = job["request"]
+-                    if not supported_metering(job["model_definition"]): raise PlatformError(503, "media_metering_unsupported")
+                     provider = self._provider(request["model"], request["capability"])
++                    if not supported_metering(job["model_definition"], provider): raise PlatformError(503, "media_metering_unsupported")
+                     if self.bindings[request["model"]]["binding_hash"] != job["binding_hash"]:
+                         raise PlatformError(503, "media_binding_unavailable")
+                     assets = [{**row, "id": identifier, "raw": self.store.read(row)} for identifier, row in metadata.items()]
+@@ -191,18 +204,37 @@
+                         await self.service.record_provider_association(job["id"], job["attempt_id"], **values)
+                     response = await adapter.submit(self._client, prepared, request_id=request_id,
+                                                    max_bytes=self.settings.max_response_bytes, on_headers=headers)
+-                    await self.service.record_provider_association(job["id"], job["attempt_id"], provider_response_id=response.response_id)
++                    terminal_reference = {"provider_response_id": response.response_id}
++                    if response.correlation is not None:
++                        await self.service.record_http_response_reference(job["id"], job["attempt_id"],
++                            namespace=response.correlation.namespace, http_request_id=response.correlation.value,
++                            response_body_sha256=response.evidence_hash)
++                        terminal_reference.update(reference_kind="http_request_id",
++                            http_reference_namespace=response.correlation.namespace,
++                            http_reference_value=response.correlation.value)
++                    else:
++                        await self.service.record_provider_association(job["id"], job["attempt_id"], provider_response_id=response.response_id)
+                     if len(response.images) > request.get("parameters", {}).get("n", 1):
+                         raise PlatformError(502, "invalid_media_response")
+                     artifacts = []
+                     ceiling = job["model_definition"]["limits"]["max_artifact_bytes"]
+                     total = 0
++                    async def stage_artifact(value):
++                        if provider.response_profile == "newapi_images_v1":
++                            # Only complete decoder properties can certify the
++                            # requested delivery. Reject before any blob stage,
++                            # file write, registration, terminal, or settlement.
++                            expected = tuple(int(part) for part in request["parameters"]["size"].split("x"))
++                            actual = tuple(value["properties"].get(key) for key in ("width", "height"))
++                            if actual != expected:
++                                raise PlatformError(502, "media_delivery_dimensions_mismatch")
++                        return await self.service.stage_blob(context,value,kind="artifact",job_id=job["id"],attempt_id=job["attempt_id"])
+                     for source in response.images:
+                         raw, mime = await adapter.retrieve(self._client, source, max_bytes=min(ceiling, self.settings.max_asset_bytes))
+                         total += len(raw)
+                         if total > ceiling: raise PlatformError(502, "media_response_too_large")
+                         stored = await self.store.put_image_async(raw, mime=mime, max_bytes=ceiling,
+-                            before_write=lambda value:self.service.stage_blob(context,value,kind="artifact",job_id=job["id"],attempt_id=job["attempt_id"]))
++                            before_write=stage_artifact)
+                         try:
+                             artifacts.append(await self.service.register_artifact(job["id"], job["attempt_id"], **stored))
+                         except PlatformError as error:
+@@ -223,7 +255,7 @@
+                         else:
+                             bases[basis] = digest({"request_hash": job["request_hash"], "inputs": verified_input_hashes(metadata)})
+                     await self.service.record_terminal_evidence(job["id"], job["attempt_id"], terminal_status="completed",
+-                        provider_response_id=response.response_id, quantities=quantities, basis_evidence=bases, evidence_hash=response.evidence_hash)
++                        **terminal_reference, quantities=quantities, basis_evidence=bases, evidence_hash=response.evidence_hash)
+                     evidence = True
+                     await self.service.finish_from_evidence(job["id"], job["attempt_id"])
+                     return await self._view(context["scope"], job["id"])
+--- a/services/platform/src/platform_service/membership.py
++++ b/services/platform/src/platform_service/membership.py
+@@ -215,6 +215,7 @@
+             return issuance_view(membership)
+ 
+     async def entitlements(self, scope):
++        from .internal_features import entitled_features
+         async with self.db.connection() as c:
+             await authorize(c, scope)
+             memberships = await active_plans(c, scope)
+@@ -227,9 +228,7 @@
+                 "product_id": scope.product_id,
+                 "active": bool(memberships),
+                 "test_only": all(m["definition"]["test_only"] for m in memberships),
+-                "features": sorted(
+-                    {f for m in memberships for f in m["definition"]["features"]}
+-                ),
++                "features": await entitled_features(c,scope,memberships),
+                 "concurrency": max(
+                     (m["definition"]["concurrency"] for m in memberships), default=0
+                 ),
+--- a/services/platform/src/platform_service/permissions.py
++++ b/services/platform/src/platform_service/permissions.py
+@@ -6,10 +6,9 @@
+ # INSERT is needed for controlled CLI provisioning and identity creation. Mutations
+ # of existing immutable history are deliberately absent, even for runtime operators.
+ INSERT_TABLES = (
+-    "media_http_response_references",
+     "media_blobs", "media_storage_budgets",
+     "media_invocations", "media_task_tokens", "media_jobs", "media_provider_attempts",
+-    "media_provider_associations", "media_terminal_evidence", "media_receipts",
++    "media_provider_associations", "media_terminal_evidence", "media_receipts", "media_http_response_references",
+     "media_assets", "media_artifacts", "media_voices", "media_blocked_bindings",
+     "execution_provider_attempts",
+     "execution_provider_associations",
+@@ -98,10 +97,10 @@
+     ),
+ }
+ IMMUTABLE_TABLES = (
+-    "media_http_response_references",
++    "internal_feature_extensions",
+     "media_storage_policy",
+     "media_models", "media_model_states", "media_task_tokens", "media_provider_attempts",
+-    "media_provider_associations", "media_terminal_evidence", "media_receipts", "media_voices", "media_blocked_bindings",
++    "media_provider_associations", "media_terminal_evidence", "media_receipts", "media_voices", "media_blocked_bindings", "media_http_response_references",
+     "execution_provider_attempts",
+     "execution_provider_associations",
+     "execution_terminal_evidence",
+@@ -221,7 +220,7 @@
+                 raise PlatformError(503, "unsafe_runtime_role")
+             catalog_write = await (
+                 await conn.execute(
+-                    "SELECT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=%s AND c.relname IN ('execution_models','execution_model_states','media_models','media_model_states','media_storage_policy','internal_grants') AND has_any_column_privilege(%s,c.oid,'INSERT')) AS unsafe",
++                    "SELECT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=%s AND c.relname IN ('execution_models','execution_model_states','media_models','media_model_states','media_storage_policy','internal_grants','internal_feature_extensions') AND has_any_column_privilege(%s,c.oid,'INSERT')) AS unsafe",
+                     (context["schema"], name),
+                 )
+             ).fetchone()
+--- a/services/platform/src/platform_service/media/contracts.py
++++ b/services/platform/src/platform_service/media/contracts.py
+@@ -118,6 +118,9 @@
+         if any(any(not mime.startswith('image/') for mime in spec['mime_types']) for spec in (incoming,outgoing) if spec is not None):return False
+     return True
+ 
++def live_feature_allowed(value):
++    return value.get('test_only') is True or not str(value.get('capability','')).startswith('image.') or value.get('feature')=='image'
++
+ 
+ def validate_definition(value):
+     fields={'id','version','name','capability','feature','products','test_only','provider_id','provider_version','adapter','protocol_version','verification','verification_ref','rate','limits','parameters'}
+@@ -126,7 +129,7 @@
+     for key in fields-{'products','test_only','rate','limits','parameters'}:bounded(result[key])
+     identifier(result['id']);identifier(result['adapter'])
+     if (result['capability'] not in CAPABILITIES or result['protocol_version']!='1' or type(result['test_only']) is not bool
+-            or result['verification']!=('fixture' if result['test_only'] else 'live')):
++            or result['verification']!=('fixture' if result['test_only'] else 'live') or not live_feature_allowed(result)):
+         raise PlatformError(422,'invalid_media_definition')
+     products=result['products']
+     if not isinstance(products,list) or not 1<=len(products)<=64 or any(not isinstance(p,str) for p in products) or len(set(products))!=len(products):raise PlatformError(422,'invalid_media_definition')
+--- a/services/platform/src/platform_service/media/core.py
++++ b/services/platform/src/platform_service/media/core.py
+@@ -14,9 +14,11 @@
+ from ..credits import CreditLedger, authorize, active_plans, bounded, integer
+ from ..errors import PlatformError
+ from ..identity import now, opaque
+-from .contracts import validate_definition, validate_request, digest, canonical, identifier, hash_value, MAX_OPERATIONS, MAX_BUDGET
++from .contracts import validate_definition, validate_request, live_feature_allowed, digest, canonical, identifier, hash_value, MAX_OPERATIONS, MAX_BUDGET
+ from .rates import cost, quantities as rate_quantities, unicode_scalars
+ from .storage import StorageLifecycle
++from .references import http_reference
++from ..internal_features import feature_memberships
+ 
+ 
+ def scope_of(value):
+@@ -76,6 +78,7 @@
+                 or row['definition']['test_only']!=(mode=='test') or product not in row['definition']['products']):
+             raise PlatformError(503,'media_unavailable')
+         definition=row['definition']
++        if not live_feature_allowed(definition):raise PlatformError(503,'media_unavailable')
+         if any(binding.get(k)!=definition[k] for k in ('provider_id','provider_version','adapter','protocol_version')):
+             raise PlatformError(503,'media_unavailable')
+         hash_value(binding.get('binding_hash'))
+@@ -84,7 +87,7 @@
+         return definition,binding
+ 
+     async def _entitlement(self,c,scope,mode,feature):
+-        plans=[p for p in await active_plans(c,scope,mode) if feature in p['definition']['features']]
++        plans=await feature_memberships(c,scope,mode,feature)
+         if not plans:raise PlatformError(403,'media_entitlement_required')
+         return max(p['expires_at'] for p in plans)
+ 
+@@ -209,6 +212,7 @@
+         async with self.db.connection() as c:
+             row,scope,_=await self._job(c,job_id,attempt_id,live=True);await authorize(c,scope)
+             if row['status']!='reserved' or row['dispatched_at'] is not None:raise PlatformError(409,'media_already_dispatched')
++            if not live_feature_allowed(row['model_definition']):raise PlatformError(503,'media_unavailable')
+             inv=await (await c.execute('SELECT expires_at FROM media_invocations WHERE id=%s',(row['invocation_id'],))).fetchone()
+             if row['lease_until']<=now() or inv['expires_at']<=now():raise PlatformError(410,'media_lease_expired')
+             await self._entitlement(c,scope,row['funding_mode'],row['model_definition']['feature'])
+@@ -257,6 +261,30 @@
+             duplicate=await (await c.execute('SELECT 1 FROM media_provider_associations WHERE provider_scope_hash=%s AND (provider_response_id=%s OR provider_job_id=%s)',(attempt['provider_scope_hash'],provider_response_id,provider_job_id))).fetchone()
+             if duplicate:raise PlatformError(409,'media_response_reused')
+             return await (await c.execute('INSERT INTO media_provider_associations(job_id,kind,attempt_id,binding_hash,provider_scope_hash,http_status,http_request_id,provider_response_id,provider_job_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *',(job_id,kind,attempt_id,row['binding_hash'],attempt['provider_scope_hash'],http_status,http_request_id,provider_response_id,provider_job_id))).fetchone()
++
++    async def record_http_response_reference(self,job_id,attempt_id,*,namespace,http_request_id,response_body_sha256):
++        http_reference(namespace,http_request_id);hash_value(response_body_sha256)
++        async with self.db.connection() as c:
++            row,_,_=await self._job(c,job_id,attempt_id)
++            attempt=await (await c.execute('SELECT * FROM media_provider_attempts WHERE job_id=%s',(job_id,))).fetchone()
++            associated=await (await c.execute("SELECT * FROM media_provider_associations WHERE job_id=%s AND kind='http'",(job_id,))).fetchone()
++            if (row['dispatched_at'] is None or not attempt or not associated or associated['http_status']!=200
++                    or associated['http_request_id']!=http_request_id):
++                raise PlatformError(409,'media_response_unverified')
++            values=dict(attempt_id=attempt_id,binding_hash=row['binding_hash'],provider_scope_hash=attempt['provider_scope_hash'],
++                namespace=namespace,http_request_id=http_request_id,response_body_sha256=response_body_sha256)
++            old=await (await c.execute('SELECT * FROM media_http_response_references WHERE job_id=%s',(job_id,))).fetchone()
++            if old:
++                if any(old[key]!=value for key,value in values.items()):raise PlatformError(409,'media_evidence_mismatch')
++                return old
++            # Also serialize cross-wallet jobs that share one provider response.
++            await c.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',
++                (digest(['media-http-reference',attempt['provider_scope_hash'],namespace,http_request_id]),))
++            duplicate=await (await c.execute('SELECT 1 FROM media_http_response_references WHERE provider_scope_hash=%s AND namespace=%s AND http_request_id=%s',
++                (attempt['provider_scope_hash'],namespace,http_request_id))).fetchone()
++            if duplicate:raise PlatformError(409,'media_response_reused')
++            return await (await c.execute('INSERT INTO media_http_response_references(job_id,attempt_id,binding_hash,provider_scope_hash,namespace,http_request_id,response_body_sha256) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING *',
++                (job_id,attempt_id,row['binding_hash'],attempt['provider_scope_hash'],namespace,http_request_id,response_body_sha256))).fetchone()
+ 
+     async def _verified_quantities(self,c,row,quantities):
+         definition=row['model_definition'];values=rate_quantities(definition['rate'],quantities)
+@@ -272,22 +300,39 @@
+             if expected!=values[unit]:raise PlatformError(409,'media_quantity_unverified')
+         return values
+ 
+-    async def record_terminal_evidence(self,job_id,attempt_id,*,terminal_status,provider_response_id,quantities,basis_evidence,evidence_hash):
++    async def record_terminal_evidence(self,job_id,attempt_id,*,terminal_status,provider_response_id,quantities,basis_evidence,evidence_hash,
++                                       reference_kind='object_id',http_reference_namespace=None,http_reference_value=None):
+         if terminal_status not in {'completed','failed','cancelled'}:raise PlatformError(422,'invalid_media_evidence')
+-        bounded(provider_response_id);hash_value(evidence_hash)
++        hash_value(evidence_hash)
++        if reference_kind=='object_id':
++            bounded(provider_response_id)
++            if http_reference_namespace is not None or http_reference_value is not None:raise PlatformError(422,'invalid_media_reference')
++        elif reference_kind=='http_request_id':
++            if provider_response_id is not None:raise PlatformError(422,'invalid_media_reference')
++            http_reference(http_reference_namespace,http_reference_value)
++        else:raise PlatformError(422,'invalid_media_reference')
+         async with self.db.connection() as c:
+             row,_,_=await self._job(c,job_id,attempt_id)
+             quantities=await self._verified_quantities(c,row,quantities)
+             bases={meter['basis'] for meter in row['model_definition']['rate']['meters']}
+             if not isinstance(basis_evidence,dict) or set(basis_evidence)!=bases:raise PlatformError(422,'invalid_media_evidence')
+             for value in basis_evidence.values():hash_value(value)
+-            if row['dispatched_at'] is None or not await (await c.execute("SELECT 1 FROM media_provider_associations WHERE job_id=%s AND kind='response' AND provider_response_id=%s",(job_id,provider_response_id))).fetchone():raise PlatformError(409,'media_response_unverified')
+-            values=dict(attempt_id=attempt_id,binding_hash=row['binding_hash'],terminal_status=terminal_status,provider_response_id=provider_response_id,quantities=quantities,basis_evidence=basis_evidence,evidence_hash=evidence_hash)
++            if reference_kind=='object_id':
++                verified=await (await c.execute("SELECT 1 FROM media_provider_associations WHERE job_id=%s AND kind='response' AND provider_response_id=%s",(job_id,provider_response_id))).fetchone()
++            else:
++                verified=await (await c.execute('SELECT 1 FROM media_http_response_references WHERE job_id=%s AND attempt_id=%s AND binding_hash=%s AND namespace=%s AND http_request_id=%s AND response_body_sha256=%s',
++                    (job_id,attempt_id,row['binding_hash'],http_reference_namespace,http_reference_value,evidence_hash))).fetchone()
++            if row['dispatched_at'] is None or not verified:raise PlatformError(409,'media_response_unverified')
++            values=dict(attempt_id=attempt_id,binding_hash=row['binding_hash'],terminal_status=terminal_status,provider_response_id=provider_response_id,quantities=quantities,basis_evidence=basis_evidence,evidence_hash=evidence_hash,
++                reference_kind=reference_kind,http_reference_namespace=http_reference_namespace,http_reference_value=http_reference_value)
+             old=await (await c.execute('SELECT * FROM media_terminal_evidence WHERE job_id=%s',(job_id,))).fetchone()
+             if old:
+-                if any(old[k]!=v for k,v in values.items()):raise PlatformError(409,'media_evidence_mismatch')
++                if any(old.get(k,'object_id' if k=='reference_kind' else None)!=v for k,v in values.items()):raise PlatformError(409,'media_evidence_mismatch')
+                 return old
+-            evidence=await (await c.execute('INSERT INTO media_terminal_evidence(job_id,attempt_id,binding_hash,terminal_status,provider_response_id,quantities,basis_evidence,evidence_hash) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *',(job_id,attempt_id,row['binding_hash'],terminal_status,provider_response_id,Jsonb(quantities),Jsonb(basis_evidence),evidence_hash))).fetchone()
++            if reference_kind=='object_id':
++                evidence=await (await c.execute('INSERT INTO media_terminal_evidence(job_id,attempt_id,binding_hash,terminal_status,provider_response_id,quantities,basis_evidence,evidence_hash) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *',(job_id,attempt_id,row['binding_hash'],terminal_status,provider_response_id,Jsonb(quantities),Jsonb(basis_evidence),evidence_hash))).fetchone()
++            else:
++                evidence=await (await c.execute('INSERT INTO media_terminal_evidence(job_id,attempt_id,binding_hash,terminal_status,provider_response_id,quantities,basis_evidence,evidence_hash,reference_kind,http_reference_namespace,http_reference_value) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *',(job_id,attempt_id,row['binding_hash'],terminal_status,provider_response_id,Jsonb(quantities),Jsonb(basis_evidence),evidence_hash,reference_kind,http_reference_namespace,http_reference_value))).fetchone()
+             artifacts=await self._delivery_count(c,job_id)
+             await c.execute('UPDATE media_jobs SET execution_state=%s,delivery_state=%s,updated_at=clock_timestamp() WHERE id=%s',(terminal_status,'available' if artifacts else 'unavailable',job_id))
+             await self._release_storage_budget(c,job_id)
+@@ -324,7 +369,10 @@
+                 error=PlatformError(409,'settlement_exceeds_reservation')
+             else:
+                 await self.ledger._complete(c,scope,reservation,actual,attempt_id,'settled')
+-                await c.execute('INSERT INTO media_receipts(job_id,attempt_id,quantities,basis_evidence,evidence_hash,terminal_status,provider_response_id,actual) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',(job_id,attempt_id,Jsonb(evidence['quantities']),Jsonb(evidence['basis_evidence']),evidence['evidence_hash'],evidence['terminal_status'],evidence['provider_response_id'],actual))
++                if evidence.get('reference_kind','object_id')=='object_id':
++                    await c.execute('INSERT INTO media_receipts(job_id,attempt_id,quantities,basis_evidence,evidence_hash,terminal_status,provider_response_id,actual) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',(job_id,attempt_id,Jsonb(evidence['quantities']),Jsonb(evidence['basis_evidence']),evidence['evidence_hash'],evidence['terminal_status'],evidence['provider_response_id'],actual))
++                else:
++                    await c.execute('INSERT INTO media_receipts(job_id,attempt_id,quantities,basis_evidence,evidence_hash,terminal_status,provider_response_id,actual,reference_kind,http_reference_namespace,http_reference_value) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',(job_id,attempt_id,Jsonb(evidence['quantities']),Jsonb(evidence['basis_evidence']),evidence['evidence_hash'],evidence['terminal_status'],evidence['provider_response_id'],actual,evidence['reference_kind'],evidence['http_reference_namespace'],evidence['http_reference_value']))
+                 await c.execute('UPDATE media_invocations SET held=held-%s,spent=spent+%s WHERE id=%s',(row['amount'],actual,row['invocation_id']))
+                 artifacts=await self._delivery_count(c,job_id)
+                 row=await (await c.execute("UPDATE media_jobs SET status='settled',actual=%s,execution_state=%s,delivery_state=%s,updated_at=clock_timestamp() WHERE id=%s RETURNING *",(actual,evidence['terminal_status'],'available' if artifacts else 'unavailable',job_id))).fetchone()
+--- a/services/platform/src/platform_service/media/references.py
++++ b/services/platform/src/platform_service/media/references.py
+@@ -0,0 +1,15 @@
++"""Authenticated HTTP correlations are distinct from provider resource IDs."""
++import re
++from ..errors import PlatformError
++
++HTTP_REFERENCE_PATTERNS = {
++    "openai_x_request_id_v1": re.compile(r"req_[A-Za-z0-9_-]{1,192}\Z", re.ASCII),
++    "newapi_x_oneapi_request_id_v1": re.compile(r"[0-9]{23}[A-Za-z0-9]{16}\Z", re.ASCII),
++}
++
++
++def http_reference(namespace, value):
++    pattern = HTTP_REFERENCE_PATTERNS.get(namespace) if isinstance(namespace, str) else None
++    if pattern is None or not isinstance(value, str) or not pattern.fullmatch(value):
++        raise PlatformError(422, "invalid_media_reference")
++    return namespace, value
+--- a/services/platform/src/platform_service/media/adapters/base.py
++++ b/services/platform/src/platform_service/media/adapters/base.py
+@@ -11,12 +11,19 @@
+ 
+ 
+ @dataclass(frozen=True)
++class HttpCorrelation:
++    namespace: str
++    value: str
++
++
++@dataclass(frozen=True)
+ class ImageResult:
+-    response_id: str
++    response_id: str | None
+     images: list[dict]
+     quantities: dict[str, int]
+     usage_hash: str | None
+     evidence_hash: str
++    correlation: HttpCorrelation | None = None
+ 
+ 
+ class MediaAdapter:
+--- a/services/platform/src/platform_service/media/adapters/openai_images.py
++++ b/services/platform/src/platform_service/media/adapters/openai_images.py
+@@ -8,7 +8,8 @@
+ from ...errors import PlatformError
+ from ...execution_protocol import _unique
+ from ...media_config import origin
+-from .base import ImageResult, MediaAdapter, PreparedRequest
++from .base import HttpCorrelation, ImageResult, MediaAdapter, PreparedRequest
++from ..references import http_reference
+ 
+ PARAMETERS = frozenset({"n", "size", "quality", "response_format", "output_format", "background", "input_fidelity", "output_compression", "moderation", "mask_asset"})
+ PATHS = {"image.generate": "/images/generations", "image.edit": "/images/edits", "image.variation": "/images/variations"}
+@@ -48,6 +49,8 @@
+         params = dict(request.get("parameters", {}))
+         if set(params) - PARAMETERS or type(params.get("n", 1)) is not int or not 1 <= params.get("n", 1) <= 4:
+             raise PlatformError(422, "invalid_media_parameters")
++        if self.provider.response_profile == "newapi_images_v1" and params != {"n": 1, "size": "1024x1024"}:
++            raise PlatformError(422, "unverified_media_parameters")
+         mask_id = params.pop("mask_asset", None)
+         if self.provider.response_format is not None:
+             if params.get("response_format", self.provider.response_format) != self.provider.response_format:
+@@ -94,15 +97,29 @@
+                                  headers={"Authorization": "Bearer " + self.provider.secret,
+                                           "Content-Type": prepared.content_type, "Accept": "application/json",
+                                           "Accept-Encoding": "identity", "X-Request-ID": request_id}) as response:
+-            http_id = correlation(response.headers.get("x-request-id") or response.headers.get("request-id"))
++            gateway = self.provider.response_profile == "newapi_images_v1"
++            http_id = correlation(response.headers.get("x-oneapi-request-id") if gateway else
++                                  response.headers.get("x-request-id") or response.headers.get("request-id"))
++            reference = None
++            if gateway and http_id is not None:
++                try:
++                    http_reference("newapi_x_oneapi_request_id_v1", http_id)
++                    reference = HttpCorrelation("newapi_x_oneapi_request_id_v1", http_id)
++                except PlatformError:
++                    http_id = None
+             await on_headers(http_status=response.status_code, **({"http_request_id": http_id} if http_id else {}))
+             raw = await bounded_response(response, max_bytes, json_type=True)
+         try:
+             value = json.loads(raw, object_pairs_hook=_unique, parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+             if not isinstance(value, dict) or value.get("error") or not isinstance(value.get("data"), list) or not 1 <= len(value["data"]) <= 4:
+                 raise ValueError
+-            response_id = correlation(value.get("id")) or http_id
+-            if response_id is None: raise ValueError
++            if gateway:
++                if reference is None or type(value.get("created")) is not int or value["created"] <= 0:
++                    raise ValueError
++                response_id = None
++            else:
++                response_id = correlation(value.get("id")) or http_id
++                if response_id is None: raise ValueError
+             images = []
+             for row in value["data"]:
+                 if not isinstance(row, dict) or bool(row.get("url")) == bool(row.get("b64_json")):
+@@ -119,7 +136,7 @@
+                 if "total_tokens" in usage and (type(usage["total_tokens"]) is not int or usage["total_tokens"] != sum(quantities.values())):
+                     raise ValueError
+                 usage_hash = hashlib.sha256(encode(usage)).hexdigest()
+-            return ImageResult(response_id, images, quantities, usage_hash, hashlib.sha256(raw).hexdigest())
++            return ImageResult(response_id, images, quantities, usage_hash, hashlib.sha256(raw).hexdigest(), reference)
+         except (ValueError, TypeError, UnicodeError, KeyError):
+             raise PlatformError(502, "invalid_media_response") from None
+ 
+--- a/services/platform/src/platform_service/migrations/016_m1_image_enablement.sql
++++ b/services/platform/src/platform_service/migrations/016_m1_image_enablement.sql
+@@ -0,0 +1,159 @@
++-- Explicit authenticated HTTP references remain distinct from provider objects.
++-- The legacy object branch retains its original values and evidence semantics.
++ALTER TABLE media_provider_attempts ADD CONSTRAINT media_attempt_reference_identity
++ UNIQUE(job_id,attempt_id,binding_hash,provider_scope_hash);
++CREATE TABLE media_http_response_references (
++ job_id text PRIMARY KEY REFERENCES media_jobs(id), attempt_id text NOT NULL,
++ binding_hash text NOT NULL, provider_scope_hash text NOT NULL,
++ namespace text NOT NULL,
++ http_request_id text NOT NULL,
++ CHECK((namespace='openai_x_request_id_v1' AND http_request_id ~ '^req_[A-Za-z0-9_-]{1,192}$')
++    OR (namespace='newapi_x_oneapi_request_id_v1' AND http_request_id ~ '^[0-9]{23}[A-Za-z0-9]{16}$')),
++ response_body_sha256 text NOT NULL CHECK(response_body_sha256 ~ '^[a-f0-9]{64}$'),
++ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
++ FOREIGN KEY(job_id,attempt_id,binding_hash,provider_scope_hash)
++ REFERENCES media_provider_attempts(job_id,attempt_id,binding_hash,provider_scope_hash),
++ UNIQUE(job_id,attempt_id,binding_hash,namespace,http_request_id,response_body_sha256),
++ UNIQUE(provider_scope_hash,namespace,http_request_id)
++);
++CREATE TRIGGER media_http_response_immutable BEFORE UPDATE OR DELETE ON media_http_response_references
++ FOR EACH ROW EXECUTE FUNCTION deny_immutable_change();
++CREATE TRIGGER media_http_response_no_truncate BEFORE TRUNCATE ON media_http_response_references
++ FOR EACH STATEMENT EXECUTE FUNCTION deny_immutable_change();
++
++ALTER TABLE media_terminal_evidence
++ ALTER COLUMN provider_response_id DROP NOT NULL,
++ ADD COLUMN reference_kind text NOT NULL DEFAULT 'object_id',
++ ADD COLUMN http_reference_namespace text,
++ ADD COLUMN http_reference_value text,
++ ADD CONSTRAINT media_terminal_reference_kind CHECK(
++    (reference_kind='object_id' AND provider_response_id IS NOT NULL AND http_reference_namespace IS NULL AND http_reference_value IS NULL)
++ OR (reference_kind='http_request_id' AND provider_response_id IS NULL AND http_reference_namespace IS NOT NULL AND http_reference_value IS NOT NULL AND
++     ((http_reference_namespace='openai_x_request_id_v1' AND http_reference_value ~ '^req_[A-Za-z0-9_-]{1,192}$')
++       OR (http_reference_namespace='newapi_x_oneapi_request_id_v1' AND http_reference_value ~ '^[0-9]{23}[A-Za-z0-9]{16}$')))),
++ ADD CONSTRAINT media_terminal_http_reference FOREIGN KEY(job_id,attempt_id,binding_hash,http_reference_namespace,http_reference_value,evidence_hash)
++ REFERENCES media_http_response_references(job_id,attempt_id,binding_hash,namespace,http_request_id,response_body_sha256)
++ DEFERRABLE INITIALLY DEFERRED;
++ALTER TABLE media_receipts
++ ALTER COLUMN provider_response_id DROP NOT NULL,
++ ADD COLUMN reference_kind text NOT NULL DEFAULT 'object_id',
++ ADD COLUMN http_reference_namespace text,
++ ADD COLUMN http_reference_value text,
++ ADD CONSTRAINT media_receipt_reference_kind CHECK(
++    (reference_kind='object_id' AND provider_response_id IS NOT NULL AND http_reference_namespace IS NULL AND http_reference_value IS NULL)
++ OR (reference_kind='http_request_id' AND provider_response_id IS NULL AND http_reference_namespace IS NOT NULL AND http_reference_value IS NOT NULL AND
++     ((http_reference_namespace='openai_x_request_id_v1' AND http_reference_value ~ '^req_[A-Za-z0-9_-]{1,192}$')
++       OR (http_reference_namespace='newapi_x_oneapi_request_id_v1' AND http_reference_value ~ '^[0-9]{23}[A-Za-z0-9]{16}$'))));
++
++CREATE FUNCTION check_media_http_reference() RETURNS trigger LANGUAGE plpgsql AS $$
++BEGIN
++ IF NOT EXISTS(SELECT 1 FROM media_jobs j JOIN media_provider_associations a ON a.job_id=j.id
++    WHERE j.id=NEW.job_id AND j.attempt_id=NEW.attempt_id AND j.binding_hash=NEW.binding_hash
++      AND j.dispatched_at IS NOT NULL AND a.kind='http' AND a.attempt_id=NEW.attempt_id
++      AND a.binding_hash=NEW.binding_hash AND a.provider_scope_hash=NEW.provider_scope_hash
++      AND a.http_status=200 AND a.http_request_id=NEW.http_request_id) THEN
++ RAISE EXCEPTION 'unverified authenticated media response' USING ERRCODE='23514'; END IF;
++ RETURN NULL;
++END $$;
++
++
++CREATE CONSTRAINT TRIGGER media_http_reference_binding AFTER INSERT ON media_http_response_references
++ DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_media_http_reference();
++
++CREATE OR REPLACE FUNCTION check_media_reconciliation() RETURNS trigger LANGUAGE plpgsql AS $$
++DECLARE inv text; current_inv media_invocations%ROWTYPE; expected_count bigint; expected_held numeric; expected_spent numeric;
++BEGIN
++ IF TG_TABLE_NAME='media_invocations' THEN inv=NEW.id;
++ ELSIF TG_TABLE_NAME IN ('media_receipts','media_terminal_evidence','media_provider_attempts','media_provider_associations','media_artifacts','media_voices','media_http_response_references') THEN SELECT invocation_id INTO inv FROM media_jobs WHERE id=NEW.job_id;
++ ELSIF TG_TABLE_NAME='media_assets' THEN inv=NEW.invocation_id;
++ ELSIF TG_TABLE_NAME='credit_reservations' THEN
++   SELECT invocation_id INTO inv FROM media_jobs WHERE reservation_id=NEW.id;
++   IF inv IS NULL AND NEW.operation='media' THEN RAISE EXCEPTION 'orphan media reservation' USING ERRCODE='23514'; END IF;
++ ELSE inv=NEW.invocation_id; END IF;
++ IF inv IS NULL THEN RETURN NULL; END IF;
++ SELECT * INTO current_inv FROM media_invocations WHERE id=inv;
++ IF current_inv.scope->>'user_id' IS DISTINCT FROM current_inv.user_id OR current_inv.scope->>'product_id' IS DISTINCT FROM current_inv.product_id
++    OR current_inv.scope->>'tenant_id' IS DISTINCT FROM current_inv.tenant_id OR current_inv.scope->>'billing_account_id' IS DISTINCT FROM current_inv.billing_account_id
++    OR current_inv.scope->>'session_id' IS DISTINCT FROM current_inv.session_id
++    OR NOT EXISTS(SELECT 1 FROM identity_sessions s WHERE s.id=current_inv.session_id AND s.user_id=current_inv.user_id AND s.product_id=current_inv.product_id
++       AND s.tenant_id=current_inv.tenant_id AND s.billing_account_id=current_inv.billing_account_id AND s.authorization_epoch::text=current_inv.scope->>'authorization_epoch')
++    OR NOT EXISTS(SELECT 1 FROM media_models m WHERE m.id=current_inv.model AND m.definition->>'capability'=current_inv.capability) THEN
++ RAISE EXCEPTION 'media invocation scope mismatch' USING ERRCODE='23514'; END IF;
++ SELECT count(*),coalesce(sum(amount) FILTER(WHERE status IN ('reserved','dispatched','pending_reconciliation')),0),coalesce(sum(actual) FILTER(WHERE status='settled'),0)
++ INTO expected_count,expected_held,expected_spent FROM media_jobs WHERE invocation_id=inv;
++ IF (current_inv.operation_count,current_inv.held::numeric,current_inv.spent::numeric) IS DISTINCT FROM (expected_count,expected_held,expected_spent) THEN
++ RAISE EXCEPTION 'media invocation reconciliation failed' USING ERRCODE='23514'; END IF;
++ IF EXISTS(SELECT 1 FROM media_jobs j JOIN credit_reservations r ON r.id=j.reservation_id WHERE j.invocation_id=inv AND
++    (j.status<>r.status OR j.amount<>r.amount OR j.actual IS DISTINCT FROM r.actual OR j.billing_account_id<>r.billing_account_id
++     OR j.user_id<>r.user_id OR j.product_id<>r.product_id OR j.tenant_id<>r.tenant_id OR j.funding_mode<>r.funding_mode
++     OR j.scope<>current_inv.scope OR j.model<>current_inv.model OR j.capability<>current_inv.capability
++     OR j.user_id<>current_inv.user_id OR j.product_id<>current_inv.product_id OR j.tenant_id<>current_inv.tenant_id OR j.billing_account_id<>current_inv.billing_account_id
++     OR j.funding_mode<>current_inv.funding_mode OR j.model_definition<>(SELECT definition FROM media_models WHERE id=j.model)
++     OR r.operation<>'media' OR r.idempotency_key<>j.id OR r.body_hash<>j.request_hash OR r.rate_version<>(j.model_definition->'rate'->>'version'))) THEN
++ RAISE EXCEPTION 'media reservation reconciliation failed' USING ERRCODE='23514'; END IF;
++ IF EXISTS(SELECT 1 FROM media_jobs j WHERE j.invocation_id=inv AND
++    ((j.status='reserved' AND (j.dispatched_at IS NOT NULL OR j.execution_state<>'queued' OR j.actual IS NOT NULL))
++     OR (j.status IN ('dispatched','pending_reconciliation','settled') AND (j.dispatched_at IS NULL OR NOT EXISTS(SELECT 1 FROM media_provider_attempts a WHERE a.job_id=j.id)))
++     OR (j.status='released' AND (j.dispatched_at IS NOT NULL OR j.actual<>0 OR j.execution_state<>'cancelled')))) THEN
++ RAISE EXCEPTION 'media execution reconciliation failed' USING ERRCODE='23514'; END IF;
++ IF EXISTS(SELECT 1 FROM media_jobs j LEFT JOIN media_receipts r ON r.job_id=j.id LEFT JOIN media_terminal_evidence e ON e.job_id=j.id WHERE j.invocation_id=inv AND
++    ((j.status='settled' AND (r.job_id IS NULL OR e.job_id IS NULL OR r.actual<>j.actual OR r.attempt_id<>j.attempt_id
++      OR (r.quantities,r.basis_evidence,r.evidence_hash,r.terminal_status,r.provider_response_id,r.reference_kind,r.http_reference_namespace,r.http_reference_value) IS DISTINCT FROM (e.quantities,e.basis_evidence,e.evidence_hash,e.terminal_status,e.provider_response_id,e.reference_kind,e.http_reference_namespace,e.http_reference_value)))
++     OR (j.status<>'settled' AND r.job_id IS NOT NULL))) THEN
++ RAISE EXCEPTION 'media receipt reconciliation failed' USING ERRCODE='23514'; END IF;
++ IF EXISTS(SELECT 1 FROM media_provider_attempts a JOIN media_jobs j ON j.id=a.job_id WHERE j.invocation_id=inv AND (a.attempt_id<>j.attempt_id OR a.binding_hash<>j.binding_hash))
++ OR EXISTS(SELECT 1 FROM media_provider_associations a JOIN media_provider_attempts p ON p.job_id=a.job_id JOIN media_jobs j ON j.id=a.job_id WHERE j.invocation_id=inv AND
++    (a.attempt_id<>p.attempt_id OR a.binding_hash<>p.binding_hash OR a.provider_scope_hash<>p.provider_scope_hash))
++ OR EXISTS(SELECT 1 FROM media_terminal_evidence e JOIN media_jobs j ON j.id=e.job_id WHERE j.invocation_id=inv AND
++    (e.attempt_id<>j.attempt_id OR e.binding_hash<>j.binding_hash OR e.terminal_status<>j.execution_state
++     OR NOT EXISTS(SELECT 1 FROM media_provider_associations a WHERE a.job_id=j.id AND a.kind='http')
++     OR (e.reference_kind='object_id' AND NOT EXISTS(SELECT 1 FROM media_provider_associations a WHERE a.job_id=j.id AND a.kind='response' AND a.provider_response_id=e.provider_response_id))
++     OR (e.reference_kind='http_request_id' AND NOT EXISTS(SELECT 1 FROM media_http_response_references h WHERE h.job_id=j.id AND h.attempt_id=e.attempt_id AND h.binding_hash=e.binding_hash AND h.namespace=e.http_reference_namespace AND h.http_request_id=e.http_reference_value AND h.response_body_sha256=e.evidence_hash)))) THEN
++ RAISE EXCEPTION 'media evidence binding mismatch' USING ERRCODE='23514'; END IF;
++ IF EXISTS(SELECT 1 FROM media_assets a WHERE a.invocation_id=inv AND (a.scope<>current_inv.scope OR a.user_id<>current_inv.user_id OR a.product_id<>current_inv.product_id OR a.tenant_id<>current_inv.tenant_id OR a.billing_account_id<>current_inv.billing_account_id))
++ OR EXISTS(SELECT 1 FROM media_artifacts a JOIN media_jobs j ON j.id=a.job_id WHERE j.invocation_id=inv AND
++    (a.invocation_id<>j.invocation_id OR a.attempt_id<>j.attempt_id OR a.scope<>j.scope OR a.user_id<>j.user_id OR a.product_id<>j.product_id OR a.tenant_id<>j.tenant_id OR a.billing_account_id<>j.billing_account_id))
++ OR EXISTS(SELECT 1 FROM media_voices a JOIN media_jobs j ON j.id=a.job_id WHERE j.invocation_id=inv AND
++    (a.scope<>j.scope OR a.user_id<>j.user_id OR a.product_id<>j.product_id OR a.tenant_id<>j.tenant_id OR a.billing_account_id<>j.billing_account_id)) THEN
++ RAISE EXCEPTION 'media content scope mismatch' USING ERRCODE='23514'; END IF;
++ RETURN NULL;
++END $$;
++
++CREATE CONSTRAINT TRIGGER media_http_reference_reconciliation AFTER INSERT ON media_http_response_references
++ DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_media_reconciliation();
++
++-- Non-financial, append-only image access on precisely the original grant.
++CREATE TABLE internal_feature_extensions (
++ id text PRIMARY KEY, grant_id text NOT NULL REFERENCES internal_grants(id),
++ environment_id text NOT NULL, user_id text NOT NULL REFERENCES users(id), tenant_id text NOT NULL,
++ billing_account_id text NOT NULL, product_id text NOT NULL CHECK(product_id='easel'),
++ feature text NOT NULL CHECK(feature='image'), starts_at timestamptz NOT NULL, expires_at timestamptz NOT NULL,
++ operator_id text NOT NULL CHECK(length(btrim(operator_id))>=1 AND length(btrim(operator_id))<=256),
++ issuance_key text NOT NULL CHECK(length(btrim(issuance_key))>=1 AND length(btrim(issuance_key))<=256),
++ reason text NOT NULL CHECK(length(btrim(reason))>=1 AND length(btrim(reason))<=256),
++ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
++ UNIQUE(environment_id,issuance_key), UNIQUE(grant_id,product_id,feature),
++ FOREIGN KEY(billing_account_id,tenant_id) REFERENCES billing_accounts(id,tenant_id),
++ FOREIGN KEY(tenant_id,user_id) REFERENCES tenant_members(tenant_id,user_id)
++);
++CREATE TRIGGER internal_feature_extensions_immutable BEFORE UPDATE OR DELETE ON internal_feature_extensions
++ FOR EACH ROW EXECUTE FUNCTION deny_immutable_change();
++CREATE TRIGGER internal_feature_extensions_no_truncate BEFORE TRUNCATE ON internal_feature_extensions
++ FOR EACH STATEMENT EXECUTE FUNCTION deny_immutable_change();
++CREATE FUNCTION check_internal_feature_extension() RETURNS trigger LANGUAGE plpgsql AS $$
++BEGIN
++ IF NOT EXISTS(SELECT 1 FROM internal_grants g JOIN memberships m ON m.id=g.membership_id
++     JOIN credit_lots l ON l.id=g.lot_id JOIN tenants t ON t.id=g.tenant_id AND t.owner_user_id=g.user_id
++     WHERE g.id=NEW.grant_id AND g.environment_id=NEW.environment_id
++       AND (g.user_id,g.tenant_id,g.billing_account_id,g.starts_at,g.expires_at)
++           IS NOT DISTINCT FROM (NEW.user_id,NEW.tenant_id,NEW.billing_account_id,NEW.starts_at,NEW.expires_at)
++       AND m.billing_account_id=g.billing_account_id AND m.plan_id='easel-internal-experience-v1'
++       AND (m.starts_at,m.expires_at) IS NOT DISTINCT FROM (g.starts_at,g.expires_at)
++       AND l.membership_id=m.id AND l.billing_account_id=g.billing_account_id AND NOT l.test_only
++       AND g.starts_at<=clock_timestamp() AND g.expires_at>clock_timestamp()
++       AND NOT EXISTS(SELECT 1 FROM membership_revocations r WHERE r.membership_id=m.id)) THEN
++ RAISE EXCEPTION 'internal feature grant binding divergence' USING ERRCODE='23514'; END IF;
++ RETURN NULL;
++END $$;
++CREATE CONSTRAINT TRIGGER internal_feature_extension_binding AFTER INSERT ON internal_feature_extensions
++ DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_internal_feature_extension();
+--- a/services/platform/src/platform_service/migrations/017_voice_stages.sql
++++ b/services/platform/src/platform_service/migrations/017_voice_stages.sql
+@@ -1,57 +1,3 @@
+--- Explicit authenticated HTTP references remain distinct from provider objects.
+--- The legacy object branch retains its original values and evidence semantics.
+-ALTER TABLE media_provider_attempts ADD CONSTRAINT media_attempt_reference_identity
+- UNIQUE(job_id,attempt_id,binding_hash,provider_scope_hash);
+-CREATE TABLE media_http_response_references (
+- job_id text PRIMARY KEY REFERENCES media_jobs(id), attempt_id text NOT NULL,
+- binding_hash text NOT NULL, provider_scope_hash text NOT NULL,
+- namespace text NOT NULL CHECK(namespace='openai_x_request_id_v1'),
+- http_request_id text NOT NULL CHECK(http_request_id ~ '^req_[A-Za-z0-9_-]{1,192}$'),
+- response_body_sha256 text NOT NULL CHECK(response_body_sha256 ~ '^[a-f0-9]{64}$'),
+- created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+- FOREIGN KEY(job_id,attempt_id,binding_hash,provider_scope_hash)
+- REFERENCES media_provider_attempts(job_id,attempt_id,binding_hash,provider_scope_hash),
+- UNIQUE(job_id,attempt_id,binding_hash,namespace,http_request_id,response_body_sha256),
+- UNIQUE(provider_scope_hash,namespace,http_request_id)
+-);
+-CREATE TRIGGER media_http_response_immutable BEFORE UPDATE OR DELETE ON media_http_response_references
+- FOR EACH ROW EXECUTE FUNCTION deny_immutable_change();
+-CREATE TRIGGER media_http_response_no_truncate BEFORE TRUNCATE ON media_http_response_references
+- FOR EACH STATEMENT EXECUTE FUNCTION deny_immutable_change();
+-
+-ALTER TABLE media_terminal_evidence
+- ALTER COLUMN provider_response_id DROP NOT NULL,
+- ADD COLUMN reference_kind text NOT NULL DEFAULT 'object_id',
+- ADD COLUMN http_reference_namespace text,
+- ADD COLUMN http_reference_value text,
+- ADD CONSTRAINT media_terminal_reference_kind CHECK(
+-    (reference_kind='object_id' AND provider_response_id IS NOT NULL AND http_reference_namespace IS NULL AND http_reference_value IS NULL)
+- OR (reference_kind='http_request_id' AND provider_response_id IS NULL AND http_reference_namespace IS NOT NULL AND http_reference_namespace='openai_x_request_id_v1'
+-     AND http_reference_value IS NOT NULL AND http_reference_value ~ '^req_[A-Za-z0-9_-]{1,192}$')),
+- ADD CONSTRAINT media_terminal_http_reference FOREIGN KEY(job_id,attempt_id,binding_hash,http_reference_namespace,http_reference_value,evidence_hash)
+- REFERENCES media_http_response_references(job_id,attempt_id,binding_hash,namespace,http_request_id,response_body_sha256)
+- DEFERRABLE INITIALLY DEFERRED;
+-ALTER TABLE media_receipts
+- ALTER COLUMN provider_response_id DROP NOT NULL,
+- ADD COLUMN reference_kind text NOT NULL DEFAULT 'object_id',
+- ADD COLUMN http_reference_namespace text,
+- ADD COLUMN http_reference_value text,
+- ADD CONSTRAINT media_receipt_reference_kind CHECK(
+-    (reference_kind='object_id' AND provider_response_id IS NOT NULL AND http_reference_namespace IS NULL AND http_reference_value IS NULL)
+- OR (reference_kind='http_request_id' AND provider_response_id IS NULL AND http_reference_namespace IS NOT NULL AND http_reference_namespace='openai_x_request_id_v1'
+-     AND http_reference_value IS NOT NULL AND http_reference_value ~ '^req_[A-Za-z0-9_-]{1,192}$'));
+-
+-CREATE FUNCTION check_media_http_reference() RETURNS trigger LANGUAGE plpgsql AS $$
+-BEGIN
+- IF NOT EXISTS(SELECT 1 FROM media_jobs j JOIN media_provider_associations a ON a.job_id=j.id
+-    WHERE j.id=NEW.job_id AND j.attempt_id=NEW.attempt_id AND j.binding_hash=NEW.binding_hash
+-      AND j.dispatched_at IS NOT NULL AND a.kind='http' AND a.attempt_id=NEW.attempt_id
+-      AND a.binding_hash=NEW.binding_hash AND a.provider_scope_hash=NEW.provider_scope_hash
+-      AND a.http_status=200 AND a.http_request_id=NEW.http_request_id) THEN
+- RAISE EXCEPTION 'unverified authenticated media response' USING ERRCODE='23514'; END IF;
+- RETURN NULL;
+-END $$;
+-
+ CREATE TABLE media_voice_registration_proofs (
+  voice_id text PRIMARY KEY REFERENCES media_voices(id),job_id text NOT NULL UNIQUE REFERENCES media_jobs(id),
+  attempt_id text NOT NULL,binding_hash text NOT NULL,provider_scope_hash text NOT NULL,
+@@ -166,67 +112,9 @@
+  EXECUTE format('CREATE CONSTRAINT TRIGGER %I AFTER INSERT ON %I DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_media_voice_history()',t||'_binding',t);
+  END LOOP;
+ END $$;
+-CREATE CONSTRAINT TRIGGER media_http_reference_binding AFTER INSERT ON media_http_response_references
+- DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_media_http_reference();
+ 
+-CREATE OR REPLACE FUNCTION check_media_reconciliation() RETURNS trigger LANGUAGE plpgsql AS $$
+-DECLARE inv text; current_inv media_invocations%ROWTYPE; expected_count bigint; expected_held numeric; expected_spent numeric;
+-BEGIN
+- IF TG_TABLE_NAME='media_invocations' THEN inv=NEW.id;
+- ELSIF TG_TABLE_NAME IN ('media_receipts','media_terminal_evidence','media_provider_attempts','media_provider_associations','media_artifacts','media_voices','media_http_response_references') THEN SELECT invocation_id INTO inv FROM media_jobs WHERE id=NEW.job_id;
+- ELSIF TG_TABLE_NAME='media_assets' THEN inv=NEW.invocation_id;
+- ELSIF TG_TABLE_NAME='credit_reservations' THEN
+-   SELECT invocation_id INTO inv FROM media_jobs WHERE reservation_id=NEW.id;
+-   IF inv IS NULL AND NEW.operation='media' THEN RAISE EXCEPTION 'orphan media reservation' USING ERRCODE='23514'; END IF;
+- ELSE inv=NEW.invocation_id; END IF;
+- IF inv IS NULL THEN RETURN NULL; END IF;
+- SELECT * INTO current_inv FROM media_invocations WHERE id=inv;
+- IF current_inv.scope->>'user_id' IS DISTINCT FROM current_inv.user_id OR current_inv.scope->>'product_id' IS DISTINCT FROM current_inv.product_id
+-    OR current_inv.scope->>'tenant_id' IS DISTINCT FROM current_inv.tenant_id OR current_inv.scope->>'billing_account_id' IS DISTINCT FROM current_inv.billing_account_id
+-    OR current_inv.scope->>'session_id' IS DISTINCT FROM current_inv.session_id
+-    OR NOT EXISTS(SELECT 1 FROM identity_sessions s WHERE s.id=current_inv.session_id AND s.user_id=current_inv.user_id AND s.product_id=current_inv.product_id
+-       AND s.tenant_id=current_inv.tenant_id AND s.billing_account_id=current_inv.billing_account_id AND s.authorization_epoch::text=current_inv.scope->>'authorization_epoch')
+-    OR NOT EXISTS(SELECT 1 FROM media_models m WHERE m.id=current_inv.model AND m.definition->>'capability'=current_inv.capability) THEN
+- RAISE EXCEPTION 'media invocation scope mismatch' USING ERRCODE='23514'; END IF;
+- SELECT count(*),coalesce(sum(amount) FILTER(WHERE status IN ('reserved','dispatched','pending_reconciliation')),0),coalesce(sum(actual) FILTER(WHERE status='settled'),0)
+- INTO expected_count,expected_held,expected_spent FROM media_jobs WHERE invocation_id=inv;
+- IF (current_inv.operation_count,current_inv.held::numeric,current_inv.spent::numeric) IS DISTINCT FROM (expected_count,expected_held,expected_spent) THEN
+- RAISE EXCEPTION 'media invocation reconciliation failed' USING ERRCODE='23514'; END IF;
+- IF EXISTS(SELECT 1 FROM media_jobs j JOIN credit_reservations r ON r.id=j.reservation_id WHERE j.invocation_id=inv AND
+-    (j.status<>r.status OR j.amount<>r.amount OR j.actual IS DISTINCT FROM r.actual OR j.billing_account_id<>r.billing_account_id
+-     OR j.user_id<>r.user_id OR j.product_id<>r.product_id OR j.tenant_id<>r.tenant_id OR j.funding_mode<>r.funding_mode
+-     OR j.scope<>current_inv.scope OR j.model<>current_inv.model OR j.capability<>current_inv.capability
+-     OR j.user_id<>current_inv.user_id OR j.product_id<>current_inv.product_id OR j.tenant_id<>current_inv.tenant_id OR j.billing_account_id<>current_inv.billing_account_id
+-     OR j.funding_mode<>current_inv.funding_mode OR j.model_definition<>(SELECT definition FROM media_models WHERE id=j.model)
+-     OR r.operation<>'media' OR r.idempotency_key<>j.id OR r.body_hash<>j.request_hash OR r.rate_version<>(j.model_definition->'rate'->>'version'))) THEN
+- RAISE EXCEPTION 'media reservation reconciliation failed' USING ERRCODE='23514'; END IF;
+- IF EXISTS(SELECT 1 FROM media_jobs j WHERE j.invocation_id=inv AND
+-    ((j.status='reserved' AND (j.dispatched_at IS NOT NULL OR j.execution_state<>'queued' OR j.actual IS NOT NULL))
+-     OR (j.status IN ('dispatched','pending_reconciliation','settled') AND (j.dispatched_at IS NULL OR NOT EXISTS(SELECT 1 FROM media_provider_attempts a WHERE a.job_id=j.id)))
+-     OR (j.status='released' AND (j.dispatched_at IS NOT NULL OR j.actual<>0 OR j.execution_state<>'cancelled')))) THEN
+- RAISE EXCEPTION 'media execution reconciliation failed' USING ERRCODE='23514'; END IF;
+- IF EXISTS(SELECT 1 FROM media_jobs j LEFT JOIN media_receipts r ON r.job_id=j.id LEFT JOIN media_terminal_evidence e ON e.job_id=j.id WHERE j.invocation_id=inv AND
+-    ((j.status='settled' AND (r.job_id IS NULL OR e.job_id IS NULL OR r.actual<>j.actual OR r.attempt_id<>j.attempt_id
+-      OR (r.quantities,r.basis_evidence,r.evidence_hash,r.terminal_status,r.provider_response_id,r.reference_kind,r.http_reference_namespace,r.http_reference_value) IS DISTINCT FROM (e.quantities,e.basis_evidence,e.evidence_hash,e.terminal_status,e.provider_response_id,e.reference_kind,e.http_reference_namespace,e.http_reference_value)))
+-     OR (j.status<>'settled' AND r.job_id IS NOT NULL))) THEN
+- RAISE EXCEPTION 'media receipt reconciliation failed' USING ERRCODE='23514'; END IF;
+- IF EXISTS(SELECT 1 FROM media_provider_attempts a JOIN media_jobs j ON j.id=a.job_id WHERE j.invocation_id=inv AND (a.attempt_id<>j.attempt_id OR a.binding_hash<>j.binding_hash))
+- OR EXISTS(SELECT 1 FROM media_provider_associations a JOIN media_provider_attempts p ON p.job_id=a.job_id JOIN media_jobs j ON j.id=a.job_id WHERE j.invocation_id=inv AND
+-    (a.attempt_id<>p.attempt_id OR a.binding_hash<>p.binding_hash OR a.provider_scope_hash<>p.provider_scope_hash))
+- OR EXISTS(SELECT 1 FROM media_terminal_evidence e JOIN media_jobs j ON j.id=e.job_id WHERE j.invocation_id=inv AND
+-    (e.attempt_id<>j.attempt_id OR e.binding_hash<>j.binding_hash OR e.terminal_status<>j.execution_state
+-     OR NOT EXISTS(SELECT 1 FROM media_provider_associations a WHERE a.job_id=j.id AND a.kind='http')
+-     OR (e.reference_kind='object_id' AND NOT EXISTS(SELECT 1 FROM media_provider_associations a WHERE a.job_id=j.id AND a.kind='response' AND a.provider_response_id=e.provider_response_id))
+-     OR (e.reference_kind='http_request_id' AND NOT EXISTS(SELECT 1 FROM media_http_response_references h WHERE h.job_id=j.id AND h.attempt_id=e.attempt_id AND h.binding_hash=e.binding_hash AND h.namespace=e.http_reference_namespace AND h.http_request_id=e.http_reference_value AND h.response_body_sha256=e.evidence_hash)))) THEN
+- RAISE EXCEPTION 'media evidence binding mismatch' USING ERRCODE='23514'; END IF;
+- IF EXISTS(SELECT 1 FROM media_assets a WHERE a.invocation_id=inv AND (a.scope<>current_inv.scope OR a.user_id<>current_inv.user_id OR a.product_id<>current_inv.product_id OR a.tenant_id<>current_inv.tenant_id OR a.billing_account_id<>current_inv.billing_account_id))
+- OR EXISTS(SELECT 1 FROM media_artifacts a JOIN media_jobs j ON j.id=a.job_id WHERE j.invocation_id=inv AND
+-    (a.invocation_id<>j.invocation_id OR a.attempt_id<>j.attempt_id OR a.scope<>j.scope OR a.user_id<>j.user_id OR a.product_id<>j.product_id OR a.tenant_id<>j.tenant_id OR a.billing_account_id<>j.billing_account_id))
+- OR EXISTS(SELECT 1 FROM media_voices a JOIN media_jobs j ON j.id=a.job_id WHERE j.invocation_id=inv AND
+-    (a.scope<>j.scope OR a.user_id<>j.user_id OR a.product_id<>j.product_id OR a.tenant_id<>j.tenant_id OR a.billing_account_id<>j.billing_account_id)) THEN
+- RAISE EXCEPTION 'media content scope mismatch' USING ERRCODE='23514'; END IF;
+- RETURN NULL;
+-END $$;
++
++
+ 
+ ALTER TABLE media_voice_step_observations ADD CONSTRAINT media_voice_observation_step_identity UNIQUE(id,step_id);
+ ALTER TABLE media_voice_registration_proofs ADD CONSTRAINT media_voice_proof_observation
+--- a/services/platform/tests/test_media_newapi_images.py
++++ b/services/platform/tests/test_media_newapi_images.py
+@@ -0,0 +1,268 @@
++"""Explicit New API image gateway references; synthetic responses, real PostgreSQL."""
++import base64
++from dataclasses import replace
++import hashlib
++import io
++import json
++
++import httpx
++from PIL import Image
++import psycopg
++import pytest
++from psycopg.types.json import Jsonb
++
++from platform_service.errors import PlatformError
++from platform_service.media_config import MediaProvider, MediaSettings
++from platform_service.media.adapters.openai_images import OpenAIImagesAdapter
++from platform_service.media_runtime import MediaRuntime
++from test_media_contracts import definition
++from test_media_credits import setup, admit, artifact
++
++NAMESPACE = 'newapi_x_oneapi_request_id_v1'
++GATEWAY_ID = '202610270212247285164708268d9d6hP1gm1CF'
++FORWARDED_ID = '016f6b9b-d7ff-4b3f-a10c-24ad3632ba2d'
++
++
++def provider(**patch):
++    values = dict(version='1', base_url='http://127.0.0.1:9999/v1', secret='synthetic-only',
++                  models={'fixture-image':'upstream'}, capabilities=('image.generate',),
++                  response_profile='newapi_images_v1')
++    return MediaProvider(**(values | patch))
++
++
++def settings(tmp_path, **patch):
++    return MediaSettings(mode='test', storage_root=tmp_path/'media', providers={'fixture':provider(**patch)})
++
++
++def png(size=(1024,1024)):
++    stream=io.BytesIO(); Image.new('RGB',size,(92,115,140)).save(stream,format='PNG'); return stream.getvalue()
++
++
++def request():
++    return {'model':'fixture-image','capability':'image.generate','prompt':'Synthetic controlled image',
++            'assets':[],'parameters':{'n':1,'size':'1024x1024'}}
++
++
++def test_response_profile_is_explicit_and_changes_only_new_binding(tmp_path):
++    assert 'response_profile' in MediaProvider.__dataclass_fields__
++    legacy=MediaProvider('1','http://127.0.0.1:9999/v1','synthetic-only',{'fixture-image':'upstream'},capabilities=('image.generate',))
++    old=MediaSettings(mode='test',storage_root=tmp_path/'old',providers={'fixture':legacy})
++    frozen=['test','fixture','1',legacy.base_url,hashlib.sha256(legacy.secret.encode()).hexdigest(),
++            'fixture-image','upstream','openai_images_v1','1',['image.generate'],[],False,None]
++    assert old.bindings['fixture-image']['binding_hash']==hashlib.sha256(json.dumps(frozen,separators=(',',':')).encode()).hexdigest()
++    assert settings(tmp_path).bindings!=old.bindings
++    for patch in ({'response_profile':'guessed'}, {'capabilities':('image.edit',)}, {'response_format':'url'}):
++        with pytest.raises(ValueError): settings(tmp_path/'invalid',**patch)
++
++
++@pytest.mark.asyncio
++async def test_newapi_profile_persists_gateway_header_namespace_without_fabricating_object_or_usage():
++    adapter=OpenAIImagesAdapter(provider(),'test')
++    prepared=adapter.prepare(request(),[])
++    observed=[]
++    value={'created':1793067144,'data':[{'url':'http://127.0.0.1:9998/original.png'}]}
++    raw=json.dumps(value,separators=(',',':')).encode()
++    def handler(req): return httpx.Response(200,content=raw,headers={
++        'content-type':'application/json','x-oneapi-request-id':GATEWAY_ID,'x-request-id':FORWARDED_ID})
++    async def headers(**values): observed.append(values)
++    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
++        result=await adapter.submit(client,prepared,request_id='local-attempt',max_bytes=65536,on_headers=headers)
++    assert result.response_id is None
++    assert result.correlation.namespace==NAMESPACE and result.correlation.value==GATEWAY_ID
++    assert result.evidence_hash==hashlib.sha256(raw).hexdigest()
++    assert result.quantities=={} and result.usage_hash is None
++    assert observed==[{'http_status':200,'http_request_id':GATEWAY_ID}]
++
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('header,patch',[
++    ({'x-request-id':FORWARDED_ID},{}),
++    ({'x-oneapi-request-id':FORWARDED_ID},{}),
++    ({'x-oneapi-request-id':GATEWAY_ID},{'id':'made-up-object','created':None}),
++])
++async def test_gateway_profile_has_no_uuid_bodyid_or_created_fallback(header,patch):
++    adapter=OpenAIImagesAdapter(provider(),'test'); observed=[]
++    value={'created':1793067144,'data':[{'b64_json':base64.b64encode(png()).decode()}]} | patch
++    async def headers(**values):observed.append(values)
++    def handler(req):return httpx.Response(200,json=value,headers=header)
++    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
++        with pytest.raises(PlatformError):await adapter.submit(client,adapter.prepare(request(),[]),request_id='local',max_bytes=65536,on_headers=headers)
++    assert all('provider_response_id' not in values for values in observed)
++
++
++@pytest.mark.asyncio
++async def test_real_pg_newapi_url_decode_fixed_delivery_receipt_is_typed_and_replay_never_posts(db,tmp_path):
++    service,ledger,scope,*_=await setup(db)
++    configured=settings(tmp_path,download_origins=('http://127.0.0.1:9998',))
++    token=await service.mint(scope,model='fixture-image',capability='image.generate',invocation_key='typed-runtime',mode='test',bindings=configured.bindings)
++    calls=[]
++    response_raw=json.dumps({'created':1793067144,'data':[{'url':'http://127.0.0.1:9998/image.png'}]},separators=(',',':')).encode()
++    def handler(req):
++        calls.append(req)
++        if req.method=='POST':return httpx.Response(200,content=response_raw,headers={'content-type':'application/json','x-oneapi-request-id':GATEWAY_ID,'x-request-id':FORWARDED_ID})
++        assert req.headers.get('authorization') is None
++        return httpx.Response(200,content=png(),headers={'content-type':'image/png'})
++    runtime=MediaRuntime(db,service.identity,configured,service=service,transport=httpx.MockTransport(handler))
++    try:
++        result=await runtime.submit(token['task_token'],'one',request())
++        assert result['financial_state']=='settled' and result['actual']=='2'
++        assert len(result['artifacts'])==1 and result['artifacts'][0]['properties']=={'width':1024,'height':1024,'format':'PNG'}
++        assert (await runtime.artifact(scope,result['artifacts'][0]['id'],content=True))[0]==png()
++        assert (await runtime.submit(token['task_token'],'one',request()))['id']==result['id']
++        assert [r.method for r in calls]==['POST','GET']
++        async with db.connection() as c:
++            ref=await (await c.execute('SELECT * FROM media_http_response_references WHERE job_id=%s',(result['id'],))).fetchone()
++            terminal=await (await c.execute('SELECT * FROM media_terminal_evidence WHERE job_id=%s',(result['id'],))).fetchone()
++            receipt=await (await c.execute('SELECT * FROM media_receipts WHERE job_id=%s',(result['id'],))).fetchone()
++            assert ref['namespace']==NAMESPACE and ref['http_request_id']==GATEWAY_ID
++            assert ref['response_body_sha256']==hashlib.sha256(response_raw).hexdigest()
++            for row in (terminal,receipt):
++                assert row['provider_response_id'] is None and row['reference_kind']=='http_request_id'
++                assert row['http_reference_namespace']==NAMESPACE and row['http_reference_value']==GATEWAY_ID
++                assert row['quantities']=={'image':1} and set(row['basis_evidence'])=={'verified_delivery_v1'}
++            assert (await (await c.execute("SELECT count(*) n FROM media_provider_associations WHERE job_id=%s AND kind='response'",(result['id'],))).fetchone())['n']==0
++        assert (await ledger.summary(scope))['spent']=='2'
++    finally:await runtime.close()
++
++
++@pytest.mark.asyncio
++async def test_gateway_no_usage_profile_closes_token_meters_before_mint_dispatch_or_funding(db,tmp_path):
++    spec=definition();spec['rate']={'version':'unknown-tokens','meters':[{'unit':'input_token','basis':'provider_usage_v1','numerator':'1','denominator':'1'}]};spec['limits']['max_units']={'input_token':8}
++    service,ledger,scope,*_=await setup(db,media_definition=spec)
++    calls=[]
++    runtime=MediaRuntime(db,service.identity,settings(tmp_path),service=service,transport=httpx.MockTransport(lambda req:calls.append(req)))
++    try:
++        assert (await runtime.capabilities('easel'))['test_media_execution_enabled'] is False
++        assert await runtime.catalog(scope)=={'models':[]}
++        with pytest.raises(PlatformError):await runtime.mint(scope,{'model':'fixture-image','capability':'image.generate','invocation_key':'closed'})
++        assert not calls and (await ledger.summary(scope))['reserved']=='0'
++    finally:await runtime.close()
++
++
++async def dispatched(db,key='typed',gateway_id=GATEWAY_ID):
++    service,ledger,scope,ctx,*_=await setup(db)
++    assert callable(getattr(service,'record_http_response_reference',None))
++    job=await admit(service,ctx,key)
++    await service.record_provider_attempt(job['id'],job['attempt_id'],provider_request_hash='b'*64,provider_scope_hash='c'*64,upstream_model='fixture',request_id='local-'+job['id'])
++    await service.dispatch(job['id'],job['attempt_id'])
++    await service.record_provider_association(job['id'],job['attempt_id'],http_status=200,http_request_id=gateway_id)
++    return service,ledger,scope,ctx,job
++
++
++@pytest.mark.asyncio
++async def test_typed_reference_is_immutable_and_rejects_wrong_namespace_header_attempt_binding_body(db):
++    service,ledger,scope,ctx,job=await dispatched(db)
++    original=await service.record_http_response_reference(job['id'],job['attempt_id'],namespace=NAMESPACE,http_request_id=GATEWAY_ID,response_body_sha256='d'*64)
++    assert (await service.record_http_response_reference(job['id'],job['attempt_id'],namespace=NAMESPACE,http_request_id=GATEWAY_ID,response_body_sha256='d'*64))==original
++    for patch in [{'namespace':'guessed'},{'http_request_id':FORWARDED_ID},{'http_request_id':'202610270212247285164708268d9d6hP1gm1CE'},{'response_body_sha256':'e'*64}]:
++        with pytest.raises(PlatformError):await service.record_http_response_reference(job['id'],job['attempt_id'],**({'namespace':NAMESPACE,'http_request_id':GATEWAY_ID,'response_body_sha256':'d'*64}|patch))
++    for column,value in [('namespace','guessed'),('http_request_id',FORWARDED_ID),('response_body_sha256','e'*64)]:
++        with pytest.raises(psycopg.Error):
++            async with db.connection() as c:await c.execute('UPDATE media_http_response_references SET '+column+'=%s WHERE job_id=%s',(value,job['id']))
++    await artifact(service,job)
++    arguments=dict(terminal_status='completed',provider_response_id=None,quantities={'image':1},basis_evidence={'verified_delivery_v1':'e'*64},evidence_hash='d'*64,reference_kind='http_request_id',http_reference_namespace=NAMESPACE,http_reference_value=GATEWAY_ID)
++    for patch in [{'provider_response_id':'fake-object'},{'reference_kind':'object_id'},{'evidence_hash':'f'*64},{'http_reference_value':'202610270212247285164708268d9d6hP1gm1CE'}]:
++        with pytest.raises(PlatformError):await service.record_terminal_evidence(job['id'],job['attempt_id'],**(arguments|patch))
++    await service.record_terminal_evidence(job['id'],job['attempt_id'],**arguments)
++    assert (await service.finish_from_evidence(job['id'],job['attempt_id']))['actual']=='2'
++    async with db.connection() as c:
++        receipt=await (await c.execute('SELECT * FROM media_receipts WHERE job_id=%s',(job['id'],))).fetchone()
++        assert receipt['provider_response_id'] is None and receipt['http_reference_namespace']==NAMESPACE
++
++
++@pytest.mark.asyncio
++async def test_database_cannot_reuse_gateway_reference_or_attach_wrong_attempt_scope_and_header(db):
++    service,ledger,scope,ctx,first=await dispatched(db)
++    await service.record_http_response_reference(first['id'],first['attempt_id'],namespace=NAMESPACE,http_request_id=GATEWAY_ID,response_body_sha256='d'*64)
++    second=await admit(service,ctx,'second')
++    await service.record_provider_attempt(second['id'],second['attempt_id'],provider_request_hash='e'*64,provider_scope_hash='c'*64,upstream_model='fixture',request_id='local-second')
++    await service.dispatch(second['id'],second['attempt_id'])
++    await service.record_provider_association(second['id'],second['attempt_id'],http_status=200,http_request_id=GATEWAY_ID)
++    values=dict(job_id=second['id'],attempt_id=second['attempt_id'],binding_hash=second['binding_hash'],provider_scope_hash='c'*64,namespace=NAMESPACE,http_request_id=GATEWAY_ID,response_body_sha256='d'*64)
++    for patch in [{},{'attempt_id':'other'},{'binding_hash':'f'*64},{'provider_scope_hash':'f'*64},{'http_request_id':'202610270212247285164708268d9d6hP1gm1CE'}]:
++        with pytest.raises(psycopg.Error):
++            async with db.connection() as c:
++                await c.execute('INSERT INTO media_http_response_references(job_id,attempt_id,binding_hash,provider_scope_hash,namespace,http_request_id,response_body_sha256) VALUES (%(job_id)s,%(attempt_id)s,%(binding_hash)s,%(provider_scope_hash)s,%(namespace)s,%(http_request_id)s,%(response_body_sha256)s)',values|patch)
++    assert (await ledger.summary(scope))['reserved']=='12'
++
++
++@pytest.mark.asyncio
++async def test_database_terminal_typed_tuple_and_body_hash_cannot_be_forged(db):
++    service,ledger,scope,ctx,job=await dispatched(db)
++    await service.record_http_response_reference(job['id'],job['attempt_id'],namespace=NAMESPACE,http_request_id=GATEWAY_ID,response_body_sha256='d'*64)
++    await artifact(service,job)
++    values=dict(job_id=job['id'],attempt_id=job['attempt_id'],binding_hash=job['binding_hash'],
++        terminal_status='completed',provider_response_id=None,quantities=Jsonb({'image':1}),
++        basis_evidence=Jsonb({'verified_delivery_v1':'e'*64}),evidence_hash='d'*64,
++        reference_kind='http_request_id',http_reference_namespace=NAMESPACE,http_reference_value=GATEWAY_ID)
++    for patch in [{'evidence_hash':'f'*64},{'provider_response_id':'fabricated-object'},
++                  {'http_reference_namespace':'openai_x_request_id_v1'},
++                  {'http_reference_value':'202610270212247285164708268d9d6hP1gm1CE'}]:
++        with pytest.raises(psycopg.Error) as caught:
++            async with db.connection() as c:
++                await c.execute('INSERT INTO media_terminal_evidence(job_id,attempt_id,binding_hash,terminal_status,provider_response_id,quantities,basis_evidence,evidence_hash,reference_kind,http_reference_namespace,http_reference_value) VALUES (%(job_id)s,%(attempt_id)s,%(binding_hash)s,%(terminal_status)s,%(provider_response_id)s,%(quantities)s,%(basis_evidence)s,%(evidence_hash)s,%(reference_kind)s,%(http_reference_namespace)s,%(http_reference_value)s)',values|patch)
++                await c.execute("UPDATE media_jobs SET execution_state='completed' WHERE id=%s",(job['id'],))
++                await service._release_storage_budget(c,job['id'])
++        assert caught.value.sqlstate in {'23503','23514'}
++    await service.finish(job['id'],job['attempt_id'],terminal_status='completed',provider_response_id=None,
++        quantities={'image':1},basis_evidence={'verified_delivery_v1':'e'*64},evidence_hash='d'*64,
++        reference_kind='http_request_id',http_reference_namespace=NAMESPACE,http_reference_value=GATEWAY_ID)
++    assert (await ledger.summary(scope))['spent']=='2'
++
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('failure',['download_timeout','decode_failure','wrong_header'])
++async def test_gateway_unknown_or_invalid_delivery_preserves_hold_and_replay_never_generates_again(db,tmp_path,failure):
++    service,ledger,scope,*_=await setup(db)
++    configured=settings(tmp_path,download_origins=('http://127.0.0.1:9998',))
++    token=await service.mint(scope,model='fixture-image',capability='image.generate',invocation_key='unknown',mode='test',bindings=configured.bindings)
++    calls=[]
++    def handler(req):
++        calls.append(req)
++        if req.method=='POST':return httpx.Response(200,json={'created':1793067144,'data':[{'url':'http://127.0.0.1:9998/image.png'}]},headers={'x-oneapi-request-id':FORWARDED_ID if failure=='wrong_header' else GATEWAY_ID})
++        if failure=='download_timeout':raise httpx.ReadTimeout('synthetic-only',request=req)
++        return httpx.Response(200,content=b'not-an-image',headers={'content-type':'image/png'})
++    runtime=MediaRuntime(db,service.identity,configured,service=service,transport=httpx.MockTransport(handler))
++    try:
++        with pytest.raises(PlatformError):await runtime.submit(token['task_token'],'one',request())
++        old=await runtime.submit(token['task_token'],'one',request())
++        assert old['financial_state']=='pending_reconciliation' and old['actual'] is None
++        assert sum(r.method=='POST' for r in calls)==1
++        assert (await ledger.summary(scope))['reserved']=='6' and (await ledger.summary(scope))['spent']=='0'
++        async with db.connection() as c:
++            assert (await (await c.execute('SELECT count(*) n FROM media_terminal_evidence')).fetchone())['n']==0
++            assert (await (await c.execute('SELECT count(*) n FROM media_receipts')).fetchone())['n']==0
++    finally:await runtime.close()
++
++
++@pytest.mark.asyncio
++async def test_gateway_wrong_decoded_dimensions_keep_unknown_hold_budget_and_never_register_or_repost(db,tmp_path):
++    service,ledger,scope,*_=await setup(db)
++    configured=settings(tmp_path)
++    token=await service.mint(scope,model='fixture-image',capability='image.generate',invocation_key='wrong-size',mode='test',bindings=configured.bindings)
++    calls=[]
++    def handler(req):
++        calls.append(req)
++        return httpx.Response(200,json={'created':1793067144,'data':[{'b64_json':base64.b64encode(png((2,2))).decode()}]},headers={'x-oneapi-request-id':GATEWAY_ID})
++    runtime=MediaRuntime(db,service.identity,configured,service=service,transport=httpx.MockTransport(handler))
++    try:
++        with pytest.raises(PlatformError):await runtime.submit(token['task_token'],'one',request())
++        old=await runtime.submit(token['task_token'],'one',request())
++        assert old['financial_state']=='pending_reconciliation' and old['actual'] is None and old['artifacts']==[]
++        assert (await ledger.summary(scope))['spent']=='0' and (await ledger.summary(scope))['reserved']=='6'
++        assert len(calls)==1
++        async with db.connection() as c:
++            assert (await (await c.execute('SELECT count(*) n FROM media_artifacts')).fetchone())['n']==0
++            assert (await (await c.execute('SELECT count(*) n FROM media_blobs')).fetchone())['n']==0
++            assert (await (await c.execute('SELECT count(*) n FROM media_terminal_evidence')).fetchone())['n']==0
++            assert (await (await c.execute('SELECT count(*) n FROM media_receipts')).fetchone())['n']==0
++            budget=await (await c.execute('SELECT * FROM media_storage_budgets WHERE job_id=%s',(old['id'],))).fetchone()
++            assert budget['released_at'] is None and budget['remaining_bytes']==budget['max_bytes'] and budget['remaining_files']==budget['max_files']
++    finally:await runtime.close()
++
++
++@pytest.mark.parametrize('parameters',[{'n':2,'size':'1024x1024'},{'n':1,'size':'1536x1024'},{'n':1},
++                                     {'n':1,'size':'1024x1024','quality':'low'}])
++def test_explicit_gateway_profile_does_not_expand_unverified_request_quantity_size_or_quality(parameters):
++    adapter=OpenAIImagesAdapter(provider(),'test')
++    with pytest.raises(PlatformError):adapter.prepare(request()|{'parameters':parameters},[])
+--- a/services/platform/tests/test_internal_features.py
++++ b/services/platform/tests/test_internal_features.py
+@@ -0,0 +1,222 @@
++"""Append-only image entitlement on an existing internal grant, without funds."""
++import asyncio
++from dataclasses import replace
++from datetime import timedelta
++import importlib.util
++import secrets
++from uuid import uuid4
++
++import psycopg
++from psycopg import sql
++from psycopg.types.json import Jsonb
++from psycopg.conninfo import make_conninfo
++import pytest
++
++from platform_service.contracts import OperatorIdentity
++from platform_service.errors import PlatformError
++from platform_service.credits import active_plans, CreditLedger
++from platform_service.membership import MembershipService
++from test_internal_grants import internal, issue
++
++OPERATOR=OperatorIdentity('feature-operator',frozenset({'internal:extend_features'}))
++
++
++async def snapshot(db):
++    async with db.connection() as c:
++        return {table:await (await c.execute(sql.SQL('SELECT * FROM {} ORDER BY 1').format(sql.Identifier(table)))).fetchall()
++                for table in ['plans','internal_grants','memberships','credit_lots','credit_journals','credit_entries']}
++
++
++def feature_service(db):
++    assert importlib.util.find_spec('platform_service.internal_features') is not None
++    from platform_service.internal_features import InternalFeatureService
++    return InternalFeatureService(db)
++
++
++async def extend(service,internal,grant,**patch):
++    return await service.extend(OPERATOR,**(dict(environment=internal[3]['environment_id'],grant_id=grant['id'],
++        product='easel',feature='image',key='approved-image-once',reason='User approved existing experience image access')|patch))
++
++
++@pytest.mark.asyncio
++async def test_extension_is_audited_idempotent_and_preserves_all_old_funds_plan_expiry_and_concurrency(internal,db):
++    grant=await issue(internal);scope=internal[2];service=feature_service(db)
++    before=await snapshot(db);wallet=await CreditLedger(db).summary(scope)
++    first=await extend(service,internal,grant)
++    assert await extend(service,internal,grant)==first
++    assert first['grant_id']==grant['id'] and first['product_id']=='easel' and first['feature']=='image'
++    assert first['operator_id']==OPERATOR.id and first['reason']=='User approved existing experience image access'
++    assert first['expires_at']==grant['expires_at'] and first['starts_at']==grant['starts_at']
++    assert await snapshot(db)==before and await CreditLedger(db).summary(scope)==wallet
++    entitlement=await MembershipService(db).entitlements(scope)
++    assert entitlement['features']==['image','text'] and entitlement['concurrency']==1
++    assert entitlement['experience_active'] and len(entitlement['memberships'])==1
++    from platform_service.internal_features import feature_memberships
++    async with db.connection() as c:
++        plans=await active_plans(c,scope,'live')
++        selected=await feature_memberships(c,scope,'live','image')
++        assert selected==plans and selected[0]['definition']['features']==['text']
++        assert await feature_memberships(c,scope,'test','image')==[]
++        assert await feature_memberships(c,replace(scope,user_id='other'),'live','image')==[]
++        assert await feature_memberships(c,replace(scope,product_id='second'),'live','image')==[]
++        assert (await (await c.execute('SELECT count(*) n FROM internal_feature_extensions')).fetchone())['n']==1
++
++
++@pytest.mark.asyncio
++async def test_extension_requires_owner_capability_exact_grant_environment_feature_and_source_key(internal,db):
++    grant=await issue(internal);service=feature_service(db)
++    for patch in [{'environment':'different-env'},{'grant_id':'missing'},{'product':'second'},{'feature':'video'}]:
++        with pytest.raises(PlatformError):await extend(service,internal,grant,**patch)
++    with pytest.raises(PlatformError):
++        await service.extend(OperatorIdentity('unprivileged',frozenset()),environment=internal[3]['environment_id'],grant_id=grant['id'],product='easel',feature='image',key='x',reason='approved')
++    first=await extend(service,internal,grant)
++    for patch in [{'key':'new-key'},{'reason':'different-reason'}]:
++        with pytest.raises(PlatformError):await extend(service,internal,grant,**patch)
++    assert await extend(service,internal,grant)==first
++
++
++@pytest.mark.asyncio
++async def test_concurrent_feature_extension_has_one_history_row_without_new_financial_rows(internal,db):
++    grant=await issue(internal);service=feature_service(db);before=await snapshot(db)
++    outcomes=await asyncio.gather(*(extend(service,internal,grant) for _ in range(6)))
++    assert all(row==outcomes[0] for row in outcomes)
++    assert await snapshot(db)==before
++
++
++@pytest.mark.asyncio
++async def test_database_rejects_rebound_owner_expiry_product_and_mutable_feature_history(internal,db):
++    grant=await issue(internal);service=feature_service(db)
++    row=await extend(service,internal,grant)
++    async with db.connection() as c:stored=await (await c.execute('SELECT * FROM internal_feature_extensions')).fetchone()
++    for patch in [{'user_id':'other'},{'billing_account_id':'other-wallet'},{'tenant_id':'other-t'},
++                  {'environment_id':'other-environment'},{'expires_at':stored['expires_at']+timedelta(days=1)},
++                  {'starts_at':stored['starts_at']+timedelta(seconds=1)},{'product_id':'second'},{'feature':'video'}]:
++        values=stored|{'id':'candidate-'+str(len(str(patch))),'issuance_key':'candidate-'+str(len(str(patch)))}|patch
++        with pytest.raises(psycopg.Error):
++            async with db.connection() as c:
++                await c.execute('INSERT INTO internal_feature_extensions(id,grant_id,environment_id,user_id,tenant_id,billing_account_id,product_id,feature,starts_at,expires_at,operator_id,issuance_key,reason) VALUES (%(id)s,%(grant_id)s,%(environment_id)s,%(user_id)s,%(tenant_id)s,%(billing_account_id)s,%(product_id)s,%(feature)s,%(starts_at)s,%(expires_at)s,%(operator_id)s,%(issuance_key)s,%(reason)s)',values)
++    for command in ['UPDATE internal_feature_extensions SET reason=\'changed\'','DELETE FROM internal_feature_extensions','TRUNCATE internal_feature_extensions']:
++        with pytest.raises(psycopg.Error):
++            async with db.connection() as c:await c.execute(command)
++
++
++@pytest.mark.asyncio
++async def test_inactive_owner_blocks_product_entitlements_without_rewriting_feature_history(internal,db):
++    grant=await issue(internal);scope=internal[2];service=feature_service(db)
++    await extend(service,internal,grant)
++    async with db.connection() as c:
++        await c.execute("UPDATE users SET active=false WHERE id=%s",(scope.user_id,))
++    with pytest.raises(PlatformError):await MembershipService(db).entitlements(scope)
++    from platform_service.internal_features import feature_memberships
++    async with db.connection() as c:
++        assert await feature_memberships(c,scope,'live','image',memberships=[])==[]
++        assert (await (await c.execute('SELECT count(*) n FROM internal_feature_extensions')).fetchone())['n']==1
++
++
++@pytest.mark.asyncio
++async def test_extension_uses_real_image_feature_gate_on_original_wallet_and_no_new_grant(internal,db):
++    from platform_service.media.core import MediaService
++    from platform_service.identity import IdentityService
++    from test_media_contracts import definition
++    grant=await issue(internal);scope=internal[2]
++    media=MediaService(db,IdentityService(db,None))
++    spec=definition();spec.update(feature='image',test_only=False,verification='live',verification_ref='synthetic-local-protocol-evidence')
++    spec['rate']={'version':'approved-internal-image-20261027-v1','meters':[{'unit':'image','basis':'verified_delivery_v1','numerator':'1000000','denominator':'1'}]}
++    spec['limits']['max_units']={'image':1}
++    binding={'fixture-image':{'provider_id':'fixture','provider_version':'1','adapter':'openai_images_v1','protocol_version':'1','binding_hash':'a'*64}}
++    operator=OperatorIdentity('publisher',frozenset({'media:publish'}))
++    await media.publish(spec,operator);await media.set_enabled('fixture-image',True,operator)
++    with pytest.raises(PlatformError) as caught:
++        await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='before-extension',mode='live',bindings=binding)
++    assert caught.value.code=='media_entitlement_required'
++    await extend(feature_service(db),internal,grant)
++    token=await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='after-extension',mode='live',bindings=binding)
++    assert token['model']=='fixture-image'
++    assert (await CreditLedger(db).summary(scope))['experience_issued']=='10000000'
++
++
++def test_runtime_has_select_only_feature_authority_and_preserves_text_rules():
++    from platform_service.permissions import INSERT_TABLES, UPDATE_COLUMNS, SELECT_TABLES, IMMUTABLE_TABLES
++    assert 'internal_feature_extensions' in SELECT_TABLES and 'internal_feature_extensions' in IMMUTABLE_TABLES
++    assert 'internal_feature_extensions' not in INSERT_TABLES and 'internal_feature_extensions' not in UPDATE_COLUMNS
++
++
++@pytest.mark.asyncio
++async def test_live_image_cannot_claim_text_feature_even_as_legacy_misconfigured_catalog(internal,db):
++    from platform_service.media.core import MediaService
++    from platform_service.media.contracts import validate_definition
++    from platform_service.identity import IdentityService
++    from test_media_contracts import definition
++    await issue(internal);scope=internal[2]
++    bad=definition();bad.update(feature='text',test_only=False,verification='live')
++    rejected=False
++    try:validate_definition(bad)
++    except PlatformError:rejected=True
++    assert rejected, 'a live image model must require the image feature'
++    async with db.connection() as c:
++        await c.execute("INSERT INTO media_models(id,definition,operator_id) VALUES ('fixture-image',%s,'legacy-owner')",(Jsonb(bad),))
++        await c.execute("INSERT INTO media_model_states(model_id,enabled,operator_id) VALUES ('fixture-image',true,'legacy-owner')")
++    media=MediaService(db,IdentityService(db,None))
++    bindings={'fixture-image':{'provider_id':'fixture','provider_version':'1','adapter':'openai_images_v1','protocol_version':'1','binding_hash':'a'*64}}
++    assert await media.catalog(scope,mode='live',bindings=bindings)=={'models':[]}
++    with pytest.raises(PlatformError):
++        await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='no-text-bypass',mode='live',bindings=bindings)
++    assert (await CreditLedger(db).summary(scope))['reserved']=='0'
++
++
++@pytest.mark.asyncio
++async def test_actual_nonowner_runtime_can_read_image_right_but_cannot_extend_or_write_audit(internal,db,test_dsn):
++    from platform_service.db import Database
++    from platform_service.permissions import grant_runtime_permissions
++    grant=await issue(internal);scope=internal[2]
++    await extend(feature_service(db),internal,grant)
++    role='image_runtime_'+uuid4().hex
++    password=secrets.token_urlsafe(24)
++    async with db.connection() as c:
++        await c.execute(sql.SQL('CREATE ROLE {} LOGIN PASSWORD {}').format(sql.Identifier(role),sql.Literal(password)))
++        await grant_runtime_permissions(c,role)
++    runtime=Database(make_conninfo(test_dsn,user=role,password=password),schema=db.schema)
++    try:
++        await runtime.open();await runtime.require_runtime_role()
++        rights=await MembershipService(runtime).entitlements(scope)
++        assert rights['features']==['image','text'] and rights['concurrency']==1
++        with pytest.raises(PlatformError) as caught:
++            await extend(feature_service(runtime),internal,grant)
++        assert caught.value.code=='internal_owner_required'
++        for command in [
++            'INSERT INTO internal_feature_extensions SELECT * FROM internal_feature_extensions',
++            "UPDATE internal_feature_extensions SET reason='changed'",'DELETE FROM internal_feature_extensions',
++            'TRUNCATE internal_feature_extensions','ALTER TABLE internal_feature_extensions DISABLE TRIGGER ALL',
++        ]:
++            with pytest.raises(psycopg.errors.InsufficientPrivilege):
++                async with runtime.connection() as c:await c.execute(command)
++    finally:
++        await runtime.close()
++        async with db.connection() as c:
++            await c.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(role)))
++            await c.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))
++
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('privilege',['INSERT','INSERT (id)'])
++async def test_runtime_startup_rejects_accidental_feature_table_or_column_insert_and_reprovision_removes_it(db,privilege):
++    from platform_service.permissions import assert_safe_runtime_role,grant_runtime_permissions
++    role='feature_grant_'+uuid4().hex
++    async with db.connection() as c:
++        await c.execute(sql.SQL('CREATE ROLE {} NOLOGIN').format(sql.Identifier(role)))
++    try:
++        async with db.connection() as c:
++            await grant_runtime_permissions(c,role)
++            await c.execute(sql.SQL('GRANT '+privilege+' ON internal_feature_extensions TO {}').format(sql.Identifier(role)))
++        with pytest.raises(PlatformError) as caught:
++            async with db.connection() as c:await assert_safe_runtime_role(c,role)
++        assert caught.value.code=='unsafe_runtime_role'
++        async with db.connection() as c:
++            await grant_runtime_permissions(c,role)
++            permissions=await (await c.execute("SELECT has_any_column_privilege(%s,'internal_feature_extensions','INSERT') unsafe",(role,))).fetchone()
++            assert permissions['unsafe'] is False
++            await assert_safe_runtime_role(c,role)
++    finally:
++        async with db.connection() as c:
++            await c.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(role)))
++            await c.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))
+--- a/services/platform/tests/test_media_storage.py
++++ b/services/platform/tests/test_media_storage.py
+@@ -498,7 +498,7 @@
+     if terminal:await finish(service,job)
+     else:await service.pending(job['id'],job['attempt_id'],'legacy_unknown')
+     monkeypatch.setattr(database_module,'MIGRATIONS_DIR',source)
+-    assert await bare_db.migrate()==['015_media_storage.sql']
++    assert await bare_db.migrate()==['015_media_storage.sql','016_m1_image_enablement.sql','017_voice_stages.sql']
+     assert await bare_db.migrate()==[]
+     async with bare_db.connection() as c:
+         await c.execute('UPDATE media_jobs SET updated_at=clock_timestamp() WHERE id=%s',(job['id'],))
+--- a/services/platform/tests/test_media_images_runtime.py
++++ b/services/platform/tests/test_media_images_runtime.py
+@@ -218,6 +218,9 @@
+         assert request.url.path == "/v1/images/variations" and b'name="prompt"' not in request.content
+         return httpx.Response(200, json={"data": [{"b64_json": base64.b64encode(png()).decode()}]}, headers={"x-request-id": "legacy-fixture"})
+     current = runtime(tmp_path, handler, capabilities=("image.variation",), legacy_variations=True)
++    async def variations_catalog(scope, **kwargs):
++        return {"models": [{"id": "public", **definition("image.variation")}]}
++    current.service.catalog = variations_catalog
+     current.service.assets["one"] = {"id": "one", **current.store.put_image(png((2,2)))}
+     try:
+         result = await current.submit("private-task", "variation", body("image.variation", prompt="", assets=["one"]))
+--- a/services/platform/tests/test_internal_grants.py
++++ b/services/platform/tests/test_internal_grants.py
+@@ -259,7 +259,7 @@
+         async with db.connection() as c:
+             await c.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(role)))
+             await c.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))
+-    for command in ["UPDATE internal_grants SET reason='bad'",'DELETE FROM internal_grants','TRUNCATE internal_grants']:
++    for command in ["UPDATE internal_grants SET reason='bad'",'DELETE FROM internal_grants','TRUNCATE internal_grants CASCADE']:
+         with pytest.raises(psycopg.errors.CheckViolation):
+             async with db.connection() as c:
+                 await c.execute(command)
+--- a/scripts/validation/verify_central_live_text.py
++++ b/scripts/validation/verify_central_live_text.py
+@@ -53,6 +53,7 @@
+     "008_console_auth.sql", "009_console_operations.sql", "010_identity_continuity.sql",
+     "011_console_reconciliation.sql",
+     "012_execution_writeoffs.sql", "013_execution_evidence.sql", "014_media_execution.sql", "015_media_storage.sql",
++    "016_m1_image_enablement.sql", "017_voice_stages.sql",
+ ]
+ ACCEPTANCE_CREDITS = 100_000_000
+ ACCEPTANCE_RATE = {
+--- a/services/platform/tests/test_live_validation_runner.py
++++ b/services/platform/tests/test_live_validation_runner.py
+@@ -147,6 +147,7 @@
+             "008_console_auth.sql", "009_console_operations.sql", "010_identity_continuity.sql",
+             "011_console_reconciliation.sql",
+             "012_execution_writeoffs.sql", "013_execution_evidence.sql", "014_media_execution.sql", "015_media_storage.sql",
++            "016_m1_image_enablement.sql", "017_voice_stages.sql",
+         ]
+         assert receipt["no_payment_rows"] == {
+             "billing_orders": 0,
