@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 import pytest
 import web.app as web
+from easel.routes import outputs as output_routes  # noqa: E402
 from easel.harnesses import codex
 from easel.platform.session import SessionStore
 from tests import test_agent_harnesses as harness_tests
@@ -445,8 +446,8 @@ async def test_cancel_during_scan_closes_worker_snapshot(tmp_path, monkeypatch, 
 
     monkeypatch.setattr(privacy, "safe_snapshot", slow_scan)
     task = asyncio.create_task(
-        web.api_media("clean.txt", Request({"type": "http", "headers": []}))
-        if route == "media" else web.api_output("clean.txt")
+        output_routes.api_media("clean.txt", Request({"type": "http", "headers": []}))
+        if route == "media" else output_routes.api_output("clean.txt")
     )
     assert await asyncio.to_thread(entered.wait, 2)
     # The scanner remains blocked while actual stop/status handlers can progress.

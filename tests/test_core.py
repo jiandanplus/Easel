@@ -22,6 +22,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 from easel.commands import skill as cli_skill  # noqa: E402
 from easel import persona  # noqa: E402
 import app as web  # noqa: E402
+from easel.routes import outputs as output_routes  # noqa: E402
 import paper_ingest  # noqa: E402
 import render_slides  # noqa: E402
 from model_registry import (configured_providers, env_aliases, provider_ids,
@@ -263,7 +264,7 @@ def test_find_skill_missing():
     ("h.bin", "binary"), ("i.zip", "binary"),
 ])
 def test_file_kind(name, kind):
-    assert web._file_kind(name) == kind
+    assert output_routes._file_kind(name) == kind
 
 
 def test_upload_keeps_multiple_files_with_same_name(tmp_path, monkeypatch):
@@ -275,7 +276,7 @@ def test_upload_keeps_multiple_files_with_same_name(tmp_path, monkeypatch):
         UploadFile(filename="image.png", file=io.BytesIO(b"second")),
     ]
 
-    result = asyncio.run(web.api_upload(files, sessionId="session-a"))
+    result = asyncio.run(output_routes.api_upload(files, sessionId="session-a"))
 
     assert [item["name"] for item in result["files"]] == ["image.png", "image (2).png"]
     saved = [tmp_path / item["path"] for item in result["files"]]
@@ -286,11 +287,11 @@ def test_uploads_are_scoped_to_the_owning_session(tmp_path, monkeypatch):
     from fastapi import HTTPException, UploadFile
 
     monkeypatch.setattr(web, "OUTPUTS_DIR", tmp_path)
-    first = asyncio.run(web.api_upload(
+    first = asyncio.run(output_routes.api_upload(
         [UploadFile(filename="shared.png", file=io.BytesIO(b"session-a"))],
         sessionId="session-a",
     ))["files"][0]
-    second = asyncio.run(web.api_upload(
+    second = asyncio.run(output_routes.api_upload(
         [UploadFile(filename="shared.png", file=io.BytesIO(b"session-b"))],
         sessionId="session-b",
     ))["files"][0]
@@ -321,7 +322,7 @@ def test_attachment_context_rejects_tampered_reference(tmp_path, monkeypatch):
     from fastapi import HTTPException, UploadFile
 
     monkeypatch.setattr(web, "OUTPUTS_DIR", tmp_path)
-    attachment = asyncio.run(web.api_upload(
+    attachment = asyncio.run(output_routes.api_upload(
         [UploadFile(filename="image.png", file=io.BytesIO(b"image"))],
         sessionId="session-a",
     ))["files"][0]
@@ -338,7 +339,9 @@ def test_attachment_context_rejects_tampered_reference(tmp_path, monkeypatch):
 
 # ---- 跨平台：文本落盘必须显式 encoding（否则 Windows cp1252/gbk 写中文报错、读回丢内容）----
 
-@pytest.mark.parametrize("rel", ["web/app.py", "easel/persona.py", "easel/commands/skill.py"])
+@pytest.mark.parametrize("rel", ["web/app.py", "easel/persona.py", "easel/commands/skill.py",
+                                 "easel/routes/accounts.py", "easel/routes/outputs.py",
+                                 "easel/routes/planning.py", "easel/routes/updates.py"])
 def test_text_io_always_pins_utf8_encoding(rel):
     """read_text/write_text 若不显式指定 encoding，Windows 默认非 UTF-8：
     写中文抛 UnicodeEncodeError（落不了盘），读回抛 UnicodeDecodeError（像丢了数据）。
@@ -366,13 +369,13 @@ def test_text_io_always_pins_utf8_encoding(rel):
 def test_safe_output_path_blocks_traversal():
     from fastapi import HTTPException
     with pytest.raises(HTTPException):
-        web._safe_output_path("../../etc/passwd")
+        output_routes._safe_output_path("../../etc/passwd")
 
 
 def test_safe_output_path_blocks_absolute_escape():
     from fastapi import HTTPException
     with pytest.raises(HTTPException):
-        web._safe_output_path("/etc/passwd")
+        output_routes._safe_output_path("/etc/passwd")
 
 
 # ---- Web: find_skill 与 CLI 一致 ----
@@ -473,7 +476,7 @@ def test_output_tree_relative_paths(tmp_path, monkeypatch):
     sub.mkdir()
     (sub / "note.md").write_text("x", encoding="utf-8")
     (sub / "card.png").write_bytes(b"\x89PNG")
-    tree = web.get_output_tree()
+    tree = output_routes.get_output_tree()
     grp = next(g for g in tree if g["name"] == "主题A")
     # 目录节点带递归 children（file 节点含 name/path/kind）
     paths = {f["path"] for f in grp["children"]}
