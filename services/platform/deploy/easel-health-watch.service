@@ -1,0 +1,22 @@
+[Unit]
+Description=Easel private local health checks
+After=docker.service nginx.service
+ConditionHost=ser362540173134
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+ExecStart=/usr/bin/python3 -B /usr/local/lib/easel-operations/check_service_health.py --record
+TimeoutStartSec=60
+LimitCORE=0
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=read-only
+ProtectSystem=strict
+StateDirectory=easel-health
+StateDirectoryMode=0700
+ReadWritePaths=/var/lib/easel-health
+StandardOutput=journal
+StandardError=journal

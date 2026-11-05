@@ -1,0 +1,52 @@
+{
+  "files": {
+    "REVIEW.safe.md": {
+      "bytes": 8143,
+      "sha256": "2c411b14c42682476200db04a1fbe902119460f4efc378644667b16b6ef1abc6"
+    },
+    "ROOT-freeze.safe.json": {
+      "bytes": 663,
+      "sha256": "ca1ec10f57c109df6e6299b2dbdd3c9241b8a966bdaa4c5f196fc0520cf63ae3"
+    },
+    "fixture.expected-digests.json": {
+      "bytes": 619,
+      "sha256": "56068da61b93cbe5582fc943bf3bcfae22abae9e9cb267c835ce52eb057f9ec7"
+    },
+    "fixture.metadata.canonical.json": {
+      "bytes": 656,
+      "sha256": "85b46b92677de58afc766d86f28f7037a114bb6af9b45ba8f601dcc047c6e891"
+    },
+    "fixture.raw.framed.bin": {
+      "bytes": 23309,
+      "sha256": "3e4a5354304f4fdc67009ceddf0419a80d98f3ef7c2e0bbcfd21f37fcfe756c5"
+    },
+    "fixture.security.canonical.json": {
+      "bytes": 60839,
+      "sha256": "5e689f7855cf3a675609a130001432eeca6db9642ca0c52e049332bdceabaf77"
+    },
+    "fixture.sysfs-after.canonical.json": {
+      "bytes": 1458,
+      "sha256": "af1096e54220a3f28a738c986a1524d5fa59da5f4ef92e9b5dc9cd22fd184f97"
+    },
+    "fixture.sysfs-before.canonical.json": {
+      "bytes": 1458,
+      "sha256": "af1096e54220a3f28a738c986a1524d5fa59da5f4ef92e9b5dc9cd22fd184f97"
+    },
+    "fixture.telemetry.canonical.json": {
+      "bytes": 8191,
+      "sha256": "c93615be566478d27231ba33451097331667a60903668818e26ea402a9daa65f"
+    },
+    "policy.canonical.json": {
+      "bytes": 81806,
+      "sha256": "a87d2bbd5bb8afb554f827fc8609ca02a5ca5b5c1817cb09045e0c35bf230d36"
+    },
+    "policy.digest.json": {
+      "bytes": 410,
+      "sha256": "f124b3bb592f6b55ebc338ca803e1e164b0c9a4de2fbf510a7d2e55adf5fe58b"
+    }
+  },
+  "fixture_sha256": "ed372111e9b71271b082dd2cc8fcd6d8a5f6e124f58f4329999e4c742dfc5bab",
+  "format": "b3-n3-copied-root-goldens-v1",
+  "origin": "outputs/_run/b3-worker-artifact-preparation-20261104/profile-literal",
+  "reference_generator_imported_or_run": false
+}

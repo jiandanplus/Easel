@@ -1,0 +1,1 @@
+"""Scoped transactional text execution."""
