@@ -177,6 +177,16 @@ def _trusted_files():
             name = "platform_service/" + ("console_static/" if static else "") + relative
             _require(name not in result)
             result[name] = _read(path, MAX_FILE_BYTES)
+    # Other files the wheel force-includes (license notices, the media_backup helpers), byte for byte.
+    project = tomllib.loads(_read(PLATFORM_ROOT / "pyproject.toml", MAX_CONFIG_BYTES).decode())
+    included = project["tool"]["hatch"]["build"]["targets"]["wheel"].get("force-include", {})
+    for source, name in included.items():
+        if source == "frontend/dist":
+            _require(name == "platform_service/console_static")
+            continue
+        path = PLATFORM_ROOT / source
+        _require(path.is_file() and not path.is_symlink() and _name(name) and name not in result)
+        result[name] = _read(path, MAX_FILE_BYTES)
     _require("platform_service/__init__.py" in result
              and "platform_service/console_static/index.html" in result
              and any(name.endswith(".sql") for name in result))
@@ -188,6 +198,7 @@ def verify_wheel(path):
     try:
         raw = _read(path, MAX_WHEEL_BYTES)
         expected = _trusted_files()
+        packages = {name.split("/", 1)[0] for name in expected}
         project = tomllib.loads(_read(PLATFORM_ROOT / "pyproject.toml", MAX_CONFIG_BYTES).decode())["project"]
         expected_dist = re.sub(r"[-_.]+", "_", project["name"]).lower() + "-" + project["version"] + ".dist-info"
         metadata_value = None
@@ -209,7 +220,7 @@ def verify_wheel(path):
                          and 0 <= member.file_size <= MAX_FILE_BYTES)
                 total += member.file_size
                 _require(total <= MAX_TOTAL_BYTES)
-                if name.startswith("platform_service/"):
+                if name.split("/", 1)[0] in packages:
                     if not member.is_dir():
                         _require(name in expected)
                         with archive.open(member) as stream:

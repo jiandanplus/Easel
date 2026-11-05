@@ -221,8 +221,7 @@ jobs:
           )
           echo "EASEL_B2_TEST_AUTHORITY_FILE=$dir/authority.private.json" >> "$GITHUB_ENV"
       # 从仓库根以 `python -m pytest` 运行：部分用例按 services.platform.tests.* 导入。
-      # 排除已冻结的 AV（需 Linux Docker 守护进程）与 B2 恢复链路测试，以及两条与 B2 维护许可
-      # 耦合的图片功能开关用例，见 docs/superpowers/plans/2026-11-05-optimized-roadmap.md。
+      # 排除已冻结的 AV（需 Linux Docker 守护进程）与 B2 恢复链路测试，见 docs/decisions/0001-freeze-b2-b3-av.md。
       - name: Central service tests
         timeout-minutes: 30
         run: >-
@@ -236,7 +235,6 @@ jobs:
           --ignore=services/platform/tests/test_settled_media_restore_fixture.py
           --ignore=services/platform/tests/test_mixed_media_restore_fixture.py
           --ignore=services/platform/tests/test_media_restore_capture.py
-          -k 'not (test_extension_uses_real_image_feature_gate_on_original_wallet_and_no_new_grant or test_live_image_cannot_claim_text_feature_even_as_legacy_misconfigured_catalog)'
       # B3 按设计在“状态不明”时保留目录与文件描述符、不提供释放接口（由 Root 处置，进程退出即释放），
       # 测试大量构造这类保留场景；同进程累积到上万个后，后续用到 select() 的用例会越过 1024 上限。
       # 因此每个 B3 文件单独一个进程，进程退出即完成处置。

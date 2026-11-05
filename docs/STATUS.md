@@ -15,8 +15,8 @@
 | 自定义接口渠道 | 已部署 | 用户自配供应商，不经中央钱包 |
 | 社媒账号登录与发布（7 个平台） | 源码 + 测试 | 依赖各平台页面，改版易失效；小红书自动发布有风控风险 |
 | 微信 / 支付宝付款 | 源码 + 隔离验证 | 按用户决定保持关闭 |
-| 订阅媒体 M2/M3/M4（视频、音乐、语音） | 源码 + 测试 | 未部署；维护许可已改为可选、默认关闭（[决策 0006](decisions/0006-media-maintenance-optional.md)），可随下一次中央发布逐个开放 |
-| 异地备份、恢复演练、飞书告警（P1） | 源码 + 隔离验证 | 等用户提供 R2 与飞书后部署 |
+| 订阅媒体 M2/M3/M4（视频、音乐、语音） | 源码 + 测试 + 隔离验证 | 未部署；维护许可已改为可选、默认关闭（[决策 0006](decisions/0006-media-maintenance-optional.md)）。候选版本已在隔离环境完成干净安装、016→020 升级与启动，上线按 [P3 清单](../services/platform/deploy/P3-MEDIA-RELEASE.md) |
+| 异地备份、恢复演练、飞书告警（P1） | 源码 + 隔离验证 | 飞书告警经 `lark-cli` 机器人私聊，已实测送达；Mac 端已安装（未启用定时任务）；等开通 R2 后按 [部署说明](../services/platform/deploy/backup/README.md) 完成 |
 | B2/B3 媒体备份恢复、AV 自建构建 | 冻结 | 代码与测试保留，不再开发或部署（[决策 0001](decisions/0001-freeze-b2-b3-av.md)） |
 
 ## 2. 部署与运行位置
@@ -29,6 +29,7 @@
 | 桌面构建输入与产物 | `~/Easel-build/python-inputs`、`~/Easel-build/pi-runtime-v37`、`~/Easel-build/releases/` |
 | 更新签名私钥 | `~/Easel-build/release-signing/update-signing-key.pem`（仅本机，需另行备份） |
 | 备份解密私钥（新） | `~/Easel-build/backup-keys/backup-private.pem`（仅本机，需另行备份；公钥在 `services/platform/deploy/backup/`） |
+| 恢复演练与 R2 监视 | `~/Easel-build/backup-drill`（文件与 `drill.env` 已就绪，缺 `rclone.conf`；launchd 任务未加载） |
 | 中央服务、Console、Logto、两个 PostgreSQL | 154.217.245.179（`ssh easel-zhiyin`），详见 [部署手册](handbook/2026-11-05/03-deployment.md) |
 | New API 网关 | 火山引擎 115.190.211.112 |
 | 生产备份 | 154 每日加密备份，**仅同机保存、私钥同机、从未恢复演练**，P1 部署后解决 |
@@ -37,16 +38,16 @@
 
 - 分支：接手后的全部工作在 `claude/takeover-baseline`（已推送 `jiandanplus/Easel`）。尚未合并到 `codex/ui-redesign` 或 `main`；主目录仍保留前任未提交的同内容工作区。
 - 结构：`web/app.py` 只保留启动、中间件、静态页、状态、画像、技能与对话执行引擎核心（1,913 行）；各领域路由在 `easel/routes/`（[决策 0004](decisions/0004-web-routes-by-domain.md)）。中央服务在 `services/platform/`（独立 uv 项目）。
-- 测试（2026-11-05 本机）：根目录 2701 passed；前端 597 passed；中央服务非 B3 单进程 3229 passed（真实 PostgreSQL），B3 35 个文件逐个进程全部通过。
+- 测试：根目录 2701 passed、前端 597 passed（2026-11-05）；中央服务非 B3 单进程 3237 passed（2026-11-06，真实 PostgreSQL；原先因 B2 耦合在 CI 中排除的 2 个图片测试已修复并恢复），B3 35 个文件逐个进程运行。
 - CI：`.github/workflows/ci.yml` 已含中央服务 job，PR [jiandanplus/Easel#1](https://github.com/jiandanplus/Easel/pull/1) 已开（暂不合并）。2026-11-06 首次运行时因 **GitHub 账号账单问题被锁定，任务未启动**，需账号所有者处理后重跑。
 
 ## 4. 待办与卡点
 
 | 事项 | 卡在 | 下一步 |
 | --- | --- | --- |
-| P1 生产数据安全 | 用户提供 R2 桶与令牌、飞书机器人 | 按 `services/platform/deploy/backup/README.md` 部署，逐步确认 |
+| P1 生产数据安全 | 用户在 Cloudflare 控制台开通 R2、创建两个桶内令牌；授权连接 154 | `setup_r2.sh` 建桶 → `install_mac.sh --keys` → `deploy_server.sh` → `install_mac.sh --activate` → 首次恢复演练 |
 | 桌面签名公证 | Apple 开发者身份 | — |
-| 订阅媒体开放（P3） | 无（屏障已改为可选） | 构建中央候选版本，在临时环境验证后，随迁移 017–020 部署；视频、音乐、语音逐个真实验收 |
+| 订阅媒体开放（P3） | 授权连接 154 做只读预检；P1 先完成 | 核对生产 001–016 迁移校验和与媒体配置 → 按手册第 8 节升级 → 视频、音乐、语音逐个真实验收（产生供应商费用） |
 | 创作者价值（P4） | 用户确定最重要的创作流程 | — |
 | 合并策略 | 用户决定 | 开 PR 让 CI 真正运行，再决定合入哪里 |
 | 商业付款、第二产品 | 商户信息、产品定位 | — |

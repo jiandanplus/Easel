@@ -27,6 +27,14 @@ async def snapshot(db):
                 for table in ['plans','internal_grants','memberships','credit_lots','credit_journals','credit_entries']}
 
 
+async def local_maintenance(db, root):
+    """Media mutations run under a maintenance permit; local mode is the production default."""
+    from platform_service.media_maintenance.runtime import RuntimeGeneration
+    generation = RuntimeGeneration.local(db, storage_root=root)
+    await generation.start()
+    return generation
+
+
 def feature_service(db):
     assert importlib.util.find_spec('platform_service.internal_features') is not None
     from platform_service.internal_features import InternalFeatureService
@@ -114,7 +122,7 @@ async def test_inactive_owner_blocks_product_entitlements_without_rewriting_feat
 
 
 @pytest.mark.asyncio
-async def test_extension_uses_real_image_feature_gate_on_original_wallet_and_no_new_grant(internal,db):
+async def test_extension_uses_real_image_feature_gate_on_original_wallet_and_no_new_grant(internal,db,tmp_path):
     from platform_service.media.core import MediaService
     from platform_service.identity import IdentityService
     from test_media_contracts import definition
@@ -125,12 +133,16 @@ async def test_extension_uses_real_image_feature_gate_on_original_wallet_and_no_
     spec['limits']['max_units']={'image':1}
     binding={'fixture-image':{'provider_id':'fixture','provider_version':'1','adapter':'openai_images_v1','protocol_version':'1','binding_hash':'a'*64}}
     operator=OperatorIdentity('publisher',frozenset({'media:publish'}))
-    await media.publish(spec,operator);await media.set_enabled('fixture-image',True,operator)
+    maintenance=await local_maintenance(db,tmp_path);media.maintenance=maintenance
+    async with maintenance.use('catalog',spec['id'],transient=True):
+        await media.publish(spec,operator);await media.set_enabled('fixture-image',True,operator)
     with pytest.raises(PlatformError) as caught:
-        await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='before-extension',mode='live',bindings=binding)
+        async with maintenance.use('mint',str(uuid4()),transient=True):
+            await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='before-extension',mode='live',bindings=binding)
     assert caught.value.code=='media_entitlement_required'
     await extend(feature_service(db),internal,grant)
-    token=await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='after-extension',mode='live',bindings=binding)
+    async with maintenance.use('mint',str(uuid4()),transient=True):
+        token=await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='after-extension',mode='live',bindings=binding)
     assert token['model']=='fixture-image'
     assert (await CreditLedger(db).summary(scope))['experience_issued']=='10000000'
 
@@ -142,7 +154,7 @@ def test_runtime_has_select_only_feature_authority_and_preserves_text_rules():
 
 
 @pytest.mark.asyncio
-async def test_live_image_cannot_claim_text_feature_even_as_legacy_misconfigured_catalog(internal,db):
+async def test_live_image_cannot_claim_text_feature_even_as_legacy_misconfigured_catalog(internal,db,tmp_path):
     from platform_service.media.core import MediaService
     from platform_service.media.contracts import validate_definition
     from platform_service.identity import IdentityService
@@ -159,8 +171,10 @@ async def test_live_image_cannot_claim_text_feature_even_as_legacy_misconfigured
     media=MediaService(db,IdentityService(db,None))
     bindings={'fixture-image':{'provider_id':'fixture','provider_version':'1','adapter':'openai_images_v1','protocol_version':'1','binding_hash':'a'*64}}
     assert await media.catalog(scope,mode='live',bindings=bindings)=={'models':[]}
+    maintenance=await local_maintenance(db,tmp_path);media.maintenance=maintenance
     with pytest.raises(PlatformError):
-        await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='no-text-bypass',mode='live',bindings=bindings)
+        async with maintenance.use('mint',str(uuid4()),transient=True):
+            await media.mint(scope,model='fixture-image',capability='image.generate',invocation_key='no-text-bypass',mode='live',bindings=bindings)
     assert (await CreditLedger(db).summary(scope))['reserved']=='0'
 
 

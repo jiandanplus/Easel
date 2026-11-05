@@ -1,4 +1,5 @@
 """Offline preparation security contracts; synthetic public inputs only."""
+import hashlib
 import importlib
 import json
 import os
@@ -42,6 +43,9 @@ def public_tree(tmp_path, monkeypatch):
             path.write_bytes(value)
     monkeypatch.setattr(prep, 'SOURCE_ROOT', source)
     monkeypatch.setattr(prep, 'STATIC_ROOT', static)
+    (tmp_path / 'pyproject.toml').write_text('[project]\nname = "easel-central-platform"\nversion = "0.1.0"\n'
+        '[tool.hatch.build.targets.wheel.force-include]\n"frontend/dist" = "platform_service/console_static"\n')
+    monkeypatch.setattr(prep, 'PLATFORM_ROOT', tmp_path)
     return {**{'platform_service/' + k: v for k,v in contents.items()},
             **{'platform_service/console_static/' + k: v for k,v in assets.items()}}
 
@@ -317,3 +321,18 @@ def test_source_issuer_keeps_exact_literal_loopback_contract(tmp_path,issuer):
 def test_source_issuer_rejects_hex_alias_instead_of_resolving_it(tmp_path):
     path=tmp_path/'public.json';path.write_text(json.dumps(config(source_oidc_issuer='http://0x7f.0.0.0x1:18763/oidc')))
     with pytest.raises(prep.PreparationError):prep.load_config(path)
+
+
+def test_force_included_files_are_required_byte_for_byte(tmp_path, public_tree):
+    (tmp_path / 'licenses').mkdir()
+    (tmp_path / 'licenses/NOTICE.txt').write_bytes(b'SYNTHETIC LICENSE')
+    (tmp_path / 'helper.py').write_bytes(b'HELPER = 1\n')
+    with (tmp_path / 'pyproject.toml').open('a') as handle:
+        handle.write('"licenses/NOTICE.txt" = "platform_service/licenses/NOTICE.txt"\n"helper.py" = "helper_pkg/helper.py"\n')
+    files = {**public_tree, 'platform_service/licenses/NOTICE.txt': b'SYNTHETIC LICENSE', 'helper_pkg/helper.py': b'HELPER = 1\n'}
+    report = prep.verify_wheel(wheel(tmp_path, files))
+    assert report['source_files']['helper_pkg/helper.py'] == hashlib.sha256(b'HELPER = 1\n').hexdigest()
+    for broken in ({'changes': {'helper_pkg/helper.py': b'HELPER = 2\n'}}, {'missing': ('platform_service/licenses/NOTICE.txt',)},
+                   {'changes': {'helper_pkg/extra.py': b'UNLISTED'}}):
+        with pytest.raises(prep.PreparationError):
+            prep.verify_wheel(wheel(tmp_path, files, **broken))
