@@ -9,7 +9,7 @@
 
 - **P2 交付到你手上（进行中）**：发现 17868 的工作区位于 `/private/tmp`，已被 macOS 清理到只剩 4 个文件；已从 10-30 备份恢复到 `~/Library/Application Support/Easel/workspaces/main`，启动器改为拒绝临时目录工作区。构建输入迁到 `~/Easel-build`（Python 运行时 1,650 项与固定库存逐项一致、26 个 wheel 与官方归档哈希一致），构建 v37 并在 17868 激活。应用内更新已完成：Ed25519 签名清单 + 大小/SHA-256/库存校验 + 失败自动回滚，v38→v39 端到端实测 8 秒完成切换。签名公证仍待 Apple 开发者身份。
 
-- **P5 工程债（进行中）**：`web/app.py` 按领域拆到 `easel/routes/`（planning、updates、accounts、outputs、settings、chat，共享请求模型在 schemas），6,657 行降到 1,913 行；拆分前先让 app.py 在进程内只加载一份。中央服务测试的描述符累积查明为冻结 B3 按设计保留描述符，CI 改为 B3 每文件单独进程、其余单进程运行；带真实 PostgreSQL 的非 B3 单进程运行 3229 passed，描述符峰值 13、净变化 0。剩余：文档收敛。
+- **P5 工程债（已完成）**：`web/app.py` 按领域拆到 `easel/routes/`（planning、updates、accounts、outputs、settings、chat，共享请求模型在 schemas），6,657 行降到 1,913 行；拆分前先让 app.py 在进程内只加载一份。中央服务测试的描述符累积查明为冻结 B3 按设计保留描述符，CI 改为 B3 每文件单独进程、其余单进程运行；带真实 PostgreSQL 的非 B3 单进程运行 3229 passed，描述符峰值 13、净变化 0。文档收敛：新增 `docs/STATUS.md`（唯一现状入口）、`docs/decisions/`（决策记录）与 `docs/README.md`（现行/历史索引），历史计划与验收记录保留原样、不再维护。
 
 ## 接手时发现的结构问题（影响后续阶段）
 
