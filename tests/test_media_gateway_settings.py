@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "web"))
 import app as web
+from easel.routes import settings as settings_routes  # noqa: E402
 
 
 CUSTOM = "# preserved\nIMG_API_KEY=custom-image-secret\nIMG_BASE_URL=https://custom.example/images\nIMG_MODEL=custom-image\nDASHSCOPE_API_KEY=custom-dashscope-secret\n"
@@ -133,7 +134,7 @@ def test_reentered_key_allows_address_change_and_switchback_restores_custom(sand
     body["modes"] = dict.fromkeys(body["modes"], "custom")
     body["key"] = ""
     save(sandbox, body)
-    rows = web._model_channels()["channels"]["image"]["rows"]
+    rows = settings_routes._model_channels()["channels"]["image"]["rows"]
     assert len(rows) == 1 and rows[0]["slot"] == "openai"
     assert rows[0]["baseUrl"] == "https://custom.example/images"
     assert rows[0]["model"] == "custom-image"
@@ -149,7 +150,7 @@ def test_invalid_json_never_echoes_submitted_secrets(sandbox):
 def test_legacy_manual_adapter_keeps_original_readiness(sandbox):
     sandbox.env_file.write_text(CUSTOM + "IMAGE_API_MODE=new-api\n")
     assert web._skill_api_configured("ai-image-gen") is True
-    rows = web._model_channels()["channels"]["image"]["rows"]
+    rows = settings_routes._model_channels()["channels"]["image"]["rows"]
     assert len(rows) == 1 and rows[0]["slot"] == "openai"
 
 
@@ -187,7 +188,7 @@ def test_api_preserves_unchanged_legacy_group_when_other_group_is_saved(sandbox)
 def test_gateway_rows_and_skill_status_use_effective_route(sandbox):
     save(sandbox)
     assert web._skill_api_configured("ai-image-gen") is True
-    channels = web._model_channels()["channels"]
+    channels = settings_routes._model_channels()["channels"]
     for channel in ("image", "video", "music", "speech"):
         rows = channels[channel]["rows"]
         gateway = next(row for row in rows if row["slot"] == "new-api")
@@ -202,7 +203,7 @@ def test_media_rows_use_fresh_file_even_with_direct_chat_process_env(sandbox, mo
     save(sandbox)
     monkeypatch.setattr(web, "_direct_api_enabled", lambda: True)
     monkeypatch.setattr(web, "read_settings", lambda *a: {"IMAGE_API_MODE": "custom", "NEW_API_IMAGE_MODEL": "stale-model", "NEW_API_KEY": "stale-key"})
-    row = web._model_channels()["channels"]["image"]["rows"][0]
+    row = settings_routes._model_channels()["channels"]["image"]["rows"][0]
     assert row["slot"] == "new-api" and row["model"] == "gpt-image-1"
 
 

@@ -16,6 +16,7 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "web"))
 import app as web
+from easel.routes import settings as settings_routes  # noqa: E402
 from easel import direct_api
 from easel.harnesses import store
 
@@ -60,9 +61,10 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "_DIRECT_CHAT_TASKS", set())
     def forbidden(*args, **kwargs):
         raise AssertionError("API mode must not call OpenClaw")
-    for name in ("openclaw_base_cmd", "_gateway_http_ready", "check_gateway",
-                 "_heal_openclaw_session", "_sync_openclaw_chat", "_openclaw_provider_creds"):
+    for name in ("openclaw_base_cmd", "_gateway_http_ready", "check_gateway", "_heal_openclaw_session"):
         monkeypatch.setattr(web, name, forbidden)
+    for name in ("_sync_openclaw_chat", "_openclaw_provider_creds"):
+        monkeypatch.setattr(settings_routes, name, forbidden)
     monkeypatch.setattr(web, "GatewayClient", forbidden)
     local = "http://127.0.0.1:7860"
     with TestClient(web.app, base_url=local, headers={"Origin": local}, client=("127.0.0.1", 50000)) as client:
@@ -147,7 +149,7 @@ def test_private_models_only_allowed_for_configured_gateway(sandbox, monkeypatch
         web.ENV_FILE.write_text("EASEL_CHAT_TRANSPORT=http\n" + "\n".join(
             f"{key}={value}" for key, value in SETTINGS.items()), encoding="utf-8")
         store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {"runtime": "api"})
-    monkeypatch.setattr(web, "_ssrf_safe", lambda url: False)
+    monkeypatch.setattr(settings_routes, "_ssrf_safe", lambda url: False)
     captured = []
     class Response:
         def __enter__(self):
@@ -374,7 +376,7 @@ def test_queued_turn_does_not_overwrite_running_snapshot(sandbox, monkeypatch):
 
 
 def test_model_listing_does_not_send_stored_key_to_draft_url(sandbox, monkeypatch):
-    monkeypatch.setattr(web, "_ssrf_safe", lambda url: True)
+    monkeypatch.setattr(settings_routes, "_ssrf_safe", lambda url: True)
     def forbidden(*args, **kwargs):
         raise AssertionError("must not send stored credentials to a new URL")
     monkeypatch.setattr(web.urllib.request, "build_opener", forbidden)
@@ -439,7 +441,7 @@ def test_cancelled_queue_releases_tracking_without_overwriting_active_turn(sandb
         await asyncio.wait_for(waiting.wait(), timeout=2)
         assert web._DIRECT_CHAT_TASKS
         with pytest.raises(web.HTTPException) as error:
-            await web.api_chat_transport_save(web.ChatTransportRequest(transport="openclaw"))
+            await settings_routes.api_chat_transport_save(settings_routes.ChatTransportRequest(transport="openclaw"))
         assert error.value.status_code == 409
         queued.cancel()
         with pytest.raises(asyncio.CancelledError):

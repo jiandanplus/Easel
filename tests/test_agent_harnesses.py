@@ -8,6 +8,8 @@ from unittest.mock import Mock
 import pytest
 from fastapi.testclient import TestClient
 
+
+from easel.routes import settings as settings_routes  # noqa: E402
 import web.app as web
 from easel.harnesses import store
 from easel.harnesses.acp import ACPAdapter
@@ -68,7 +70,7 @@ def test_model_configuration_preview_does_not_switch_engine(sandbox, monkeypatch
         captured.append(runtime)
         return {"runtime": runtime}
 
-    monkeypatch.setattr(web, "_model_channels", channels)
+    monkeypatch.setattr(settings_routes, "_model_channels", channels)
     before = (web.OUTPUTS_DIR / "_harness" / "config.json").read_bytes()
     for runtime in ("api", "openclaw"):
         response = sandbox.get("/api/settings/models", params={"runtime": runtime})
@@ -302,7 +304,7 @@ def test_web_native_working_directory_is_easel_root():
 def test_settings_blocking_probes_are_offloaded():
     import inspect
 
-    for endpoint in (web.api_harness_settings, web.api_settings_models, web.api_local_agents):
+    for endpoint in (settings_routes.api_harness_settings, settings_routes.api_settings_models, settings_routes.api_local_agents):
         assert "asyncio.to_thread" in inspect.getsource(endpoint)
 
 
@@ -1093,7 +1095,7 @@ def test_sync_request_disconnect_keeps_worker_protected_until_completion(sandbox
                 await request
             assert web._HARNESS_TASKS and web._BG_TASKS
             with pytest.raises(web.HTTPException) as error:
-                await web.api_harness_settings_save(web.HarnessSettingsRequest(runtime="codex"))
+                await settings_routes.api_harness_settings_save(settings_routes.HarnessSettingsRequest(runtime="codex"))
             assert error.value.status_code == 409
             assert (await web.api_chat_last("detached"))["status"] == "running"
         finally:
@@ -1107,8 +1109,8 @@ def test_sync_request_disconnect_keeps_worker_protected_until_completion(sandbox
 def test_local_agent_enable_rejects_accepted_tasks_before_mutations(sandbox, monkeypatch):
     monkeypatch.setattr(web, "_BG_TASKS", {"accepted"})
     declare, primary = Mock(), Mock()
-    monkeypatch.setattr(web, "_declare_anthropic_provider", declare)
-    monkeypatch.setattr(web, "_set_openclaw_primary", primary)
+    monkeypatch.setattr(settings_routes, "_declare_anthropic_provider", declare)
+    monkeypatch.setattr(settings_routes, "_set_openclaw_primary", primary)
     config_path = web.OUTPUTS_DIR / "openclaw.json"
     store.write_json(config_path, {"models": {"providers": {"keep": {}}},
                                   "agents": {"defaults": {"model": {"primary": "keep"}}}})

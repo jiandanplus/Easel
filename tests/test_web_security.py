@@ -20,6 +20,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "web"))
 sys.path.insert(0, str(PROJECT_ROOT / "skills" / "shared" / "scripts"))
 
+
+from easel.routes import settings as settings_routes  # noqa: E402
 import app as web  # noqa: E402
 import install_tool  # noqa: E402
 
@@ -37,7 +39,7 @@ def client(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
     env_file.write_text(ORIGINAL_ENV, encoding="utf-8")
     monkeypatch.setattr(web, "ENV_FILE", env_file)
-    monkeypatch.setattr(web, "_openclaw_provider_creds",
+    monkeypatch.setattr(settings_routes, "_openclaw_provider_creds",
                         lambda: {"myproxy": ("https://good.example.com/v1", "sk-fake-custom")})
     # openclaw.json 也必须隔离：_sync_openclaw_chat 直连 Path.home()/'.openclaw-easel'/openclaw.json，
     # 不隔离就会把夹具值写进用户真配置（models[0].id / baseUrl / apiKey），跑完 pytest 主模型与
@@ -95,7 +97,7 @@ def test_env_newline_injection_rejected(client, row):
 ])
 def test_guard_env_values_rejects(updates):
     with pytest.raises(Exception):
-        web._guard_env_values(updates)
+        settings_routes._guard_env_values(updates)
 
 
 # ---- 不换行也能执行命令：bash 在赋值右侧照做命令替换 ----
@@ -114,7 +116,7 @@ def test_guard_env_values_rejects(updates):
 ])
 def test_guard_env_values_rejects_shell_metachars(value):
     with pytest.raises(Exception):
-        web._guard_env_values({"OPENAI_API_KEY": value})
+        settings_routes._guard_env_values({"OPENAI_API_KEY": value})
 
 
 def test_env_shell_substitution_rejected_via_api(client):
@@ -124,7 +126,7 @@ def test_env_shell_substitution_rejected_via_api(client):
 
 
 def test_guard_env_values_allows_normal():
-    web._guard_env_values({"OPENAI_API_KEY": "sk-normal", "OPENAI_BASE_URL": "https://a.com/v1"})
+    settings_routes._guard_env_values({"OPENAI_API_KEY": "sk-normal", "OPENAI_BASE_URL": "https://a.com/v1"})
 
 
 @pytest.mark.parametrize("value", [
@@ -137,13 +139,13 @@ def test_guard_env_values_allows_normal():
 ])
 def test_guard_env_values_allows_real_values(value):
     """收紧字符集不能把正常值一起误杀 —— 这几类是面板真会写进去的。"""
-    web._guard_env_values({"OPENAI_API_KEY": value})
+    settings_routes._guard_env_values({"OPENAI_API_KEY": value})
 
 
 def test_both_env_writers_are_guarded():
     """两个写入口都得挂闸——漏一个等于没修。"""
     import inspect
-    for fn in (web._write_env, web._write_env_direct):
+    for fn in (settings_routes._write_env, settings_routes._write_env_direct):
         assert "_guard_env_values" in inspect.getsource(fn), fn.__name__
 
 
@@ -167,7 +169,7 @@ def test_local_gateway_user_is_not_locked_out(client, monkeypatch):
     面板显示/回传的却是上游地址 —— 两者天生不等，闸按「换址」判就会让网关用户连改个模型都
     保存不了。而且 _sync_openclaw_chat 那边本来就不改网关的 baseUrl，不存在拿旧 Key 打新地址。
     """
-    monkeypatch.setattr(web, "_openclaw_provider_creds",
+    monkeypatch.setattr(settings_routes, "_openclaw_provider_creds",
                         lambda: {"myproxy": ("http://127.0.0.1:8890/v1", "sk-fake-gw")})
     resp = _save(client, {"channel": "chat",
                           "rows": [{"slot": "custom", "name": "myproxy", "model": "gpt-5.5",
@@ -176,10 +178,10 @@ def test_local_gateway_user_is_not_locked_out(client, monkeypatch):
 
 
 def test_local_gateway_helper():
-    assert web._is_local_gateway_base("http://127.0.0.1:8890/v1")
-    assert not web._is_local_gateway_base("https://api.openai.com/v1")
-    assert not web._is_local_gateway_base("")
-    assert not web._is_local_gateway_base(None)
+    assert settings_routes._is_local_gateway_base("http://127.0.0.1:8890/v1")
+    assert not settings_routes._is_local_gateway_base("https://api.openai.com/v1")
+    assert not settings_routes._is_local_gateway_base("")
+    assert not settings_routes._is_local_gateway_base(None)
 
 
 # ---- Base URL 必须整串校验（只看开头挡不住内嵌凭据/控制字符）----
@@ -204,7 +206,7 @@ def test_base_url_validated_whole_string(client, bad):
     ("not-a-url", False),
 ])
 def test_valid_base_url(url, ok):
-    assert web._valid_base_url(url) is ok
+    assert settings_routes._valid_base_url(url) is ok
 
 
 # ---- 自测探针会把真 Key 当 Bearer 发出去：不许指向本机/内网/云元数据 ----
@@ -219,14 +221,14 @@ def test_valid_base_url(url, ok):
     "http://no-such-host-zzz.invalid/v1",  # 解析不了就当不安全
 ])
 def test_ssrf_guard_rejects_internal(url):
-    assert web._ssrf_safe(url) is False
+    assert settings_routes._ssrf_safe(url) is False
 
 
 def test_selftest_probe_has_guards():
     import inspect
-    src = inspect.getsource(web.api_models_selftest)
+    src = inspect.getsource(settings_routes.api_models_selftest)
     assert "_valid_base_url" in src and "_model_target_allowed" in src, "探针前必须先过两道闸"
-    assert "_ssrf_safe" in inspect.getsource(web._model_target_allowed)
+    assert "_ssrf_safe" in inspect.getsource(settings_routes._model_target_allowed)
     assert "redirect_request" in src, "不能跟跳转——跟了等于绕过前面的判断"
 
 
@@ -238,7 +240,7 @@ def test_install_id_must_be_known(client, bad_id):
 
 
 def test_install_ids_come_from_engine():
-    ids = web._install_tool_ids()
+    ids = settings_routes._install_tool_ids()
     assert ids and "node" in ids, f"配方表读不出来：{ids}"
 
 

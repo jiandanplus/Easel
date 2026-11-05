@@ -26,6 +26,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "web"))
 sys.path.insert(0, str(PROJECT_ROOT / "skills" / "shared" / "scripts"))
 
+
+from easel.routes import settings as settings_routes  # noqa: E402
 import app as web  # noqa: E402
 
 ORIGINAL_ENV = (
@@ -65,9 +67,9 @@ def _stub_opener(monkeypatch, payload: bytes, capture: list | None = None):
     capture = capture if capture is not None else []
     # 测试环境 DNS 对 example.com 的解析不可控（可能落到内网网段被 _ssrf_safe 拒）。
     # 正常路径用例只关心「请求怎么发、响应怎么解析」，放行交给 _ssrf_safe 自己的用例。
-    monkeypatch.setattr(web, "_ssrf_safe", lambda u: True)
+    monkeypatch.setattr(settings_routes, "_ssrf_safe", lambda u: True)
     # 同一原因：_valid_base_url 也会做 DNS/格式校验，测试环境不可控。
-    monkeypatch.setattr(web, "_valid_base_url", lambda u: True)
+    monkeypatch.setattr(settings_routes, "_valid_base_url", lambda u: True)
     class _Opener:
         def open(self, rq, timeout=None):
             capture.append((rq.full_url, {k.lower(): v for k, v in dict(rq.headers).items()}))
@@ -151,7 +153,7 @@ def test_fetch_reuses_stored_key_when_draft_empty(sandbox, monkeypatch):
 
 def test_fetch_custom_slot_uses_provider_name(sandbox, monkeypatch):
     """自定义供应商：凭据按 provider 名从 openclaw.json 取。"""
-    monkeypatch.setattr(web, "_openclaw_provider_creds",
+    monkeypatch.setattr(settings_routes, "_openclaw_provider_creds",
                         lambda: {"myproxy": ("https://my.example.com/v1", "sk-stored")})
     capture: list = []
     _stub_opener(monkeypatch, json.dumps({"data": [{"id": "m2"}]}).encode(), capture)

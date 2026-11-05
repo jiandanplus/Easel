@@ -1,6 +1,7 @@
 import pytest
 from easel.harnesses.base import HarnessError
 from easel.service_contracts import task_context
+from easel.routes import settings as settings_routes
 
 
 def test_subscription_rejects_other_runtime_before_dispatch(tmp_path):
@@ -324,8 +325,8 @@ async def test_subscription_model_save_preserves_custom_selection(
         "_harness_settings",
         lambda: {**config, "models": {"codex": "custom-displayed"}},
     )
-    await web.api_harness_settings_save(
-        web.HarnessSettingsRequest(
+    await settings_routes.api_harness_settings_save(
+        settings_routes.HarnessSettingsRequest(
             runtime="codex", service_source="subscription", model="alias"
         )
     )
@@ -337,14 +338,14 @@ async def test_subscription_model_save_preserves_custom_selection(
 
     # Omitted model must survive source-only saves in both directions.
     for source in ("custom", "subscription", "custom"):
-        await web.api_harness_settings_save(
-            web.HarnessSettingsRequest(runtime="codex", service_source=source)
+        await settings_routes.api_harness_settings_save(
+            settings_routes.HarnessSettingsRequest(runtime="codex", service_source=source)
         )
         saved = store.read_json(tmp_path / "outputs/_harness/config.json")
         assert saved["models"]["codex"] == "custom-original"
         assert saved["subscription_model"] == "alias"
-    await web.api_harness_settings_save(
-        web.HarnessSettingsRequest(runtime="codex", service_source="custom", model="")
+    await settings_routes.api_harness_settings_save(
+        settings_routes.HarnessSettingsRequest(runtime="codex", service_source="custom", model="")
     )
     assert (
         store.read_json(tmp_path / "outputs/_harness/config.json")["models"]["codex"]
