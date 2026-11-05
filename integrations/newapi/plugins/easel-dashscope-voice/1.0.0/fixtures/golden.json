@@ -1,0 +1,1264 @@
+{
+  "cases": [
+    {
+      "name": "Decode create_voice",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "voice-enrollment",
+              "input": {
+                "action": "create_voice",
+                "target_model": "cosyvoice-v2",
+                "prefix": "myvoice",
+                "url": "https://sample.example.test/sample.wav"
+              }
+            }
+          }
+        }
+      ],
+      "member": "enroll",
+      "expected": {
+        "kind": "submit",
+        "model": "voice-enrollment",
+        "action": "create_voice",
+        "requestBody": {
+          "model": "voice-enrollment",
+          "input": {
+            "action": "create_voice",
+            "target_model": "cosyvoice-v2",
+            "prefix": "myvoice",
+            "url": "https://sample.example.test/sample.wav"
+          }
+        }
+      }
+    },
+    {
+      "name": "Decode query_voice",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "voice-enrollment",
+              "input": {
+                "action": "query_voice",
+                "voice_task_id": "task_enroll"
+              }
+            }
+          }
+        }
+      ],
+      "member": "verify",
+      "expected": {
+        "kind": "submit",
+        "model": "voice-enrollment",
+        "action": "query_voice",
+        "requestBody": {
+          "model": "voice-enrollment",
+          "input": {
+            "action": "query_voice",
+            "voice_task_id": "task_enroll"
+          }
+        },
+        "originTaskIds": [
+          "task_enroll"
+        ]
+      }
+    },
+    {
+      "name": "Decode synthesize",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "cosyvoice-v2",
+              "input": {
+                "voice_task_id": "task_verify",
+                "text": "你好，世界。",
+                "format": "wav",
+                "rate": 1
+              }
+            }
+          }
+        }
+      ],
+      "member": "synthesize",
+      "expected": {
+        "kind": "submit",
+        "model": "cosyvoice-v2",
+        "action": "synthesize",
+        "requestBody": {
+          "model": "cosyvoice-v2",
+          "input": {
+            "voice_task_id": "task_verify",
+            "text": "你好，世界。",
+            "format": "wav",
+            "rate": 1
+          }
+        },
+        "originTaskIds": [
+          "task_verify"
+        ]
+      }
+    },
+    {
+      "name": "Reject delete",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "voice-enrollment",
+              "input": {
+                "action": "delete_voice",
+                "target_model": "cosyvoice-v2",
+                "prefix": "myvoice",
+                "url": "https://sample.example.test/sample.wav"
+              }
+            }
+          }
+        }
+      ],
+      "member": "enroll",
+      "expectedError": "Only voice-enrollment create_voice is supported on this route."
+    },
+    {
+      "name": "Reject raw voice ID",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "cosyvoice-v2",
+              "input": {
+                "text": "hello",
+                "voice": "private"
+              }
+            }
+          }
+        }
+      ],
+      "member": "synthesize",
+      "expectedError": "Unsupported voice input field; use a public voice_task_id."
+    },
+    {
+      "name": "Reject invalid prefix",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "voice-enrollment",
+              "input": {
+                "action": "create_voice",
+                "target_model": "cosyvoice-v2",
+                "prefix": "bad-prefix",
+                "url": "https://sample.example.test/sample.wav"
+              }
+            }
+          }
+        }
+      ],
+      "member": "enroll",
+      "expectedError": "The voice prefix must contain 1 to 10 letters or digits."
+    },
+    {
+      "name": "Build enroll",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "create_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "create_voice",
+              "target_model": "cosyvoice-v2",
+              "prefix": "myvoice",
+              "url": "https://sample.example.test/sample.wav"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://workspace.cn-beijing.maas.aliyuncs.com/api/v1/services/audio/tts/customization",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "voice-enrollment",
+          "input": {
+            "action": "create_voice",
+            "target_model": "cosyvoice-v2",
+            "prefix": "myvoice",
+            "url": "https://sample.example.test/sample.wav"
+          }
+        }
+      }
+    },
+    {
+      "name": "Build verify",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "query_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "query_voice",
+              "voice_task_id": "task_enroll"
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_enroll",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "create_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "create_voice",
+                "target_model": "cosyvoice-v2",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "url": "https://workspace.cn-beijing.maas.aliyuncs.com/api/v1/services/audio/tts/customization",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "voice-enrollment",
+          "input": {
+            "action": "query_voice",
+            "voice_id": "cosyvoice-private-voice-id"
+          }
+        }
+      }
+    },
+    {
+      "name": "Build synthesize",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "OK",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "url": "https://workspace.cn-beijing.maas.aliyuncs.com/api/v1/services/audio/tts/SpeechSynthesizer",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "cosyvoice-v2",
+          "input": {
+            "text": "你好，世界。",
+            "format": "wav",
+            "rate": 1,
+            "voice": "cosyvoice-private-voice-id"
+          }
+        }
+      }
+    },
+    {
+      "name": "Require origin",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": []
+        }
+      ],
+      "expectedError": "Exactly one owned origin voice task is required."
+    },
+    {
+      "name": "Reject unverified origin",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_enroll",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "create_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "create_voice",
+                "target_model": "cosyvoice-v2",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expectedError": "The origin voice task has not completed the required verification stage."
+    },
+    {
+      "name": "Reject pending review",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "DEPLOYING",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expectedError": "The voice is not ready: verification must report OK."
+    },
+    {
+      "name": "Reject target model mismatch",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v3-plus",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "OK",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expectedError": "The synthesis model must match the enrolled target model."
+    },
+    {
+      "name": "Parse enrollment without public private ID",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "create_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "create_voice",
+              "target_model": "cosyvoice-v2",
+              "prefix": "myvoice",
+              "url": "https://sample.example.test/sample.wav"
+            }
+          }
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "output": {
+              "voice_id": "cosyvoice-private-voice-id"
+            },
+            "usage": {
+              "count": 1
+            }
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "cosyvoice-private-voice-id",
+        "taskData": {
+          "stage": "create_voice",
+          "target_model": "cosyvoice-v2",
+          "usage": {
+            "count": 1
+          }
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%"
+        }
+      }
+    },
+    {
+      "name": "Parse verification",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "query_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "query_voice",
+              "voice_task_id": "task_enroll"
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_enroll",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "create_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "create_voice",
+                "target_model": "cosyvoice-v2",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "output": {
+              "status": "OK",
+              "target_model": "cosyvoice-v2"
+            },
+            "usage": {
+              "count": 1
+            }
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "cosyvoice-private-voice-id",
+        "taskData": {
+          "stage": "query_voice",
+          "target_model": "cosyvoice-v2",
+          "voice_status": "OK",
+          "usage": {
+            "count": 1
+          }
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%"
+        }
+      }
+    },
+    {
+      "name": "Parse final speech",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "OK",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "request_id": "request_tts",
+            "output": {
+              "finish_reason": "stop",
+              "audio": {
+                "id": "audio_tts",
+                "url": "https://media.example.test/speech.wav",
+                "expires_at": 2000000000
+              }
+            },
+            "usage": {
+              "characters": 6
+            }
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "audio_tts",
+        "taskData": {
+          "stage": "synthesize",
+          "output": {
+            "audio": {
+              "url": "https://media.example.test/speech.wav",
+              "expires_at": 2000000000
+            },
+            "finish_reason": "stop"
+          },
+          "usage": {
+            "characters": 6
+          }
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%"
+        }
+      }
+    },
+    {
+      "name": "Reject enrollment missing usage",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "create_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "create_voice",
+              "target_model": "cosyvoice-v2",
+              "prefix": "myvoice",
+              "url": "https://sample.example.test/sample.wav"
+            }
+          }
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "output": {
+              "voice_id": "cosyvoice-private-voice-id"
+            }
+          }
+        }
+      ],
+      "expectedError": "Provider usage count must equal one."
+    },
+    {
+      "name": "Reject unexpected review status",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "query_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "query_voice",
+              "voice_task_id": "task_enroll"
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_enroll",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "create_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "create_voice",
+                "target_model": "cosyvoice-v2",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "output": {
+              "status": "WHAT",
+              "target_model": "cosyvoice-v2"
+            },
+            "usage": {
+              "count": 1
+            }
+          }
+        }
+      ],
+      "expectedError": "The provider returned an unknown voice review status."
+    },
+    {
+      "name": "Reject missing speech usage",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "OK",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "request_id": "request_tts",
+            "output": {
+              "finish_reason": "stop",
+              "audio": {
+                "id": "audio_tts",
+                "url": "https://media.example.test/speech.wav",
+                "expires_at": 2000000000
+              }
+            },
+            "usage": {}
+          }
+        }
+      ],
+      "expectedError": "Positive provider usage characters is required."
+    },
+    {
+      "name": "Do not echo provider error",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "OK",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "code": "InvalidApiKey",
+            "message": "fixture-private"
+          }
+        }
+      ],
+      "expectedError": "The voice provider rejected the request."
+    },
+    {
+      "name": "Render opaque enrollment reference",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_enroll",
+          "status": "SUCCESS",
+          "data": {
+            "stage": "create_voice",
+            "target_model": "cosyvoice-v2",
+            "usage": {
+              "count": 1
+            }
+          }
+        }
+      ],
+      "member": "result",
+      "expected": {
+        "output": {
+          "task_id": "task_enroll",
+          "task_status": "SUCCEEDED",
+          "voice_task_id": "task_enroll",
+          "target_model": "cosyvoice-v2",
+          "voice_status": "UNVERIFIED"
+        },
+        "usage": {
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "Render verified reference",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_verify",
+          "status": "SUCCESS",
+          "data": {
+            "stage": "query_voice",
+            "target_model": "cosyvoice-v2",
+            "voice_status": "OK",
+            "usage": {
+              "count": 1
+            }
+          }
+        }
+      ],
+      "member": "result",
+      "expected": {
+        "output": {
+          "task_id": "task_verify",
+          "task_status": "SUCCEEDED",
+          "voice_task_id": "task_verify",
+          "target_model": "cosyvoice-v2",
+          "voice_status": "OK"
+        },
+        "usage": {
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "Render speech",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_speech",
+          "status": "SUCCESS",
+          "data": {
+            "stage": "synthesize",
+            "output": {
+              "audio": {
+                "url": "https://media.example.test/speech.wav",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "characters": 6
+            }
+          }
+        }
+      ],
+      "member": "result",
+      "expected": {
+        "output": {
+          "task_id": "task_speech",
+          "task_status": "SUCCEEDED",
+          "audio": {
+            "url": "https://media.example.test/speech.wav"
+          },
+          "finish_reason": "stop"
+        },
+        "usage": {
+          "characters": 6
+        }
+      }
+    },
+    {
+      "name": "Usage unknown on request",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "create_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "create_voice",
+              "target_model": "cosyvoice-v2",
+              "prefix": "myvoice",
+              "url": "https://sample.example.test/sample.wav"
+            }
+          }
+        }
+      ],
+      "expected": null
+    },
+    {
+      "name": "Report create_voice usage",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "create_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "create_voice",
+              "target_model": "cosyvoice-v2",
+              "prefix": "myvoice",
+              "url": "https://sample.example.test/sample.wav"
+            }
+          }
+        },
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "stage": "create_voice",
+          "target_model": "cosyvoice-v2",
+          "usage": {
+            "count": 1
+          }
+        }
+      ],
+      "expected": {
+        "count": 1,
+        "operation": "create_voice"
+      }
+    },
+    {
+      "name": "Report query_voice usage",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "query_voice",
+          "requestBody": {
+            "model": "voice-enrollment",
+            "input": {
+              "action": "query_voice",
+              "voice_task_id": "task_enroll"
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_enroll",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "create_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "create_voice",
+                "target_model": "cosyvoice-v2",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "stage": "query_voice",
+          "target_model": "cosyvoice-v2",
+          "voice_status": "OK",
+          "usage": {
+            "count": 1
+          }
+        }
+      ],
+      "expected": {
+        "count": 1,
+        "operation": "query_voice"
+      }
+    },
+    {
+      "name": "Report synthesize usage",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "OK",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "stage": "synthesize",
+          "output": {
+            "audio": {
+              "url": "https://media.example.test/speech.wav",
+              "expires_at": 2000000000
+            },
+            "finish_reason": "stop"
+          },
+          "usage": {
+            "characters": 6
+          }
+        }
+      ],
+      "expected": {
+        "characters": 6
+      }
+    },
+    {
+      "name": "Reject zero character usage",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "OK",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "usage": {
+            "characters": 0
+          }
+        }
+      ],
+      "expectedError": "Positive provider usage characters is required."
+    },
+    {
+      "name": "No success facts on failure",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-key",
+          "action": "synthesize",
+          "upstreamModel": "cosyvoice-v2",
+          "requestBody": {
+            "model": "cosyvoice-v2",
+            "input": {
+              "voice_task_id": "task_verify",
+              "text": "你好，世界。",
+              "format": "wav",
+              "rate": 1
+            }
+          },
+          "originTasks": [
+            {
+              "taskId": "task_verify",
+              "upstreamTaskId": "cosyvoice-private-voice-id",
+              "action": "query_voice",
+              "status": "SUCCESS",
+              "data": {
+                "stage": "query_voice",
+                "target_model": "cosyvoice-v2",
+                "voice_status": "OK",
+                "usage": {
+                  "count": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "status": "FAILURE"
+        },
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "No invented poll endpoint",
+      "hook": "buildQueryRequest",
+      "args": [
+        {}
+      ],
+      "expectedError": "These voice operations have no upstream polling; use the owned verify route."
+    },
+    {
+      "name": "No invented terminal poll state",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {},
+        {
+          "status": 503
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "No automatic upstream polling is defined for these voice operations."
+      }
+    },
+    {
+      "name": "Audio artifact",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS",
+          "data": {
+            "stage": "synthesize",
+            "output": {
+              "audio": {
+                "url": "https://media.example.test/speech.wav",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "characters": 6
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": "audio",
+          "type": "audio",
+          "mimeType": "audio/wav"
+        }
+      ]
+    },
+    {
+      "name": "No enrollment audio artifact",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS",
+          "data": {
+            "stage": "create_voice",
+            "target_model": "cosyvoice-v2",
+            "usage": {
+              "count": 1
+            }
+          }
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "Credentialless audio GET",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "audio",
+          "data": {
+            "stage": "synthesize",
+            "output": {
+              "audio": {
+                "url": "https://media.example.test/speech.wav",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "characters": 6
+            }
+          },
+          "authHeader": "Bearer secret"
+        }
+      ],
+      "expected": {
+        "url": "https://media.example.test/speech.wav",
+        "method": "GET",
+        "credentialless": true
+      }
+    },
+    {
+      "name": "Reject enrollment artifact access",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "audio",
+          "data": {
+            "stage": "create_voice",
+            "target_model": "cosyvoice-v2",
+            "usage": {
+              "count": 1
+            }
+          }
+        }
+      ],
+      "expectedError": "Unknown voice audio artifact."
+    }
+  ]
+}

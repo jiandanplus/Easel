@@ -1,0 +1,838 @@
+{
+  "cases": [
+    {
+      "name": "multipart sample decoder",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "multipart",
+            "fields": {
+              "purpose": [
+                "voice_clone"
+              ]
+            },
+            "files": [
+              {
+                "ref": "request_file:file",
+                "field": "file",
+                "filename": "sample.wav",
+                "mimeType": "audio/wav",
+                "size": 1024
+              }
+            ]
+          }
+        }
+      ],
+      "member": "upload",
+      "expected": {
+        "kind": "submit",
+        "action": "upload",
+        "model": "easel-minimax-upload",
+        "requestBody": {
+          "purpose": "voice_clone"
+        }
+      }
+    },
+    {
+      "name": "reject client URL",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "multipart",
+            "fields": {
+              "url": [
+                "https://example.com/a.wav"
+              ]
+            },
+            "files": [
+              {
+                "ref": "request_file:file",
+                "field": "file",
+                "filename": "sample.wav",
+                "mimeType": "audio/wav",
+                "size": 1024
+              }
+            ]
+          }
+        }
+      ],
+      "member": "upload",
+      "expectedError": "unsupported field"
+    },
+    {
+      "name": "single upload descriptor",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "action": "upload",
+          "requestBody": {
+            "purpose": "voice_clone"
+          },
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [
+            {
+              "ref": "request_file:file",
+              "field": "file",
+              "filename": "sample.wav",
+              "mimeType": "audio/wav",
+              "size": 1024
+            }
+          ],
+          "model": "easel-minimax-upload",
+          "upstreamModel": "easel-minimax-upload"
+        }
+      ],
+      "expected": {
+        "url": "https://api.minimax.cn/v1/files/upload",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key"
+        },
+        "bodyType": "multipart",
+        "parts": [
+          {
+            "name": "purpose",
+            "value": "voice_clone"
+          },
+          {
+            "name": "file",
+            "fileRef": "request_file:file",
+            "filename": "sample.wav"
+          }
+        ]
+      }
+    },
+    {
+      "name": "reject untrusted channel host",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "action": "upload",
+          "requestBody": {
+            "purpose": "voice_clone"
+          },
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://evil.example",
+          "apiKey": "fixture-key",
+          "files": [
+            {
+              "ref": "request_file:file",
+              "field": "file",
+              "filename": "sample.wav",
+              "mimeType": "audio/wav",
+              "size": 1024
+            }
+          ],
+          "model": "easel-minimax-upload",
+          "upstreamModel": "easel-minimax-upload"
+        }
+      ],
+      "expectedError": "official MiniMax base URL"
+    },
+    {
+      "name": "upload immediate completion",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "upload",
+          "requestBody": {},
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-upload",
+          "upstreamModel": "easel-minimax-upload"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "file": {
+              "file_id": "123456789",
+              "purpose": "voice_clone"
+            },
+            "base_resp": {
+              "status_code": 0,
+              "status_msg": "success"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "123456789",
+        "taskData": {
+          "operation": "upload",
+          "status": "SUCCESS",
+          "purpose": "voice_clone"
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%"
+        }
+      }
+    },
+    {
+      "name": "reject unsafe int64",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "upload",
+          "requestBody": {},
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-upload",
+          "upstreamModel": "easel-minimax-upload"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "file": {
+              "file_id": 9007199254740992
+            },
+            "base_resp": {
+              "status_code": 0,
+              "status_msg": "success"
+            }
+          }
+        }
+      ],
+      "expectedError": "unsafe file_id"
+    },
+    {
+      "name": "reject business error in HTTP200",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "clone",
+          "requestBody": {},
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-clone",
+          "upstreamModel": "easel-minimax-clone"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "base_resp": {
+              "status_code": 1008,
+              "status_msg": "fixture failure"
+            }
+          }
+        }
+      ],
+      "expectedError": "MiniMax error 1008"
+    },
+    {
+      "name": "reject missing status",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "clone",
+          "requestBody": {},
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-clone",
+          "upstreamModel": "easel-minimax-clone"
+        },
+        {
+          "statusCode": 200,
+          "body": {}
+        }
+      ],
+      "expectedError": "missing MiniMax status"
+    },
+    {
+      "name": "clone requires public dependency",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "json",
+            "value": {
+              "file_task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          }
+        }
+      ],
+      "member": "clone",
+      "expected": {
+        "kind": "submit",
+        "action": "clone",
+        "model": "easel-minimax-clone",
+        "originTaskIds": [
+          "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        "requestBody": {
+          "file_task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "name": "reject raw supplier voice/file",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "json",
+            "value": {
+              "file_id": 123,
+              "voice_id": "foreignVoice"
+            }
+          }
+        }
+      ],
+      "member": "clone",
+      "expectedError": "unsupported field"
+    },
+    {
+      "name": "clone single JSON descriptor",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "action": "clone",
+          "requestBody": {
+            "file_task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-clone",
+          "upstreamModel": "easel-minimax-clone",
+          "originTasks": [
+            {
+              "action": "upload",
+              "status": "SUCCESS",
+              "taskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "upstreamTaskId": "123456789",
+              "data": {
+                "operation": "upload",
+                "status": "SUCCESS"
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "url": "https://api.minimax.cn/v1/voice_clone",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "file_id": 123456789,
+          "voice_id": "easel_task_cccccccccccccccccccccccccccccccc"
+        }
+      }
+    },
+    {
+      "name": "clone rejects missing host-resolved origin",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "action": "clone",
+          "requestBody": {
+            "file_task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-clone",
+          "upstreamModel": "easel-minimax-clone"
+        }
+      ],
+      "expectedError": "host-resolved"
+    },
+    {
+      "name": "clone rejects wrong operation origin",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "action": "clone",
+          "requestBody": {
+            "file_task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-clone",
+          "upstreamModel": "easel-minimax-clone",
+          "originTasks": [
+            {
+              "action": "clone",
+              "status": "SUCCESS",
+              "taskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "upstreamTaskId": "123456789",
+              "data": {
+                "operation": "clone",
+                "status": "SUCCESS"
+              }
+            }
+          ]
+        }
+      ],
+      "expectedError": "successful upload"
+    },
+    {
+      "name": "clone immediate completion",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "clone",
+          "requestBody": {},
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-clone",
+          "upstreamModel": "easel-minimax-clone"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "input_sensitive": false,
+            "base_resp": {
+              "status_code": 0,
+              "status_msg": "success"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "easel_task_cccccccccccccccccccccccccccccccc",
+        "taskData": {
+          "operation": "clone",
+          "status": "SUCCESS"
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%"
+        }
+      }
+    },
+    {
+      "name": "speech public dependency",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "easel-minimax-speech-2.8-hd",
+              "voice_task_id": "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "text": "Hello",
+              "speed": 1
+            }
+          }
+        }
+      ],
+      "member": "synthesize",
+      "expected": {
+        "kind": "submit",
+        "action": "synthesize",
+        "model": "easel-minimax-speech-2.8-hd",
+        "originTaskIds": [
+          "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ],
+        "requestBody": {
+          "model": "easel-minimax-speech-2.8-hd",
+          "voice_task_id": "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "text": "Hello",
+          "speed": 1
+        }
+      }
+    },
+    {
+      "name": "speech no stream",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "easel-minimax-speech-2.8-hd",
+              "voice_task_id": "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "text": "Hello",
+              "speed": 1,
+              "stream": true
+            }
+          }
+        }
+      ],
+      "member": "synthesize",
+      "expectedError": "stream is not supported"
+    },
+    {
+      "name": "speech single JSON descriptor",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "action": "synthesize",
+          "requestBody": {
+            "model": "easel-minimax-speech-2.8-hd",
+            "voice_task_id": "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "text": "Hello",
+            "speed": 1
+          },
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-speech-2.8-hd",
+          "upstreamModel": "speech-2.8-hd",
+          "originTasks": [
+            {
+              "action": "clone",
+              "status": "SUCCESS",
+              "taskId": "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "upstreamTaskId": "easel_privateVoice01",
+              "data": {
+                "operation": "clone",
+                "status": "SUCCESS"
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "url": "https://api.minimax.cn/v1/t2a_v2",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "speech-2.8-hd",
+          "text": "Hello",
+          "stream": false,
+          "output_format": "hex",
+          "voice_setting": {
+            "voice_id": "easel_privateVoice01",
+            "speed": 1
+          },
+          "audio_setting": {
+            "format": "mp3",
+            "sample_rate": 16000,
+            "bitrate": 32000,
+            "channel": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "speech immediate hex completion",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "synthesize",
+          "requestBody": {},
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-synthesize",
+          "upstreamModel": "easel-minimax-synthesize"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "data": {
+              "audio": "494433",
+              "status": 2
+            },
+            "extra_info": {
+              "usage_characters": 5,
+              "audio_length": 1200
+            },
+            "base_resp": {
+              "status_code": 0,
+              "status_msg": "success"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "task_cccccccccccccccccccccccccccccccc",
+        "taskData": {
+          "operation": "synthesize",
+          "status": "SUCCESS",
+          "audio": "494433",
+          "usage_characters": 5,
+          "audio_length": 1200
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%"
+        }
+      }
+    },
+    {
+      "name": "reject unfinished audio",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "synthesize",
+          "requestBody": {},
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-synthesize",
+          "upstreamModel": "easel-minimax-synthesize"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "data": {
+              "audio": "494433",
+              "status": 1
+            },
+            "extra_info": {
+              "usage_characters": 5
+            },
+            "base_resp": {
+              "status_code": 0,
+              "status_msg": "success"
+            }
+          }
+        }
+      ],
+      "expectedError": "incomplete nonstreaming audio"
+    },
+    {
+      "name": "reject missing usage facts",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "synthesize",
+          "requestBody": {},
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "model": "easel-minimax-synthesize",
+          "upstreamModel": "easel-minimax-synthesize"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "data": {
+              "audio": "494433",
+              "status": 2
+            },
+            "extra_info": {},
+            "base_resp": {
+              "status_code": 0,
+              "status_msg": "success"
+            }
+          }
+        }
+      ],
+      "expectedError": "usage_characters"
+    },
+    {
+      "name": "public upload result hides supplier IDs",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "status": "SUCCESS",
+          "data": {
+            "operation": "upload",
+            "file_id": "privateSupplierID"
+          }
+        }
+      ],
+      "member": "created",
+      "expected": {
+        "task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": "SUCCESS",
+        "file_task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "name": "public clone result hides supplier IDs",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "status": "SUCCESS",
+          "data": {
+            "operation": "clone",
+            "voice_id": "privateSupplierID"
+          }
+        }
+      ],
+      "member": "created",
+      "expected": {
+        "task_id": "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "status": "SUCCESS",
+        "voice_task_id": "task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    {
+      "name": "public speech result is JSON hex",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_cccccccccccccccccccccccccccccccc",
+          "status": "SUCCESS",
+          "data": {
+            "operation": "synthesize",
+            "audio": "494433",
+            "usage_characters": 5,
+            "audio_length": 1200
+          }
+        }
+      ],
+      "member": "created",
+      "expected": {
+        "task_id": "task_cccccccccccccccccccccccccccccccc",
+        "status": "SUCCESS",
+        "data": {
+          "audio": "494433",
+          "status": 2
+        },
+        "extra_info": {
+          "usage_characters": 5,
+          "audio_length": 1200,
+          "audio_format": "mp3"
+        }
+      }
+    },
+    {
+      "name": "actual usage replaces reservation",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "operation": "synthesize",
+          "usage_characters": 5,
+          "audio_length": 1200
+        }
+      ],
+      "expected": {
+        "characters": 5,
+        "audio_milliseconds": 1200
+      }
+    },
+    {
+      "name": "failed completion has no success facts",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {
+          "status": "FAILURE"
+        },
+        {
+          "operation": "clone"
+        }
+      ],
+      "expected": {}
+    },
+    {
+      "name": "no polling POST",
+      "hook": "buildQueryRequest",
+      "args": [
+        {}
+      ],
+      "expectedError": "immediate tasks"
+    },
+    {
+      "name": "unknown state is unknown",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "status": "new_status"
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "unrecognized immediate task result"
+      }
+    },
+    {
+      "name": "quoted int64 serialized without float rounding",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "action": "clone",
+          "requestBody": {
+            "file_task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "publicTaskId": "task_cccccccccccccccccccccccccccccccc",
+          "baseUrl": "https://api.minimax.cn",
+          "apiKey": "fixture-key",
+          "files": [],
+          "originTasks": [
+            {
+              "action": "upload",
+              "status": "SUCCESS",
+              "taskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "upstreamTaskId": "9007199254740993",
+              "data": {
+                "operation": "upload",
+                "status": "SUCCESS"
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "url": "https://api.minimax.cn/v1/voice_clone",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-key",
+          "Content-Type": "application/json"
+        },
+        "body": "{\"file_id\":9007199254740993,\"voice_id\":\"easel_task_cccccccccccccccccccccccccccccccc\"}"
+      }
+    },
+    {
+      "name": "reject larger than signed int64",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "action": "upload"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "file": {
+              "file_id": "9223372036854775808"
+            },
+            "base_resp": {
+              "status_code": 0
+            }
+          }
+        }
+      ],
+      "expectedError": "unsafe file_id"
+    }
+  ]
+}

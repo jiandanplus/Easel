@@ -1,0 +1,582 @@
+{
+  "unixNow": 1000,
+  "cases": [
+    {
+      "name": "private JSON decode",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "easel-fish-s2.1-pro",
+              "text": "Hello",
+              "reference_id": "admin_preset",
+              "format": "mp3",
+              "speed": 1
+            }
+          }
+        }
+      ],
+      "member": "synthesize",
+      "expected": {
+        "kind": "submit",
+        "model": "easel-fish-s2.1-pro",
+        "action": "synthesize",
+        "requestBody": {
+          "model": "easel-fish-s2.1-pro",
+          "text": "Hello",
+          "reference_id": "admin_preset",
+          "format": "mp3",
+          "speed": 1
+        }
+      }
+    },
+    {
+      "name": "reject public URL injection",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "easel-fish-s2.1-pro",
+              "text": "Hello",
+              "reference_id": "admin_preset",
+              "format": "mp3",
+              "speed": 1,
+              "url": "https://evil.example"
+            }
+          }
+        }
+      ],
+      "member": "synthesize",
+      "expectedError": "unsupported field"
+    },
+    {
+      "name": "reject stream",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "easel-fish-s2.1-pro",
+              "text": "Hello",
+              "reference_id": "admin_preset",
+              "format": "mp3",
+              "speed": 1,
+              "stream": true
+            }
+          }
+        }
+      ],
+      "member": "synthesize",
+      "expectedError": "stream"
+    },
+    {
+      "name": "reject arbitrary model",
+      "hook": "native",
+      "args": [
+        {
+          "query": {},
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "arbitrary",
+              "text": "Hello",
+              "reference_id": "admin_preset",
+              "format": "mp3",
+              "speed": 1
+            }
+          }
+        }
+      ],
+      "member": "synthesize",
+      "expectedError": "model"
+    },
+    {
+      "name": "idempotent submit descriptor",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "baseUrl": "http://fish-bridge:8787"
+        }
+      ],
+      "expected": {
+        "url": "http://fish-bridge:8787/v1/tts",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "Content-Type": "application/json",
+          "Idempotency-Key": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "body": {
+          "model": "s2.1-pro",
+          "text": "Hello",
+          "format": "mp3",
+          "speed": 1,
+          "reference_id": "admin_preset"
+        }
+      }
+    },
+    {
+      "name": "reject nonprivate destination",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "baseUrl": "https://evil.example"
+        }
+      ],
+      "expectedError": "private bridge URL"
+    },
+    {
+      "name": "reject weak internal secret",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "weak",
+          "baseUrl": "http://fish-bridge:8787"
+        }
+      ],
+      "expectedError": "internal secret"
+    },
+    {
+      "name": "complete metadata task",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "baseUrl": "http://fish-bridge:8787"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "state": "completed",
+            "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "mime_type": "audio/mpeg",
+            "format": "mp3",
+            "size": 8,
+            "expires_at": 1600,
+            "request_count": 1,
+            "input_characters": 5
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "taskData": {
+          "state": "completed",
+          "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "mime_type": "audio/mpeg",
+          "format": "mp3",
+          "size": 8,
+          "expires_at": 1600,
+          "request_count": 1,
+          "input_characters": 5
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%"
+        }
+      }
+    },
+    {
+      "name": "pending consumption does not become failure",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "baseUrl": "http://fish-bridge:8787"
+        },
+        {
+          "statusCode": 202,
+          "body": {
+            "state": "pending",
+            "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "taskData": {
+          "state": "pending",
+          "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "name": "pending query is GET only",
+      "hook": "buildQueryRequest",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "baseUrl": "http://fish-bridge:8787",
+          "taskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "expected": {
+        "url": "http://fish-bridge:8787/v1/operations/task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+        }
+      }
+    },
+    {
+      "name": "pending parser",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "state": "pending",
+          "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "expected": {
+        "status": "IN_PROGRESS",
+        "progress": "0%",
+        "reason": "upstream outcome unconfirmed; no automatic resubmission"
+      }
+    },
+    {
+      "name": "complete parser",
+      "hook": "parseTaskResult",
+      "args": [
+        {
+          "taskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "state": "completed",
+          "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "mime_type": "audio/mpeg",
+          "format": "mp3",
+          "size": 8,
+          "expires_at": 1600,
+          "request_count": 1,
+          "input_characters": 5
+        }
+      ],
+      "expected": {
+        "status": "SUCCESS",
+        "progress": "100%"
+      }
+    },
+    {
+      "name": "unknown parser",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "state": "unexpected"
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "unrecognized bridge receipt"
+      }
+    },
+    {
+      "name": "audio artifact metadata",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS",
+          "data": {
+            "state": "completed",
+            "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "mime_type": "audio/mpeg",
+            "format": "mp3",
+            "size": 8,
+            "expires_at": 1600,
+            "request_count": 1,
+            "input_characters": 5
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": "audio",
+          "type": "audio",
+          "mimeType": "audio/mpeg"
+        }
+      ]
+    },
+    {
+      "name": "expired artifact is hidden",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS",
+          "data": {
+            "state": "completed",
+            "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "mime_type": "audio/mpeg",
+            "format": "mp3",
+            "size": 8,
+            "expires_at": 999,
+            "request_count": 1,
+            "input_characters": 5
+          }
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "private authenticated content HEAD",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "baseUrl": "http://fish-bridge:8787",
+          "data": {
+            "state": "completed",
+            "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "mime_type": "audio/mpeg",
+            "format": "mp3",
+            "size": 8,
+            "expires_at": 1600,
+            "request_count": 1,
+            "input_characters": 5
+          },
+          "artifactKey": "audio",
+          "clientRequest": {
+            "method": "HEAD",
+            "headers": {}
+          }
+        }
+      ],
+      "expected": {
+        "url": "http://fish-bridge:8787/v1/artifacts/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "method": "HEAD",
+        "headers": {
+          "Authorization": "Bearer FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+        }
+      }
+    },
+    {
+      "name": "content rejects POST",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "baseUrl": "http://fish-bridge:8787",
+          "data": {
+            "state": "completed",
+            "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "mime_type": "audio/mpeg",
+            "format": "mp3",
+            "size": 8,
+            "expires_at": 1600,
+            "request_count": 1,
+            "input_characters": 5
+          },
+          "artifactKey": "audio",
+          "clientRequest": {
+            "method": "POST"
+          }
+        }
+      ],
+      "expectedError": "GET or HEAD"
+    },
+    {
+      "name": "content rejects unknown artifact",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "publicTaskId": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "requestBody": {
+            "model": "easel-fish-s2.1-pro",
+            "text": "Hello",
+            "reference_id": "admin_preset",
+            "format": "mp3",
+            "speed": 1
+          },
+          "model": "easel-fish-s2.1-pro",
+          "upstreamModel": "easel-fish-s2.1-pro",
+          "apiKey": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "baseUrl": "http://fish-bridge:8787",
+          "data": {
+            "state": "completed",
+            "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "mime_type": "audio/mpeg",
+            "format": "mp3",
+            "size": 8,
+            "expires_at": 1600,
+            "request_count": 1,
+            "input_characters": 5
+          },
+          "artifactKey": "../other",
+          "clientRequest": {
+            "method": "HEAD",
+            "headers": {}
+          }
+        }
+      ],
+      "expectedError": "artifact_not_found"
+    },
+    {
+      "name": "public presenter owner-protected content",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "status": "SUCCESS",
+          "data": {
+            "state": "completed",
+            "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "mime_type": "audio/mpeg",
+            "format": "mp3",
+            "size": 8,
+            "expires_at": 1600,
+            "request_count": 1,
+            "input_characters": 5
+          }
+        }
+      ],
+      "member": "created",
+      "expected": {
+        "task_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": "SUCCESS",
+        "content_url": "/v1/tasks/task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/artifacts/audio/content",
+        "mime_type": "audio/mpeg",
+        "size": 8,
+        "expires_at": 1600
+      }
+    },
+    {
+      "name": "observed completion usage",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "state": "completed",
+          "operation_id": "task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "artifact_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "mime_type": "audio/mpeg",
+          "format": "mp3",
+          "size": 8,
+          "expires_at": 1600,
+          "request_count": 1,
+          "input_characters": 5
+        }
+      ],
+      "expected": {
+        "synthesis_requests": 1,
+        "input_characters": 5
+      }
+    },
+    {
+      "name": "no usage for pending",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {
+          "status": "IN_PROGRESS"
+        },
+        {
+          "state": "pending"
+        }
+      ],
+      "expected": {}
+    }
+  ]
+}
