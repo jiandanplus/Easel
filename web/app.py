@@ -39,6 +39,13 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, StrictBool
 from sse_starlette.sse import EventSourceResponse
 
+# This file is imported both as "app" (web/ on sys.path) and as "web.app". Register
+# one instance under both names so its state and the routes bound to it are shared.
+_MODULE_NAMES = {"app", "web.app"}
+if __name__ in _MODULE_NAMES:
+    for _name in _MODULE_NAMES - {__name__}:
+        sys.modules.setdefault(_name, sys.modules[__name__])
+
 RESOURCE_ROOT = Path(os.environ.get("EASEL_RESOURCE_ROOT") or Path(__file__).resolve().parents[1]).expanduser().resolve()
 PROJECT_ROOT = Path(os.environ.get("EASEL_WORKSPACE_ROOT") or Path(__file__).resolve().parents[1]).expanduser().resolve()
 
