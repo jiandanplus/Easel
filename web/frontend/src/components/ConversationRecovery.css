@@ -1,0 +1,9 @@
+.conversation-recovery { margin-top: 10px; font-size: 12px; line-height: 1.6; color: var(--text-secondary); }
+.conversation-recovery-trigger { padding: 5px 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text-secondary); font: inherit; cursor: pointer; }
+.conversation-recovery-trigger:hover { color: var(--text); background: var(--bg); }
+.conversation-recovery-trigger:disabled { cursor: progress; opacity: .65; }
+.conversation-recovery-results { max-width: 620px; margin-top: 8px; }
+.conversation-recovery p { margin: 5px 0; }
+.conversation-recovery-note { color: var(--text-tertiary, var(--text-secondary)); }
+.conversation-recovery-operation { margin-top: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); overflow-wrap: anywhere; }
+.conversation-recovery-operation strong { color: var(--text); font-weight: 600; }

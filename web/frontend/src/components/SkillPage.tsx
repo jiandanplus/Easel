@@ -48,11 +48,6 @@ function iconFor(name: string, LayerIcon: IconC): IconC {
   return LayerIcon;
 }
 
-const LAYER_DESC: Record<string, string> = {
-  discover: '发现层技能', plan: '策划层技能', produce: '制作层技能',
-  publish: '发布层技能', attribute: '归因层技能', general: '通用技能', other: '技能',
-};
-
 export default function SkillPage({ persona }: SkillPageProps) {
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [error, setError] = useState('');
@@ -87,20 +82,17 @@ export default function SkillPage({ persona }: SkillPageProps) {
     <div className="skills-page">
       <div className="skills-page-head">
         <h1 className="page-title">技能库</h1>
-        <p className="page-subtitle">
-          共 {skills.length} 个技能，按流水线层分区浏览。点卡片查看说明、就地运行；
-          标 <span className="badge badge-warn" style={{ padding: '1px 7px' }}>需 API</span> 的需先配置密钥
-          {needApiCount > 0 && `（当前 ${needApiCount} 个待配置）`}。
-        </p>
+        <p className="page-subtitle">{skills.length} 个技能{needApiCount > 0 && ` · ${needApiCount} 个待配置`}</p>
         <div className="skill-search">
           <span className="skill-search-ic"><IconSearch size={16} /></span>
           <input
             className="field"
+            aria-label="搜索技能"
             placeholder="搜索技能名或描述…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {query && <button className="btn btn-ghost btn-sm" onClick={() => setQuery('')}>清除</button>}
+          {query && <button type="button" className="btn btn-ghost btn-sm" onClick={() => setQuery('')}>清除</button>}
         </div>
       </div>
 
@@ -127,23 +119,22 @@ export default function SkillPage({ persona }: SkillPageProps) {
                 const Icon = iconFor(s.name, meta.Icon);
                 const alert = s.needsApi && !s.apiConfigured;
                 return (
-                  <div
+                  <button
                     key={s.name}
+                    type="button"
                     className="card card-hover skill-card"
                     style={{ ['--layer-color' as string]: meta.color }}
                     onClick={() => setSelected(s.name)}
                   >
-                    {alert && <div className="skill-card-alert" title="需要配置 API key">!</div>}
-                    <div className="skill-card-icon" style={{ color: meta.color }}><Icon size={19} /></div>
-                    <div className="skill-card-name">{displayName(s.name)}</div>
-                    <div className="skill-card-rawname">{s.name}</div>
-                    <div className="skill-card-desc">{s.description?.trim() || LAYER_DESC[layer.key]}</div>
-                    <div className="skill-card-foot">
-                      {s.needsApi && (s.apiConfigured
+                    {alert && <span className="skill-card-alert" title="需要配置 API key" aria-hidden="true">!</span>}
+                    <span className="skill-card-icon" style={{ color: meta.color }} aria-hidden="true"><Icon size={19} /></span>
+                    <span className="skill-card-name">{displayName(s.name)}</span>
+                    {s.needsApi && <span className="skill-card-foot">
+                      {s.apiConfigured
                         ? <span className="badge badge-ok">已配置</span>
-                        : <span className="badge badge-warn">需 API</span>)}
-                    </div>
-                  </div>
+                        : <span className="badge badge-warn">需 API</span>}
+                    </span>}
+                  </button>
                 );
               })}
             </div>

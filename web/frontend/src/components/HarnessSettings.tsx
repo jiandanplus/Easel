@@ -1,20 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchHarnessModels, fetchHarnessSettings, saveHarnessSettings, platformModels } from '../lib/api';
-import type { HarnessModel, HarnessSettingsResponse } from '../lib/api';
+import { fetchHarnessModels, fetchHarnessSettings, saveHarnessSettings, platformModels, centralModels } from '../lib/api';
+import type { HarnessModel, HarnessSettingsResponse, SubscriptionBackend } from '../lib/api';
 import SettingsSelect from './SettingsSelect';
 import BundledProviderSettings from './BundledProviderSettings';
 
-export default function HarnessSettings({ onChange, onSelect }: {
+export default function HarnessSettings({ onChange, onSelect, onSettingsChange }: {
   onChange: (runtime: string) => void;
   onSelect: (runtime: string) => void;
+  onSettingsChange?: (settings: HarnessSettingsResponse) => void;
 }) {
   const [settings, setSettings] = useState<HarnessSettingsResponse | null>(null);
-  const [runtime, setRuntime] = useState('api');
+  const [runtime, setRuntime] = useState('pi');
   const [model, setModel] = useState('');
   const [source, setSource] = useState<'custom' | 'subscription'>('custom');
+  const [backend, setBackend] = useState<SubscriptionBackend>('central');
   const [subscriptionModel, setSubscriptionModel] = useState('');
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
-  const [subscriptionModels, setSubscriptionModels] = useState<{ id: string }[]>([]);
+  const [subscriptionModels, setSubscriptionModels] = useState<{ id: string; name?: string; test_only?: boolean }[]>([]);
   const [sandbox, setSandbox] = useState('workspace-write');
   const [autoApprove, setAutoApprove] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -35,35 +37,39 @@ export default function HarnessSettings({ onChange, onSelect }: {
       setSettings(value);
       setRuntime(value.runtime);
       setSource(value.service_source || 'custom');
+      setBackend(value.subscription_backend || (value.service_source === 'subscription' ? 'legacy' : 'central'));
       setSubscriptionModel(value.subscription_model || '');
       setModel(value.models[value.runtime] || '');
       setSandbox(value.sandbox);
       setAutoApprove(value.codex_auto_approve ?? false);
       onChange(value.runtime);
       onSelect(value.runtime);
+      onSettingsChange?.(value);
     }).catch((error) => {
       if (alive) setNote(`读取失败：${error instanceof Error ? error.message : String(error)}`);
     }).finally(() => {
       if (alive) setSettingsLoading(false);
     });
     return () => { alive = false; modelRequest.current += 1; };
-  }, [onChange, onSelect, refresh]);
+  }, [onChange, onSelect, onSettingsChange, refresh]);
 
   useEffect(() => {
     if (source !== 'subscription') { setSubscriptionLoading(false); return; }
     let alive = true;
     setSubscriptionLoading(true); setModelNote(''); setSubscriptionModels([]);
-    platformModels().then(value => {
+    (backend === 'central' ? centralModels() : platformModels()).then(value => {
       if (!alive) return;
       setSubscriptionModels(value.models);
-      if (!value.ready || !value.models.length) setModelNote(value.reason === 'gateway_not_configured' ? '平台模型网关尚未配置，请联系运营者。' : '当前无可用订阅模型，请在账号与订阅中检查测试权益。');
+      if (value.ready === false || !value.models.length) setModelNote(value.reason === 'gateway_not_configured' ? '平台模型网关尚未配置，请联系运营者。' : '暂无可用订阅模型，请检查登录状态和权益');
     }).catch(error => { if (alive) setModelNote(error instanceof Error ? error.message : '读取订阅模型失败'); })
       .finally(() => { if (alive) setSubscriptionLoading(false); });
     return () => { alive = false; };
-  }, [source, refresh]);
+  }, [source, backend, refresh]);
 
   const selected = settings?.agents.find((agent) => agent.id === runtime);
-  const bundled = runtime === 'codex' && selected?.origin === 'bundled';
+  const bundled = runtime === 'pi' || (runtime === 'codex' && selected?.origin === 'bundled');
+  const supportsSubscription = (agent: HarnessSettingsResponse['agents'][number] | undefined) =>
+    (agent?.subscription_backends ?? (agent?.id === 'codex' ? ['central', 'legacy'] : [])).includes(backend);
   const nativeModels = catalogs[runtime] || [];
   const pullModels = async () => {
     const requested = runtime;
@@ -87,10 +93,11 @@ export default function HarnessSettings({ onChange, onSelect }: {
     setBusy(true);
     setNote('');
     try {
-      const value = await saveHarnessSettings(runtime, source === 'subscription' ? subscriptionModel : model, sandbox, runtime === 'codex' ? autoApprove : undefined, { service_source: source, execution_target: 'local', ...(source === 'subscription' ? { subscription_model: subscriptionModel } : {}) });
+      const value = await saveHarnessSettings(runtime, source === 'subscription' ? subscriptionModel : model, sandbox, runtime === 'codex' ? autoApprove : undefined, { service_source: source, execution_target: 'local', ...(source === 'subscription' ? { subscription_model: subscriptionModel, subscription_backend: backend } : {}) });
       setSettings(value);
       onChange(value.runtime);
-      setNote('已保存，请新建对话；旧对话仍保留在原底座，不迁移历史。');
+      onSettingsChange?.(value);
+      setNote('已保存 · 新建对话后生效');
     } catch (error) {
       setNote(`保存失败：${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -102,9 +109,8 @@ export default function HarnessSettings({ onChange, onSelect }: {
     <section className="st-panel active harness-settings" aria-label="Agent 底座设置">
       <div className="panel-top">
         <strong>Agent 底座</strong>
-        <span className="desc">选择仅聊天，或使用 Agent 执行工具</span>
         <span className="spacer" />
-        <button className="btn btn-sm" disabled={!settings || settingsLoading || busy || settings.locked || !selected?.installed || (source === 'subscription' && (runtime !== 'codex' || !subscriptionModels.some(item => item.id === subscriptionModel)))}
+        <button className="btn btn-sm" disabled={!settings || settingsLoading || busy || settings.locked || !selected?.installed || (source === 'subscription' && (!supportsSubscription(selected) || !subscriptionModels.some(item => item.id === subscriptionModel)))}
           onClick={() => void save()}>{busy ? '保存中…' : '保存底座'}</button>
         <button className="btn btn-sm" disabled={settingsLoading || busy}
           onClick={() => setRefresh((previous) => previous + 1)}>{settingsLoading ? '读取中…' : '重新读取'}</button>
@@ -114,8 +120,8 @@ export default function HarnessSettings({ onChange, onSelect }: {
         <div className="settings-field-body">
           <div className="settings-engine-control">
             <SettingsSelect label="执行引擎" value={runtime} disabled={!settings || settingsLoading || busy || settings.locked}
-              options={(settings?.agents || [{ id: 'api', label: '仅聊天模式', installed: true }])
-                .filter(agent => source === 'custom' || agent.id === 'codex').map((agent) => ({
+              options={(settings?.agents || [{ id: 'pi', label: 'Easel 内置智能体 · Pi', installed: false }])
+                .filter(agent => source === 'custom' || supportsSubscription(agent as HarnessSettingsResponse['agents'][number])).map((agent) => ({
                 value: agent.id,
                 label: `${agent.label}${agent.installed ? '' : '（未安装 / 未配置）'}`,
               }))}
@@ -128,51 +134,41 @@ export default function HarnessSettings({ onChange, onSelect }: {
                 setNote('');
                 onSelect(value);
               }} />
-            <span className="settings-help">
-              <button type="button" className="settings-help-trigger" aria-label="仅聊天模式说明"
-                aria-describedby="chat-only-help">ⓘ</button>
-              <span id="chat-only-help" className="settings-help-tooltip" role="tooltip">
-                仅聊天模式直接调用模型 API，适合问答、写作和内容分析，不启动 Agent，
-                不能操作本机文件、运行命令、使用浏览器或执行技能。请在下方配置模型、API 地址和 Key；
-                需要工具时可切换到 OpenClaw、OpenCode、Codex 或其它 Agent。切换后请新建对话，旧历史保留。
-              </span>
-            </span>
+
           </div>
-          <p className="desc">{runtime === 'api' ? '模型 API 直连 · 无需安装 Agent，模型在下方配置'
-            : runtime === 'openclaw' ? 'OpenClaw 的模型、API 地址和 Key 在下方配置，保存后同步到 gateway'
-            : `${selected?.protocol || ''} · 连接由适配器管理，无需另选连接方式`}</p>
-          <p className="desc">安装时可选择 OpenClaw，也可先跳过，进入这里选择已安装的其它引擎。选择引擎可查看对应配置，只有「保存底座」才切换。{source === 'subscription' ? '订阅服务使用平台账号与服务端授权模型。' : bundled ? '内置 Codex 请在下方配置自定义供应商地址、模型和 API Key。' : '外部引擎认证沿用各引擎自身配置。'}</p>
           {selected && !selected.installed && (
-            <p className="desc" role="status">未检测到 {selected.label}。请确认 CLI 已安装在运行 Web 的服务器账户下，并检查启动 PATH；
-              安装或调整路径后重启 Web。原有配置未删除，安装前不能保存为执行引擎。</p>
+            <p className="desc" role="status">{runtime === 'pi'
+              ? '内置 Pi 不可用，请重新安装 Easel'
+              : `未检测到 ${selected.label}，请安装后重启 Easel`}</p>
           )}
-          {runtime !== settings?.runtime && <p className="desc">当前为配置预览；请先「保存底座」，再保存下方 API 配置。旧对话不迁移。</p>}
+          {runtime !== settings?.runtime && <p className="desc">切换待保存</p>}
         </div>
       </div>
       <fieldset className="platform-source" disabled={!settings || settingsLoading || busy || settings.locked}>
         <legend>服务来源与执行位置</legend>
         <div className="platform-actions">
           <button type="button" className="btn btn-sm" aria-pressed={source === 'custom'} onClick={() => { setSource('custom'); setModelNote(''); }}>自定义服务</button>
-          <button type="button" className="btn btn-sm" aria-pressed={source === 'subscription'} onClick={() => { setSource('subscription'); }}>订阅服务</button>
+          <button type="button" className="btn btn-sm" aria-pressed={source === 'subscription'} onClick={() => { if (source !== 'subscription' && settings?.service_source !== 'subscription') { setBackend('central'); setSubscriptionModel(''); } setSource('subscription'); }}>订阅服务</button>
           <button type="button" className="btn btn-sm" aria-pressed={true} disabled>本机执行</button>
-          <button type="button" className="btn btn-sm" disabled title="云端执行尚未实现，不会回退到本机">云端执行（暂未开放）</button>
+          <button type="button" className="btn btn-sm" disabled>云端执行（暂未开放）</button>
         </div>
-        <p className="desc">自定义服务无需 Easel 账号；订阅服务当前仅支持 Codex。切换服务来源不会自动切换执行引擎，请明确选择 Codex 并保存。云端执行与订阅媒体通道暂未开放。</p>
         {source === 'subscription' && <>
+          <SettingsSelect label="订阅渠道" value={backend} disabled={subscriptionLoading || busy || settings?.locked}
+            options={[{ value: 'central', label: '中央订阅' }, { value: 'legacy', label: '旧版测试订阅' }]}
+            onChange={value => { if (value !== backend) { setBackend(value as SubscriptionBackend); setSubscriptionModel(''); setSubscriptionModels([]); setModelNote(''); } }} />
           <SettingsSelect label="订阅模型" value={subscriptionModel} disabled={subscriptionLoading || busy || settings?.locked}
-            options={[{ value: '', label: '请选择服务端授权模型' }, ...subscriptionModels.map(item => ({ value: item.id, label: item.id }))]} onChange={setSubscriptionModel} />
-          {runtime !== 'codex' && <p role="status">请选择 Codex；其它引擎暂不支持订阅服务。</p>}
+            options={[{ value: '', label: '请选择服务端授权模型' }, ...subscriptionModels.map(item => ({ value: item.id, label: `${item.name || item.id}${item.test_only ? '（测试点数）' : ''}` }))]} onChange={setSubscriptionModel} />
+          {!supportsSubscription(selected) && <p role="status">当前引擎不支持此订阅渠道</p>}
           {modelNote && <p role="status">{modelNote}</p>}
-          <p className="desc">模型与测试额度由服务端校验。选择模型不代表已获权益；账户变更或权益到期会明确拒绝任务。</p>
         </>}
       </fieldset>
       {runtime !== 'openclaw' && runtime !== 'api' && (
         <>
           {source === 'custom' && (bundled ? <BundledProviderSettings disabled={busy || settingsLoading || !selected?.installed}
-            version={selected?.version || ''} onSaved={(value) => {
+            runtime={runtime} version={selected?.version || ''} onSaved={(value) => {
               setModel(value);
-              setCatalogs((previous) => ({ ...previous, codex: [] }));
-              setSettings((previous) => previous ? { ...previous, models: { ...previous.models, codex: value } } : previous);
+              setCatalogs((previous) => ({ ...previous, [runtime]: [] }));
+              setSettings((previous) => previous ? { ...previous, models: { ...previous.models, [runtime]: value } } : previous);
             }} /> : <div className="settings-field">
             <label className="settings-field-label" htmlFor="harness-model">模型覆盖</label>
             <div className="settings-field-body">
@@ -193,26 +189,24 @@ export default function HarnessSettings({ onChange, onSelect }: {
               <input id="harness-model" className="mock" value={model} disabled={busy || settings?.locked} maxLength={240}
               onChange={(event) => setModel(event.target.value)}
               placeholder={runtime === 'codex' ? '留空使用 Codex 原生配置' : 'provider/model；留空使用原生配置'} />
-              <p className="desc">可从原生 CLI 列表选择，也可手动填写；留空沿用原生默认模型，不修改其它底座的供应商配置。
-                模型是否可用仍取决于当前账号、供应商和原生 CLI 支持。</p>
               {modelNote && <p className="desc" role="status">{modelNote}</p>}
             </div>
           </div>)}
-          {runtime === 'codex' && (
+          {(runtime === 'pi' || runtime === 'codex') && (
             <>
             <div className="settings-field">
-              <span className="settings-field-label">Codex 沙箱</span>
+              <span className="settings-field-label">{runtime === 'pi' ? '工具权限' : 'Codex 沙箱'}</span>
               <div className="settings-field-body">
-                <SettingsSelect label="Codex 沙箱" value={sandbox} disabled={busy || settings?.locked}
+                <SettingsSelect label={runtime === 'pi' ? '工具权限' : 'Codex 沙箱'} value={sandbox} disabled={busy || settings?.locked}
                   options={[
                     { value: 'workspace-write', label: '项目工作区写入' },
                     { value: 'read-only', label: '只读' },
                   ]}
                   onChange={setSandbox} />
-                <p className="desc">保留所选沙箱边界，不授予系统完全访问权限。</p>
+                <p className="desc">{runtime === 'pi' ? '文件限当前工作区 · 命令逐次确认' : '限所选工作区权限'}</p>
               </div>
             </div>
-            <div className="settings-field">
+            {runtime === 'codex' && <div className="settings-field">
               <label className="settings-field-label" htmlFor="codex-auto-approve">永久通过授权</label>
               <div className="settings-field-body">
                 <button id="codex-auto-approve" type="button" role="switch"
@@ -222,22 +216,15 @@ export default function HarnessSettings({ onChange, onSelect }: {
                   onClick={() => setAutoApprove((previous) => !previous)}>
                   <span className="settings-permission-switch__thumb" />
                 </button>
-                <p id="codex-auto-approve-help" className="desc">保存后持续生效，仅影响 Easel 的 Codex：
-                  自动批准普通文件读取、搜索、Git 查看/拉取，以及项目工作区内的文件修改授权。
-                  sudo、删除、系统修改、执行脚本及无法判断安全性的操作仍需确认；不是无限权限，可随时关闭。</p>
+                <p id="codex-auto-approve-help" className="desc">自动批准文件读取、搜索、Git 查看／拉取和工作区内修改。
+                  删除、系统修改及执行脚本仍需确认。保存后持续生效，可随时关闭。</p>
               </div>
-            </div>
+            </div>}
             </>
           )}
-          {source === 'custom' && !bundled && <>
-          <p className="desc">认证由原生 CLI 管理，Easel 不迁移密钥。未自动批准的额外权限需在对话中确认；
-            OpenCode / 通用 ACP 使用其原生权限策略，不是 Codex 沙箱。</p>
-          <p className="desc"><code>{selected?.install_hint}</code></p>
-          <p className="desc">“已安装”仅表示找到 CLI，不代表模型已登录；保存后请发送消息验证。</p>
-          </>}
         </>
       )}
-      {settings?.locked && <p className="desc">启动环境 EASEL_AGENT_RUNTIME 已固定底座，请修改启动环境后重启。</p>}
+      {settings?.locked && <p className="desc">执行引擎已锁定</p>}
       {note && <div className={`save-note${note.includes('失败') ? ' err' : ''}`} role="status">{note}</div>}
     </section>
   );

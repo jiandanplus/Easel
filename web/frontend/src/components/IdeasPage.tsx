@@ -51,7 +51,6 @@ export default function IdeasPage({ onUseTopic }: IdeasPageProps) {
       <div className="page-head">
         <div>
           <h1 className="page-title"><IconIdea size={21} /> 选题库</h1>
-          <p className="page-subtitle">攒住每一个灵感——从热点收藏或手动新增，推进到「做内容」再进日历。</p>
         </div>
         <button className="btn btn-sm btn-primary" onClick={openNew}>+ 新建选题</button>
       </div>

@@ -1,3 +1,6 @@
+import { verifiedArtifact } from './deliverables';
+import type { VerifiedArtifact } from './deliverables';
+
 function getBasePath(): string {
   const path = window.location.pathname;
   const cleaned = path.replace(/\/index\.html$/, '').replace(/\/$/, '');
@@ -5,6 +8,29 @@ function getBasePath(): string {
 }
 
 const BASE = getBasePath();
+
+export type MediaCapability = 'image' | 'video' | 'music' | 'voice';
+export type MediaGatewayMode = 'custom' | 'new-api';
+export interface MediaGatewayValues {
+  baseUrl: string;
+  modes: Record<MediaCapability, MediaGatewayMode>;
+  image: { model: string };
+  video: { model: string; profile: string };
+  music: { provider: string; model: string };
+  voice: { provider: string; model: string; voiceId: string };
+  geminiTtsApi: string;
+}
+export interface MediaGatewaySettings extends MediaGatewayValues {
+  keyConfigured: boolean;
+  keyMasked: string;
+  configured: Record<MediaCapability, boolean>;
+  managed: Record<MediaCapability, boolean>;
+}
+export interface MediaGatewayPayload extends MediaGatewayValues { key?: string; clearKey?: boolean; adopt?: MediaCapability[] }
+export const fetchMediaGateway = (): Promise<MediaGatewaySettings> => request('/api/settings/media-gateway');
+export const saveMediaGateway = (value: MediaGatewayPayload): Promise<MediaGatewaySettings & { ok: boolean }> => request('/api/settings/media-gateway', {
+  method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value),
+});
 
 export function apiErrorMessage(value: unknown): string {
   if (!value || typeof value !== 'object') return '';
@@ -37,6 +63,153 @@ export const platformDevices = (): Promise<{ sessions: PlatformDevice[] }> => re
 export const platformRevoke = (id: string): Promise<{ ok: boolean }> => request(`/api/platform/devices/${encodeURIComponent(id)}`, { method: 'DELETE' });
 export const platformModels = (): Promise<{ models: { id: string }[]; ready: boolean; reason: string }> => request('/api/platform/models');
 
+export interface CentralScope {
+  user_id: string; product_id: string; tenant_id: string; billing_account_id: string; session_id: string; authorization_epoch: number;
+}
+export interface CentralStatus {
+  configured: boolean; url: string; authenticated: boolean;
+  account: { id: string; email: string | null; email_verified: boolean } | null;
+  scope: CentralScope | null;
+  error?: { code: string; message: string };
+  login: { pending: boolean; expires_at?: number; error?: { code: string; message: string } };
+  capabilities?: { auth_mode: 'logto'; ledger_mode: 'central_credit'; billing_stage: 'test' | 'live' | 'disabled'; payments_enabled: boolean; subscription_execution_enabled: boolean; test_execution_enabled?: boolean; execution_stage?: 'disabled' | 'test' | 'live' };
+}
+export interface CentralPlan {
+  id: string; name: string; version: string; included_products: string[]; features: string[];
+  credits: string; days: number; concurrency: number; test_only: boolean;
+}
+export interface CentralWallet {
+  unit: 'microcredit'; microcredits_per_point: '1000000'; available: string; reserved: string;
+  spent: string; expired: string; issued: string; pending_reconciliation: number; test_only: boolean;
+  active_requests?: number; pending_reconciliation_limit?: number;
+  frozen?: string; refunded?: string; funding_mode?: 'empty' | 'test' | 'live' | 'mixed'; test_available?: string; live_available?: string;
+  experience_available?: string; experience_issued?: string; experience_expires_at?: string | null;
+}
+export interface CentralEntitlements {
+  active: boolean; product_id: string; test_only: boolean; features: string[]; concurrency: number;
+  experience_active?: boolean;
+  memberships: { id: string; plan_id: string; expires_at: number | string; funding_source?: 'internal_experience' | 'test' | 'live' }[];
+}
+export interface CentralUsage {
+  id: string; operation: string; product_id: string; amount: string; actual: string | null; status: string;
+  rate_version: string; created_at: number | string; updated_at: number | string;
+}
+export interface CentralDevice { id: string; client_id: string; product_id: string; expires_at: string; current: boolean }
+const centralPost = <T,>(path: string): Promise<T> => request(`/api/platform/central/${path}`, { method: 'POST' });
+// In-memory only: financial reads must never outlive their authenticated account.
+let centralBoundaryVersion = 0;
+let observedCentralSignature: string | null | undefined;
+const centralBoundaryListeners = new Set<() => void>();
+export const centralAccountBoundaryVersion = () => centralBoundaryVersion;
+export function subscribeCentralAccountBoundary(listener: () => void): () => void {
+  centralBoundaryListeners.add(listener);
+  return () => { centralBoundaryListeners.delete(listener); };
+}
+function invalidateCentralAccountBoundary() {
+  centralBoundaryVersion += 1;
+  for (const listener of centralBoundaryListeners) listener();
+}
+export function centralAccountSignature(status: CentralStatus): string | null {
+  if (!status.authenticated || !status.account?.id || !status.scope || !status.url) return null;
+  const scope = status.scope;
+  if (![scope.user_id, scope.product_id, scope.tenant_id, scope.billing_account_id, scope.session_id].every(value => typeof value === 'string' && value.length > 0) || !Number.isSafeInteger(scope.authorization_epoch)) return null;
+  return JSON.stringify([status.url.trim().replace(/\/+$/, ''), status.account.id, scope.user_id, scope.product_id, scope.tenant_id, scope.billing_account_id, scope.session_id, scope.authorization_epoch]);
+}
+export async function centralStatus(signal?: AbortSignal): Promise<CentralStatus> {
+  const version = centralBoundaryVersion;
+  const status = await request<CentralStatus>('/api/platform/central/status', { signal });
+  if (version === centralBoundaryVersion && !signal?.aborted) {
+    const signature = centralAccountSignature(status);
+    const changed = observedCentralSignature !== undefined && observedCentralSignature !== signature;
+    observedCentralSignature = signature;
+    if (changed) invalidateCentralAccountBoundary();
+  }
+  return status;
+}
+async function centralAccountMutation<T>(perform: () => Promise<T>): Promise<T> {
+  invalidateCentralAccountBoundary();
+  try { return await perform(); }
+  finally { invalidateCentralAccountBoundary(); }
+}
+export const centralStartLogin = (): Promise<{ authorization_url: string; expires_at: number }> => centralAccountMutation(() => centralPost('auth/start'));
+export const centralCancelLogin = (): Promise<CentralStatus> => centralAccountMutation(() => centralPost('auth/cancel'));
+export const centralLogout = (): Promise<CentralStatus> => centralAccountMutation(() => centralPost('logout'));
+export const centralPlans = (signal?: AbortSignal): Promise<{ plans: CentralPlan[] }> => request('/api/platform/central/plans', { signal });
+export const centralWallet = (signal?: AbortSignal): Promise<CentralWallet> => request('/api/platform/central/wallet', { signal });
+export const centralEntitlements = (signal?: AbortSignal): Promise<CentralEntitlements> => request('/api/platform/central/entitlements', { signal });
+export const centralUsage = (signal?: AbortSignal): Promise<{ usage: CentralUsage[] }> => request('/api/platform/central/usage', { signal });
+export const centralDevices = (signal?: AbortSignal): Promise<{ sessions: CentralDevice[] }> => request('/api/platform/central/devices', { signal });
+export const centralRevoke = (id: string): Promise<{ ok: boolean }> => centralAccountMutation(() => request(`/api/platform/central/devices/${encodeURIComponent(id)}`, { method: 'DELETE' }));
+
+export interface CentralModel {
+  id: string; name?: string; capability: 'text'; test_only: boolean; readiness?: string; ready?: boolean;
+  rate: { version: string; input: { numerator: string; denominator: string }; output: { numerator: string; denominator: string } };
+  limits?: { max_input_bytes: number; max_input_tokens: number; max_output_tokens: number };
+}
+export type CentralExecutionFailureCode = 'upstream_timeout' | 'upstream_unavailable' | 'upstream_error' | 'invalid_upstream_usage' | 'request_cancelled';
+export interface CentralExecution {
+  id: string; model: string; status: string; amount?: string; actual?: string | null;
+  input_tokens?: number | null; output_tokens?: number | null; rate_version?: string;
+  funding_mode?: 'test' | 'live'; created_at?: string;
+  failure_code?: CentralExecutionFailureCode;
+  resolution?: 'platform_absorbed'; customer_charge?: '0'; provider_usage_known?: false;
+}
+export const centralModels = (signal?: AbortSignal): Promise<{ models: CentralModel[]; ready?: boolean; reason?: string }> => request('/api/platform/central/models', { signal });
+export interface CentralMediaModel {
+  id: string; name: string; version: string; capability: string; readiness: string; test_only: boolean;
+  rate: { version: string; meters: { unit: string; basis: string; numerator: string; denominator: string }[] };
+  limits: { max_input_bytes: number; max_assets: number; max_artifact_bytes: number; max_units: Record<string, number> };
+  parameters: Record<string, unknown>;
+}
+export interface CentralMediaJob {
+  id: string; model: string; capability: string; execution_state: string; delivery_state: string;
+  status: string; financial_state: string; amount: string; actual: string | null; funding_mode: string;
+  artifacts: { id: string; sha256: string; size: number; mime: string; expires_at?: string; purged_at?: string | null }[];
+}
+export interface CentralMediaRecoveries {
+  recoveries: { operation_key: string; model: string; capability: string; local_status: string; lookup_status: string; job?: CentralMediaJob }[];
+  truncated: boolean;
+}
+export const centralMediaModels = (signal?: AbortSignal): Promise<{ models: CentralMediaModel[] }> => request('/api/platform/central/media-models', { signal });
+export const centralMediaRecoveries = (signal?: AbortSignal): Promise<CentralMediaRecoveries> => request('/api/platform/central/media-recoveries', { signal });
+export function centralMediaTurnRecoveries(sessionId: string, turnId: string, signal?: AbortSignal): Promise<CentralMediaRecoveries> {
+  if (![sessionId, turnId].every(value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(value))) return Promise.reject(new Error('会话或轮次标识无效'));
+  return request(`/api/platform/central/media-recoveries/turn?session_id=${encodeURIComponent(sessionId)}&turn_id=${encodeURIComponent(turnId)}`, { signal });
+}
+export const centralExecutions = (signal?: AbortSignal): Promise<{ executions: CentralExecution[] }> => request('/api/platform/central/executions', { signal });
+export interface CentralExecutionRecoveryItem {
+  operation_key: string; invocation_id: string; model: string; local_status: string;
+  lookup_status: 'found' | 'not_found' | 'unavailable';
+  execution?: CentralExecution & { result_state: 'available' | 'expired' | 'not_available' };
+}
+export interface CentralExecutionRecoveries { recoveries: CentralExecutionRecoveryItem[]; truncated: boolean }
+export const centralExecutionRecoveries = (signal?: AbortSignal): Promise<CentralExecutionRecoveries> => request('/api/platform/central/execution-recoveries', { signal });
+export function centralTurnRecoveries(sessionId: string, turnId: string, signal?: AbortSignal): Promise<CentralExecutionRecoveries> {
+  if (![sessionId, turnId].every(value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(value))) return Promise.reject(new Error('会话或轮次标识无效'));
+  return request(`/api/platform/central/execution-recoveries/turn?session_id=${encodeURIComponent(sessionId)}&turn_id=${encodeURIComponent(turnId)}`, { signal });
+}
+
+export interface CentralOffer extends Omit<CentralPlan, 'id'> {
+  id: string; plan_id: string; currency: 'CNY'; amount_minor: string;
+  terms: { refund_policy: 'unused_full_only'; description: string };
+}
+export interface CentralBillingCatalog { mode: 'disabled' | 'test' | 'live'; channels: { id: 'wechat' | 'alipay'; label: string; enabled: boolean }[]; offers: CentralOffer[] }
+export interface CentralOrder {
+  /** Monotonic decimal revision covering order and refund changes. */
+  revision: string;
+  id: string; status: string; channel: 'wechat' | 'alipay'; mode: 'test' | 'live'; currency: 'CNY'; amount_minor: string; offer: CentralOffer;
+  created_at: string; expires_at: string; paid_at: string | null; credit_state: string;
+  checkout: { qr_code: string; qr_data_url?: string | null; expires_at: string } | null;
+  refund: { id: string; status: string; amount_minor?: string; reason?: string } | null;
+}
+export interface CentralCreateOrder { offer_id: string; channel: 'wechat' | 'alipay'; idempotency_key: string }
+export const centralBillingCatalog = (signal?: AbortSignal): Promise<CentralBillingCatalog> => request('/api/platform/central/billing/catalog', { signal });
+export const centralOrders = (signal?: AbortSignal): Promise<{ orders: CentralOrder[] }> => request('/api/platform/central/orders', { signal });
+export const centralOrder = (id: string, signal?: AbortSignal): Promise<CentralOrder> => request(`/api/platform/central/orders/${encodeURIComponent(id)}`, { signal });
+export const centralCreateOrder = (body: CentralCreateOrder, signal?: AbortSignal): Promise<CentralOrder> => request('/api/platform/central/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
+export const centralRefreshOrder = (id: string, signal?: AbortSignal): Promise<CentralOrder> => request(`/api/platform/central/orders/${encodeURIComponent(id)}/refresh`, { method: 'POST', signal });
+export const centralCloseOrder = (id: string, signal?: AbortSignal): Promise<CentralOrder> => request(`/api/platform/central/orders/${encodeURIComponent(id)}/close`, { method: 'POST', signal });
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   // 全部是动态应用接口（登录态/数据等），禁止浏览器 HTTP 缓存——否则 /api/accounts 等可能被启发式
   // 缓存住旧响应（曾表现为“扫码登录后卡片仍显示未登录”）。调用方可用 options.cache 覆盖。
@@ -61,13 +234,94 @@ export interface StatusResponse {
   gateway: boolean;
   transport?: string;
   runtime?: string;
+  runtime_detail?: string;
   skills: SkillItem[];
   personas: PersonaItem[];
+  workbench?: WorkbenchContract;
 }
 
+export interface WorkbenchContract {
+  version: number; build_id: string; workspace_scope: string; source_scope: string;
+}
+export interface ChatAcceptedReceipt {
+  version: 1; session_id: string; turn_id: string; request_hash: string; receipt_id: string;
+}
+export interface ChatCompletion {
+  version: 1; session_id: string; turn_id: string; state: 'completed' | 'stopped' | 'failed' | 'unknown';
+  clean_end?: boolean; stop_reason?: string;
+}
+export interface ChatRejectedReceipt { version: 1; session_id: string; turn_id: string; request_hash: string; not_dispatched: true }
+export interface ChatSubmissionError extends Error { status?: number; rejection?: ChatRejectedReceipt; completion?: ChatCompletion }
+async function chatRequestHash(body: Record<string, unknown>): Promise<string | undefined> {
+  if (typeof crypto === 'undefined' || !crypto.subtle) return;
+  const normalized: Record<string, unknown> = {};
+  for (const field of ['attachments', 'catalog_revision', 'execution_target', 'message', 'model', 'persona', 'reasoning_effort', 'service_source', 'sessionId', 'turnId']) {
+    normalized[field] = field === 'attachments' ? ((body.attachments || []) as UploadedFile[]).map(item => ({ id: item.id, name: item.name, path: item.path })) : body[field] ?? null;
+  }
+  const canonical = (value: unknown): string => {
+    if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+    if (value && typeof value === 'object') return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical((value as Record<string, unknown>)[key])}`).join(',')}}`;
+    return JSON.stringify(value);
+  };
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical(normalized)));
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+export interface ChatTurnStatus extends Partial<ChatAcceptedReceipt> {
+  version: 1; session_id: string; turn_id: string;
+  state: 'unknown' | 'accepted' | 'running' | 'completed' | 'stopped' | 'failed' | 'rejected';
+  accepted: boolean; text?: string; clean_end?: boolean; stop_reason?: string; last_event_id?: number;
+  not_dispatched?: boolean;
+}
+const validTurnIdentifier = (value: unknown): value is string => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(value);
+function acceptedReceipt(value: unknown, sessionId: string, turnId?: string): ChatAcceptedReceipt | undefined {
+  if (!value || typeof value !== 'object') return;
+  const row = value as Partial<ChatAcceptedReceipt>;
+  if (row.version === 1 && row.session_id === sessionId && row.turn_id === turnId
+    && typeof row.request_hash === 'string' && /^[a-f0-9]{64}$/.test(row.request_hash)
+    && typeof row.receipt_id === 'string' && /^[a-f0-9]{64}$/.test(row.receipt_id))
+    return { version: 1, session_id: sessionId, turn_id: turnId!, request_hash: row.request_hash, receipt_id: row.receipt_id };
+}
+export async function fetchChatTurn(sessionId: string, turnId: string, signal?: AbortSignal): Promise<ChatTurnStatus> {
+  if (!validTurnIdentifier(sessionId) || !validTurnIdentifier(turnId)) throw new Error('请求编号无效');
+  const value = await request<ChatTurnStatus>(`/api/chat/turns/${encodeURIComponent(sessionId)}/${encodeURIComponent(turnId)}`, { cache: 'no-store', signal });
+  return checkedChatTurn(value, sessionId, turnId);
+}
+function checkedChatTurn(value: ChatTurnStatus, sessionId: string, turnId: string): ChatTurnStatus {
+  if (!value || value.version !== 1 || value.session_id !== sessionId || value.turn_id !== turnId
+    || !['unknown', 'accepted', 'running', 'completed', 'stopped', 'failed', 'rejected'].includes(value.state)
+    || typeof value.accepted !== 'boolean' || (value.accepted && !acceptedReceipt(value, sessionId, turnId))) throw new Error('请求状态暂不可确认');
+  if (value.state === 'rejected' && (value.accepted || value.not_dispatched !== true || !acceptedReceipt(value, sessionId, turnId))) throw new Error('请求状态暂不可确认');
+  return value;
+}
+export async function withdrawChatTurn(sessionId: string, turnId: string, requestHash: string): Promise<ChatTurnStatus> {
+  if (!validTurnIdentifier(sessionId) || !validTurnIdentifier(turnId) || !/^[a-f0-9]{64}$/.test(requestHash)) throw new Error('请求编号无效');
+  const value = await request<ChatTurnStatus>(`/api/chat/turns/${encodeURIComponent(sessionId)}/${encodeURIComponent(turnId)}/withdraw`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request_hash: requestHash }), cache: 'no-store',
+  });
+  return checkedChatTurn(value, sessionId, turnId);
+}
+export const validateDraftAttachments = (sessionId: string, attachments: UploadedFile[], signal?: AbortSignal): Promise<{ version: 1; session_id: string; attachments: (UploadedFile & { state: 'available' | 'missing' | 'forbidden' })[] }> =>
+  request('/api/workbench/attachments/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: sessionId, attachments }), signal });
+export const fetchArtifactReference = (path: string, sessionId?: string): Promise<UploadedFile & { size: number; kind: string; state: 'available' }> =>
+  request(`/api/artifacts/reference?path=${encodeURIComponent(path)}${sessionId ? `&session_id=${encodeURIComponent(sessionId)}` : ''}`, { cache: 'no-store' });
+
 export type ServiceSource = 'custom' | 'subscription';
+export type SubscriptionBackend = 'central' | 'legacy';
 export type ExecutionTarget = 'local' | 'cloud';
-export interface ServiceRoute { service_source: ServiceSource; execution_target: ExecutionTarget }
+export interface ServiceRoute { service_source: ServiceSource; execution_target: ExecutionTarget; subscription_backend?: SubscriptionBackend }
+export interface ChatTurnSelection { model: string; catalog_revision: string; reasoning_effort?: string }
+export interface ChatModelOption {
+  id: string; label: string; default: boolean;
+  reasoning: { status: 'supported' | 'unsupported' | 'unknown'; efforts: string[] };
+}
+export interface ChatModelCatalog extends Partial<ServiceRoute> {
+  revision: string; source_revision: string; expires_in: number; runtime: string; selected_model: string; switchable: boolean; ready: boolean; reason: string;
+  models: ChatModelOption[];
+}
+export const fetchChatModels = (signal?: AbortSignal, sessionId?: string, refresh = false): Promise<ChatModelCatalog> => {
+  const query = [sessionId ? `session_id=${encodeURIComponent(sessionId)}` : '', refresh ? 'refresh=true' : ''].filter(Boolean).join('&');
+  return request(`/api/chat/models${query ? `?${query}` : ''}`, { signal });
+};
 export interface TaskRoute extends ServiceRoute { runtime: string; model: string; model_resolution: 'explicit' | 'native-default' | 'gateway-agent-default'; chat: boolean; tools: boolean }
 
 export interface HarnessSettingsResponse extends ServiceRoute {
@@ -78,7 +332,7 @@ export interface HarnessSettingsResponse extends ServiceRoute {
   sandbox: string;
   codex_auto_approve: boolean;
   locked: boolean;
-  agents: { id: string; label: string; protocol: string; installed: boolean; install_hint: string; origin?: 'bundled' | 'override' | 'external'; version?: string; resolution_error?: string }[];
+  agents: { id: string; label: string; protocol: string; installed: boolean; install_hint: string; origin?: 'bundled' | 'override' | 'external'; version?: string; resolution_error?: string; subscription_backends?: SubscriptionBackend[] }[];
 }
 
 export function fetchHarnessSettings(): Promise<HarnessSettingsResponse> {
@@ -630,11 +884,11 @@ export function submitLoginSms(platform: string, code: string): Promise<{ ok: bo
 }
 
 /** 用户显式停止：终止后端正在跑的对话 agent，释放会话锁，令下一句能立刻发。 */
-export function stopChat(sessionId: string): Promise<{ stopped: boolean }> {
+export function stopChat(sessionId: string, turnId?: string): Promise<{ stopped: boolean; state?: 'stopping' | 'stopped' | 'completed' | 'unknown' }> {
   return request('/api/chat/stop', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId }),
+    body: JSON.stringify({ sessionId, ...(turnId ? { turnId } : {}) }),
   });
 }
 
@@ -643,7 +897,7 @@ export function streamChat(
   persona: string | undefined,
   sessionId: string,
   onToken: (chunk: string) => void,
-  onDone: (sessionKey?: string) => void,
+  onDone: (sessionKey?: string, completion?: ChatCompletion) => void,
   onError: (err: Error) => void,
   onThinking?: (chunk: string) => void,
   onActivity?: (status: string) => void,
@@ -654,20 +908,35 @@ export function streamChat(
   attachments: UploadedFile[] = [],
   onQuestion?: (q: ChatQuestion) => void,
   onHeartbeat?: (note: string) => void,
-  route?: Partial<ServiceRoute>,
+  route?: Partial<ServiceRoute> & Partial<ChatTurnSelection>,
+  onCentralRecovery?: (hint: { version: 1; turn_id: string }) => void,
+  onAccepted?: (receipt: ChatAcceptedReceipt) => void,
+  onRequestPrepared?: (binding: { session_id: string; turn_id: string; request_hash: string }) => void,
+  onArtifact?: (artifact: VerifiedArtifact) => void,
 ): AbortController {
   const controller = new AbortController();
   let lastEventId = 0;
+  const requestBody = { message, persona: persona || undefined, sessionId, turnId, attachments, ...route };
+  let requestHash: string | undefined;
+  let acceptedSeen = false;
+  let terminalError: ChatSubmissionError | undefined;
+  const artifacts = new Map<string, VerifiedArtifact>();
 
-  const consume = async (res: Response): Promise<boolean> => {
+  const consume = async (res: Response, initialRequest: boolean): Promise<boolean> => {
       if (!res.ok) {
         let detail = `Stream error: ${res.status}`;
+        let rejection: ChatRejectedReceipt | undefined;
         try {
           const payload: unknown = await res.json();
           detail = apiErrorMessage(payload) || detail;
+          const marker = (payload as { rejection?: Partial<ChatRejectedReceipt> } | null)?.rejection;
+          if (initialRequest && requestHash && marker?.version === 1 && marker.session_id === sessionId && marker.turn_id === turnId
+            && marker.not_dispatched === true && marker.request_hash === requestHash)
+            rejection = { version: 1, session_id: sessionId, turn_id: turnId!, request_hash: requestHash, not_dispatched: true };
         } catch { /* non-JSON error */ }
-        const error = new Error(detail) as Error & { status?: number };
+        const error = new Error(detail) as ChatSubmissionError;
         error.status = res.status;
+        if (rejection) error.rejection = rejection;
         throw error;
       }
       const reader = res.body?.getReader();
@@ -697,16 +966,44 @@ export function streamChat(
             const q = JSON.parse(data) as ChatQuestion;
             if (q && typeof q === 'object' && Array.isArray(q.questions)) onQuestion(q);
           } catch { /* 解析失败忽略 */ }
+        } else if (currentEvent === 'artifact' && onArtifact) {
+          try {
+            const item = verifiedArtifact(JSON.parse(data), sessionId, turnId);
+            if (item) {
+              const previous = artifacts.get(item.path);
+              if (!previous || previous.size !== item.size || previous.sha256 !== item.sha256) {
+                artifacts.delete(item.path); artifacts.set(item.path, item);
+                if (artifacts.size > 16) artifacts.delete(artifacts.keys().next().value!);
+                onArtifact(item);
+              }
+            }
+          } catch { /* malformed and foreign artifacts cannot create delivery cards */ }
+        } else if (currentEvent === 'accepted') {
+          try { const receipt = acceptedReceipt(JSON.parse(data), sessionId, turnId); if (receipt) { acceptedSeen = true; onAccepted?.(receipt); } }
+          catch { /* invalid receipts cannot clear a draft */ }
+        } else if (currentEvent === 'central_recovery' && onCentralRecovery) {
+          try {
+            const hint: unknown = JSON.parse(data);
+            if (hint && typeof hint === 'object' && 'version' in hint && hint.version === 1 && 'turn_id' in hint && typeof hint.turn_id === 'string' && hint.turn_id === turnId && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(hint.turn_id)) {
+              onCentralRecovery({ version: 1, turn_id: hint.turn_id });
+            }
+          } catch { /* malformed or unrelated hints are ignored */ }
         } else if (currentEvent === 'heartbeat') {
           // 防呆心跳：独立于 activity/thinking，仅作「未卡住」提示，不覆盖真实状态。
           if (onHeartbeat) { try { onHeartbeat(JSON.parse(data) as string); } catch { onHeartbeat(data); } }
         } else if (currentEvent === 'error') {
           let msg = '执行失败';
           try { msg = JSON.parse(data) as string; } catch { msg = data; }
-          onError(new Error(msg));
-          return true;
+          if (acceptedSeen) terminalError = new Error(msg);
+          else { onError(new Error(msg)); return true; }
         } else if (currentEvent === 'done') {
-          try { onDone((JSON.parse(data) as { sessionKey?: string }).sessionKey); } catch { onDone(); }
+          let value: Partial<ChatCompletion> & { sessionKey?: string } = {};
+          try { value = JSON.parse(data); } catch { /* legacy empty terminal */ }
+          const completion = value?.version === 1 && value.session_id === sessionId && value.turn_id === turnId
+            && ['completed', 'stopped', 'failed', 'unknown'].includes(value.state || '')
+            ? { version: 1 as const, session_id: sessionId, turn_id: turnId!, state: value.state!, clean_end: value.clean_end, stop_reason: value.stop_reason } : undefined;
+          if (terminalError) { if (completion) terminalError.completion = completion; onError(terminalError); }
+          else onDone(value?.sessionKey, completion);
           return true;
         }
         return false;
@@ -741,6 +1038,11 @@ export function streamChat(
   };
 
   void (async () => {
+    try { requestHash = await chatRequestHash(requestBody); } catch { /* No rejection acknowledgment without a trustworthy digest. */ }
+    if (!resumeOnly && requestHash && turnId) {
+      try { onRequestPrepared?.({ session_id: sessionId, turn_id: turnId, request_hash: requestHash }); }
+      catch { onError(new Error('无法保存提交记录')); return; }
+    }
     const started = Date.now();
     let first = !resumeOnly;
     while (!controller.signal.aborted) {
@@ -748,7 +1050,7 @@ export function streamChat(
         const res = first
           ? await fetch(`${BASE}/api/chat/stream`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ message, persona: persona || undefined, sessionId, turnId, attachments, ...route }),
+              body: JSON.stringify(requestBody),
               signal: controller.signal,
             })
           : await fetch(`${BASE}/api/chat/jobs/${encodeURIComponent(turnId || '')}/stream?after=${lastEventId}`, {
@@ -758,7 +1060,7 @@ export function streamChat(
           onRecoveryUnavailable();
           return;
         }
-        if (await consume(res)) return;
+        if (await consume(res, first)) return;
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') return;
         const status = (err as Error & { status?: number })?.status;
@@ -783,7 +1085,7 @@ export function streamChat(
 }
 
 /** 取某会话最近一轮的完整结果（SSE 断线后据此取回）。 */
-export function fetchLastTurn(sessionId: string, turnId?: string): Promise<{ status: string; text: string; turn_id?: string; route?: TaskRoute }> {
+export function fetchLastTurn(sessionId: string, turnId?: string): Promise<{ status: string; text: string; turn_id?: string; artifacts?: VerifiedArtifact[]; route?: TaskRoute; clean_end?: boolean; central_recovery?: { version: number; turn_id: string } }> {
   const query = turnId ? `?turn_id=${encodeURIComponent(turnId)}` : '';
   return request(`/api/chat/last/${encodeURIComponent(sessionId)}${query}`);
 }

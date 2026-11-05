@@ -1,3 +1,4 @@
+import { requireDeliverables } from './deliverablesHarness.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
@@ -9,7 +10,7 @@ const source=readFileSync(new URL('../../web/frontend/src/lib/api.ts',import.met
 const {outputText}=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}});
 function setup(response){
  const calls=[];const api={};
- runInNewContext(outputText,{exports:api,window:{location:{pathname:'/'}},Error,Object,fetch:async(url,options)=>{calls.push({url,options});return response}});
+ runInNewContext(outputText,{exports:api,require:requireDeliverables,window:{location:{pathname:'/'}},Error,Object,fetch:async(url,options)=>{calls.push({url,options});return response}});
  return {api,calls};
 }
 test('account bridge submits credentials only to request body without browser storage',async()=>{

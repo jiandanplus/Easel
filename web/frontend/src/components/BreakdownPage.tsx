@@ -46,7 +46,6 @@ export default function BreakdownPage({ persona }: BreakdownPageProps) {
       <div className="page-head">
         <div>
           <h1 className="page-title"><IconFire size={21} /> 爆款拆解</h1>
-          <p className="page-subtitle">贴一条对标/爆款内容，AI 拆出钩子、结构、火的原因，并给你可复制的模板与选题。</p>
         </div>
       </div>
 

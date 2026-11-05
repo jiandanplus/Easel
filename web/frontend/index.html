@@ -5,11 +5,16 @@
     <script>
       // Keep normalization in sync with src/lib/theme.ts before styles load.
       (function () {
-        var theme;
-        try { theme = localStorage.getItem('easel_theme'); } catch (_) { /* Storage may be unavailable. */ }
-        if (['paper', 'minimal', 'forest', 'pastel', 'swiss'].indexOf(theme) === -1) theme = 'paper';
-        try { localStorage.setItem('easel_theme', theme); } catch (_) { /* Apply this visit. */ }
+        var preference, mode = 'system', customTheme = 'paper', dark = false;
+        try { preference = JSON.parse(localStorage.getItem('easel_appearance') || 'null'); } catch (_) { /* Storage may be unavailable. */ }
+        if (preference && typeof preference === 'object' && ['system', 'light', 'dark', 'custom'].indexOf(preference.mode) !== -1) {
+          mode = preference.mode;
+          if (['paper', 'minimal', 'forest', 'pastel', 'swiss'].indexOf(preference.theme) !== -1) customTheme = preference.theme;
+        }
+        try { dark = window.matchMedia('(prefers-color-scheme: dark)').matches; } catch (_) { /* Day fallback. */ }
+        var theme = mode === 'custom' ? customTheme : mode === 'dark' || (mode === 'system' && dark) ? 'forest' : 'paper';
         document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.appearanceMode = mode;
         document.documentElement.style.colorScheme = theme === 'forest' ? 'dark' : 'light';
       })();
     </script>

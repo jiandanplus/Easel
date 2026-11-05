@@ -148,7 +148,7 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid
 .skills-page { background: var(--bg); }
 .skills-page-head { background: var(--bg); border-bottom-color: var(--border); padding: 30px 34px 22px; }
 .skills-body { padding: 0 34px 50px; }
-.skill-card { padding: 22px; min-height: 180px; }
+.skill-card { padding: 22px; }
 .skill-card-icon { width: 40px; height: 40px; background: var(--surface-2); border-radius: 7px; }
 .skill-card-name { font-size: 16px; }
 .skill-card-desc { color: var(--text-secondary); font-size: 12px; line-height: 1.8; }

@@ -7,8 +7,8 @@ const require=createRequire(new URL('../../web/frontend/package.json',import.met
 const ts=require('typescript');
 const source=readFileSync(new URL('../../web/frontend/src/components/PlatformAccountSettings.tsx',import.meta.url),'utf8');
 const parsed=ts.createSourceFile('panel.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
-const fn=parsed.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='PlatformAccountSettings');
-const {outputText}=ts.transpileModule(fn.getText(parsed).replace('export default ','')+'\nPlatformAccountSettings;', {compilerOptions:{target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}});
+const fn=parsed.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='LegacyPlatformAccountSettings');
+const {outputText}=ts.transpileModule(fn.getText(parsed).replace('export ','')+'\nLegacyPlatformAccountSettings;', {compilerOptions:{target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}});
 const settle=()=>new Promise(r=>setImmediate(r));
 function nodes(t,type){return !t||typeof t!=='object'?[]:[...(t.type===type?[t]:[]),...(t.children||[]).flatMap(n=>nodes(n,type))]}
 function text(t){return typeof t==='string'||typeof t==='number'?String(t):!t||typeof t!=='object'?'':(t.children||[]).map(text).join('')}
@@ -34,9 +34,9 @@ test('accessible register/login clears password even on safe backend error',asyn
  assert.equal(view.submitted[0].mode,'register');assert.equal(view.submitted[0].password,'synthetic-password-123');
  assert.equal(nodes(view.render(),'input').find(n=>n.props.type==='password').props.value,'');assert.match(text(view.render()),/会话已过期/);
 });
-test('server plans show test entitlement and registration grants no quota',async()=>{
+test('server plan catalog retains test entitlement and offers no payment action',async()=>{
  const view=setup();view.render();await settle();const tree=view.render();
- assert.match(text(tree),/Synthetic plan/);assert.match(text(tree),/测试权益/);assert.match(text(tree),/注册不会自动获得/);
+ assert.match(text(tree),/Synthetic plan/);assert.match(text(tree),/测试权益/);
  assert.doesNotMatch(text(tree),/购买|支付|¥|￥/);
 });
 test('available quota sums only active grants while lifetime usage and pending stay distinct',async()=>{
@@ -68,7 +68,7 @@ test('settings account navigation mounts account panel without changing model se
  const states=[];let cursor=0;
  const component=runInNewContext(output,{React:{Fragment:'fragment',createElement:(type,props,...children)=>({type,props:props||{},children:children.flat()})},
  useState:initial=>{let i=cursor++;if(!(i in states))states[i]=typeof initial==='function'?initial():initial;return[states[i],v=>states[i]=typeof v==='function'?v(states[i]):v]},useEffect:()=>{},useCallback:cb=>cb,useRef:value=>({current:value}),
- CHANNELS:[],ThemeSettings:'theme',HarnessSettings:'harness',PlatformAccountSettings:'platform-account',EnvBoard:'env',IconSlidersHorizontal:'icon',IconPackage:'icon',IconEllipsis:'icon'});
+ CHANNELS:[],ThemeSettings:'theme',HarnessSettings:'harness',MediaGatewaySettings:'media-gateway',PlatformAccountSettings:'platform-account',EnvBoard:'env',IconSlidersHorizontal:'icon',IconPackage:'icon',IconEllipsis:'icon'});
  const render=()=>{cursor=0;return component({onClose(){}})};
  assert.equal(nodes(render(),'platform-account').length,0);
  nodes(render(),'button').find(n=>text(n)==='账号与订阅').props.onClick();

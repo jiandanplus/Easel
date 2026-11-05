@@ -1,3 +1,4 @@
+import { requireDeliverables } from './deliverablesHarness.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -24,8 +25,8 @@ function load(initial) {
   const localStorage = storage(initial);
   const sessionStorage = storage({ easel_tab_session: 'original', 'easel_pending_turn:original': 'pending' });
   const exports = {};
-  runInNewContext(outputText, { exports, localStorage, sessionStorage, Date, Math });
-  return { exports, localStorage, sessionStorage };
+  runInNewContext(outputText, { exports, require: requireDeliverables, localStorage, sessionStorage, Date, Math });
+  return { exports, require: requireDeliverables, localStorage, sessionStorage };
 }
 
 test('loading without the obsolete reset marker preserves existing conversation history and recovery', () => {

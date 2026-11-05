@@ -1,0 +1,23 @@
+.central-account { display: grid; gap: 18px; max-width: 900px; padding: 20px; min-width: 0; color: var(--text); }
+.central-account h3, .central-account h4, .central-account p { margin: 0; }
+.central-account-header, .central-account-identity { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.central-account-header > div, .central-account-identity > div { display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.central-account-notice { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text-secondary); line-height: 1.6; }
+.central-account-login { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.central-account-login > p { flex-basis: 100%; }
+.central-account-login a { text-decoration: none; }
+.central-account-section { display: grid; gap: 12px; min-width: 0; }
+.central-account-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: grid; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.central-account-card button { justify-self: start; }
+.central-account-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 12px; margin: 0; }
+.central-account-balances > div { border: 1px solid var(--border); border-radius: 10px; padding: 14px; min-width: 0; }
+.central-account-balances dt { font-size: 12px; color: var(--text-secondary); }
+.central-account-balances dd { margin: 8px 0 0; font-size: 22px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.central-account-legacy { margin: 0 20px 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.central-account-legacy > div > p { margin: 12px 0 0; }
+@media (max-width: 520px) {
+  .central-account { padding: 14px; gap: 16px; }
+  .central-account-legacy { margin: 0 14px 14px; }
+  .central-account-header, .central-account-identity { align-items: flex-start; }
+  .central-account .btn { max-width: 100%; white-space: normal; }
+}

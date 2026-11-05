@@ -77,7 +77,8 @@ function transformSegment(seg: string): string {
   if (!seg.includes('outputs')) return seg;   // 快速路径
   let s = seg.replace(ABS_PREFIX, 'outputs/');
   s = s.replace(/outputs[\\/]/g, 'outputs/'); // 相对路径里的反斜杠分隔符
-  return s.replace(OUT_RE, renderPath);
+  return s.replace(OUT_RE, (token, offset: number, whole: string) =>
+    whole.slice(offset + token.length).startsWith('[已隐藏]') ? token : renderPath(token));
 }
 
 /** 整体恰好是一个产物路径（用于判定行内代码能否安全转链） */
@@ -95,6 +96,10 @@ function transformLink(seg: string): string {
   const match = seg.match(/^(\[[^\]]*\])\((?:<([^>]+)>|([^\s]+))\)$/);
   if (!match) return seg;
   let target = match[2] || match[3];
+  // A redacted path has lost its identity. Preserve its text, never its link.
+  try {
+    if (decodeURIComponent(target).includes('[已隐藏]')) return seg.replace(/([\[\]()])/g, '\\$1');
+  } catch { return seg; }
   // 外部 URL、API 地址和已转换的锚点保持不变。
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(target) || target.startsWith('//') || target.startsWith('#') || target.startsWith('/api/')) return seg;
   try { target = decodeURIComponent(target); } catch { return seg; }
@@ -112,10 +117,23 @@ function transformLink(seg: string): string {
   }
 }
 
+/** Streaming may contain complete links but incomplete paths: disable only damaged links. */
+export function disableRedactedOutputLinks(md: string): string {
+  return md.split(PROTECT).map((segment, index) => {
+    if (index % 2 === 0 || segment.startsWith('`')) return segment;
+    try {
+      return decodeURIComponent(segment).includes('[已隐藏]')
+        ? segment.replace(/([\[\]()])/g, '\\$1') : segment;
+    } catch { return segment; }
+  }).join('');
+}
+
 /** 入口：整段 markdown 先按受保护区切开；普通文本段做变换，
  *  行内代码仅在「整体就是产物路径」时整体替换为链接。 */
 export function linkifyOutputs(md: string): string {
-  if (!md || !md.includes('outputs')) return md;
+  if (!md) return md;
+  const safe = disableRedactedOutputLinks(md);
+  if (!safe.includes('outputs')) return safe;
   return md
     .split(PROTECT)
     .map((seg, i) => {
@@ -131,8 +149,28 @@ export function linkifyOutputs(md: string): string {
 
 /** 渲染后的 HTML 里，把指向 /api/media 的链接改为新标签打开（点文件不离开工作台）。 */
 export function externalizeMediaLinks(html: string): string {
-  return html.replace(
-    /<a href="([^"]*\/api\/media\/[^"]*)"/g,
-    '<a href="$1" target="_blank" rel="noreferrer"',
-  );
+  // This runs after Markdown parsing and sanitization for both live and final
+  // messages. GFM, autolinks and raw HTML all have the same anchor boundary.
+  const document = new DOMParser().parseFromString(html, 'text/html');
+  for (const anchor of document.querySelectorAll('a[href]')) {
+    const target = anchor.getAttribute('href') || '';
+    const decoded = target.replace(/(?:%[a-f0-9]{2})+/gi, sequence => {
+      try { return decodeURIComponent(sequence); }
+      catch {
+        // Invalid unrelated bytes must not hide an otherwise encoded marker.
+        return new TextDecoder().decode(Uint8Array.from(sequence.matchAll(/%([a-f0-9]{2})/gi), match => parseInt(match[1], 16)));
+      }
+    });
+    // Earlier Markdown protection may escape marker brackets; GFM can still
+    // autolink that text. Normalize escapes for rejection only, never a URL.
+    if (decoded.replace(/\\([\[\]])/g, '$1').includes('[已隐藏]')) {
+      anchor.removeAttribute('href');
+      anchor.removeAttribute('target');
+      anchor.removeAttribute('download');
+    } else if (target.includes('/api/media/')) {
+      anchor.setAttribute('target', '_blank');
+      anchor.setAttribute('rel', 'noreferrer');
+    }
+  }
+  return document.body.innerHTML;
 }

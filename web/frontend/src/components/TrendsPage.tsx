@@ -38,7 +38,7 @@ export default function TrendsPage({ onUseTopic }: TrendsPageProps) {
     setError('');
     fetchTrends(pfs.join(','), 15)
       .then((d) => { setGroups(d.trends); setUpdated(d.updated); })
-      .catch(() => setError('热点拉取失败——请确认已配置外网代理（EASEL_PROXY）。'))
+      .catch(() => setError('热点加载失败，请重试'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -53,7 +53,6 @@ export default function TrendsPage({ onUseTopic }: TrendsPageProps) {
         <div>
           <h1 className="page-title"><IconFire size={22} /> 热点雷达</h1>
           <p className="page-subtitle">
-            多平台实时热搜，挑值得蹭的选题，一键交给 AI 做成你的内容。
             {updated > 0 && <span style={{ color: 'var(--text-tertiary)' }}> · {new Date(updated * 1000).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })} 更新</span>}
           </p>
         </div>

@@ -135,10 +135,6 @@ export default function OnboardingWizard({ onClose, onCreated }: OnboardingWizar
           <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <div className="spinner" style={{ margin: '0 auto 16px' }} />
             <div style={{ color: 'var(--text)', fontSize: 15, marginBottom: 6 }}>画像已创建 ✓　AI 正在后台增强…</div>
-            <span style={{ fontSize: 12 }}>
-              正在尝试抓取社媒链接并完善各维度，可能需要 1-2 分钟。<br />
-              也可以现在就进去用，增强会在后台继续。
-            </span>
             <div style={{ marginTop: 20 }}>
               <button className="btn btn-primary" onClick={() => onCreated(form.name.trim())}>先进去用</button>
             </div>
@@ -147,7 +143,7 @@ export default function OnboardingWizard({ onClose, onCreated }: OnboardingWizar
           <div style={{ minHeight: 240 }}>
             {step === 0 && (
               <>
-                <label style={label}>画像名 *（一个人设 = 一个画像，可跨多平台）</label>
+                <label style={label}>画像名 *</label>
                 <input style={box} value={form.name} placeholder="如：科技数码达人"
                   onChange={(e) => set('name', e.target.value)} />
                 <label style={label}>运营平台（可多选）</label>
@@ -167,15 +163,12 @@ export default function OnboardingWizard({ onClose, onCreated }: OnboardingWizar
 
             {step === 1 && (
               <>
-                <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>
-                  贴上各平台主页链接，AI 会尽力分析你已发的内容和风格（抓不到会跳过，可留空）。
-                </p>
                 {form.platforms.length === 0 && (
-                  <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>（未选平台，可直接下一步）</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>未选择平台</p>
                 )}
                 {form.platforms.map((p) => (
                   <div key={p}>
-                    <label style={label}>{p} 主页链接</label>
+                    <label style={label}>{p} 主页链接（可选）</label>
                     <input style={box} value={form.links[p] || ''} placeholder={`https://…`}
                       onChange={(e) => set('links', { ...form.links, [p]: e.target.value })} />
                   </div>

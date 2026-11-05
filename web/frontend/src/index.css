@@ -2,3 +2,6 @@
 @import './styles/theme.css';
 @import './styles/paper.css';
 @import './styles/variants.css';
+@import './styles/appearance.css';
+@import './styles/workspace-layout.css';
+@import './styles/task-flow.css';

@@ -160,7 +160,7 @@
 :root[data-theme='minimal'] .dash-stat-ic { background: var(--accent-soft); width: 46px; height: 46px; border-radius: 50%; align-self: center; }
 :root[data-theme='minimal'] .dash-create { padding: 20px; }
 :root[data-theme='minimal'] .dash-card { padding: 18px; }
-:root[data-theme='minimal'] .skill-card { min-height: 158px; padding: 20px; }
+:root[data-theme='minimal'] .skill-card { padding: 20px; }
 :root[data-theme='minimal'] .page-head { margin-bottom: 20px; }
 /* C: deep evergreen layers and high-contrast lime actions. */
 :root[data-theme='forest'] .nav-item.active { box-shadow: inset 3px 0 var(--accent-start); color: var(--text); }
@@ -191,7 +191,7 @@
 :root[data-theme='pastel'] .dash-stat:nth-child(2) .dash-stat-ic { color: #439a80; background: #e7f7ef; }
 :root[data-theme='pastel'] .dash-stat:nth-child(3) .dash-stat-ic { color: #cb853f; background: #fff0dd; }
 :root[data-theme='pastel'] .dash-stat:nth-child(4) .dash-stat-ic { color: #9673c6; background: #f2e9ff; }
-:root[data-theme='pastel'] .skill-card { min-height: 190px; padding: 25px; }
+:root[data-theme='pastel'] .skill-card { padding: 25px; }
 :root[data-theme='pastel'] .skill-card:nth-child(3n+2) .skill-card-icon { color: #a46b43; background: #f8eadd; }
 :root[data-theme='pastel'] .skill-card:nth-child(3n+3) .skill-card-icon { color: #8066ad; background: #efe8f7; }
 :root[data-theme='pastel'] .settings-more-option { padding: 28px; }
@@ -213,7 +213,7 @@
 :root[data-theme='swiss'] .dash-stat-ic svg { width: 22px; height: 22px; }
 :root[data-theme='swiss'] .dash-stat-label { padding-right: 0; white-space: nowrap; font-size: 11px; }
 :root[data-theme='swiss'] .dash-card-head { font-size: 21px; font-weight: 750; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
-:root[data-theme='swiss'] .skill-card { min-height: 175px; border-color: var(--border-strong); }
+:root[data-theme='swiss'] .skill-card { border-color: var(--border-strong); }
 :root[data-theme='swiss'] .drawer-header { border-bottom-color: var(--text); }
 :root[data-theme='swiss'] .settings-theme-heading h3 { font-weight: 800; }
 @media(min-width:1101px) {
