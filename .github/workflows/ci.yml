@@ -221,17 +221,32 @@ jobs:
           )
           echo "EASEL_B2_TEST_AUTHORITY_FILE=$dir/authority.private.json" >> "$GITHUB_ENV"
       # 从仓库根以 `python -m pytest` 运行：部分用例按 services.platform.tests.* 导入。
-      # 每 40 个文件一个进程：单进程跑全量会累积文件描述符，超过 select() 的 1024 上限后
-      # 后段用例成批报错。排除已冻结的 AV（需 Linux Docker 守护进程）与 B2/B3 恢复链路测试，
-      # 以及两条与 B2 维护许可耦合的图片功能开关用例，见
-      # docs/superpowers/plans/2026-11-05-optimized-roadmap.md。
+      # 排除已冻结的 AV（需 Linux Docker 守护进程）与 B2 恢复链路测试，以及两条与 B2 维护许可
+      # 耦合的图片功能开关用例，见 docs/superpowers/plans/2026-11-05-optimized-roadmap.md。
       - name: Central service tests
-        timeout-minutes: 40
+        timeout-minutes: 30
+        run: >-
+          uv run --project services/platform --frozen --group test python -m pytest services/platform/tests -q
+          --ignore-glob='services/platform/tests/test_av_*'
+          --ignore-glob='services/platform/tests/test_media_backup_b3_*'
+          --ignore-glob='services/platform/tests/test_b3_*'
+          --ignore=services/platform/tests/test_media_backup_b2_capture_pg.py
+          --ignore=services/platform/tests/test_media_backup_b2_integrated.py
+          --ignore=services/platform/tests/test_media_backup_b2_pipeline.py
+          --ignore=services/platform/tests/test_settled_media_restore_fixture.py
+          --ignore=services/platform/tests/test_mixed_media_restore_fixture.py
+          --ignore=services/platform/tests/test_media_restore_capture.py
+          -k 'not (test_extension_uses_real_image_feature_gate_on_original_wallet_and_no_new_grant or test_live_image_cannot_claim_text_feature_even_as_legacy_misconfigured_catalog)'
+      # B3 按设计在“状态不明”时保留目录与文件描述符、不提供释放接口（由 Root 处置，进程退出即释放），
+      # 测试大量构造这类保留场景；同进程累积到上万个后，后续用到 select() 的用例会越过 1024 上限。
+      # 因此每个 B3 文件单独一个进程，进程退出即完成处置。
+      - name: Central B3 tests (one process per file)
+        timeout-minutes: 30
         run: |
-          ls services/platform/tests/test_*.py \
-            | grep -vE '/test_av_|/test_media_backup_b2_(capture_pg|integrated|pipeline)\.py$|/test_(settled|mixed)_media_restore_fixture\.py$|/test_media_restore_capture\.py$' \
-            | xargs -n 40 uv run --project services/platform --frozen --group test python -m pytest -q \
-                -k 'not (test_extension_uses_real_image_feature_gate_on_original_wallet_and_no_new_grant or test_live_image_cannot_claim_text_feature_even_as_legacy_misconfigured_catalog)'
+          set -e
+          for file in services/platform/tests/test_media_backup_b3_*.py services/platform/tests/test_b3_*.py; do
+            uv run --project services/platform --frozen --group test python -m pytest -q "$file"
+          done
 
   # 真·跑一遍安装。只在 nightly / 手动触发 / 打了 ci:full-install 标签的 PR 上跑：
   # 一次完整安装要下 ~1GB（pip 的 opencv/faster-whisper/rembg + npm + Chromium），

@@ -10,10 +10,17 @@ import dataclasses as dc
 import hashlib
 import os
 from pathlib import Path
+import sys
 import threading
 from types import SimpleNamespace as NS
 from unittest.mock import patch
 from uuid import uuid4
+
+# b3_source_owner and media_backup live in services/platform/scripts; do not rely on
+# another test module having put that directory on sys.path first.
+_SCRIPTS = str(Path(__file__).resolve().parents[1] / "scripts")
+if _SCRIPTS not in sys.path:
+    sys.path.insert(0, _SCRIPTS)
 
 
 def sha(raw):return hashlib.sha256(raw).hexdigest()
