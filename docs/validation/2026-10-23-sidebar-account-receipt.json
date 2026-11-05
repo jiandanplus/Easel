@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "branch": "codex/ui-redesign",
+  "head_unchanged": true,
+  "main_unchanged": true,
+  "root_env_unchanged": true,
+  "source_and_build_inputs_verified": 878,
+  "frontend_tests": {
+    "passed": 226,
+    "failed": 0,
+    "skipped": 0
+  },
+  "typescript_and_vite_build_passed": true,
+  "incremental_review": "PASS",
+  "browser": {
+    "actual_v4_preview": true,
+    "bottom_left_entry_visible": true,
+    "click_opens_existing_central_account_settings": true,
+    "close_and_reopen_verified": true,
+    "platform_unconfigured_reason_visible": true,
+    "login_not_faked": true,
+    "narrow_viewport_browser_check_performed": false
+  },
+  "models_or_payments_called_for_ui_change": 0,
+  "screenshot": "assets/2026-10-23-login-entry.png",
+  "v4_archive_sha256": "ec19d6d7a755f87532715fb0d1440e353d09a7d76a428e513418d9cddec40268"
+}

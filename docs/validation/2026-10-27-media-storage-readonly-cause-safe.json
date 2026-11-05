@@ -1,0 +1,61 @@
+{
+  "business_keys_read": 0,
+  "candidate_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+  "injection": "Only os.open for .part creation raises errno.EROFS. PNG decoding, frozen application code, typed reference and PostgreSQL transactions remain real.",
+  "input_sha256": {
+    "platform_service/media/adapters/openai_images.py": "b1494b8d51b9e1814546ca342d0775175e1ac1e5b171afafcf9b163794d7da20",
+    "platform_service/media/artifacts.py": "2e7dfa3e236227b617323ce538ea3444adbd8d7a986e22157aa44eb709cb4ad4",
+    "platform_service/media_runtime.py": "b96eb8619c0615d59e9b42f9028f081b9e8c612270b04c22779a51da0ec0dd57"
+  },
+  "production_writes": 0,
+  "read_only_case": {
+    "actual": null,
+    "artifacts": 0,
+    "blob_state": "staged",
+    "blobs": 1,
+    "directory_files": 0,
+    "held": 1000000,
+    "http_response_references": 1,
+    "provider_attempts": 1,
+    "provider_fake_post_count_including_exact_replay": 1,
+    "real_provider_post_count": 0,
+    "receipts": 0,
+    "spent": 0,
+    "terminal_evidence": 0
+  },
+  "root_observed_server_facts_not_independent_ssh": [
+    "staged PNG blob, 1024x1024,518466 bytes",
+    "storage UID/GID997 and mode0700;empty directory",
+    "ProtectSystem=strict;ReadWritePaths empty;actual API PID mountinfo root / ro"
+  ],
+  "scope_limits": [
+    "Actual mount namespace evidence was supplied by root; this reviewer did not connect to server.",
+    "Local EROFS injection proves application behavior, not actual systemd namespace configuration.",
+    "Filesystem repair does not settle or release the existing uncertain job and does not authorize a second paid POST.",
+    "New deployment helper and desktop auth hardening are separate reviews."
+  ],
+  "ssh_calls": 0,
+  "status": "failure_cause_reproduced_no_production_change",
+  "tests": {
+    "exit_code": 0,
+    "failed": 0,
+    "passed": 2,
+    "seconds": 1.22,
+    "skipped": 0
+  },
+  "writable_case": {
+    "actual": 1000000,
+    "artifacts": 1,
+    "blob_state": "attached",
+    "blobs": 1,
+    "directory_files": 1,
+    "held": 0,
+    "http_response_references": 1,
+    "provider_attempts": 1,
+    "provider_fake_post_count_including_exact_replay": 1,
+    "real_provider_post_count": 0,
+    "receipts": 1,
+    "spent": 1000000,
+    "terminal_evidence": 1
+  }
+}

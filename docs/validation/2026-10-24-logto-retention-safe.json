@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "phase": "complete",
+  "verified_at_utc": "2026-10-24T04:05:46.443675+00:00",
+  "backup_file_count": 4,
+  "all_backup_hashes_sizes_and_private_modes_reverified": true,
+  "private_target_configs_mode_verified": true,
+  "only_new_restored_postgres_stopped": "easel-idp-production-20261024-pg",
+  "container_id": "8bfa0d86bd654237776376c98e4a22c631e538fa76bc576fb83f2501a1363e0f",
+  "container_retained": true,
+  "persistent_data_volume_retained": true,
+  "internal_network_retained": true,
+  "private_backups_retained": true,
+  "original_database_running": true,
+  "original_processes": [
+    {
+      "pid": 78140,
+      "start_unchanged": true
+    },
+    {
+      "pid": 78159,
+      "start_unchanged": true
+    },
+    {
+      "pid": 163700,
+      "start_unchanged": true
+    }
+  ],
+  "old_proxy_file_hashes_unchanged": 7,
+  "nginx_test_passed": true,
+  "original_service_stop_calls": 0,
+  "delete_calls": 0,
+  "supplier_config_read": false,
+  "production_cutover_executed": false,
+  "schema_gate_still_incomplete": true
+}

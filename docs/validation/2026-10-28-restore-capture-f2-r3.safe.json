@@ -1,0 +1,116 @@
+{
+  "format": "easel-restore-capture-f2-r3-validation-v1",
+  "verdict": "pass_local_source_and_synthetic_contract_only",
+  "approved": false,
+  "actions": [],
+  "candidate": {
+    "services/platform/scripts/media_restore_capture.py": "fc3fa9cbdaa751c8efeb7ddb5a40c69efa0b7a3a7675c4b3f7832210577ed261",
+    "services/platform/tests/test_media_restore_capture.py": "2dd3311455ae4e9a886efa5f1fc4112a2e0852f4b7275b1e4569ea022ba2382d",
+    "docs/superpowers/plans/2026-10-28-restore-window-v2.md": "a7bedbe99d78b78117553bd89bd984e7a45362d76de69da50908da1eac8458ae"
+  },
+  "independent_review_sha256": "5595b70504a5db2812250c0f1deb2e34ea457fa387e2089bea09b9b205fa688a",
+  "independent_safe_sha256": "fb9507bce348215b9dbe830f465ab485557f784f82f4e98ae94d345e7fead6a2",
+  "copied_files": 188,
+  "copied_bytes": 1654777,
+  "copy_manifest": "outputs/_run/restore-capture-f2-r3-20261028/copy-manifest.json",
+  "copy_manifest_sha256": "35736efa261d8252cb3a7523c6f19f9b3390826895add147f16ef26a04fe71a5",
+  "independent_actual_results": {
+    "original-ttl": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 3.731,
+      "exit": 0,
+      "log_sha256": "55ab7e5e173afa57cdee7bdb76499f9a389fbff196512b67f4f7ac1e1cf9c8be"
+    },
+    "unchanged-r1-blocking": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.945,
+      "exit": 0,
+      "log_sha256": "1dd05e14a858c2029b5586b0911c2421a92d3389b030838f4d1c4952cb7acdb1"
+    },
+    "unchanged-r2-blocking": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.715,
+      "exit": 0,
+      "log_sha256": "ebf396554cbb7fedcd7209c22b0e048e1a3362a2de33491cf33392c36a83364f"
+    },
+    "original-B-nonblocking": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.527,
+      "exit": 1,
+      "log_sha256": "512e2dacd55ed41ec0b8dcb4badc54b40d7b821bd935ee4f49fb836e70e821c6"
+    },
+    "independent-r3": {
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 2.619,
+      "exit": 0,
+      "log_sha256": "0310f24ad16faef05e9ab3a2846102ed204ccbbd1e91fd0217fcae3bfdcd1d3a"
+    },
+    "native-owned-reentry": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.396,
+      "exit": 0,
+      "log_sha256": "a9e95b3cc7febaa50cffccb8cc26eaa6a8674bacbc0fa334f60f2b742666866b"
+    },
+    "focused": {
+      "tests": 136,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 3.999,
+      "exit": 0,
+      "log_sha256": "697b15e928b5b5179442242c9509259b01f734de8115401ab61d121666f4c11b"
+    },
+    "f1-closure": {
+      "tests": 320,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 4.997,
+      "exit": 0,
+      "log_sha256": "cd3cb619ecf77167a01c34dffd57ab92a4876db613a51c45f278a1dac35f733e"
+    },
+    "core-closure": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.031,
+      "exit": 0,
+      "log_sha256": "5ab466a7cf6bdf6ee840ae5bf5c4633b41652fdaab42fcd6ff9d06af684b2172"
+    }
+  },
+  "original_B_failed_expectation_retained_nonblocking": true,
+  "actual_Linux_PG25006_sourcefacts_capture_WPD_realDR_verified": false,
+  "AV_Linux_used_as_F2_evidence": false,
+  "real_capture_credentials_or_backups_archived": false,
+  "documentation_copy_only_no_test_rerun": true,
+  "document_sha256": "0986c2759ab607ff1257dabc47b782ebd16153d900c91fbc4a16ee8316c3d671",
+  "fresh_central_full_status": "in_progress_not_marked_passed",
+  "composer_browser_source_fixture_validation": "completed_by_root_real_CUA_synthetic_backend_not_package_or_F2_acceptance",
+  "v30_packaging": "not_done",
+  "active_preview": "v29_not_changed",
+  "copy_bytes_and_SHA_verified": true,
+  "new_local_document_links_verified": true,
+  "archive_symlinks_and_unlisted_files": false,
+  "archive_directories_mode": "0700",
+  "archive_files_mode": "0600",
+  "archives_git_ignored": true
+}

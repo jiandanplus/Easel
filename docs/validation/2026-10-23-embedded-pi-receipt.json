@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-23",
+  "branch": "codex/ui-redesign",
+  "default_agent": "pi",
+  "runtime": {
+    "pi": "1.4.0",
+    "node": "24.22.1",
+    "python": "3.12.13"
+  },
+  "delivery": {
+    "target": "macOS 15+ ARM64",
+    "unsigned": true,
+    "notarized": false,
+    "independent_device_verified": false,
+    "archive_sha256": "31ab80a3d876c8e2247b68750c55b31332dc51972ae1cfdbf55e8fd7aff8200a"
+  },
+  "real_acceptance": {
+    "provider": "New API channel 4, GLM-5.3 Responses compatibility",
+    "packaged_v3_runtime_used": true,
+    "synthetic_noncommercial_account_and_credits": true,
+    "business_key_only_on_server": true,
+    "central_write_read_final_marker": true,
+    "custom_plain_and_approved_sandboxed_python": true,
+    "successful_central_requests": 3,
+    "settled_microcredits": 1175,
+    "point_microcredit_scale": 1000000,
+    "test_rate": "ceil(input_tokens/2 + 3*output_tokens/2)",
+    "interrupted_microcredits_held_pending_reconciliation": 8960,
+    "readonly_recovery_queries": 2,
+    "replay_added_provider_requests": 0,
+    "replay_added_debit": 0,
+    "custom_added_central_debit": 0,
+    "old_minimax_posts": 5,
+    "glm_posts": 7,
+    "combined_physical_newapi_posts": 12,
+    "gateway_internal_supplier_attempts_verified": false,
+    "initial_minimax_full_task_succeeded": false,
+    "initial_minimax_settled_microcredits": 1916,
+    "initial_minimax_pending_held_microcredits": 9728,
+    "prior_s3b_settled_microcredits_unchanged": 1349,
+    "prior_s3b_pending_held_microcredits_unchanged": 33152,
+    "paid_orders_created": 0,
+    "production_oidc_or_payment_verified": false,
+    "central_live_duration_seconds": 108.002177,
+    "production_performance_claim": false,
+    "actual_server_output_cap": 512
+  },
+  "verification": {
+    "python_main_suite": {
+      "passed": 527,
+      "skipped": 6
+    },
+    "subsequent_actual_packaged_python_tests": {
+      "passed": 2
+    },
+    "remaining_optional_external_codex_skips": 4,
+    "frontend_suite": {
+      "passed": 219,
+      "failed": 0,
+      "skipped": 0
+    },
+    "frontend_typecheck_and_build": true,
+    "public_source_files_verified": 877,
+    "runtime_resource_files_verified": 15251,
+    "new_home_minimal_path_relocated_chinese_space_path_verified": true,
+    "independent_source_reviews_closed": true
+  },
+  "cleanup": {
+    "explicit_user_approval_received": true,
+    "server_private_audit_archive": "/var/lib/easel-validation/pi-embedded-20261023",
+    "owned_environment_only": true,
+    "completed": true,
+    "pending_financial_records_preserved": true,
+    "production_newapi_and_original_previews_preserved": true,
+    "post_cleanup_production_gateway_and_preview_http_verified": true,
+    "backup_restore_rehearsal_performed": false,
+    "database_archive_contains_cluster_roles": false,
+    "restore_before_revocation_requires_revoking_synthetic_sessions_again": true
+  },
+  "limits": [
+    "Operator production central URL and merchant/OIDC rollout still required for commercial login and paid subscriptions.",
+    "Optional media, ffmpeg and browser automation runtimes are not all bundled or live-accepted.",
+    "Pi Agent, Node, CPython and basic tools are embedded; UI opens in the local web browser.",
+    "CPython runtime inventory and wheels verified; original Python archive digest unavailable.",
+    "Pending uncertain jobs remain reserved for authoritative reconciliation; no automatic resend or release."
+  ],
+  "evidence_directory": "assets/2026-10-23-pi",
+  "receipts": {
+    "package-artifact.json": {
+      "sha256": "ef018b11f1b1b3b40734a6a7de5505826048429bde8c25518b3408a516227c6e",
+      "bytes": 974
+    },
+    "package-proof.json": {
+      "sha256": "208930bb5fbb833007cf68311c3ba1bd81468123e57604262e28f70a7bc21249",
+      "bytes": 1928
+    },
+    "post-smoke-proof.json": {
+      "sha256": "41f4b781718e5a552729972310532c6d3a1b24ba2d54f88e87de0fbadd0c416b",
+      "bytes": 353
+    },
+    "engine-equivalence.json": {
+      "sha256": "529a1ec436928b6c3b0199b45e67df53c874a3b85308d080e71f1b7d277790aa",
+      "bytes": 2484
+    },
+    "central-live.json": {
+      "sha256": "91a7da2675eebdae3320651233ae3861501faa81e0ffc9ad0d4e7b0a69090dad",
+      "bytes": 7079
+    },
+    "custom-live.json": {
+      "sha256": "639063f2f94b26ef1c32c4295ebe6236466c3a0a8189f288377e4243008d2527",
+      "bytes": 1259
+    },
+    "custom-python-live.json": {
+      "sha256": "cd2774024b11a11b1da5793915436adad336c125e1000c649386e2c551082292",
+      "bytes": 4471
+    },
+    "cancel-live.json": {
+      "sha256": "8d713cfdf34df3f40f437307ccd4cb85e9c9a8ada38ebe7cb7c45dae9559261f",
+      "bytes": 6087
+    },
+    "final-server-snapshot.json": {
+      "sha256": "3a5c8e2da914fa85e22d9957bd95fc96d15e1b6af6501126c256a4cc3a52b600",
+      "bytes": 4496
+    },
+    "financial-assertions.json": {
+      "sha256": "1ed9d3f43efcf9b05650398a3b44ab21e3ad45b0845c69d28337195ff16e160f",
+      "bytes": 650
+    },
+    "gateway-metering.json": {
+      "sha256": "1aabf08af6fc6e0616c64490f45594c366b960f258dd89fd5fa1e63134f58c7c",
+      "bytes": 5573
+    },
+    "gateway-correlation.json": {
+      "sha256": "186e990965b7c05c89ecedda6888565a55ffa33cf26cc544625396e181ac2674",
+      "bytes": 1242
+    },
+    "archive-cleanup.json": {
+      "sha256": "03c9fbea71a85bb5b9c5bde65478d3fac207b6e9e89bf44e9f1fb5df96bab098",
+      "bytes": 15194
+    },
+    "local-cleanup.json": {
+      "sha256": "0f1610ceadfe31be39ff78d78c72a767551cf6e463c23b56691870ffe8744b7d",
+      "bytes": 960
+    },
+    "post-cleanup-health.json": {
+      "sha256": "94dc4b16e25d8bb2ceda1966621970b88fc4f370af7d6d80f85f4525eb94f58a",
+      "bytes": 1295
+    },
+    "initial-minimax-live.json": {
+      "sha256": "2d835886a405881c06c59bfdd29c33d08ea4199763b56a009958b7695c0b0368",
+      "bytes": 2929
+    },
+    "initial-minimax-diagnostics.json": {
+      "sha256": "c2416f0a2d9eaabaaddcc4aa7c1f2f431f264aa7a37a0bd2e3c373b462211460",
+      "bytes": 1474
+    },
+    "glm-compat-channel.json": {
+      "sha256": "873adb6a23c889c3ddb073a88b62d9a01f11a596c6090fca7dba90dd4a17e9c3",
+      "bytes": 761
+    }
+  }
+}

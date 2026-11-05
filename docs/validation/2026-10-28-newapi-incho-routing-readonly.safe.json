@@ -1,0 +1,50 @@
+{
+  "observed_utc": "2026-10-28T02:31:52+00:00",
+  "source": "New API server 115.190.211.112 read-only channel/abilities query",
+  "channel": {
+    "id": 7,
+    "type": 61,
+    "status": 1,
+    "plugin": "incho",
+    "contains_incho_music": false,
+    "public_models": [
+      "v3.5",
+      "v4.5"
+    ],
+    "mapping_keys": {
+      "incho_music": null,
+      "v3.5": null,
+      "v4.5": null
+    }
+  },
+  "default_abilities": [
+    {
+      "model": "v3.5",
+      "enabled": true,
+      "channel_id": 7
+    },
+    {
+      "model": "v4.5",
+      "enabled": true,
+      "channel_id": 7
+    }
+  ],
+  "incho_music_ability_present": false,
+  "plugin_source": {
+    "version": "1.0.2",
+    "sha256": "0fcda09aef4aeabc6a6a8449d4742ac887c390d49324b2d3f2083b2ca5ad1479",
+    "public_source_inspected_in_prior_step": true,
+    "installed_hash_not_requeried_in_this_query": true,
+    "supported_upstream_versions": [
+      "v3.5",
+      "v4.0"
+    ]
+  },
+  "current_native_routing": "not_configured",
+  "v4_5": "not_supported_by_pinned_plugin_and_no_channel_override",
+  "read_only": true,
+  "database_writes": 0,
+  "provider_posts": 0,
+  "keys_or_private_plugin_source_exported": false,
+  "models_or_prices_enabled": false
+}

@@ -1,0 +1,280 @@
+{
+  "status": "full_passed_with_14_explicit_skips_and_separate_7_pass_sdk_supplement",
+  "full": {
+    "tool_session_id": 8911,
+    "exit_code": 0,
+    "passed": 1895,
+    "skipped": 14,
+    "failed": 0,
+    "errors": 0,
+    "seconds": 352.26,
+    "source_count": 431,
+    "changed_inputs": [],
+    "command": [
+      "/usr/bin/caffeinate",
+      "-i",
+      "-s",
+      "/Users/jiandan/Code/GitCode/Easel/services/platform/.venv/bin/python",
+      "-m",
+      "pytest",
+      "services/platform/tests",
+      "-q",
+      "--tb=short",
+      "-rs",
+      "--junitxml=/private/tmp/easel-central-m3-incho-header-final-20261028/full-central.junit.xml"
+    ],
+    "clock": {
+      "started_utc": "2026-10-28T02:57:55.602245+00:00",
+      "finished_utc": "2026-10-28T03:03:48.620381+00:00",
+      "wall_elapsed_seconds": 353.01768612861633,
+      "monotonic_elapsed_seconds": 353.0029992919881,
+      "samples": 699,
+      "sample_interval_seconds": 0.5,
+      "max_absolute_wall_monotonic_gap_seconds": 0.0006422121077775955,
+      "max_monotonic_sample_interval_seconds": 0.6997864170116372,
+      "clock_discontinuities": [],
+      "temporary_assertion_process_exited": true
+    },
+    "explicit_environment": {
+      "PYTHONPATH": "services/platform/src:services/platform/tests",
+      "EASEL_CENTRAL_TEST_DSN_FILE": "/private/tmp/easel-media-review-20261027-second/test-pg-private.json",
+      "EASEL_PI_TEST_PAYLOAD": "not set during full"
+    }
+  },
+  "sdk_supplement": {
+    "tool_session_id": 92805,
+    "exit_code": 0,
+    "result": {
+      "passed": 7,
+      "skipped": 0,
+      "failed": 0,
+      "errors": 0,
+      "seconds": 3.16
+    },
+    "source_count": 434,
+    "source_changed": [],
+    "payload_count": 11932,
+    "payload_changed": [],
+    "runtime_manifest_sha256": "8448f44712ed33164b3e04fd2dc198be2b03ba2bd0f62f237aec3c0d4f7d9783",
+    "actual_modules": [
+      {
+        "package": "@earendil-works/pi-ai",
+        "version": "1.4.0",
+        "package_json_sha256": "36df91142c18a5912eafab0f2783bb4d88cdd101c5c5e7fd9173d4387cc5cced",
+        "index_js_sha256": "7808fc618b4c816322005628af2726a53c4db678b37fb311163210c4fbab5ed0"
+      },
+      {
+        "package": "@earendil-works/pi-agent-core",
+        "version": "1.4.0",
+        "package_json_sha256": "3ee9a0f81587b917e7a010e4391fc10d2b04fa48091b693bffebe3b9b55e9f14",
+        "index_js_sha256": "40cb358d7f05594e9b67845a78ae50ad05e8375f0cfa8cee8a74801556c09afd"
+      }
+    ],
+    "node": {
+      "executable": "node/bin/node",
+      "sha256": "6f32069480ec14d52b6d7b1f3c7124cfbbc46203abf5ddf5c65b127435f3f329",
+      "version": "24.22.1"
+    },
+    "pi": {
+      "sha256": "8ec881590206c0c487f95469860f04852b9c1c80b4a198a9fd254fcf00768682",
+      "version": "1.4.0",
+      "worker": "worker.mjs"
+    },
+    "completed_utc": "2026-10-28T03:06:57.001473+00:00",
+    "no_actual_provider_requests": true,
+    "postgres_used": false,
+    "explicit_environment": {
+      "PYTHONPATH": "services/platform/src:services/platform/tests",
+      "EASEL_PI_TEST_PAYLOAD": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v26/Easel/Easel.app/Contents/Resources/runtime/pi"
+    }
+  },
+  "added_paths": [
+    "services/platform/src/platform_service/media/adapters/newapi_incho.py",
+    "services/platform/src/platform_service/migrations/020_media_incho_runtime.sql",
+    "services/platform/tests/test_execution_newapi_correlation.py",
+    "services/platform/tests/test_media_incho_protocol.py",
+    "services/platform/tests/test_media_incho_runtime.py",
+    "services/platform/tests/test_media_incho_sdk.py",
+    "services/platform/tests/test_mixed_media_restore_apply_diagnostics.py",
+    "tests/pi_incho_worker_fixture.mjs"
+  ],
+  "changes_from_previous": [
+    {
+      "path": "easel/platform/media_contracts.py",
+      "before_sha256": "050d9e3b327a37f3880d5744e3c6678834b09ca2d028dff2358aeeee7220b298",
+      "after_sha256": "af1409356af8d850d3ce3ba6bc451bffab9f9841547e4f56b50640410e7b6ee0"
+    },
+    {
+      "path": "scripts/validation/verify_central_live_text.py",
+      "before_sha256": "62438bb080dfe5c898a8df3fae3d978eafde54a12ba27a5d93cf89d5c97d3e93",
+      "after_sha256": "9f00e494f8fef9a578760ab273b5169a49f229ecc342df2e33547db0fabfa233"
+    },
+    {
+      "path": "services/platform/scripts/capture_mixed_media_restore_plan.py",
+      "before_sha256": "8d77536b5afa9207ba5268f4cdb904fbe14de181fdaf5667e8306ce69c457e9c",
+      "after_sha256": "c5ee12bd34b5b48a09b002382bfc9c1762a8cd6d32aa4d343d6709840b931d36"
+    },
+    {
+      "path": "services/platform/scripts/verify_mixed_media_restore_drill.py",
+      "before_sha256": "35068d9fb841598f50c59e6ec2acaab5792a598096055516b4c37950ff28424a",
+      "after_sha256": "34df13489773a3e3bf8c28601e634546d494012923dde54b0bd76e792581271e"
+    },
+    {
+      "path": "services/platform/src/platform_service/execution_runtime.py",
+      "before_sha256": "806fd4dadeb22ab5b501669cea3437549c661435a0399742347042172782924d",
+      "after_sha256": "60b803c0c1de11c69cf8f0a4235c58a3eb9b83477d2b82c38596b72cd83d17c7"
+    },
+    {
+      "path": "services/platform/src/platform_service/media/adapters/newapi_async.py",
+      "before_sha256": "58953d45e151b400cee80b7e1c6c8d2aea52638cbcf384e8ea3cd51d474e38de",
+      "after_sha256": "feb4b6c06b0eb6d0ae4546f625de630dfad7d0cabe447a10d7fcfa839d849880"
+    },
+    {
+      "path": "services/platform/src/platform_service/media/async_store.py",
+      "before_sha256": "876c9da289b23ce8ae2e2a76c347f14233cb5a639aca2f830208fabf4f5c52df",
+      "after_sha256": "110b441d6f305a4faea702fdc6f743a8803bdc91e54660901711a28bdb158a0d"
+    },
+    {
+      "path": "services/platform/src/platform_service/media/core.py",
+      "before_sha256": "2584759e92dd5db9a73a9ab7bbec4e81fcd6317cb6932a9ec967236a58257831",
+      "after_sha256": "78f755ac6bf9e205eb7a6b5f599c367e68d6ed3f662fc7938eb7887fda591104"
+    },
+    {
+      "path": "services/platform/src/platform_service/media_config.py",
+      "before_sha256": "320b280360b07054cc120033e2a3912a4f954f3eb7707d59c3bc3934ce00d58b",
+      "after_sha256": "f1abd9af4331d940a5c2905b736200ee7d13df9c4e20aee606b6fc16da49bb46"
+    },
+    {
+      "path": "services/platform/src/platform_service/media_runtime.py",
+      "before_sha256": "5250562579679ba0fe084d79f399d197b86b71778e1de1ad4069ee8af42473ff",
+      "after_sha256": "cf8d95336e5c2e0b7fa1f19aa055b0030d5c8238733a2ddc9b51c995bc9a4334"
+    },
+    {
+      "path": "services/platform/tests/test_live_validation_runner.py",
+      "before_sha256": "c918c7a8d5457030f490ac35f2bf745a3ce88a15b3e997eb5fb293ea9844fdd6",
+      "after_sha256": "7f6cdc59c2e6a8e0bc21336f65cac6675ac590141848be4d1bab91e49219dcb5"
+    },
+    {
+      "path": "services/platform/tests/test_media_storage.py",
+      "before_sha256": "98fc621d02320c55cd0a84c48c95807ea94d878b2a5dad9369e1f3d63f49e183",
+      "after_sha256": "2d5392b046a308f4cf985406cc7c81af3f3f32efbbe0eaee5b77d0c8fc7a3bba"
+    }
+  ],
+  "full_skips": [
+    {
+      "node": "tests.test_encrypted_restore_drill::test_actual_synthetic_exported_snapshot_dump_and_fresh_restore",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "node": "tests.test_encrypted_restore_drill::test_public_r2_fresh_restore_keeps_raw_schema_and_all_constraint_attributes[public]",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "node": "tests.test_encrypted_restore_drill::test_public_r2_fresh_restore_keeps_raw_schema_and_all_constraint_attributes[nonpublic]",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "node": "tests.test_media_incho_sdk::test_actual_owned_pi_sdk_projects_incho_schema_and_preserves_host_type_boundary[params0-1]",
+      "reason": "owned Pi runtime required for Incho SDK acceptance"
+    },
+    {
+      "node": "tests.test_media_incho_sdk::test_actual_owned_pi_sdk_projects_incho_schema_and_preserves_host_type_boundary[params1-1]",
+      "reason": "owned Pi runtime required for Incho SDK acceptance"
+    },
+    {
+      "node": "tests.test_media_incho_sdk::test_actual_owned_pi_sdk_projects_incho_schema_and_preserves_host_type_boundary[params2-0]",
+      "reason": "owned Pi runtime required for Incho SDK acceptance"
+    },
+    {
+      "node": "tests.test_media_incho_sdk::test_actual_owned_pi_sdk_projects_incho_schema_and_preserves_host_type_boundary[params3-0]",
+      "reason": "owned Pi runtime required for Incho SDK acceptance"
+    },
+    {
+      "node": "tests.test_media_incho_sdk::test_actual_owned_pi_sdk_projects_incho_schema_and_preserves_host_type_boundary[params4-1]",
+      "reason": "owned Pi runtime required for Incho SDK acceptance"
+    },
+    {
+      "node": "tests.test_media_incho_sdk::test_actual_owned_pi_sdk_projects_incho_schema_and_preserves_host_type_boundary[params5-0]",
+      "reason": "owned Pi runtime required for Incho SDK acceptance"
+    },
+    {
+      "node": "tests.test_media_incho_sdk::test_actual_owned_pi_sdk_projects_incho_schema_and_preserves_host_type_boundary[params6-0]",
+      "reason": "owned Pi runtime required for Incho SDK acceptance"
+    },
+    {
+      "node": "tests.test_media_restore_drill::test_full_016_owned_registry_ciphertext_nonempty_fresh_restore",
+      "reason": "explicit owned synthetic Docker environment required"
+    },
+    {
+      "node": "tests.test_mixed_media_restore_drill::test_two_pngs_plus_erofs_pending_hold_and_absence_survive_fresh_cipher_restore",
+      "reason": "explicit owned synthetic restore environment required"
+    },
+    {
+      "node": "tests.test_settled_media_restore_drill::test_actual_nonpublic_window_resolves_immutable_storage_function_in_scope",
+      "reason": "explicit owned synthetic source handle required"
+    },
+    {
+      "node": "tests.test_settled_media_restore_drill::test_two_settled_pngs_typed_receipts_wallet_and_raw_inventory_survive_fresh_cipher_restore",
+      "reason": "explicit owned synthetic restore environment required"
+    }
+  ],
+  "remaining_uncovered_restore_tests": [
+    {
+      "node": "tests.test_encrypted_restore_drill::test_actual_synthetic_exported_snapshot_dump_and_fresh_restore",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "node": "tests.test_encrypted_restore_drill::test_public_r2_fresh_restore_keeps_raw_schema_and_all_constraint_attributes[public]",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "node": "tests.test_encrypted_restore_drill::test_public_r2_fresh_restore_keeps_raw_schema_and_all_constraint_attributes[nonpublic]",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "node": "tests.test_media_restore_drill::test_full_016_owned_registry_ciphertext_nonempty_fresh_restore",
+      "reason": "explicit owned synthetic Docker environment required"
+    },
+    {
+      "node": "tests.test_mixed_media_restore_drill::test_two_pngs_plus_erofs_pending_hold_and_absence_survive_fresh_cipher_restore",
+      "reason": "explicit owned synthetic restore environment required"
+    },
+    {
+      "node": "tests.test_settled_media_restore_drill::test_actual_nonpublic_window_resolves_immutable_storage_function_in_scope",
+      "reason": "explicit owned synthetic source handle required"
+    },
+    {
+      "node": "tests.test_settled_media_restore_drill::test_two_settled_pngs_typed_receipts_wallet_and_raw_inventory_survive_fresh_cipher_restore",
+      "reason": "explicit owned synthetic restore environment required"
+    }
+  ],
+  "same_seven_restore_skips_as_prior": true,
+  "protected_migrations_count": 17,
+  "protected_migrations_match_m2": true,
+  "header_source_sha256": "60b803c0c1de11c69cf8f0a4235c58a3eb9b83477d2b82c38596b72cd83d17c7",
+  "previous_m3_full_and_wheel_preserved": true,
+  "evidence_sha256": {
+    "input-manifest.json": "5e8c9f416ac13478c332e089e3e557257fc4371090bce68c7256bd812f401cae",
+    "input-source-snapshot.tar.gz": "54ac2460d2a912eeaaa47f0348ba67fd192965202b22db96f7080b0ec5f9731d",
+    "full-central.log": "af92d9ee3fd2f9e48519164247684320300e149a94777c9709029ffd3ba9e1ba",
+    "full-central.junit.xml": "d63e01166d1b5839549ba23979dbc3b67297eb00f9b233f0d10022fe18a5b6f3",
+    "run.json": "312b25f335b048db2992b24e5abe65ceca867ce61da6b0956eabb638ea0cbcde",
+    "tool-session.json": "7b3cc01243d96c5b1164e9b62934557bb04d8191add9c6874b4d6eebc9319c05",
+    "protected-migrations.json": "eb3ef84c871d446779de1b80b0f73a4d1bf809d8cbfd40ec26879e45f9fb0f71",
+    "sdk-supplement/result.safe.json": "0ce69af4ba58e4461fcc2495cd2efa2fded54d35d64ea05c3b19c0397ba13fd0",
+    "sdk-supplement/source-before.json": "b59f2b0025d94bd331f4fa16c1eda30cdeb49ffcf398f063c331e5be7b5a2bc1",
+    "sdk-supplement/source-after.json": "b59f2b0025d94bd331f4fa16c1eda30cdeb49ffcf398f063c331e5be7b5a2bc1",
+    "sdk-supplement/source-snapshot.tar.gz": "5060b6f0479cad4ed6fbb1871d3bb11851762d7cc8513887676fa91347b8a76a",
+    "sdk-supplement/payload-before.json": "72fd757e3588c496c13b3a25e7effef7c41c5b79ed737bdf834f53ba6a8d4db9",
+    "sdk-supplement/payload-after.json": "72fd757e3588c496c13b3a25e7effef7c41c5b79ed737bdf834f53ba6a8d4db9",
+    "sdk-supplement/sdk.log": "d548f0af961fa013a4897e8f29d9d44421267e3e9617f072eb0aa0596ba261c0",
+    "sdk-supplement/sdk.junit.xml": "8bc0e584773bd12b489af261331cb314cb8b518f621a31ae72b90d3877342212"
+  },
+  "limitations": [
+    "Results are two separate runs, not one combined full-suite count",
+    "Full run lacked EASEL_PI_TEST_PAYLOAD and kept 7 additional SDK skips; only those nodes were separately rerun",
+    "runtime/pi worker/package/lock are supplemental 434 input scope, not retroactively part of full 431",
+    "Real mixed DR remains failed pending diagnosis; no production changes or real provider requests",
+    "Current tests use owned local PostgreSQL schemas and synthetic supplier HTTP"
+  ]
+}

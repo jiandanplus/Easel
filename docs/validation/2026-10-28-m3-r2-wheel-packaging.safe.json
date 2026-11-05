@@ -1,0 +1,137 @@
+{
+  "status": "local_packaged_verified_not_deployed",
+  "wheel_sha256": "936b7cb181b60a9fae9c0b9f868ed8ea0a1df081d2f51d8b77ed865333be54f1",
+  "frozen_source_sha256": "657d8540c22dfcd1e65724580a4a777ca21ac2663bb7a2e7c6d168931ff12ffb",
+  "frozen_manifest_sha256": "a0881006646406dbabd78f112f7b6506c1bafdcb6b205a1a619d5edf434bbeed",
+  "frozen_423_input_bytes_match_before_after": true,
+  "wheel_members": 101,
+  "frozen_python_sql_files": 94,
+  "supplemental_files": 4,
+  "migrations": 19,
+  "runtime_dependency_closure_locked_match": 26,
+  "installed_imports": 7,
+  "local_wav_fully_decoded_ms": 1000,
+  "database_preflight_executed": false,
+  "production_actions": false,
+  "full_suite_rerun": false,
+  "reused_full_suite": {
+    "session": 77597,
+    "passed": 1794,
+    "skipped": 7,
+    "failed": 0,
+    "errors": 0
+  },
+  "limits": [
+    "Linux target dependency wheelhouse and decoder environment not verified",
+    "Database pre016/post019 preflight modes not executed",
+    "Real mixed DR failed and awaits diagnosis",
+    "017/018/019 not deployed; unconfigured channels and commercial rates closed"
+  ],
+  "files": [
+    {
+      "path": "dist/easel_central_platform-0.1.0-py3-none-any.whl",
+      "bytes": 360973,
+      "sha256": "936b7cb181b60a9fae9c0b9f868ed8ea0a1df081d2f51d8b77ed865333be54f1"
+    },
+    {
+      "path": "input-manifest.json",
+      "bytes": 76157,
+      "sha256": "a0881006646406dbabd78f112f7b6506c1bafdcb6b205a1a619d5edf434bbeed"
+    },
+    {
+      "path": "input-source-snapshot.tar.gz",
+      "bytes": 1146705,
+      "sha256": "657d8540c22dfcd1e65724580a4a777ca21ac2663bb7a2e7c6d168931ff12ffb"
+    },
+    {
+      "path": "supplemental-inputs.json",
+      "bytes": 1411,
+      "sha256": "60e4ab339cb38ba072629080afbe6b778f0a7a2ff50f6e84afb103e92bc2dd93"
+    },
+    {
+      "path": "build-tools.json",
+      "bytes": 157,
+      "sha256": "a9d62cb2ee533d610dcef35730bb8c844588ea5a92af55054ae90010ad352d2e"
+    },
+    {
+      "path": "build.safe.log",
+      "bytes": 46,
+      "sha256": "87d54b095fe1df1172ce8584e4c9e4156f0552780477134d998de49d6d18ff26"
+    },
+    {
+      "path": "wheel-files.json",
+      "bytes": 16112,
+      "sha256": "0d79deea2d0eccb3fed55a223a8e19db2aa1d245bf0c2121ce3ae06bf49f8759"
+    },
+    {
+      "path": "wheel-METADATA.txt",
+      "bytes": 397,
+      "sha256": "ea4854f9a0924b32a704378a5654a10c59b08f52243aa5265fd05968a1021a29"
+    },
+    {
+      "path": "wheel-WHEEL.txt",
+      "bytes": 87,
+      "sha256": "5b77e4a649bbfb07fdbc123967eeecd1e5a478cfaca6eefc23c35e6fdf037848"
+    },
+    {
+      "path": "dependency-versions.json",
+      "bytes": 3828,
+      "sha256": "39ef282bc7178033236f2e697194a0e33eb744b0ed116567d93f9c8dbd998273"
+    },
+    {
+      "path": "runtime-dependencies.json",
+      "bytes": 2421,
+      "sha256": "89e150ff47bfd9e44a284c3cd78cff202ce2cad763d712deca3867e4f6890202"
+    },
+    {
+      "path": "runtime-requirements-pinned.txt",
+      "bytes": 478,
+      "sha256": "ad908289b461b2dc5cd1933f5369827f08a20aa9e6b6c57d92c7d60291c6d3bb"
+    },
+    {
+      "path": "acl-contract.json",
+      "bytes": 8811,
+      "sha256": "78413b40f8b769894f1ed979c306ad8b8b8e5fe4336ddd40959b75b605659bc8"
+    },
+    {
+      "path": "migration-sha256.json",
+      "bytes": 2437,
+      "sha256": "ea1efbfaf95fb25ea6d56241dd298aeda318716a8f99f79959f4d7a4b01bedb8"
+    },
+    {
+      "path": "preflight.py",
+      "bytes": 9937,
+      "sha256": "16303527440b096a135c05463b262a6925fb0287a243f0975c9c9d4b793c09b7"
+    },
+    {
+      "path": "preflight-local.safe.log",
+      "bytes": 179,
+      "sha256": "9ef9dc2a47b123d721c42ea88766e523bd488b95d576ce3a56ccace3887570e5"
+    },
+    {
+      "path": "local-smoke.safe.json",
+      "bytes": 479,
+      "sha256": "390610900068006c894311efa4eff42160f6731c82028db1b712b32b357b4c14"
+    },
+    {
+      "path": "preflight-checks.safe.json",
+      "bytes": 744,
+      "sha256": "8f738a811e4eeb4533255b85474552ad8091b71a943e5351def29b0aeaa9d2cb"
+    },
+    {
+      "path": "DEPLOYMENT-PREFLIGHT.md",
+      "bytes": 14270,
+      "sha256": "64991cf9d393f551503d5f2576fc40262f3bc00beac8635e3097e94d47310db0"
+    },
+    {
+      "path": "uv.lock",
+      "bytes": 54222,
+      "sha256": "0b78348fadf3ed4caddbf88b18bf3b749ed6f9666e76d8edb01623dd378417c6"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 860,
+      "sha256": "b2877df06dd7704d856edc317d976a8915e386992a670ceba2276215713f6ffb"
+    }
+  ]
+}

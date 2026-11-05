@@ -43,6 +43,8 @@
 
 Easel is an open-source content workspace for social media creators. It connects an OpenClaw Agent, account profiles, content Skills, and real media tools, enabling the Agent to produce and archive content instead of merely explaining what to do, with direct or on-demand publishing when needed.
 
+This branch adds a [macOS Apple Silicon preview package](packaging/pi/README.md) with Pi as its default agent. The complete package includes the Pi SDK, Node, Python, and the local service, so users do not install a separate agent or runtime. The workspace opens in a browser, and existing engine selections are preserved. Both central subscription and custom API modes remain available; subscriptions require an operator-deployed central service and product endpoint. No provider key is shipped. This preview is unsigned and unnotarized; other platforms and optional media tools require separate acceptance. The source installation flow below remains available for existing OpenClaw and other engine setups.
+
 Think of Easel as a content partner that remembers your positioning, audience, voice, platform constraints, preferences, and past performance. It stays with you from trend discovery through publishing, then carries what it learns into the next creation cycle.
 
 ### Local OpenAI-Compatible Gateways

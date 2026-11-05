@@ -1,0 +1,125 @@
+{
+  "status": "passed_with_explicit_skips",
+  "tool_session_id": 77597,
+  "exit_code": 0,
+  "result": {
+    "passed": 1794,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 7,
+    "seconds": 316.31
+  },
+  "input_count": 423,
+  "changed_inputs": [],
+  "changes_from_previous_freeze": [
+    {
+      "path": "services/platform/tests/test_media_storage.py",
+      "before_sha256": "94753490d32dd3a336edabc47b20b5b7e9345608dc285f05f357a1dfe45ccc80",
+      "after_sha256": "98fc621d02320c55cd0a84c48c95807ea94d878b2a5dad9369e1f3d63f49e183"
+    }
+  ],
+  "input_manifest_sha256": "a0881006646406dbabd78f112f7b6506c1bafdcb6b205a1a619d5edf434bbeed",
+  "input_source_sha256": "657d8540c22dfcd1e65724580a4a777ca21ac2663bb7a2e7c6d168931ff12ffb",
+  "environment": {
+    "command": [
+      "/usr/bin/caffeinate",
+      "-i",
+      "-s",
+      "/Users/jiandan/Code/GitCode/Easel/services/platform/.venv/bin/python",
+      "-m",
+      "pytest",
+      "services/platform/tests",
+      "-q",
+      "--tb=short",
+      "-rs",
+      "--junitxml=/private/tmp/easel-m3-final-central-final-20261028/full-central.junit.xml"
+    ],
+    "started_utc": "2026-10-28T01:46:01.570789+00:00",
+    "finished_utc": "2026-10-28T01:51:18.931854+00:00",
+    "samples": 629,
+    "sample_interval_seconds": 0.5,
+    "wall_elapsed_seconds": 317.36042499542236,
+    "monotonic_elapsed_seconds": 317.3576985829859,
+    "max_absolute_wall_monotonic_gap_seconds": 2.1197018213570118e-05,
+    "max_monotonic_sample_interval_seconds": 0.5216804590309039,
+    "clock_discontinuities": [],
+    "temporary_assertion_process_exited": true,
+    "watcher_sha256": "fb00f32427910731cd4563a14aa80b046e8e357a6179323577de23dbad951244",
+    "caffeinate_sha256": "5261790b25d1f61ef85a4330fbb2df46c69055fe21d606e2f92efe804aae4d28"
+  },
+  "skips": [
+    {
+      "nodeid": "services/platform/tests/test_encrypted_restore_drill.py::test_actual_synthetic_exported_snapshot_dump_and_fresh_restore",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_encrypted_restore_drill.py::test_public_r2_fresh_restore_keeps_raw_schema_and_all_constraint_attributes[public]",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_encrypted_restore_drill.py::test_public_r2_fresh_restore_keeps_raw_schema_and_all_constraint_attributes[nonpublic]",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_restore_drill.py::test_full_016_owned_registry_ciphertext_nonempty_fresh_restore",
+      "reason": "explicit owned synthetic Docker environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_mixed_media_restore_drill.py::test_two_pngs_plus_erofs_pending_hold_and_absence_survive_fresh_cipher_restore",
+      "reason": "explicit owned synthetic restore environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_settled_media_restore_drill.py::test_actual_nonpublic_window_resolves_immutable_storage_function_in_scope",
+      "reason": "explicit owned synthetic source handle required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_settled_media_restore_drill.py::test_two_settled_pngs_typed_receipts_wallet_and_raw_inventory_survive_fresh_cipher_restore",
+      "reason": "explicit owned synthetic restore environment required"
+    }
+  ],
+  "same_seven_skips_as_prior": true,
+  "protected_migrations_unchanged": [
+    "services/platform/src/platform_service/migrations/001_foundation.sql",
+    "services/platform/src/platform_service/migrations/002_credits.sql",
+    "services/platform/src/platform_service/migrations/003_identity.sql",
+    "services/platform/src/platform_service/migrations/004_integrity.sql",
+    "services/platform/src/platform_service/migrations/005_payments.sql",
+    "services/platform/src/platform_service/migrations/006_execution.sql",
+    "services/platform/src/platform_service/migrations/007_internal_grants.sql",
+    "services/platform/src/platform_service/migrations/008_console_auth.sql",
+    "services/platform/src/platform_service/migrations/009_console_operations.sql",
+    "services/platform/src/platform_service/migrations/010_identity_continuity.sql",
+    "services/platform/src/platform_service/migrations/011_console_reconciliation.sql",
+    "services/platform/src/platform_service/migrations/012_execution_writeoffs.sql",
+    "services/platform/src/platform_service/migrations/013_execution_evidence.sql",
+    "services/platform/src/platform_service/migrations/014_media_execution.sql",
+    "services/platform/src/platform_service/migrations/015_media_storage.sql",
+    "services/platform/src/platform_service/migrations/016_m1_image_enablement.sql",
+    "services/platform/src/platform_service/migrations/018_media_async_work.sql"
+  ],
+  "previous_runs_preserved": [
+    {
+      "session": 61826,
+      "result": "90 failed, 1697 passed, 7 skipped, 7 errors; observed host sleep overlap"
+    },
+    {
+      "session": 70290,
+      "result": "2 failed, 1792 passed, 7 skipped; uninterrupted clock; explicit migration expectation omitted 019"
+    }
+  ],
+  "evidence_sha256": {
+    "full-central.log": "ed8272fc175a34699e4572412674b26245fa37042223057aabffb31660a6ca3b",
+    "full-central.junit.xml": "1ab2b9a732b8eade7bb48583ab79c0b1ca025bcea169462de578951baa778560",
+    "run.json": "15c114ee28c98024cac0e984e6e4cc02281772ec964cd061dc2fdf7583b6ad9c",
+    "tool-session.json": "18b62599604315a8695caa24b15d297fd84a5f429baf513b978fc7d787631227",
+    "clock-watcher.safe.jsonl": "2d6ae391f72ab7b9ef431d9283f29756823945d9306bea35d85595099307678c",
+    "pre-run-hashes.json": "dd712342edb4d53bf6d3a51d6f70d4e785fdc7306d8410ec758da5457379c645",
+    "post-run-hashes.json": "93421e70392c0020e22c1b5543a2964d8d1b4a605ac5355da63b63245aba9d21",
+    "run_awake.py": "fb00f32427910731cd4563a14aa80b046e8e357a6179323577de23dbad951244"
+  },
+  "scope_limitations": [
+    "Seven explicit restore-environment tests remain skipped, not passed.",
+    "No real supplier requests, commercial-rate acceptance, production deployment, or new Docker.",
+    "Expected019 is a single explicit test expectation update; no business deadline or migration bytes changed in this final transition."
+  ]
+}

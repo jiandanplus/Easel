@@ -1,0 +1,273 @@
+{
+  "status": "passed_for_workbench_layout_scope",
+  "branch": "codex/ui-redesign",
+  "merged_to_main": false,
+  "tests": {
+    "passed": 260,
+    "failed": 0,
+    "skipped": 0,
+    "new_component_tests_included": 9,
+    "stdout_sha256": "9759eca93764dcb7ba20386025b60668178351c373fe72c668b479ba030f9f60"
+  },
+  "build": {
+    "passed": true,
+    "typescript_passed": true,
+    "warning": "Main minified JavaScript chunk remains above 500 kB.",
+    "manifest_sha256": "49d847a5ccb7c4eb6bb7f2a174fcf3b397aced406d6af0f318778989af38fdc3",
+    "authored_inputs": 83,
+    "outputs": 13
+  },
+  "targeted_lint": {
+    "passed": true,
+    "files": [
+      "Sidebar.tsx",
+      "ConversationSidebar.tsx",
+      "App.tsx"
+    ]
+  },
+  "browser": {
+    "desktopThemes": [
+      {
+        "columns": [
+          {
+            "className": "sidebar workspace-toolrail",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 80,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "className": "conversation-sidebar",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 263.994140625,
+            "x": 80,
+            "y": 0
+          },
+          {
+            "className": "main-content",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 1256.005859375,
+            "x": 343.994140625,
+            "y": 0
+          }
+        ],
+        "overflow": false,
+        "theme": "paper",
+        "viewport": {
+          "height": 900,
+          "width": 1600
+        }
+      },
+      {
+        "columns": [
+          {
+            "className": "sidebar workspace-toolrail",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 80,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "className": "conversation-sidebar",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 263.994140625,
+            "x": 80,
+            "y": 0
+          },
+          {
+            "className": "main-content",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 1256.005859375,
+            "x": 343.994140625,
+            "y": 0
+          }
+        ],
+        "overflow": false,
+        "theme": "minimal",
+        "viewport": {
+          "height": 900,
+          "width": 1600
+        }
+      },
+      {
+        "columns": [
+          {
+            "className": "sidebar workspace-toolrail",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 80,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "className": "conversation-sidebar",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 263.994140625,
+            "x": 80,
+            "y": 0
+          },
+          {
+            "className": "main-content",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 1256.005859375,
+            "x": 343.994140625,
+            "y": 0
+          }
+        ],
+        "overflow": false,
+        "theme": "forest",
+        "viewport": {
+          "height": 900,
+          "width": 1600
+        }
+      },
+      {
+        "columns": [
+          {
+            "className": "sidebar workspace-toolrail",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 80,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "className": "conversation-sidebar",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 263.994140625,
+            "x": 80,
+            "y": 0
+          },
+          {
+            "className": "main-content",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 1256.005859375,
+            "x": 343.994140625,
+            "y": 0
+          }
+        ],
+        "overflow": false,
+        "theme": "pastel",
+        "viewport": {
+          "height": 900,
+          "width": 1600
+        }
+      },
+      {
+        "columns": [
+          {
+            "className": "sidebar workspace-toolrail",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 80,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "className": "conversation-sidebar",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 263.994140625,
+            "x": 80,
+            "y": 0
+          },
+          {
+            "className": "main-content",
+            "height": 900,
+            "parent": "app-layout",
+            "width": 1256.005859375,
+            "x": 343.994140625,
+            "y": 0
+          }
+        ],
+        "overflow": false,
+        "theme": "swiss",
+        "viewport": {
+          "height": 900,
+          "width": 1600
+        }
+      }
+    ],
+    "mobile": {
+      "open": {
+        "columns": [
+          {
+            "className": "sidebar workspace-toolrail",
+            "height": 1055,
+            "parent": "app-layout",
+            "width": 63.994140625,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "className": "conversation-sidebar mobile-open",
+            "height": 1055,
+            "parent": "app-layout",
+            "width": 300,
+            "x": 63.994140625,
+            "y": 0
+          },
+          {
+            "className": "main-content",
+            "height": 1055,
+            "parent": "app-layout",
+            "width": 423.505859375,
+            "x": 63.994140625,
+            "y": 0
+          }
+        ],
+        "overflow": false,
+        "theme": "swiss",
+        "viewport": {
+          "height": 1055,
+          "width": 487
+        }
+      },
+      "closed": {
+        "focusLabel": "对话历史",
+        "historyDisplay": "none",
+        "overflow": false
+      }
+    },
+    "interactions": {
+      "renameEscapePreserved": true,
+      "renameEnterSaved": true,
+      "archiveRestored": true,
+      "settingsReturnToChat": true
+    },
+    "modelSubmissions": 0,
+    "originalWorkbenchOriginUntouched": true,
+    "previewOrigin": "http://127.0.0.1:5173/"
+  },
+  "original_workbench_configuration_unchanged": true,
+  "agent_subscription_custom_api_and_financial_code_changed": false,
+  "native_application_rebuilt": false,
+  "native_application_preview": "http://127.0.0.1:17868/",
+  "new_layout_preview": "http://127.0.0.1:5173/",
+  "preview_notes": [
+    "Loopback-only Vite frontend; API proxy uses the unchanged existing workbench backend.",
+    "Preview conversations and appearance use separate browser-origin storage; original 17868 history was not copied or overwritten.",
+    "Only an empty, explicitly labeled layout verification conversation was renamed and archived; no chat was submitted."
+  ],
+  "screenshots": [
+    "assets/codex-workbench-layout-20261026/desktop-paper-final.jpg",
+    "assets/codex-workbench-layout-20261026/desktop-forest.jpg",
+    "assets/codex-workbench-layout-20261026/mobile-history.jpg"
+  ],
+  "final_health_probe": {
+    "new_layout_http_status": 200,
+    "original_workbench_http_status": 200,
+    "private_console_health_http_status": 200,
+    "separate_api_status_probe": "exceeded_20_second_deadline; runtime readiness not newly certified by this probe"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "candidate_sha256": "abb2e0efe34956c834d4a1aa744934114a4c9d6939a73e033a716c2b15411da8",
+  "all_inputs_sha256": "223a4c82831216673c4096066223ae64d2911e2e0a4dd3b1de7469cb65a0e5f6",
+  "pre_run_match": true,
+  "post_run_checks": {
+    "p1-p2-fixed-manifest.json": {
+      "hash": "abb2e0efe34956c834d4a1aa744934114a4c9d6939a73e033a716c2b15411da8",
+      "count": 14,
+      "post_run_match": true
+    },
+    "final-all-inputs-manifest.json": {
+      "hash": "223a4c82831216673c4096066223ae64d2911e2e0a4dd3b1de7469cb65a0e5f6",
+      "count": 212,
+      "post_run_match": true
+    }
+  },
+  "full_central": {
+    "passed": 1710,
+    "skipped": 7,
+    "failed": 0,
+    "elapsed_seconds": 350.69
+  },
+  "focused_m2": {
+    "passed": 73,
+    "failed": 0,
+    "elapsed_seconds": 15.47
+  },
+  "independent_original_p1_tests": {
+    "passed": 2,
+    "failed": 0,
+    "elapsed_seconds": 0.73
+  },
+  "production_or_supplier_requests": false,
+  "skip_recheck": {
+    "passed": 1,
+    "skipped": 7,
+    "elapsed_seconds": 0.19,
+    "fixture_or_environment_gates": [
+      {
+        "source": "test_encrypted_restore_drill.py:100",
+        "count": 1,
+        "reason": "explicit synthetic Docker environment required"
+      },
+      {
+        "source": "test_encrypted_restore_drill.py:383",
+        "count": 2,
+        "reason": "explicit synthetic Docker environment required"
+      },
+      {
+        "source": "test_settled_media_restore_drill.py:77",
+        "count": 1,
+        "reason": "explicit owned synthetic source handle required"
+      },
+      {
+        "source": "test_settled_media_restore_drill.py:88",
+        "count": 1,
+        "reason": "explicit owned synthetic restore environment required"
+      },
+      {
+        "source": "test_media_restore_drill.py:247",
+        "count": 1,
+        "reason": "explicit owned synthetic Docker environment required"
+      },
+      {
+        "source": "test_mixed_media_restore_drill.py:190",
+        "count": 1,
+        "reason": "explicit owned synthetic restore environment required"
+      }
+    ]
+  },
+  "independent_final_review": {
+    "passed": 404,
+    "skipped": 1,
+    "elapsed_seconds": 88.51,
+    "closure_modules": 26,
+    "new_known_blockers": 0,
+    "review_markdown": "docs/validation/2026-10-27-m2-async-independent-review.md",
+    "review_safe_json": "docs/validation/2026-10-27-m2-async-independent-review-safe.json",
+    "review_safe_sha256": "b0cfecb0823baed4a5e2b3ca909cae39d215b8099d9d81fd5bfb3c6b915f1197",
+    "review_markdown_sha256": "cb72059d8807b12dd1fb04a186ff0d71a163bcf9b64c67ee8e0f8d7103c8cbbc",
+    "counts_not_added_to_full_suite": true
+  }
+}

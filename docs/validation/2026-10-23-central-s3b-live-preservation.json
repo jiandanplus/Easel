@@ -1,0 +1,19 @@
+{
+  "branch": "codex/ui-redesign",
+  "head": "e972af07444e181e3eb737441ecac306bca778b3",
+  "main_ref": "bb3c8ff0463f36c202454d74171682ba6e470cb1",
+  "root_env_unchanged": true,
+  "prior_paths": 264,
+  "prior_paths_unchanged": 261,
+  "authorized_document_updates": [
+    "docs/superpowers/plans/2026-10-23-central-stream-recovery.md",
+    "docs/validation/2026-10-23-central-s3b.md",
+    "services/platform/EXECUTION.md"
+  ],
+  "unexpected_prior_path_changes": [],
+  "six_sql_migrations_unchanged": true,
+  "source_files": {
+    "scripts/validation/verify_central_live_text.py": "d3cc1558a64e0477a4a0590bfc58131776d6e55c65a01da3dcc9128885c3700e",
+    "services/platform/tests/test_live_validation_runner.py": "d67b7dbaa4c62444cf62cbcb7c24297668b5052faeebeffb0075048822da6586"
+  }
+}

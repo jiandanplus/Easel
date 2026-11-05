@@ -1,0 +1,38 @@
+{
+  "scope": "local desktop auth hardening candidate; not deployed",
+  "files_sha256": {
+    "easel/platform/auth_refresh.py": "57a5773a21cee59b2657aadd39b8350ed38e80eedd8b65f3ed896f65d5b6284f",
+    "easel/platform/central.py": "9849d356ea3b5038cb2341bbb76848a33d209e2527646970ae1ad39e95fae6cf",
+    "easel/platform/media.py": "e320cb7e21d2cda56cb64ac7609b865bc6dccf7251ee8b1a957b87970bb00f4c",
+    "tests/test_central_auth_hardening.py": "541096c0657a9a3aa7e3eabe2d90b9d4dc5785d31e051a91d45705a47f0a5e28",
+    "tests/test_central_media_auth_rotation.py": "f1bfdb9960860520631f4e52131384b47d72c717e3dafefdbbd93ec135e7d6b8",
+    "tests/test_central_media_host.py": "0d8415066595ddd83fda19a0f2c0a7c3280f6802d2d98c980384545b666472c6",
+    "tests/test_central_platform_web.py": "3ef7ab501b3516310caa247150ea4e0dca1ac1547fe5a552eec9705bc8f829b4"
+  },
+  "patch_sha256": "7996ab9d27e2121e12e3fd05f098d9f494c48e40ec5056b076814157da8f1902",
+  "red_observed": {
+    "initial": {
+      "failed": 14,
+      "existing_passed": 2
+    },
+    "snapshot_mint_regression_without_sync": true,
+    "stale_guard_account_change": true
+  },
+  "tests": {
+    "native_central_passed": 326,
+    "native_central_skipped": 4,
+    "seconds": 6.22,
+    "new_hardening_cases": 21,
+    "skip_scope": "explicit legacy Codex binary/node fixtures; no model request run"
+  },
+  "v22_preserved": true,
+  "f50_preserved": true,
+  "real_user_auth_read_or_modified": false,
+  "remote_or_supplier_calls": 0,
+  "root_pi_separate_changes_sha256": {
+    "easel/harnesses/pi.py": "414642b4ba6714ea1f7f7ae12d4944c8688cd3e3fbb5e8e9b9005157a74677f1",
+    "tests/test_pi_media_host.py": "c6ab7f1dad492fd96c029e9e9791713342c2850762d9c2df4a75cf833be93959"
+  },
+  "pi_testing": "reported by root separately; not included in child326",
+  "incident_limit": "does not establish this hardening as actual cause of the incident; server readonly evidence showed session not revoked"
+}

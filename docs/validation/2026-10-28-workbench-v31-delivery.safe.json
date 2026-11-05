@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "status": "v31_public_base_delivery_evidence_archived_live_safe_pending",
+  "archive": "outputs/_run/workbench-v31-delivery-20261028",
+  "archive_scope": "exact explicit public whitelist; no recursive copy; only four named activation receipts",
+  "copied_files": 71,
+  "copied_bytes": 480987,
+  "generated_files": 2,
+  "files_with_manifest": 74,
+  "total_archive_bytes": 518694,
+  "copy_manifest_sha256": "920e5a92e4a05a2f125ecb540d328642b0d594561ea8f20531d6b3d1459958f7",
+  "artifact_zip_sha256": "f0e6e86581edb243496ce8e3ad8f3f40363e87e3e1a2c4a28fe2c6ace6c5f13c",
+  "artifact_zip_bytes": 129745884,
+  "package_validation_safe_sha256": "0a331560829322cb38840c8d5e9d8da2ac041ebc4030b12e237d79188beed6f1",
+  "codec_delta_safe_sha256": "ad31a8fb47baab1882fbb89c961a29a831e807e27de08e788335577ff4418c1d",
+  "codec_safe_sha256": "3d0bf52609c22170f17aff933676f9575ce03b2bdb437a88aa4ff5d191f553a9",
+  "offline_tool_safe_sha256": "f8e65fcef8cf689d5f842498af07305cf4e3469c510661a120b4b0cc78aeb4d1",
+  "offline_output_sha256": "f6d70fe1580047f80644550f8dfc2a0682bbd0a5e779c2124e70e8e1da10a834",
+  "activation_receipt_pid": 75194,
+  "activation_receipt_port": 17868,
+  "activation_same_workspace": true,
+  "activation_snapshot_authenticated_before": true,
+  "activation_snapshot_wallet_observed": true,
+  "activation_snapshot_same_wallet": true,
+  "login_identity_snapshot_same_previous_account_id": true,
+  "login_identity_changed_scope_field_names": [
+    "session_id"
+  ],
+  "root_live_acceptance": {
+    "single_UI_turn": "submitted_by_root_only",
+    "readonly_download_execution_wallet_verification": "in_progress_parent_supplied",
+    "independent_live_safe_receipt_archived": false,
+    "real_model_success_claimed": false,
+    "no_new_model_requests_by_archiver": true
+  },
+  "live_additions": "new live/<unique-label>/receipt.safe.json plus exclusive delta-manifest.safe.json; base receipts/manifests/docs immutable",
+  "activation_directory_scanned": false,
+  "private_or_user_workspace_copied": false,
+  "credential_pattern_hits": [],
+  "source_copies_byte_exact": true,
+  "product_source_App_ZIP_modified_by_archiver": false,
+  "master_delivery_plan_modified": false,
+  "new_build_tests_browser_network_or_SSH_run_by_archiver": false,
+  "limits": [
+    "same-machine package/runtime/isolation verification",
+    "offline synthetic provider acceptance is not real inference",
+    "live model/delivery/execution/wallet acceptance pending independent delta",
+    "unsigned/unnotarized; Gatekeeper/clean-device/nativeIME/VoiceOver not verified",
+    "historical source/guarded-build review reports retain original stage limits"
+  ]
+}

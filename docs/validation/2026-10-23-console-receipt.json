@@ -1,0 +1,533 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-23",
+  "status": "real_admin_read_acceptance_passed",
+  "branch": "codex/ui-redesign",
+  "identity": {
+    "success": true,
+    "application_id": "ao8r5odz7yovjhsxmxjbi",
+    "name": "Easel Console console-20261023-cbabf5af7060",
+    "callback": "http://127.0.0.1:18875/oidc/console/callback",
+    "environment_id": "console-20261023-cbabf5af7060",
+    "issuer": "http://127.0.0.1:18763/oidc",
+    "type": "Traditional",
+    "management_roles": [],
+    "force_login": true,
+    "server_private_file": true,
+    "secret_saved_locally": false,
+    "existing_apps_users_branding_preserved": true,
+    "model_calls": 0
+  },
+  "server_preflight": {
+    "environment_id": "console-20261023-cbabf5af7060",
+    "model_requests": 0,
+    "ok": true,
+    "phase": "preflight",
+    "source_sha256": "fe67f78928dec4ed5f72176be27c8bba2ce4b4a19c7c4d15bb17a87e748d97b6"
+  },
+  "server_prepare": {
+    "backup": {
+      "bytes": 257061,
+      "filename": "before-console-schema.dump",
+      "sha256": "b4a06ce4f0fe59f66c19753b8ffe45bf6c88a0dae27d3009e27320a161d48661"
+    },
+    "business_snapshot_unchanged": true,
+    "business_table_counts": {
+      "billing_accounts": 2,
+      "billing_offer_withdrawals": 0,
+      "billing_offers": 0,
+      "billing_orders": 0,
+      "billing_outbox": 0,
+      "billing_refunds": 0,
+      "credit_entries": 37,
+      "credit_holds": 7,
+      "credit_journals": 15,
+      "credit_lots": 1,
+      "credit_reservations": 7,
+      "execution_blocked_bindings": 0,
+      "execution_invocations": 3,
+      "execution_jobs": 7,
+      "execution_model_states": 1,
+      "execution_models": 1,
+      "execution_receipts": 7,
+      "execution_results": 7,
+      "execution_task_tokens": 3,
+      "external_identities": 2,
+      "identity_handoffs": 2,
+      "identity_sessions": 2,
+      "identity_tokens": 8,
+      "identity_transactions": 7,
+      "internal_grants": 1,
+      "membership_revocations": 0,
+      "memberships": 1,
+      "payment_event_audits": 0,
+      "payment_events": 0,
+      "payment_orphan_events": 0,
+      "payment_refund_transactions": 0,
+      "payment_transactions": 0,
+      "plans": 1,
+      "product_clients": 1,
+      "products": 1,
+      "tenant_members": 2,
+      "tenants": 2,
+      "users": 2
+    },
+    "console_started": false,
+    "environment_id": "console-20261023-cbabf5af7060",
+    "model_requests": 0,
+    "ok": true,
+    "phase": "prepared",
+    "preservation_sha256": "e68fa5acef108eff70c9e7e7ff5a9de9865f48de348aef7f1c185ddf95757d01",
+    "real_admin_grants": 0,
+    "source_sha256": "fe67f78928dec4ed5f72176be27c8bba2ce4b4a19c7c4d15bb17a87e748d97b6"
+  },
+  "server_start": {
+    "environment_id": "console-20261023-cbabf5af7060",
+    "loopback_port": 18875,
+    "nonroot": true,
+    "ok": true,
+    "phase": "running"
+  },
+  "local_preservation": {
+    "success": true,
+    "checks": {
+      "branch": true,
+      "head": true,
+      "main": true,
+      "root_env_sha256": true,
+      "custom_provider_sha256": true,
+      "migrations_001_007_unchanged": true
+    },
+    "branch": "codex/ui-redesign",
+    "head": "e972af07444e181e3eb737441ecac306bca778b3",
+    "main": "bb3c8ff0463f36c202454d74171682ba6e470cb1",
+    "commit_push_merge_performed": false
+  },
+  "docker_recovery": {
+    "restored": {
+      "easel-central-preview-3a57d494-logto": {
+        "running": true,
+        "status": "running",
+        "health": null
+      },
+      "easel-central-preview-3a57d494-pg": {
+        "running": true,
+        "status": "running",
+        "health": null
+      },
+      "lobehub": {
+        "running": true,
+        "status": "running",
+        "health": null
+      },
+      "lobe-postgres": {
+        "running": true,
+        "status": "running",
+        "health": "healthy"
+      },
+      "lobe-redis": {
+        "running": true,
+        "status": "running",
+        "health": "healthy"
+      },
+      "lobe-searxng": {
+        "running": true,
+        "status": "running",
+        "health": null
+      }
+    },
+    "volumes_deleted": 0,
+    "data_reset": false,
+    "both_logto_issuers_healthy": true,
+    "workbench_http_status": 200
+  },
+  "synthetic_pg_cleanup": {
+    "ok": true,
+    "owned_synthetic_test_container": "easel-console-tests-cbabf5af7060",
+    "stopped": true,
+    "container_removed": false,
+    "persistent_volumes_removed": 0,
+    "original_containers_untouched": true
+  },
+  "browser": {
+    "observed_at": "2026-10-23T13:39:02.708Z",
+    "real_administrator_visible": true,
+    "overview_verified": true,
+    "lists": [
+      {
+        "page": "共享钱包",
+        "ready": true,
+        "rows": 2,
+        "empty": false,
+        "formatError": false
+      },
+      {
+        "page": "用户",
+        "ready": true,
+        "rows": 2,
+        "empty": false,
+        "formatError": false
+      },
+      {
+        "page": "产品",
+        "ready": true,
+        "rows": 1,
+        "empty": false,
+        "formatError": false
+      },
+      {
+        "page": "套餐版本",
+        "ready": true,
+        "rows": 1,
+        "empty": false,
+        "formatError": false
+      },
+      {
+        "page": "订单与支付",
+        "ready": true,
+        "rows": 0,
+        "empty": true,
+        "formatError": false
+      },
+      {
+        "page": "报价目录",
+        "ready": true,
+        "rows": 0,
+        "empty": true,
+        "formatError": false
+      },
+      {
+        "page": "模型目录",
+        "ready": true,
+        "rows": 1,
+        "empty": false,
+        "formatError": false
+      },
+      {
+        "page": "供应商渠道",
+        "ready": true,
+        "rows": 1,
+        "empty": false,
+        "formatError": false
+      },
+      {
+        "page": "调用记录",
+        "ready": true,
+        "rows": 7,
+        "empty": false,
+        "formatError": false
+      },
+      {
+        "page": "运营审计",
+        "ready": true,
+        "rows": 0,
+        "empty": true,
+        "formatError": false
+      }
+    ],
+    "all_ten_lists_ready": true,
+    "user_detail_verified": true,
+    "wallet_detail_verified": true,
+    "wallet_experience_source_visible": true,
+    "model_detail_verified": true,
+    "provider_detail_verified": true,
+    "publication_dialog_verified_without_submit": true,
+    "user_search_empty_and_restore_verified": true,
+    "repeated_current_page_verified": true,
+    "list_to_overview_verified": true,
+    "historical_navigation_error_count": 1,
+    "new_browser_error_count": 0,
+    "catalog_submissions": 0,
+    "financial_mutations": 0
+  },
+  "model_calls_during_console_validation": 0,
+  "payment_operations_during_console_validation": 0,
+  "admin_grants_during_console_validation": 1,
+  "production_release": false,
+  "commit_push_merge": false,
+  "administrator_approval": {
+    "ok": true,
+    "role": "admin",
+    "active": true,
+    "separate_from_product_identities": true,
+    "approval_audit_events": 1,
+    "session_created_by_approval": false,
+    "model_calls": 0,
+    "payment_operations": 0,
+    "private_receipt_sha256": "e34d81ef7a30bb2c8cd45ceaeaee35a3ecd2fa00c16a871c2ca87ccbddd94578"
+  },
+  "server_deployment_verification": {
+    "ok": true,
+    "phase": "prepared",
+    "environment_id": "console-20261023-cbabf5af7060",
+    "source_sha256": "fe67f78928dec4ed5f72176be27c8bba2ce4b4a19c7c4d15bb17a87e748d97b6",
+    "owned_console_running": true,
+    "port_free": false,
+    "backup": {
+      "bytes": 257061,
+      "filename": "before-console-schema.dump",
+      "sha256": "b4a06ce4f0fe59f66c19753b8ffe45bf6c88a0dae27d3009e27320a161d48661"
+    },
+    "migrations": [
+      "001_foundation.sql",
+      "002_credits.sql",
+      "003_identity.sql",
+      "004_integrity.sql",
+      "005_payments.sql",
+      "006_execution.sql",
+      "007_internal_grants.sql",
+      "008_console_auth.sql",
+      "009_console_operations.sql"
+    ],
+    "administrator_count": 0,
+    "pending_requests": 0,
+    "business_wrapper_still_running": true,
+    "new_api_still_running": true,
+    "provider_key_read_by_console": false,
+    "product_capabilities": {
+      "product_id": "easel",
+      "auth_mode": "logto",
+      "ledger_mode": "central_credit",
+      "billing_stage": "disabled",
+      "payments_enabled": false,
+      "test_payments_enabled": false,
+      "execution_stage": "live",
+      "subscription_execution_enabled": true,
+      "test_execution_enabled": false,
+      "test_subscription_execution_enabled": false,
+      "media_execution_enabled": false,
+      "pending_capabilities": [
+        "images",
+        "video",
+        "music",
+        "asr",
+        "tts",
+        "voice",
+        "cloud_execution"
+      ],
+      "identity_ready": true
+    },
+    "evidence_stage": "before_user_registration_and_administrator_approval"
+  },
+  "initial_local_validation": {
+    "success": true,
+    "backend": {
+      "passed": 630,
+      "failed": 0,
+      "seconds": 65.82,
+      "real_isolated_postgresql": true,
+      "signed_synthetic_oidc": true,
+      "real_admin_tested": false
+    },
+    "frontend": {
+      "passed": 20,
+      "failed": 0,
+      "build": true,
+      "receipt_sha256": "b73ea36f7b3b5abf713db7334b065484d75d31919e2f2cbd6c657ec69ab61976"
+    },
+    "wheel": {
+      "filename": "easel_central_platform-0.1.0-py3-none-any.whl",
+      "bytes": 195985,
+      "sha256": "4e5a7594579e86d0e1a1ef698034d85e3e0ceff606c89660fd308ad0a1cdbb09",
+      "static_files_exact": 4,
+      "migrations": 9,
+      "all_python_exact": true
+    },
+    "model_calls": 0
+  },
+  "local_validation": {
+    "backend_baseline": {
+      "passed": 630,
+      "failed": 0,
+      "seconds": 65.82,
+      "real_isolated_postgresql": true,
+      "signed_synthetic_oidc": true,
+      "real_admin_tested": false
+    },
+    "navigation_fix": {
+      "ok": true,
+      "frontend_tests_passed": 22,
+      "http_static_cli_tests_passed": 27,
+      "frontend_build_success": true,
+      "assets_receipt_sha256": "c3fddd3e9849e2f71057f02f9ef4c3abf9086f5391f15142e5270e839651d62f",
+      "wheel": {
+        "filename": "easel_central_platform-0.1.0-py3-none-any.whl",
+        "bytes": 196047,
+        "sha256": "7addda835c3f4201d63c6c1f68e8173e5e8bb41e4f68f63dc98e44551745c24b",
+        "static_files_exact": 4,
+        "all_python_exact": true,
+        "migrations": 9
+      },
+      "real_browser_navigation_verification": "pending_deployment"
+    }
+  },
+  "real_administrator_before": {
+    "active_target_sessions": 1,
+    "administrator_active": true,
+    "administrator_role": "admin",
+    "approval_audit_events": 1,
+    "as_of": "2026-10-23T13:28:30.583031+00:00",
+    "business_counts": {
+      "billing_orders": 0,
+      "console_audit_events": 0,
+      "console_operations": 0,
+      "credit_entries": 37,
+      "credit_journals": 15,
+      "credit_lots": 1,
+      "execution_jobs": 7,
+      "payment_transactions": 0
+    },
+    "business_writes": 0,
+    "credential_fields_exported": false,
+    "environment_id": "console-20261023-cbabf5af7060",
+    "exact_request_approved": true,
+    "existing_control_alive": false,
+    "identity_fields_exported": false,
+    "independent_control_recovery": false,
+    "issuer_subject_matches": true,
+    "model_requests": 0,
+    "ok": true,
+    "read_only_snapshot": true,
+    "source_sha256": "fe67f78928dec4ed5f72176be27c8bba2ce4b4a19c7c4d15bb17a87e748d97b6"
+  },
+  "server_final": {
+    "active_target_sessions": 1,
+    "administrator_active": true,
+    "administrator_role": "admin",
+    "anonymous_session_status": 401,
+    "approval_audit_events": 1,
+    "as_of": "2026-10-23T13:40:14.681037+00:00",
+    "baseline_as_of": "2026-10-23T13:28:30.583031+00:00",
+    "baseline_source_sha256": "fe67f78928dec4ed5f72176be27c8bba2ce4b4a19c7c4d15bb17a87e748d97b6",
+    "business_counts": {
+      "billing_orders": 0,
+      "console_audit_events": 0,
+      "console_operations": 0,
+      "credit_entries": 37,
+      "credit_journals": 15,
+      "credit_lots": 1,
+      "execution_jobs": 7,
+      "payment_transactions": 0
+    },
+    "business_counts_before": {
+      "billing_orders": 0,
+      "console_audit_events": 0,
+      "console_operations": 0,
+      "credit_entries": 37,
+      "credit_journals": 15,
+      "credit_lots": 1,
+      "execution_jobs": 7,
+      "payment_transactions": 0
+    },
+    "business_counts_unchanged": true,
+    "business_writes": 0,
+    "control_alive_checked": true,
+    "count_change_interpretation": "unchanged",
+    "count_deltas": {
+      "billing_orders": 0,
+      "console_audit_events": 0,
+      "console_operations": 0,
+      "credit_entries": 0,
+      "credit_journals": 0,
+      "credit_lots": 0,
+      "execution_jobs": 0,
+      "payment_transactions": 0
+    },
+    "credential_fields_exported": false,
+    "environment_id": "console-20261023-cbabf5af7060",
+    "exact_request_approved": true,
+    "identity_fields_exported": false,
+    "issuer_subject_matches": true,
+    "model_requests": 0,
+    "ok": true,
+    "read_only_snapshot": true,
+    "source_sha256": "6d9aab3014d76f07fd13fd5f252714839df83f73fe5226983f8c1fa902c786a6",
+    "ssh_fallback_disabled": true
+  },
+  "static_navigation_hotfix": {
+    "archive_bytes": 245760,
+    "archive_sha256": "de28e0a246f9e567180f381b760805cba7b25655caeb873eef0074a51876dda0",
+    "asset_names": [
+      "assets/index-BdRwO4kX.js",
+      "assets/index-DoPTl_OF.css"
+    ],
+    "environment_id": "console-20261023-cbabf5af7060",
+    "index_sha256": "af4aef9c22443d6fdee3ecf4accf3ec0605a19324d246edf5576730f6a47bf63",
+    "mode": "deploy",
+    "new_source_sha256": "6d9aab3014d76f07fd13fd5f252714839df83f73fe5226983f8c1fa902c786a6",
+    "no_database_calls": true,
+    "no_restart": true,
+    "old_source_sha256": "fe67f78928dec4ed5f72176be27c8bba2ce4b4a19c7c4d15bb17a87e748d97b6",
+    "public_only": true,
+    "receipt_sha256": "c3fddd3e9849e2f71057f02f9ef4c3abf9086f5391f15142e5270e839651d62f",
+    "remote": {
+      "archive_sha256": "de28e0a246f9e567180f381b760805cba7b25655caeb873eef0074a51876dda0",
+      "backup_sha256": "414a70872bc315a71b3bbd2346c475f7a4bc115eae32295871d4490f26f6fa90",
+      "environment_id": "console-20261023-cbabf5af7060",
+      "exact_replay": false,
+      "index_sha256": "af4aef9c22443d6fdee3ecf4accf3ec0605a19324d246edf5576730f6a47bf63",
+      "new_asset_names": [
+        "assets/index-BdRwO4kX.js"
+      ],
+      "new_source_sha256": "6d9aab3014d76f07fd13fd5f252714839df83f73fe5226983f8c1fa902c786a6",
+      "no_database_calls": true,
+      "no_restart": true,
+      "ok": true,
+      "old_assets_preserved": true,
+      "old_index_sha256": "f59b220712f27934eab129d49b38b170b68f78e4579983fed6a79602a8fa31e7",
+      "old_receipt_sha256": "b73ea36f7b3b5abf713db7334b065484d75d31919e2f2cbd6c657ec69ab61976",
+      "old_source_sha256": "fe67f78928dec4ed5f72176be27c8bba2ce4b4a19c7c4d15bb17a87e748d97b6",
+      "private_backup_server_only": true,
+      "receipt_sha256": "c3fddd3e9849e2f71057f02f9ef4c3abf9086f5391f15142e5270e839651d62f",
+      "revision": "nav-hotfix-20261023",
+      "runtime_operator_unchanged": true,
+      "same_owned_pid": true
+    },
+    "revision": "nav-hotfix-20261023"
+  },
+  "public_http_assets": {
+    "ok": true,
+    "same_origin_static_hashes_verified": [
+      {
+        "file": "index.html",
+        "sha256": "af4aef9c22443d6fdee3ecf4accf3ec0605a19324d246edf5576730f6a47bf63",
+        "cache_control": "no-store",
+        "csp_present": true
+      },
+      {
+        "file": "assets/index-BdRwO4kX.js",
+        "sha256": "8cf1a2ca972fa9bff7a4f59df23017c2d9b8c2baf48d247029b0b9a48f50ab9b",
+        "cache_control": "public, max-age=31536000, immutable",
+        "csp_present": true
+      },
+      {
+        "file": "assets/index-DoPTl_OF.css",
+        "sha256": "d74f9260170cb4dd6f0a140ac69b5ffa8d5aa12dcdab5add764c13c7bc73f1be",
+        "cache_control": "public, max-age=31536000, immutable",
+        "csp_present": true
+      },
+      {
+        "file": "assets/index-DP3ZyEfr.js",
+        "sha256": "fe7cfac0240e1515204f64be41424b5d4d53bb34398aa590cd8f37d62c28ef00",
+        "cache_control": "public, max-age=31536000, immutable",
+        "csp_present": true
+      }
+    ],
+    "old_js_still_available": true
+  },
+  "final_local_preservation": {
+    "ok": true,
+    "checks": {
+      "branch": true,
+      "head": true,
+      "main": true,
+      "root_env_sha256": true,
+      "custom_provider_sha256": true,
+      "migrations_001_007_unchanged": true
+    },
+    "backend_files_exactly_preserved": 48,
+    "branch": "codex/ui-redesign",
+    "commit_push_merge_performed": false
+  },
+  "authenticated_admin_pages_verified": true
+}

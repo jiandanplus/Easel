@@ -1,0 +1,56 @@
+{
+  "schema": "easel-av-public-build-input-locks-safe-v1",
+  "date": "2026-10-28",
+  "status": "PUBLIC_EVIDENCE_ARCHIVED_BUILD_INPUTS_NOT_ADOPTED",
+  "archive": {
+    "path": "outputs/_run/central-av-build-input-locks-20261028",
+    "manifest": "outputs/_run/central-av-build-input-locks-20261028/manifest.json",
+    "manifestSha256": "619219a3fd6f18c1c8bc8df393811c6b56283d952ec254d28dd4be16ffb9e5e3",
+    "fileCount": 108,
+    "evidenceBytes": 512342,
+    "totalBytesIncludingManifest": 552319,
+    "byteLimit": 2097152,
+    "sourceTargetSha256AllMatched": true
+  },
+  "noble": {
+    "selectedMetadataSha256": "07556021afb635ae3d17e6e6fbe200add8368fc30f69a792e6dfe4f628392192",
+    "signedReleaseCount": 3,
+    "packageIndexCount": 12,
+    "queriedPackageNames": 18,
+    "fullDependencyLock": false,
+    "headersAndApiProbed": false
+  },
+  "oci": {
+    "platform": "linux/amd64",
+    "indexSha256": "24737cef17f4e22b1977df7d9a05e77c4e28b7da5b8911f8d8ccda136bf3573c",
+    "manifestSha256": "78d4744ead1f5b19b04d0df558ab182a5300903900755e515b2ca4d10eb2044d",
+    "configSha256": "d9b8c34d61a9b9a3c44cab883d7d2f2619d674966ab520186f799cf32e3e0377",
+    "metadataChainVerified": true,
+    "layerDescriptorBytes": 29767612,
+    "layerDownloaded": false,
+    "layerDigestVerified": false,
+    "imagePulled": false,
+    "buildExecuted": false
+  },
+  "libplacebo": {
+    "tag": "v7.387.0",
+    "tagObject": "451d8ea5661c868562725e6500deda7fdd4e9a1e",
+    "commit": "275f7dea27924cdd34ab2e6c20e448b6bc4fab65",
+    "localTagSignatureVerified": true,
+    "signerFingerprint": "F42CAB3CB6617134B1A1D9387976433E656E4C1F",
+    "gpgTrust": "TRUST_UNDEFINED",
+    "fullSourceAuthenticated": false,
+    "buildExecuted": false
+  },
+  "vulkanHeaders": {
+    "tag": "v1.4.345",
+    "commit": "74d8a6cb930c68ef617b202c3ff3c59d919e086b",
+    "prefixOnlyBytes": 16384,
+    "registryXmlDownloaded": false,
+    "ownSignedTagVerified": false,
+    "loaderOrRuntimeVerified": false
+  },
+  "buildInputsAdopted": false,
+  "fullBuildDependencyLock": false,
+  "profileEquivalenceVerified": false
+}

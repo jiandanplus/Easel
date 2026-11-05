@@ -1,0 +1,36 @@
+{
+  "scope": "M0/M1 default-closed code and isolated PostgreSQL/protocol/file validation",
+  "branch": "codex/ui-redesign",
+  "central_full_suite": {
+    "exit_code": 0,
+    "passed": 1268,
+    "skipped": 1,
+    "duration_seconds": 263.8,
+    "skip_reason": "test_encrypted_restore_drill.py:100 explicit synthetic Docker environment required",
+    "log_sha256": "66dfdf86ef415a3f206f560548adc6d941a5f912e001a7a989474f2f3b9e769d"
+  },
+  "independent_four_issue_checks": {
+    "passed": 4,
+    "duration_seconds": 2.65
+  },
+  "frozen_source_preserved": true,
+  "frozen_sha256": {
+    "src/platform_service/migrations/015_media_storage.sql": "1b91064ff21b1a91abcf6aeea46e91b22253073239db51221563d4ea224de1cb",
+    "src/platform_service/media/storage.py": "e747922e90d0fb08169a693706ac74d78bf6a160b902248aac280ee8c0b783b1",
+    "src/platform_service/media/core.py": "85ff8faa2cabe1f9b8a7bfc7a1540f3b69c25ec8d98d3e90a2ff295401d91d4e",
+    "src/platform_service/media_runtime.py": "44b1f278e3ef925b625d95a7c67976713ff4d61f2318a21bb9bbb586302c0c3b",
+    "src/platform_service/media/artifacts.py": "2e7dfa3e236227b617323ce538ea3444adbd8d7a986e22157aa44eb709cb4ad4",
+    "src/platform_service/media/adapters/openai_images.py": "b156bc90808a48cebfb315c8dccf176919582b3316c59d9be4516813a5da0d0e",
+    "src/platform_service/permissions.py": "def79102c0621b7df88f67b69af97449d59d5e794008f1f775f9ab1da0543885"
+  },
+  "wheel": {
+    "sha256": "b070d12f7c48f65709ebdfb295a76a2e1e45b79b612404893e5e541f00d1dfd9",
+    "files": 80,
+    "source_py_sql_byte_matches": 73,
+    "crc_ok": true
+  },
+  "production_media_enabled": false,
+  "live_media_provider_calls": 0,
+  "production_database_writes": 0,
+  "partial_gc_policy": "unverifiable .part remains pending and quota held; private operator recovery required"
+}

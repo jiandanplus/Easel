@@ -1,0 +1,179 @@
+{
+  "ok": true,
+  "product_continuity": {
+    "ok": true,
+    "authenticated_scope_matches_original_migration_candidate": true,
+    "session_matches_current_scope": true,
+    "current_was_migrated_product_user": true,
+    "wallet_changes": false
+  },
+  "financial_delta": {
+    "ok": true,
+    "new_job_count": 2,
+    "verified_new_operations": [
+      {
+        "job_id": "08e78467-c454-40eb-a3d3-878be8946ac3",
+        "invocation_id": "ed9bdcee-d179-484e-8466-250630554d9c",
+        "operation_key": "7ea06dd0-2812-419b-abca-b410fa81774b",
+        "status": "settled",
+        "model": "easel-glm53-internal-v1",
+        "funding_mode": "live",
+        "input_tokens": 712,
+        "output_tokens": 433,
+        "actual_microcredits": 1006,
+        "reserved_microcredits": 9728,
+        "rate_version": "internal-glm53-20261023-v1"
+      },
+      {
+        "job_id": "7ef65b8c-691d-4abf-962f-bdeefdbb328e",
+        "invocation_id": "ed9bdcee-d179-484e-8466-250630554d9c",
+        "operation_key": "467a53b0-e406-4954-acc9-9ae72c066956",
+        "status": "settled",
+        "model": "easel-glm53-internal-v1",
+        "funding_mode": "live",
+        "input_tokens": 802,
+        "output_tokens": 218,
+        "actual_microcredits": 728,
+        "reserved_microcredits": 9728,
+        "rate_version": "internal-glm53-20261023-v1"
+      }
+    ],
+    "before": {
+      "available": 9995178,
+      "expired": 0,
+      "held": 0,
+      "issued": 10000000,
+      "refunded": 0,
+      "spent": 4822
+    },
+    "after": {
+      "available": 9993444,
+      "expired": 0,
+      "held": 0,
+      "issued": 10000000,
+      "refunded": 0,
+      "spent": 6556
+    },
+    "deducted_microcredits": 1734,
+    "exact_usage_rates_verified": true,
+    "old_settled_jobs_unchanged": true,
+    "one_reserve_one_settle_per_job": true,
+    "per_job_reserve_settle_bucket_amounts_verified": true,
+    "wallet_entry_bucket_totals_equal_lots": true,
+    "financial_balanced": true,
+    "journals_balanced": true,
+    "no_new_issuance_or_refund": true,
+    "pending_jobs": 0,
+    "before_financial_sha256": "5ff0d162286a047f06c6cd00e13b8cf9989c9646d32f7edfb6c161e58548a700",
+    "after_financial_sha256": "26c79345d046d4496b4f0d13ecf5f0866488953b7bd78f8cb8f93d2652434fca"
+  },
+  "post_acceptance_backup": {
+    "ok": true,
+    "scope": "after_product_login_pi_execution_and_settlement",
+    "backup": {
+      "backup_id": "7a68e359-57bf-4784-b238-19b398339e43",
+      "ciphertext_bytes": 789322,
+      "ciphertext_sha256": "060d04ef26a4eb499a99ebb55f2c61c9e68af2e0e41ae1825666dcb6308ebd39",
+      "file_count": 13,
+      "fresh_restore": false,
+      "manifest_sha256": "bc8de134bfa37438e147eff063df5cc4f29b6d027cca0aa5986c9ea084df6fbb",
+      "path": "/var/backups/easel-encrypted/20261024T130357Z-7a68e359-57bf-4784-b238-19b398339e43.sealed",
+      "payload_bytes": 788480,
+      "payload_sha256": "b1b204f6e4a1602e8ba7bff3f9c20f254ee8d202c834b6d10fe9bc9564a86a58",
+      "status": "selfverified"
+    },
+    "journal_invocation_id": "d3d3ef960e6a4ffea778eef5595d998f",
+    "systemd_completion_job_result": "done",
+    "fresh_artifact_hash_and_permissions_verified": true,
+    "offsite": false,
+    "fresh_restore": false
+  },
+  "pi_workbench": {
+    "version": "pi-workbench-acceptance-v1",
+    "run_id": "7cf7b57c-7f51-4b39-b74b-cc04cf7cc2ce",
+    "status": "passed",
+    "created_utc": "2026-10-24T12:58:13.058508+00:00",
+    "post_started_utc": "2026-10-24T12:58:22.226864+00:00",
+    "disconnected_utc": "2026-10-24T13:00:23.060300+00:00",
+    "finished_utc": "2026-10-24T13:00:27.028984+00:00",
+    "automatic_retry": false,
+    "stop_sent": false,
+    "physical_chat_posts_attempted": 1,
+    "client_disconnected_after_first_token": true,
+    "first_token_seconds": 120.8347,
+    "first_poll_status": "running",
+    "recovered_clean_end": true,
+    "stop_reason": "completed",
+    "marker_returned": true,
+    "marker_absent_from_prompt": true,
+    "numbered_lines": 64,
+    "response_sha256": "7a4bdc44926b568ac2fbb691fcb169977822a7e16f096af9d6ad482cb556aac1",
+    "completion_seconds": 122.3591,
+    "route": {
+      "execution_target": "local",
+      "model": "easel-glm53-internal-v1",
+      "runtime": "pi",
+      "service_source": "subscription",
+      "subscription_backend": "central"
+    },
+    "all_tool_activities": [
+      "read_file"
+    ],
+    "sandbox_restoration": "restored",
+    "invocation_ids": [
+      "ed9bdcee-d179-484e-8466-250630554d9c"
+    ],
+    "model_limits": {
+      "max_input_bytes": 1048576,
+      "max_input_tokens": 16384,
+      "max_output_tokens": 1024
+    },
+    "model_rate": {
+      "input": {
+        "denominator": "2",
+        "numerator": "1"
+      },
+      "output": {
+        "denominator": "2",
+        "numerator": "3"
+      },
+      "version": "internal-glm53-20261023-v1"
+    }
+  },
+  "recovery_queries": {
+    "ok": true,
+    "lookup_calls": 2,
+    "chat_posts": 0,
+    "financial_before_after_identical": true,
+    "financial_sha256": "26c79345d046d4496b4f0d13ecf5f0866488953b7bd78f8cb8f93d2652434fca",
+    "operations_identical": true,
+    "operation_count": 2,
+    "all_settled_results_available": true,
+    "balance_microcredits": 9993444,
+    "held_microcredits": 0,
+    "first_token_seconds": 120.8347,
+    "completion_seconds": 122.3591
+  },
+  "custom_config_files_byte_unchanged": [
+    "config.json",
+    "bundled-provider.json"
+  ],
+  "client_script_sha256": "0eeadc46f7c657f9112b23b811e9f5de78a6dcb19e20a23f930ad8f594875101",
+  "pure_client_tests": {
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0
+  },
+  "observed_at_utc": "2026-10-24T13:06:49.101911+00:00",
+  "evidence_boundary": "real_workbench_backend_pi_and_database_reconciliation; not browser message-send visual acceptance",
+  "remaining": [
+    "independent_admin_console_login",
+    "explicit_task_stop_financial_case",
+    "full_host_reboot",
+    "concurrent_load",
+    "fresh_restore_of_new_scheduled_backup",
+    "offsite_backup_key_recovery",
+    "merchant_payments",
+    "subscription_media_cloud_agent"
+  ]
+}

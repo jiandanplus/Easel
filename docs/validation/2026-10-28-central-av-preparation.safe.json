@@ -1,0 +1,125 @@
+{
+  "status": "ISOLATED_PREPARATION_VERIFIED_PRODUCTION_AV_BLOCKED",
+  "remote_directory": "/root/easel-central-av-preparation-20261028",
+  "authorized_target": "154.217.245.179",
+  "retrieved_small_evidence_only": true,
+  "package_version": "7:6.1.1-3ubuntu5",
+  "runtime_version": "6.1.1-3ubuntu5",
+  "package_count": 233,
+  "deb_bytes": 145446530,
+  "packages_indexes_verified": 12,
+  "signed_releases": [
+    {
+      "file": "archive.ubuntu.com_ubuntu_dists_noble-updates_InRelease",
+      "sha256": "e99d7fbc7007bafb1d764d58a57afcc700cdfc4b1d0e8e6a720bc3c5dd333128",
+      "suite": "noble-updates",
+      "date": "Wed, 28 Oct 2026  3:25:37 UTC",
+      "valid_until": null,
+      "fingerprints": [
+        "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+      ],
+      "signature_verified": true
+    },
+    {
+      "file": "archive.ubuntu.com_ubuntu_dists_noble_InRelease",
+      "sha256": "cdb2f31d809f589719a53c6ad15f255b27569c4059542ada282aaa21b8e164b0",
+      "suite": "noble",
+      "date": "Thu, 25 Apr 2024 15:10:33 UTC",
+      "valid_until": null,
+      "fingerprints": [
+        "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+      ],
+      "signature_verified": true
+    },
+    {
+      "file": "security.ubuntu.com_ubuntu_dists_noble-security_InRelease",
+      "sha256": "03b4a340344bee27fe5de728cf9060b9a30a102a85ca30f25c209980c0d4f184",
+      "suite": "noble-security",
+      "date": "Tue, 27 Oct 2026 17:47:13 UTC",
+      "valid_until": null,
+      "fingerprints": [
+        "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+      ],
+      "signature_verified": true
+    }
+  ],
+  "ELF_payloads_verified": 216,
+  "dependency_counts": {
+    "ffmpeg": 214,
+    "ffprobe": 214
+  },
+  "synthetic_full_decodes": 4,
+  "pcm_sample_count_checks": [
+    {
+      "file": "tone.wav",
+      "decoded_pcm_bytes": 16000,
+      "mono_samples_at_16000hz": 8000,
+      "sample_count_duration_ms": 500,
+      "previous_progress_out_time_us": "384000",
+      "candidate_measured_duration_ms": 384
+    },
+    {
+      "file": "tone.mp3",
+      "decoded_pcm_bytes": 16000,
+      "mono_samples_at_16000hz": 8000,
+      "sample_count_duration_ms": 500,
+      "previous_progress_out_time_us": "470938",
+      "candidate_measured_duration_ms": 470
+    },
+    {
+      "file": "tone.ogg",
+      "decoded_pcm_bytes": 16000,
+      "mono_samples_at_16000hz": 8000,
+      "sample_count_duration_ms": 500,
+      "previous_progress_out_time_us": "493500",
+      "candidate_measured_duration_ms": 493
+    }
+  ],
+  "production_blockers": [
+    "clean-env direct exec exit127 libavdevice.so.60 unavailable",
+    "frozen candidate progress endpoint duration is inconsistent with actual PCM sample count on official Ubuntu ffmpeg6.1.1",
+    "API UID and actual systemd namespace not tested; root0700 staging intentionally inaccessible to normal service UID"
+  ],
+  "remaining_limits": [
+    "InRelease Valid-Until absent; no expiry invented",
+    "optional hardware/plugin dlopen paths outside synthetic formats not validated",
+    "56 copyright records retain freeform license text rather than a normalized license classification"
+  ],
+  "frozen_source": {
+    "source_tar_sha256": "54ac2460d2a912eeaaa47f0348ba67fd192965202b22db96f7080b0ec5f9731d",
+    "source_path": "services/platform/src/platform_service/media/av_artifacts.py",
+    "source_sha256": "11254764d0b956b7074687ec16fd001e6a62db275ca6e470a9899971adfa002a",
+    "execve_environment": {
+      "PATH": "/usr/bin:/bin",
+      "LANG": "C.UTF-8"
+    },
+    "path_rules": "absolute, resolved regular file, owner root/current uid, executable, no group/world write; exact version regex; no ELF header check in AVTools itself",
+    "integration_constraint": "configured executable receives ffmpeg args directly; no configurable loader argv or LD_LIBRARY_PATH"
+  },
+  "root_free_bytes_after": 41486843904,
+  "host_dpkg_status_unchanged": true,
+  "system_install_or_configuration_change": false,
+  "business_source_changes": false,
+  "receipts": {
+    "apt-config.dump": "68babd97ffaa97fc904d4b8cb29e95bab5c26ae6e658a786765beec78f6f5bef",
+    "archive.ubuntu.com_ubuntu_dists_noble-updates_InRelease.gpg-status.txt": "bcd94681298c8a68d043af9f9947b4b72d6814a428f84f41e3eff6dc995acda7",
+    "archive.ubuntu.com_ubuntu_dists_noble_InRelease.gpg-status.txt": "73db0d929dde548f3fd75c73151d10bdc3cb6aab6bd37a330915510218874858",
+    "dependency-plan.log": "eafe1d915d90437a35919b9aad8b3cdd63e07f75197e5b8bb51141d6c4718c98",
+    "duration-compatibility.safe.json": "469fc6bb21d5b49a6c9e5245f8b558092b2d53578a97babc004bce27a139cd07",
+    "duration_check.py": "55f28db777dff436d0ab402770772d696d1a857d577f3a0fd8e5a12926c2dd16",
+    "elf-payload-ownership.safe.json": "568350865d19f9634b38da26770631183ddad4befc52bc3cead1ed18f8cbb9e9",
+    "elf-smoke-attempt1.log": "0d0ba8ec1fcaef15059e243bc68f3cf49202e4d11d46f5edbcb2775e2b14fb3a",
+    "elf_smoke.py": "08be8ba566980002372f8df5adbf312f6af95078ac49e970439561157d442c16",
+    "ffmpeg-policy.log": "68e3e2053f07f88876fb0b45d7cc6a3ecd82edd2e518c1e2076b2a12c5c674e8",
+    "final.safe.json": "6124b9e59703f0e7cf629ae04e7d8c04b83206feb8b0a28d0c61c2f45f4401a1",
+    "final_audit.py": "ce683d5d52ff74ac8e9aec2b67c64be7476f83dec1cf329c601b3803fb3d674f",
+    "frozen-av-contract.safe.json": "a638f437d59924b441f83f704a042ed9c6dcacbca354ba4c63b947afb4fb6a22",
+    "initial.safe.json": "af61eb00d4208cd23ed59048b101d0b6c6e69b01e643242d5b14e8843ae11ccb",
+    "packages.safe.json": "8f81dbd15ac71437578d038b169bf1c4f0359bd63412dceba4a028963395c06d",
+    "prepare.py": "4d6f22de64f465eb8a997521bb9f644cbf69b7022010295b73cbd2551ad38280",
+    "security.ubuntu.com_ubuntu_dists_noble-security_InRelease.gpg-status.txt": "6ba8b2ac8aa6aa8ba9b5d175e7f92665c028f2cf5166bcd1d5ca4ba5f6efaa99",
+    "smoke.safe.json": "27867215ea863f7eed410beca74b655964407426abbbf8f72e0927a0acc030d0",
+    "tool-sessions.safe.json": "21301ecb373c4b042fb04bc4290e9d2f1c1acba2c55709bac713c5c93ea3eeb6",
+    "verify_extract.py": "9dd621b8d239dcabfdb643ffc9adbc61898d405d5d8ffdf6b21ff4a51e0febd2"
+  }
+}

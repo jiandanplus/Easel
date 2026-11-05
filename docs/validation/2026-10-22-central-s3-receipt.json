@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-22T07:04:08.155279+00:00",
+  "scope": "S3-A local fixture; not live supplier/payment/media/cloud/production acceptance",
+  "branch": "codex/ui-redesign",
+  "head": "e972af07444e181e3eb737441ecac306bca778b3",
+  "main_ref": "bb3c8ff0463f36c202454d74171682ba6e470cb1",
+  "no_commit_push_merge": true,
+  "root_env_sha256": "935b54d55014b9a482bed0902025e60a05d048c7e63f2984084743b3febe315e",
+  "preexisting_changed_paths": 198,
+  "preexisting_paths_missing": 0,
+  "prior_migrations_unchanged_sha256": {
+    "001_foundation.sql": "fe094e0e4614e66f4047a5e8068d41e05a7d9d2b95a2cc01d81e1250654a09d4",
+    "002_credits.sql": "2484109d40ed6dafa15ccddd2e8b8ba5757f0694eda1d67eb9c8a5cc92e28111",
+    "003_identity.sql": "094145faa90d553d11463619d0904de6559363246a6bcb78dd8c588a9502ee0b",
+    "004_integrity.sql": "8a99679b37aca448330749ca6945484d47a80fa8f5b0c0c9c6f6d3d5e3377c61",
+    "005_payments.sql": "5c1ff5d0f24293f75bed6d513d69ff30ee0acc85cf27d0ba258445ea56e2684e"
+  },
+  "tests": {
+    "central_postgresql": {
+      "passed": 405,
+      "seconds": 43.21
+    },
+    "native_legacy_custom_cli_portable": {
+      "passed": 353,
+      "skipped": 1,
+      "seconds": 16.81,
+      "skip_note": "Node opt-in case separately enabled and passed below"
+    },
+    "installed_node_native_opt_in": {
+      "passed": 1,
+      "seconds": 0.45
+    },
+    "media_custom": {
+      "passed": 243,
+      "seconds": 8.12
+    },
+    "frontend": {
+      "passed": 205,
+      "failed": 0,
+      "skipped": 0
+    },
+    "frontend_build": "passed",
+    "frontend_lint": "passed; preexisting escape warning",
+    "ruff_0_12_10": "passed",
+    "additional_unpinned_uvx_ruff": "150 findings; separate tool/rules, no automatic bulk fixes"
+  },
+  "wheel": {
+    "filename": "easel_central_platform-0.1.0-py3-none-any.whl",
+    "sha256": "b9249844b8a820cfa3da053ff66ff9872f08a0a528970c34388b57d133fd36fd",
+    "all_python_sources_match": true,
+    "migrations_001_through_006_match": true
+  },
+  "preview": {
+    "easel_url": "http://127.0.0.1:18761/",
+    "authenticated": true,
+    "fixture_provider_posts": 2,
+    "jobs": [
+      {
+        "id": "ccfdcbe6-3853-4341-a558-4ad8b5fe8440",
+        "model": "central-text-fixture-v1",
+        "funding_mode": "test",
+        "status": "settled",
+        "amount": 7372800,
+        "actual": 14000,
+        "rate_version": "fixture-token-rate-v1",
+        "input_tokens": 100,
+        "output_tokens": 20
+      },
+      {
+        "id": "640a553f-423c-41c7-9ad6-aabfa3f38ab3",
+        "model": "central-text-fixture-v1",
+        "funding_mode": "test",
+        "status": "settled",
+        "amount": 7372800,
+        "actual": 14000,
+        "rate_version": "fixture-token-rate-v1",
+        "input_tokens": 100,
+        "output_tokens": 20
+      }
+    ],
+    "wallet_before_microcredits": 200000000,
+    "wallet_after_microcredits": 199972000,
+    "spent_delta_microcredits": 28000,
+    "held_microcredits": 0,
+    "pending_requests": 0,
+    "test_execution_enabled": true,
+    "live_execution_enabled": false,
+    "logto_restarted": false,
+    "mobile_css_width": 390,
+    "mobile_document_scroll_width": 390
+  },
+  "independent_review": "PASS; no unresolved actionable P1/P2 within reviewed S3-A scope"
+}

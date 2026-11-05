@@ -1,0 +1,307 @@
+{
+  "status": "passed_for_composer_picker_and_original_17868_scope",
+  "branch": "codex/ui-redesign",
+  "head": "e972af07444e181e3eb737441ecac306bca778b3",
+  "committed_this_task": false,
+  "pushed_this_task": false,
+  "merged_to_main": false,
+  "frontend_tests": {
+    "passed": 302,
+    "failed": 0,
+    "skipped": 0,
+    "picker_subset": 26
+  },
+  "backend_tests": {
+    "passed": 306,
+    "failed": 0,
+    "skipped": 7,
+    "existing_warning": "python_multipart deprecation"
+  },
+  "central_isolated_postgres_tests": {
+    "passed": 147,
+    "failed": 0,
+    "skipped": 0,
+    "production_deployed": false,
+    "evidence": "subagent exec session 15892 final chunk b6ead9"
+  },
+  "pi_sdk_loopback": {
+    "wire_scenarios": 9,
+    "invalid_input_rejections": 3,
+    "lifecycle_scenarios": 6,
+    "pinned_pi": "1.4.0",
+    "bundled_node": true,
+    "external_calls": 0
+  },
+  "package": {
+    "status": "passed",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v15/Easel/Easel.app",
+    "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v15/Easel-Pi-macOS15-arm64.zip",
+    "archive_sha256": "c39b449fba67d1b44653f5b1c34a11a1b94471ad3a679bdaaf559869c73928ee",
+    "archive_bytes": 124888054,
+    "source_files": 885,
+    "build_inputs": 58,
+    "resource_files": 15252,
+    "zip_entries": 35800,
+    "frontend_inputs": 87,
+    "frontend_outputs": 13,
+    "source_added": [
+      "easel/chat_models.py",
+      "web/frontend/src/components/ComposerModelPicker.css",
+      "web/frontend/src/components/ComposerModelPicker.tsx",
+      "web/frontend/src/lib/chatModels.ts"
+    ],
+    "source_changed": [
+      "easel/direct_api.py",
+      "easel/harnesses/base.py",
+      "easel/harnesses/pi.py",
+      "easel/harnesses/pi_session.py",
+      "easel/platform/central.py",
+      "easel/service_contracts.py",
+      "web/app.py",
+      "web/frontend/src/App.tsx",
+      "web/frontend/src/components/ChatPage.tsx",
+      "web/frontend/src/lib/api.ts"
+    ],
+    "worker_changed": true,
+    "sdk_and_node_bytes_unchanged": true,
+    "python_execution_bytes_unchanged": true,
+    "record_metadata_only": [
+      "python/lib/python3.12/site-packages/charset_normalizer-3.5.2.dist-info/RECORD",
+      "python/lib/python3.12/site-packages/fastapi-0.143.1.dist-info/RECORD",
+      "python/lib/python3.12/site-packages/httpx-0.28.1.dist-info/RECORD",
+      "python/lib/python3.12/site-packages/idna-3.20.dist-info/RECORD",
+      "python/lib/python3.12/site-packages/markdown-3.11.1.dist-info/RECORD",
+      "python/lib/python3.12/site-packages/uvicorn-0.54.0.dist-info/RECORD"
+    ],
+    "settings_and_store_bytes_unchanged": true,
+    "exact_archive_verified": true,
+    "model_requests": 0,
+    "source_manifest_sha256": "2ffb0a4a95248f0bdc39c3f807e5203705be3b42c1fea051e441cd7c60044c74",
+    "frontend_receipt_sha256": "289c6557e35a8e27fc9ffedc5670b079cf199832efd66796949e8278edd9d4c3"
+  },
+  "clean_smoke": {
+    "scope": "offline_isolated_v15_clean_home_smoke",
+    "status": "passed",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v15/Easel/Easel.app",
+    "workspace": "/private/tmp/easel-composer-models-20261026/clean-smoke-v15/workspace",
+    "home": "/private/tmp/easel-composer-models-20261026/clean-smoke-v15/home",
+    "initial_path": "/usr/bin:/bin:/usr/sbin:/sbin",
+    "platform_url_unset": true,
+    "external_network_denied": true,
+    "model_posts": 0,
+    "browser_opened": false,
+    "agent_install_attempted": false,
+    "original_preview_touched": false,
+    "three_column_sources_and_compiled_artifacts_bound": true,
+    "rendered_ui_verified": false,
+    "initial_inventory": {
+      "files": 15252,
+      "manifest_sha256": "74363a3f767ac9e39c10d5766e502c7243209812bcd84dd656afddfe09840f18"
+    },
+    "frontend_binding": {
+      "source_inputs": 87,
+      "artifacts": 13,
+      "receipt_sha256": "289c6557e35a8e27fc9ffedc5670b079cf199832efd66796949e8278edd9d4c3",
+      "source_manifest_sha256": "2ffb0a4a95248f0bdc39c3f807e5203705be3b42c1fea051e441cd7c60044c74",
+      "source_and_artifacts_bound": true
+    },
+    "identity_verified": true,
+    "port": 54346,
+    "html_200": true,
+    "static_assets_200": 2,
+    "icon_200": true,
+    "default_runtime": "pi",
+    "bundled_pi_installed": true,
+    "runtime_detail": "内置 Pi 供应商未配置",
+    "central_configured": false,
+    "unconfigured_model_directory_safe": true,
+    "updated_timeout_sources_present": true,
+    "admission_error_and_retry_guard_sources_present": true,
+    "wallet_activity_and_pending_limit_sources_present": true,
+    "owned_stop_exit_0": true,
+    "owned_port_closed": true,
+    "final_inventory_matches": true
+  },
+  "upgrade": {
+    "ok": true,
+    "url": "http://127.0.0.1:17868/",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v15/Easel/Easel.app",
+    "previous_pid": 37745,
+    "current_pid": 55269,
+    "launcher_pid": 55269,
+    "authenticated_before_after": true,
+    "same_scope": true,
+    "same_workspace": true,
+    "same_home": true,
+    "protected_file_count": 45,
+    "protected_files_unchanged": true,
+    "wallet_unchanged": true,
+    "served_assets_match_new_package": true,
+    "served_asset_count": 2,
+    "original_v14_retained": true,
+    "package_sha256": "c39b449fba67d1b44653f5b1c34a11a1b94471ad3a679bdaaf559869c73928ee",
+    "model_calls": 0,
+    "new_login_started": false,
+    "browser_history_verification": "separate original-tab DOM check required; not inferred from workspace files"
+  },
+  "post_browser_preservation": {
+    "status": "passed",
+    "final_pid": 55269,
+    "same_authenticated_scope": true,
+    "same_wallet": true,
+    "same_workspace_and_home": true,
+    "45_protected_files_unchanged_at_switch": true,
+    "44_non_rotating_protected_files_unchanged_after_browser": true,
+    "central_session_identity_and_configuration_unchanged": true,
+    "normal_token_rotation_fields": [],
+    "final_resources_unchanged": 15252,
+    "temporary_ports_closed": [
+      61390,
+      54337,
+      54346,
+      52502
+    ],
+    "real_model_calls": 0,
+    "wallet_mutations": 0
+  },
+  "actual_browser": {
+    "url": "http://127.0.0.1:17868/",
+    "app_version": "v15",
+    "old_chat_list_retained": true,
+    "old_four_message_bodies_equal": true,
+    "theme_preserved": true,
+    "temporary_empty_conversations_created": 2,
+    "persistent_old_chat_count": 1,
+    "real_model_requests": 0,
+    "new_login_started": false,
+    "real_logout": false,
+    "model_directory_loaded": true,
+    "subscription_model_count": 1,
+    "model_label": "GLM 5.3 · 内部体验",
+    "reasoning_status": "unknown",
+    "reasoning_control_disabled": true,
+    "empty_chat_draft_only": true,
+    "screenshots": [
+      "actual-17868-model-list.jpg",
+      "actual-17868-model-menu.jpg"
+    ]
+  },
+  "actual_catalog": {
+    "ready": true,
+    "model_count": 1,
+    "models": [
+      {
+        "id": "easel-glm53-internal-v1",
+        "label": "GLM 5.3 · 内部体验",
+        "reasoning": {
+          "status": "unknown",
+          "efforts": []
+        }
+      }
+    ],
+    "runtime": "pi",
+    "source": "subscription",
+    "real_model_requests": 0,
+    "final_package": "v15"
+  },
+  "synthetic_browser": {
+    "owned_fixture": true,
+    "requests": [
+      {
+        "model": "synthetic-reasoner",
+        "effort": "high",
+        "reasoning_present": true,
+        "input_items": 2,
+        "tool_results": 0,
+        "request_sha256": "d62057ea6c19a327bcdd1ddc74da872f5ca8a356f11bc8be18bb808e39769e6c"
+      },
+      {
+        "model": "synthetic-reasoner",
+        "effort": "high",
+        "reasoning_present": true,
+        "input_items": 4,
+        "tool_results": 1,
+        "request_sha256": "e80d28fa2e5057f40e0e8a7d580b339873e8e7d6b69ffea5909c6da739681396"
+      },
+      {
+        "model": "synthetic-fast",
+        "effort": null,
+        "reasoning_present": false,
+        "input_items": 6,
+        "tool_results": 1,
+        "request_sha256": "baa1bfed1b1dd519d1aa6baa5022db1f3666aa6d6cc79369c82ee90d0d925417"
+      },
+      {
+        "model": "synthetic-reasoner",
+        "effort": "high",
+        "reasoning_present": true,
+        "input_items": 8,
+        "tool_results": 1,
+        "request_sha256": "773c1fb8c1903d8b3ed9d11fcc401b55f2550aca592f8b34db90025d174d7509"
+      },
+      {
+        "model": "synthetic-fast",
+        "effort": null,
+        "reasoning_present": false,
+        "input_items": 10,
+        "tool_results": 1,
+        "request_sha256": "2ac6ecfda03e96e8413db85d069381011a4f9fb4e9ce53006b7dea2e6243fa9c"
+      },
+      {
+        "model": "synthetic-fast",
+        "effort": null,
+        "reasoning_present": false,
+        "input_items": 12,
+        "tool_results": 1,
+        "request_sha256": "23a9720dac89044a3f2f9f314819440b21a45bb75a0c94869343f209d6c927dc"
+      }
+    ],
+    "external_requests": 0,
+    "final_package": "v14",
+    "final_package_chat_posts": 3,
+    "earlier_v13_chat_posts": 2,
+    "total_chat_posts": 5,
+    "visible_user_messages": 4,
+    "synthetic_retry_admission_path_observed": true,
+    "retry_trigger_attribution": "not_determined_from_ui_evidence",
+    "no_automatic_picker_retry_path_in_source": true,
+    "history_messages": 12,
+    "same_native_session": true,
+    "default_provider_model_unchanged": true,
+    "external_network_denied": true,
+    "focus_subpage_separate_actions_passed": true,
+    "model_search_passed": true,
+    "real_model_requests": 0
+  },
+  "launchers": {
+    "helpers": [
+      {
+        "path": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v15/启动现有工作台.command",
+        "sha256": "c27bc48b20fde673e84fb3fdedef4b236d743a6048fbfaa0a6ad2e638b3e1ca4"
+      },
+      {
+        "path": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v15/停止现有工作台.command",
+        "sha256": "82a8a6cf8e2fe5a1bdfd7e17c245ff06114214af11c0ff717807316a6064bed4"
+      }
+    ],
+    "old_helpers_forward_to_v15": true,
+    "old_helpers_backed_up": true,
+    "existing_instance_reused": true
+  },
+  "cleanup": {
+    "synthetic_app_owned_stop_exit0": true,
+    "synthetic_provider_termination_sent": true,
+    "dedicated_pg_container_stopped": true,
+    "original_17868_kept_running": true,
+    "other_services_untouched": true
+  },
+  "limits": [
+    "Production central reasoning capabilities not deployed or newly published",
+    "Current authenticated subscription catalog has one model with unknown reasoning efforts",
+    "Live model/billing not called in this UI task",
+    "Synthetic retry admission observed; exact trigger not attributed",
+    "macOS15+arm64 unsigned and not notarized",
+    "Browser narrow/short viewport not separately accepted",
+    "Existing temporary user workspace retained; reboot persistence not claimed"
+  ]
+}

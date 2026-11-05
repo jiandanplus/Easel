@@ -1,0 +1,267 @@
+{
+  "status": "passed_for_account_popover_and_17868_scope",
+  "branch": "codex/ui-redesign",
+  "merged_to_main": false,
+  "frontend_tests": {
+    "passed": 276,
+    "failed": 0,
+    "skipped": 0,
+    "account_component_tests_included": 23
+  },
+  "package": {
+    "status": "passed",
+    "scope": "v12_package_and_v11_resource_comparison",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v12/Easel/Easel.app",
+    "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v12/Easel-Pi-macOS15-arm64.zip",
+    "archive_sha256": "659534ddcb82e55a0909cfe12304e0eb7653eb6fe7079eb81f4a2bb2e7f9481c",
+    "archive_bytes": 124876692,
+    "zip_crc_entries": 35798,
+    "archive_all_resources_match_inventory": true,
+    "source_files": 881,
+    "build_inputs": 58,
+    "source_manifest_sha256": "5b349bc0a55117e0dc487f96072beb9859bc4702a56ce4ef143480bce45939d1",
+    "inventory_files": 15251,
+    "inventory_manifest_sha256": "2e6aa6450ffb14e05ab6298a456f84a1a6561c0b7ee2d4db8cff774845ac6691",
+    "frontend_inputs": 84,
+    "frontend_outputs": 13,
+    "frontend_receipt_sha256": "feaa3014c0279ee7264f74c4ac9a64cfe75ec62c6a57d803d1396c1a28adaac3",
+    "frontend_source_and_output_exact": true,
+    "pi_manifest_verified_without_execution": true,
+    "source_delta": {
+      "added": [
+        "web/frontend/src/components/SidebarAccount.css"
+      ],
+      "removed": [],
+      "changed": [
+        "web/frontend/src/components/Sidebar.tsx",
+        "web/frontend/src/components/SidebarAccount.tsx"
+      ]
+    },
+    "resource_delta": {
+      "added": [
+        "web/frontend/dist/assets/index-BrAHzu-b.css",
+        "web/frontend/dist/assets/index-loMok7vR.js"
+      ],
+      "removed": [
+        "web/frontend/dist/assets/index-CgJTkwLB.js",
+        "web/frontend/dist/assets/index-CyH-Q9QD.css"
+      ],
+      "changed": [
+        "build-provenance.json",
+        "python/lib/python3.12/site-packages/charset_normalizer-3.5.2.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/fastapi-0.143.1.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/httpx-0.28.1.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/idna-3.20.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/markdown-3.11.1.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/uvicorn-0.54.0.dist-info/RECORD",
+        "source-manifest.json",
+        "web/frontend/dist/index.html"
+      ]
+    },
+    "python_metadata_only_record_differences": [
+      {
+        "path": "python/lib/python3.12/site-packages/charset_normalizer-3.5.2.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/normalizer"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/fastapi-0.143.1.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/fastapi"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/httpx-0.28.1.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/httpx"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/idna-3.20.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/idna"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/markdown-3.11.1.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/markdown_py"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/uvicorn-0.54.0.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/uvicorn"
+        ]
+      }
+    ],
+    "python_execution_bytes_identical": true,
+    "easel_execution_bytes_identical": true,
+    "web_backend_bytes_identical": true,
+    "pi_agent_and_sdk_bytes_identical": true,
+    "launcher_plist_and_delivery_controls_identical": true,
+    "no_external_symlinks": true,
+    "original_v11_resources_unchanged": true,
+    "new_v12_resources_unchanged": true,
+    "services_started": 0,
+    "real_model_calls": 0,
+    "user_configuration_read": false
+  },
+  "offline_smoke": {
+    "scope": "offline_isolated_v12_clean_home_smoke",
+    "status": "passed",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v12/Easel/Easel.app",
+    "workspace": "/private/tmp/easel-account-card-20261026/clean-smoke/workspace",
+    "home": "/private/tmp/easel-account-card-20261026/clean-smoke/home",
+    "initial_path": "/usr/bin:/bin:/usr/sbin:/sbin",
+    "platform_url_unset": true,
+    "external_network_denied": true,
+    "model_posts": 0,
+    "browser_opened": false,
+    "agent_install_attempted": false,
+    "original_preview_touched": false,
+    "three_column_sources_and_compiled_artifacts_bound": true,
+    "rendered_ui_verified": false,
+    "initial_inventory": {
+      "files": 15251,
+      "manifest_sha256": "2e6aa6450ffb14e05ab6298a456f84a1a6561c0b7ee2d4db8cff774845ac6691"
+    },
+    "frontend_binding": {
+      "source_inputs": 84,
+      "artifacts": 13,
+      "receipt_sha256": "feaa3014c0279ee7264f74c4ac9a64cfe75ec62c6a57d803d1396c1a28adaac3",
+      "source_manifest_sha256": "5b349bc0a55117e0dc487f96072beb9859bc4702a56ce4ef143480bce45939d1",
+      "source_and_artifacts_bound": true
+    },
+    "identity_verified": true,
+    "port": 59280,
+    "html_200": true,
+    "static_assets_200": 2,
+    "icon_200": true,
+    "default_runtime": "pi",
+    "bundled_pi_installed": true,
+    "runtime_detail": "内置 Pi 供应商未配置",
+    "central_configured": false,
+    "updated_timeout_sources_present": true,
+    "admission_error_and_retry_guard_sources_present": true,
+    "wallet_activity_and_pending_limit_sources_present": true,
+    "owned_stop_exit_0": true,
+    "owned_port_closed": true,
+    "final_inventory_matches": true
+  },
+  "upgrade": {
+    "ok": true,
+    "url": "http://127.0.0.1:17868/",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v12/Easel/Easel.app",
+    "previous_pid": 47661,
+    "current_pid": 77633,
+    "launcher_pid": 77633,
+    "authenticated_before_after": true,
+    "same_scope": true,
+    "same_workspace": true,
+    "same_home": true,
+    "protected_file_count": 45,
+    "protected_files_unchanged": true,
+    "wallet_unchanged": true,
+    "served_assets_match_new_package": true,
+    "served_asset_count": 2,
+    "original_v11_retained": true,
+    "package_sha256": "659534ddcb82e55a0909cfe12304e0eb7653eb6fe7079eb81f4a2bb2e7f9481c",
+    "model_calls": 0,
+    "new_login_started": false,
+    "browser_history_verification": "separate original-tab DOM check required; not inferred from workspace files"
+  },
+  "browser_actual": {
+    "historyBefore": {
+      "theme": "forest",
+      "listCount": 1,
+      "messageCount": 4,
+      "listSha256": "65ab6397ea04860a2654c634f9e2cc95e32d26a01ac3680a6cd5e07bf4f54f70",
+      "messagesSha256": "74f567653941fcfb464e2b61ae6ba3b9caf778f4f6cc8dcced894e886611c001"
+    },
+    "historyAfter": {
+      "theme": "forest",
+      "listCount": 1,
+      "messageCount": 4,
+      "listSha256": "65ab6397ea04860a2654c634f9e2cc95e32d26a01ac3680a6cd5e07bf4f54f70",
+      "messagesSha256": "74f567653941fcfb464e2b61ae6ba3b9caf778f4f6cc8dcced894e886611c001"
+    },
+    "historyUnchanged": true,
+    "escape": {
+      "closed": true,
+      "focusLabel": "用户菜单"
+    },
+    "settingsOpened": true,
+    "realLogoutPerformed": false,
+    "modelRequests": 0
+  },
+  "browser_synthetic": {
+    "synthetic_only": true,
+    "real_services_contacted": false,
+    "credentials_read_or_created": false,
+    "authenticated": false,
+    "pending": false,
+    "counts": {
+      "starts": 1,
+      "accepted_starts": 1,
+      "completions": 1,
+      "cancellations": 0,
+      "logouts": 1,
+      "status_gets": 13,
+      "synthetic_login_page_gets": 1,
+      "model_posts": 0,
+      "rejected_writes": 0
+    }
+  },
+  "post_browser_preservation": {
+    "ok": true,
+    "protected_user_files_unchanged": 45,
+    "settings_panel_central_account_and_store_byte_identical": true,
+    "runtime_resource_inventory_unchanged": 15251
+  },
+  "protected_settings_source_hashes": {
+    "web/frontend/src/components/SettingsPanel.tsx": "87a4c670e5ddc1135c20b68331d2585e3e74ed133109056c48e483b5af8d0766",
+    "web/frontend/src/components/CentralAccountSettings.tsx": "be88117eaf3d97f54ec06b9940718bf381d901b4e7365cf1c2bd5a6aef2581ec",
+    "web/frontend/src/lib/store.ts": "6c004458aedd79a327a84e311b046768a937e174200ef5447f7a0d7649c1b9aa"
+  },
+  "launchers": {
+    "new": {
+      "启动现有工作台.command": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v12/启动现有工作台.command",
+      "停止现有工作台.command": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v12/停止现有工作台.command"
+    },
+    "old_local_entries_forward_to_v12": true,
+    "old_native_app_and_archive_untouched": true
+  },
+  "synthetic_fixture_stopped": {
+    "stopped": true,
+    "synthetic_only": true,
+    "real_services_contacted": false,
+    "credentials_read_or_created": false,
+    "authenticated": false,
+    "pending": true,
+    "counts": {
+      "starts": 2,
+      "accepted_starts": 2,
+      "completions": 1,
+      "cancellations": 0,
+      "logouts": 1,
+      "status_gets": 16,
+      "synthetic_login_page_gets": 2,
+      "model_posts": 0,
+      "rejected_writes": 0
+    }
+  },
+  "screenshots": [
+    "assets/account-popover-20261026/actual-17868-user-card.jpg",
+    "assets/account-popover-20261026/synthetic-signed-in-card.jpg"
+  ],
+  "limits": [
+    "Real account was not logged out or reauthenticated; signed-out login and logout used an isolated synthetic service only.",
+    "No real model request, payment, grant or credit deduction was performed.",
+    "Short-height placement was covered by 300/400 unit tests; the attempted browser viewport override did not change that hidden tab, so no short-height browser verification is claimed.",
+    "Visible history list and active-message DOM hashes matched; full browser storage hashing was unavailable.",
+    "Native bundle remains unsigned, non-notarized macOS15+arm64 local preview."
+  ],
+  "fixture_setup_note": "The initial isolated fixture form POST was rejected under no-referrer policy; v2 changed only its Referrer-Policy to same-origin, retained the strict write-Origin guard, then completed the final synthetic flow."
+}

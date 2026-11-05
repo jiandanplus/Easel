@@ -1,0 +1,120 @@
+{
+  "version": "v35",
+  "branch": "codex/ui-redesign",
+  "head": "e972af07444e181e3eb737441ecac306bca778b3",
+  "package": {
+    "passed": true,
+    "checks": {
+      "archive": {
+        "passed": true,
+        "sha256": "984cc3060091a00babcfdd6f90205e5b92ab698a24adf3ae7321797ffec975d9",
+        "bytes": 129751187
+      },
+      "current_authority": {
+        "passed": true,
+        "source_count": 904,
+        "build_inputs": 60
+      },
+      "exact_v34_source_delta": {
+        "passed": true,
+        "changed": [
+          "easel/platform/central.py",
+          "easel/platform/central_web.py",
+          "easel/platform/session.py"
+        ],
+        "unchanged_build_inputs": true
+      },
+      "packaged_public_source": {
+        "passed": true,
+        "count": 804
+      },
+      "complete_resource_inventory": {
+        "passed": true,
+        "rehashed": 15402,
+        "internal_symlinks": 9
+      },
+      "frontend_receipt": {
+        "passed": true,
+        "sources": 100,
+        "outputs": 13
+      },
+      "pi_receipt": {
+        "passed": true,
+        "records": 11931,
+        "same_as_v34": true
+      },
+      "provenance_agrees": {
+        "passed": true
+      },
+      "zip_unique_safe_crc_and_exact_payload": {
+        "passed": true,
+        "entries": 36118,
+        "payload": 15407,
+        "symlinks": 9
+      },
+      "old_v34_archive_preserved": {
+        "passed": true
+      }
+    },
+    "limits": [
+      "Static public artifact verification only; no activation, real auth, provider, billing, signing or clean-machine claim."
+    ]
+  },
+  "protection": {
+    "changes": [
+      "outputs/_harness/central-platform-session.json"
+    ],
+    "history_and_custom_config_preserved": true,
+    "model_posts": 0,
+    "native_v35_instance_verified": true,
+    "new_protected_files": [],
+    "ok": true,
+    "payment_or_wallet_writes": 0,
+    "protected_files": 150,
+    "same_account_scope": true,
+    "same_wallet": true,
+    "same_workbench_source_scope": true,
+    "same_workbench_workspace_scope": true,
+    "wallet_observed": true,
+    "workbench_build_id_changed": false
+  },
+  "final_guard": {
+    "ok": true,
+    "protected_files": 150,
+    "protected_byte_changes": [
+      "outputs/_harness/central-platform-session.json"
+    ],
+    "account_semantics_preserved": true,
+    "identity_listener_and_v35_html_match": true,
+    "source_records_rehashed": 904,
+    "build_inputs_rehashed": 60,
+    "wallet_comparison": "same at completed v35 corrected after guard; not reread by this guard",
+    "no_history_or_config_writes": true,
+    "model_posts": 0,
+    "wallet_writes": 0,
+    "account_body_exported": false
+  },
+  "browser": {
+    "sameOriginalTab": true,
+    "originalConversationRetained": true,
+    "conversationHistoryVisible": true,
+    "actualUnknownCardOpened": true,
+    "explicitReadonlyRetryPerformed": true,
+    "actualRetryCompletedToAuthenticatedUserMenu": true,
+    "cardClosed": true,
+    "composerAndDraftNotEdited": true,
+    "loginLogoutCancelActions": 0,
+    "settingsSaveActions": 0,
+    "modelSendActions": 0,
+    "accountIdOrHistoryBodyExported": false
+  },
+  "closure": {
+    "files": 31,
+    "manifest_sha256": "5811c5e19584dc05fafd2a5d6448f9093a94bec89c0d0b630b0923ae4591e06c",
+    "root_rehashed_exact_file_set": true
+  },
+  "model_posts": 0,
+  "wallet_writes": 0,
+  "signed_or_notarized": false,
+  "whole_goal_complete": false
+}

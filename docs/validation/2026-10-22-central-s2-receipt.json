@@ -1,0 +1,148 @@
+{
+  "date": "2026-10-22T05:59:17.630191+00:00",
+  "branch": "codex/ui-redesign",
+  "head_unchanged": true,
+  "main_unchanged": true,
+  "root_env_unchanged": true,
+  "preexisting_file_count": 154,
+  "modified_preexisting_files": [
+    "docs/platform/README.md",
+    "easel/platform/central.py",
+    "easel/platform/central_web.py",
+    "services/platform/.env.example",
+    "services/platform/README.md",
+    "services/platform/pyproject.toml",
+    "services/platform/src/platform_service/__main__.py",
+    "services/platform/src/platform_service/app.py",
+    "services/platform/src/platform_service/credits.py",
+    "services/platform/src/platform_service/membership.py",
+    "services/platform/src/platform_service/permissions.py",
+    "services/platform/uv.lock",
+    "tests/frontend/centralAccount.test.mjs",
+    "web/frontend/src/components/CentralAccountSettings.tsx",
+    "web/frontend/src/lib/api.ts"
+  ],
+  "missing_preexisting_files": [],
+  "tests": {
+    "central_postgresql": {
+      "passed": 297,
+      "skipped": 0,
+      "seconds": 27.89
+    },
+    "native_central_and_legacy_platform": {
+      "passed": 133,
+      "seconds": 17.57
+    },
+    "custom_media_gateway": {
+      "passed": 206,
+      "seconds": 4.34
+    },
+    "frontend_all": {
+      "passed": 189,
+      "skipped": 0
+    },
+    "frontend_billing_subset": {
+      "passed": 30
+    },
+    "provider_subset": {
+      "passed": 80
+    },
+    "core_independent_subset": {
+      "passed": 47
+    }
+  },
+  "build": {
+    "frontend": true,
+    "lint": true,
+    "ruff_central_full": true,
+    "wheel_includes_migrations": 5,
+    "known_warnings": [
+      "existing linkifyOutputs no-useless-escape",
+      "frontend main chunk exceeds 500kB"
+    ]
+  },
+  "preview": {
+    "easel_url": "http://127.0.0.1:18761/",
+    "logto_console": "http://127.0.0.1:18764/console",
+    "mode": "test",
+    "live_payments_enabled": false,
+    "subscription_execution_enabled": false,
+    "logto_restarted": false,
+    "wallet": {
+      "available": "200000000",
+      "reserved": "0",
+      "spent": "0",
+      "issued": "300000000",
+      "frozen": "0",
+      "refunded": "100000000",
+      "test_available": "200000000",
+      "live_available": "0",
+      "funding_mode": "test"
+    },
+    "order_states": [
+      {
+        "id": "d2eb9e1af9d9431e803524e5de65b1cd",
+        "channel": "wechat",
+        "mode": "test",
+        "status": "pending",
+        "credit_state": "not_granted",
+        "revision": "1"
+      },
+      {
+        "id": "46f291cb7ce9494a91455277dc48a213",
+        "channel": "alipay",
+        "mode": "test",
+        "status": "paid",
+        "credit_state": "granted",
+        "revision": "3"
+      },
+      {
+        "id": "5e863e3d03b240cbbde987ec201d1b1a",
+        "channel": "wechat",
+        "mode": "test",
+        "status": "refunded",
+        "credit_state": "revoked",
+        "revision": "10"
+      }
+    ],
+    "browser_checks": {
+      "themes": [
+        "paper",
+        "forest"
+      ],
+      "narrow_css_width": 390,
+      "document_width": 390,
+      "qr_image_loaded": true,
+      "qr_right_px": 331.240234375,
+      "desktop_metrics_restored": true
+    }
+  },
+  "database": {
+    "original_s1_lot_preserved": {
+      "lots": 1,
+      "issued": "100000000",
+      "available": "100000000",
+      "other": "0"
+    },
+    "lot_conservation_violations": 0,
+    "payment_transactions": 2,
+    "membership_revocations": 1,
+    "runtime_role_safe": true,
+    "migrations": [
+      "001_foundation.sql",
+      "002_credits.sql",
+      "003_identity.sql",
+      "004_integrity.sql",
+      "005_payments.sql"
+    ]
+  },
+  "evidence_limits": [
+    "No real merchant payment/refund",
+    "No production deployment or server load acceptance",
+    "S3 subscription execution remains disabled"
+  ],
+  "independent_final_review": "PASS; no outstanding actionable P1/P2",
+  "nonblocking_followup": [
+    "Unify offer/runtime/provider maximum CNY amount validation before publishing extraordinary high prices"
+  ]
+}

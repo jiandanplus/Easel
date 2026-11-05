@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "phase": "complete",
+  "verified_at_utc": "2026-10-23T18:41:17.371086+00:00",
+  "private_archive_hash_reverified": true,
+  "private_backup_and_operator_modes_verified": true,
+  "source_database_running": true,
+  "old_processes": [
+    {
+      "pid": 78140,
+      "original_start_and_uid_unchanged": true
+    },
+    {
+      "pid": 78159,
+      "original_start_and_uid_unchanged": true
+    },
+    {
+      "pid": 163700,
+      "original_start_and_uid_unchanged": true
+    }
+  ],
+  "old_proxy_files_unchanged": 7,
+  "nginx_config_test_passed": true,
+  "only_new_central_restore_stopped": "easel-central-restore-4feac8d463f2948a07227384b9093081",
+  "restore_container_id": "8902abb8f805e883c9b9c4bf61a6e0bd68c4e068873fe38bf7bba3ca01ef05a8",
+  "restore_container_retained": true,
+  "restore_volume_retained": true,
+  "private_backup_retained": true,
+  "original_service_stop_calls": 0,
+  "delete_calls": 0,
+  "supplier_config_opened": false
+}

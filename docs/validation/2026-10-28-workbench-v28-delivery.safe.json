@@ -1,0 +1,305 @@
+{
+  "status": "v28_active_real_tool_and_billing_verified_followup_model_readiness_fix_in_progress",
+  "package": {
+    "schema_version": 1,
+    "status": "built_and_isolated_verified_waiting_root_activation",
+    "version": "v28",
+    "artifact": {
+      "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v28/Easel/Easel.app",
+      "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v28/Easel-Pi-macOS15-arm64.zip",
+      "sha256": "421dad0981b0d3383915ac8e0f00ac5333aeb92cabb2a532d1a86c53ba31b81a",
+      "archive_bytes": 129745093,
+      "inventory_files": 15402,
+      "schema_version": 1,
+      "engine": "pi",
+      "git_commit": "e972af07444e181e3eb737441ecac306bca778b3",
+      "source_manifest_sha256": "8efca377e36273042096c12c6a249eb1036f0809b61d7f2511e92017b182f7e1",
+      "pi_manifest_sha256": "23bd3438ff8864722f359200a313686d3098f97e200310aa2c41af103f052a06",
+      "frontend_receipt_sha256": "195521fa1fd9964605b402bda87c89c8561dc4d89afa862138aecc93d1ff8531",
+      "python_archive_verified": true,
+      "python_archive_sha256": "55bc1a5edbc8ac4da0081f4f5731ed2d1ed10c57cb37a820b2a0dbc7cad742e9",
+      "python_source_provenance_sha256": "3aab5044d4bdaf99da45fc795045e36b1833565c79ddb019a3578096eda8d8eb",
+      "python_runtime_inventory_sha256": "25b1bb10c833bd8afca6106867d53cefd789ce88ed6de1dca2c0c761038a1ce0",
+      "python_runtime_inventory_verified": true,
+      "copy_strategy": "clonefile",
+      "clonefile_flags": 9,
+      "python_version": "3.12.13",
+      "wheel_count": 26,
+      "minimum_macos": "15.0",
+      "unsigned": true,
+      "notarized": false,
+      "ui": "loopback web browser"
+    },
+    "complete_inventory_sha256": "b2facaf30219b8c62a227aea4f2d7b434bb6cadd60e426d2fefb3375aa901a15",
+    "source_files": 904,
+    "build_input_files": 59,
+    "receipts": {
+      "resume-preflight-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/resume-preflight-safe.json",
+        "sha256": "2a08248134f5d380e1be0f5acac06a15fd7e70d89d54d8f1ffcfaa62af415cb8"
+      },
+      "pi-preparation-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/pi-preparation-safe.json",
+        "sha256": "d3b78370c46c38f967c479dca63cd6acd3e15a3cf3182401ab07f40aee163581"
+      },
+      "freeze-and-dist-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/freeze-and-dist-safe.json",
+        "sha256": "ff0caf2fd1c500483a00b629fe8c9e4949fb05ffe79a22e957eef9e6e681e059"
+      },
+      "frontend-tests-receipt-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/frontend-tests-receipt-safe.json",
+        "sha256": "8409b71ec5ce3452d656c18afd2f92ed91d0e423a67f4aeb19f73bb1045e3ddd"
+      },
+      "inventory-privacy-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/inventory-privacy-safe.json",
+        "sha256": "f434ef7fe9d66a825fba13c5543a094767714f49c1d97c80823819fe6833d74a"
+      },
+      "runtime-comparison-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/runtime-comparison-safe.json",
+        "sha256": "b1ae59d7480191ecca48cf78333547b09f780341e19e40be83ceb8ac46168dbc"
+      },
+      "embedded-python-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/embedded-python-safe.json",
+        "sha256": "90fdd5c200c42a0dc818db3d440df0e8ab5b36c786f49815c2d177fb5620a4a8"
+      },
+      "actual-sdk-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/actual-sdk-safe.json",
+        "sha256": "57f8bc60d9af422378c4b5915ab14e8d310f88555e21f6957d09f454460961f0"
+      },
+      "fresh-install-safe.json": {
+        "path": "/private/tmp/easel-v28-package-20261028/fresh-install-safe.json",
+        "sha256": "403d92e516128e88c7108cc906a8ae5eca9a7ce1aa3c6d99a42df7cb3b0b5acf"
+      }
+    },
+    "copy_strategy": "clonefile",
+    "clonefile_flags": 9,
+    "guard_safety_reserve_bytes": 209715200,
+    "source_and_original_inputs_not_mutated_by_COW": true,
+    "current_free_bytes": 2031173632,
+    "official_archive_verified_for_new_v28_chain_only": true,
+    "historical_v27_archive_verified_false_unchanged": true,
+    "python_base_authority_entries_verified": 1650,
+    "wheels_unchanged": 26,
+    "real_installer_RECORD_metadata_retained": true,
+    "runtime_differences_to_reviewed_smoke": "six removed site-packages/bin entries and six authentic installer RECORD hashes for those removed entries; all runtime code/resources equal",
+    "pi_manifest_entries": 11931,
+    "pi_unchanged_dependency_entries_excluding_worker": 11930,
+    "runtime_tree_files_including_manifest": 11932,
+    "pi_changed_entries_to_v27": [
+      "worker.mjs",
+      "runtime-manifest.json"
+    ],
+    "fresh_frontend_tsc_and_vite_exit": 0,
+    "frontend_tests_trusted_root_run": {
+      "passed": 485,
+      "failed": 0,
+      "skipped": 0,
+      "rerun_by_packager": false
+    },
+    "actual_sdk_strict_mock": {
+      "ok": true,
+      "direct_app_payload": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v28/Easel/Easel.app/Contents/Resources/runtime/pi",
+      "worker_sha256": "7fc068daae8e9cc9dc201252dbb412de9adb935569e0cb20e641ad6e2b193f6d",
+      "actual_pinned_sdk": true,
+      "checks": [
+        {
+          "model_count": 0,
+          "statuses": [
+            200
+          ],
+          "done": true,
+          "host_requests": 0,
+          "nonmock_fetch_requests": 0
+        },
+        {
+          "model_count": 1,
+          "statuses": [
+            200
+          ],
+          "done": true,
+          "host_requests": 0,
+          "nonmock_fetch_requests": 0
+        },
+        {
+          "model_count": 2,
+          "statuses": [
+            200
+          ],
+          "done": true,
+          "host_requests": 0,
+          "nonmock_fetch_requests": 0
+        },
+        {
+          "model_count": 100,
+          "statuses": [
+            200
+          ],
+          "done": true,
+          "host_requests": 0,
+          "nonmock_fetch_requests": 0
+        }
+      ],
+      "scope": "synthetic strict gateway; no real model or host tools"
+    },
+    "isolated_startup_stop": {
+      "ok": true,
+      "new_explicit_workspace": true,
+      "home_unchanged": true,
+      "bundled_pi": true,
+      "host_path": "system_only",
+      "default_subscription": true,
+      "public_login_entry_configured": true,
+      "prior_credentials_required": false,
+      "supplier_key_required": false,
+      "external_model_posts": 0,
+      "auth_posts": 0,
+      "same_machine_test": true,
+      "clean_device_or_gatekeeper_verified": false,
+      "isolated_port": 52825,
+      "owned_instance_stopped": true,
+      "existing_17868_http200_after": true
+    },
+    "auth_posts": 0,
+    "provider_model_posts": 0,
+    "original_17868_activation_performed": false,
+    "original_workspace_or_credentials_read": false,
+    "old_Apps_ZIPs_inputs_removed": false,
+    "original_workspace_helpers_prepared_not_executed": true,
+    "limits": {
+      "unsigned": true,
+      "notarized": false,
+      "Gatekeeper_verified": false,
+      "independent_clean_device_verified": false,
+      "real_provider_verified_by_this_package_task": false,
+      "component_signature_failures": [
+        "python/lib/python3.12/site-packages/charset_normalizer/cd.cpython-312-darwin.so",
+        "python/lib/python3.12/site-packages/charset_normalizer/md.cpython-312-darwin.so"
+      ],
+      "unused_external_rpaths": [
+        {
+          "file": "python/lib/python3.12/site-packages/PIL/.dylibs/libjpeg.62.4.0.dylib",
+          "command": "LC_RPATH",
+          "value": "/Users/runner/work/Pillow/Pillow/build/deps/darwin/lib"
+        }
+      ],
+      "source_provenance_not_reproducible_build_claim": true
+    },
+    "independent_reviews": {
+      "python_report": {
+        "path": "/private/tmp/easel-python-source-independent-20261028/review.md",
+        "sha256": "c041c7e0e68c32b75ceca606db65fe6ce79ed54cf6d849a65a5d006a5cb23847"
+      },
+      "cow_code_report": {
+        "path": "/private/tmp/easel-v28-cow-independent-review-20261028/review.md",
+        "sha256": "93d6366c7bd0697a0b992335a1701841d7f982a750da2086f1143407c716d2a1"
+      }
+    },
+    "historical_disk_blocked_receipt_retained": {
+      "path": "/private/tmp/easel-v28-package-20261028/disk-blocked-safe.json",
+      "sha256": "2bd28c4432116fbf538b9edc7cab24ea8effcc17a5f53d666257a5368eaa093d"
+    }
+  },
+  "upgrade_preservation": {
+    "ok": true,
+    "protected_files": 146,
+    "new_private_runtime_files": [],
+    "history_and_custom_config_preserved": true,
+    "same_account_scope": true,
+    "same_wallet": true,
+    "wallet_observed": true,
+    "changes": [],
+    "model_calls": 0
+  },
+  "live_new_task": {
+    "observed_utc": "2026-10-28T04:09:02.864839+00:00",
+    "ok": true,
+    "session_id": "mvrlf6j53cn0u9",
+    "turn_id": "ba8ce3ee-17d5-4e52-8747-d6d7c7565a02",
+    "status": "done",
+    "clean_end": true,
+    "target_relative": "outputs/acceptance-v28-20261028/tool-check.txt",
+    "file_bytes": 18,
+    "file_sha256": "01d235ab9209d24a3275d508dbe2eee9b7c9f9db6cc0543675ae77f9a994d951",
+    "new_executions": [
+      {
+        "operation_key": "d6befc35-c263-4e39-9874-804295913dc6",
+        "invocation_id": "8ed91834-6a7b-4219-a008-acc49133a9cd",
+        "model": "easel-deepseek-flash-internal-v1",
+        "local_status": "delivered",
+        "lookup_status": "found",
+        "execution": {
+          "id": "6b04aa82-f1ff-40ba-a3ed-2c05872aed4d",
+          "model": "easel-deepseek-flash-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-28T04:08:12.233004+00:00",
+          "updated_at": "2026-10-28T04:08:13.958209+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "1331",
+          "input_tokens": 2545,
+          "output_tokens": 39,
+          "result_state": "available"
+        }
+      },
+      {
+        "operation_key": "6b4240c3-b539-4694-ba9a-b0b5f7d3beca",
+        "invocation_id": "8ed91834-6a7b-4219-a008-acc49133a9cd",
+        "model": "easel-deepseek-flash-internal-v1",
+        "local_status": "delivered",
+        "lookup_status": "found",
+        "execution": {
+          "id": "ee7d09bc-6ad0-45f1-a1fc-adb2d16fce7d",
+          "model": "easel-deepseek-flash-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-28T04:08:08.151928+00:00",
+          "updated_at": "2026-10-28T04:08:11.478809+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "1585",
+          "input_tokens": 2210,
+          "output_tokens": 320,
+          "result_state": "available"
+        }
+      }
+    ],
+    "total_actual_microcredits": "2916",
+    "wallet_after": {
+      "available": "6939509",
+      "reserved": "1009728",
+      "spent": "2050763",
+      "issued": "10000000",
+      "pending_reconciliation": 2,
+      "active_requests": 0,
+      "pending_reconciliation_limit": 3
+    },
+    "wallet_delta_matches_sum_actual": true,
+    "same_scope": true,
+    "old_v27_pending_unchanged": true,
+    "old_hold_released": false
+  },
+  "download": {
+    "ok": true,
+    "http_status": 200,
+    "bytes": 18,
+    "sha256": "01d235ab9209d24a3275d508dbe2eee9b7c9f9db6cc0543675ae77f9a994d951",
+    "content_type": "text/plain; charset=utf-8",
+    "content_disposition": null,
+    "matches_actual_tool_file": true,
+    "model_requests": 0
+  },
+  "followup_ui_issue": {
+    "confirmed": true,
+    "description": "completed turn remount displays previous model label but next nonempty draft stays confirm-model; no extra model request submitted",
+    "source_fix_in_progress": true
+  },
+  "assets": {
+    "recovery-card.png": "efcd0a121006cff37db028c52285e723e69902c39225d25434225276070e0122",
+    "live-tool-settled.png": "027f0e8605bb9c0a7e4ca33291484c74d38927dc06493a808aafe90ecda3f792",
+    "next-draft-model-not-ready.png": "c89ca9d6b4da3a046626b72b48d224782141e71223d0bc8ba01561ba977b7b49"
+  },
+  "new_commits": false,
+  "pushed": false,
+  "merged": false
+}

@@ -1,0 +1,84 @@
+{
+  "authority": "/Users/jiandan/Code/GitCode/Easel/docs/validation/2026-10-29-av-source-tooling.md",
+  "authority_sha256": "4eb12b9c8e0eac548c0cd56cd68ea7175a43f8db97a433d4f0ce56d67bdd315e",
+  "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/central-av-source-tooling-20261029",
+  "manifest": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/central-av-source-tooling-20261029/manifest.safe.json",
+  "manifest_sha256": "d4e766979ebe282c78b8753477d61ae67adc28e0fd099034eb7a499e7c8d8dd4",
+  "copied_files": 76,
+  "copied_bytes": 558383,
+  "root_full": {
+    "passed": 230,
+    "failed": 0,
+    "exit_code": 0,
+    "inputs": 10,
+    "inputs_sha256_unchanged": true,
+    "rerun_by_archive": false
+  },
+  "scope_counts": {
+    "root_six_files": 230,
+    "task1_author": 69,
+    "task2_author": 71,
+    "task3_protocol_http_author": 90,
+    "not_additive": true
+  },
+  "limited_reviews": [
+    {
+      "task": 1,
+      "spec": "PASS",
+      "quality": "PASS",
+      "scope": "Current repair candidate under revised Task1 offline-tool budgets and caller-controlled private destination-parent premise; no real-upstream or integration acceptance",
+      "review": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/central-av-source-tooling-20261029/reviews/easel-av-source-task1-independent-r2-20261029.safe.json",
+      "review_sha256": "1dd808016347208c9ce8eecad7e60f178d56fc6fbc997b98054b4aaae185660c",
+      "source_hashes": "7df12a3a151dfe4ffcb1c8f92748e3bf6df2c6909cdfe8ec0cad1ad97565a243",
+      "test_hash": "d7a484c5575fafeb6d00b6a8b047923cef464798b90f2504ab5f90e1e43fd2ed"
+    },
+    {
+      "task": 2,
+      "spec": "PASS",
+      "quality": "PASS",
+      "scope": "limited follow-up to two R1 P2 findings",
+      "review": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/central-av-source-tooling-20261029/reviews/easel-av-source-task2-independent-r2-20261029.safe.json",
+      "review_sha256": "bef28d7783024ecec5ee05b179c04cdb7c8f6b6f97c88432d830b9ee575fe76c",
+      "source_hashes": "bbcd07d1968fbd41553e35a84e8b60a7f7534b4808b215b8fa84b37bfb76fad2",
+      "test_hash": "5b6a9d1a5ddee0fa5ebc59b8d840cba7c11565cf1b3693fe3864c7fa364ff908"
+    },
+    {
+      "task": 3,
+      "spec": "PASS",
+      "quality": "PASS",
+      "scope": "Original F1/F2/F3 component defects only; not a full Task3 integration or source-adoption gate",
+      "review": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/central-av-source-tooling-20261029/reviews/easel-av-source-task3-independent-r2-20261029.safe.json",
+      "review_sha256": "6b4d84dfe15c1b7646bf13c627150f9a2464e2760c40096b4025b7b3ef756a3a",
+      "source_hashes": {
+        "services/platform/scripts/av_sources/bounded_fetch.py": "14c35324ea569bdeb436b232482998c44f5c859bb4777fb7d5a53ecafa1213e6",
+        "services/platform/tests/test_av_source_http_review_regressions.py": "b312d9e92afb913d0ba2ff053033a5adff87f891073ab9560b7f1ec98191ba10",
+        "services/platform/scripts/av_sources/smart_http.py": "e2b0df06028695822a0ef4ffdaa63b6344335e92ae0e5bc2e07e643975c936c4",
+        "services/platform/tests/test_av_source_smart_http.py": "0178af39ef444433e476319c263b5239f989547fefdea60ae4a84230017decb7",
+        "services/platform/tests/test_av_source_bounded_fetch.py": "18fce9dbcd9969ee4cfe9b8eb066ea2969c37c9a4e1fc1046f1bb981b4981d81",
+        "services/platform/tests/test_av_source_bounded_fetch_extra.py": "2d9f135b1d7ced9d1322de2acc030c408be55bd1c3739d343fed8df0f0b8b44d"
+      },
+      "test_hash": null
+    }
+  ],
+  "history_preserved": {
+    "initial_FAIL": true,
+    "task1_reviewer_final_status": "error",
+    "http_r2_interrupted_then_resumed": true,
+    "old_4MiB_header_budget_failed": true,
+    "revised_tar_container_metadata_budget_bytes": 8388608,
+    "old_results_not_overwritten": true
+  },
+  "github_actually_downloaded": false,
+  "real_ffmpeg_extracted": false,
+  "source_identity_verified": false,
+  "build_inputs_adopted": false,
+  "os_resource_limits_verified": false,
+  "dns_ip_egress_verified": false,
+  "no_UI": true,
+  "no_copied_code_execution": true,
+  "no_test_execution": true,
+  "no_production_change": true,
+  "no_network": true,
+  "no_SSH": true,
+  "all_source_before_copy_after_pin_equal": true
+}

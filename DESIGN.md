@@ -1,8 +1,8 @@
 # Easel appearance
 
-## Current theme: A · 纸感编辑室
+## Day theme: A · 纸感编辑室
 
-Default theme id: `paper`. Approved visual references: `design/UI-v2-20261015/A/01.png` through `22.png`. Implemented shared palette and component treatment live in `web/frontend/src/styles/paper.css`.
+Default appearance mode: follow system. Day uses `paper` (A), night uses `forest` (C). Approved visual references: `design/UI-v2-20261015/A/01.png` through `22.png`. Implemented shared palette and component treatment live in `web/frontend/src/styles/paper.css`.
 
 - Warm paper background `#f8f5ef`, raised surface `#fffdf9`, sidebar `#f4f0e7`.
 - Ink text `#282a25`, muted text `#727369`, fine border `#e6e0d5`.
@@ -28,7 +28,9 @@ Primary action colors for D/E are slightly deeper than the illustration palette 
 
 ## Theme behavior
 
-`web/frontend/src/lib/theme.ts` owns availability, initialization and persistence under `easel_theme`. The bootstrap in `index.html` must agree with its default. A remains the default; old light/dark or unknown preferences migrate to A. Appearance choice is local to the current browser, with guarded storage and cross-tab synchronization. Valid B–E preferences survive reload. Existing tabs running older app code should be refreshed after upgrading.
+`web/frontend/src/lib/theme.ts` owns theme availability and appearance preferences. The authoritative `easel_appearance` value atomically stores `{mode, theme}`. Missing or invalid preferences default to `system`, which observes `prefers-color-scheme: dark` and chooses A/day or C/night in real time. Explicit `light`/`dark` modes keep A/C fixed. Selecting any theme card enters `custom` mode and preserves that exact theme until a display mode is chosen again. Old `easel_theme` values no longer override the new system default; the legacy key is only mirrored for older tabs. Storage failures remain nonfatal and preference changes synchronize across current tabs.
+
+`index.html` resolves the same preference before the stylesheet paints. Only C uses the native dark color scheme. The lower-left runtime area includes a compact current-mode icon/button, which switches to the opposite fixed day/night mode. Settings show three display-mode choices above the five theme cards and explain the current automatic/fixed/custom state. Shared controls and responsive footer styling live in `styles/appearance.css`.
 
 Theme changes update presentation without remounting the underlying business page. Unsent chat drafts survive opening settings and switching themes. Hero artwork and theme previews are local bundled assets; interface text and controls remain real DOM.
 

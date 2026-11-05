@@ -1,0 +1,108 @@
+{
+  "author_final_full_central_not_this_reviewers_run": {
+    "all_212_inputs_sha256": "223a4c82831216673c4096066223ae64d2911e2e0a4dd3b1de7469cb65a0e5f6",
+    "do_not_add_to_independent_counts": true,
+    "elapsed_seconds": 350.69,
+    "failed": 0,
+    "owned_aggregate_sha256": "abb2e0efe34956c834d4a1aa744934114a4c9d6939a73e033a716c2b15411da8",
+    "passed": 1710,
+    "receipt": "/private/tmp/easel-m2-candidate-20261027/p1-p2-fixed-receipt.json",
+    "skipped": 7
+  },
+  "candidate_kind": "source-file manifest aggregate, not a production wheel",
+  "candidate_sha256": "abb2e0efe34956c834d4a1aa744934114a4c9d6939a73e033a716c2b15411da8",
+  "closure_file_count": 26,
+  "fixed_findings": [
+    {
+      "code": "worker_get_without_absolute_deadline",
+      "fix": "Whole-claim absolute asyncio timeout min(worker_wall_seconds,remaining record deadline), bounded leases/heartbeats; expired-only current-token defer to manual. Existing core financial deadline guard unchanged.",
+      "new_independent_status": "passed",
+      "old_candidate": "9798b204883e7a2f1501ba2f95509e8ce4d394635b7bf5bf56a396df01ae02ae",
+      "old_reproduction": "30ms owned claim deadline and 20ms-per-byte synthetic GET; at120ms run_once remains live in gather.",
+      "original_test": "/private/tmp/easel-m2-independent-review-20261027/test_worker_deadline_independent.py",
+      "priority": 1
+    },
+    {
+      "code": "known_running_async_job_loses_execution_concurrency",
+      "fix": "Successful queued/running polls and heartbeat retain dispatched job lease, clamped to deadline; generic recovery respects valid known query with no GET failure; existing pending never promoted to active.",
+      "new_independent_status": "passed",
+      "old_actual_pg_observation": {
+        "active_requests": 0,
+        "concurrency": 1,
+        "execution_state": "unknown",
+        "pending": 1,
+        "second_admit_succeeded": true,
+        "status": "pending_reconciliation",
+        "work_phase": "query"
+      },
+      "old_candidate": "9798b204883e7a2f1501ba2f95509e8ce4d394635b7bf5bf56a396df01ae02ae",
+      "original_test": "/private/tmp/easel-m2-independent-review-20261027/test_job_lease_independent.py",
+      "priority": 1
+    }
+  ],
+  "hashes_pre_post_and_at_report_match": true,
+  "independent_final_tests": {
+    "elapsed_seconds": 88.51,
+    "exit_code": 0,
+    "failed": 0,
+    "modules": 27,
+    "passed": 404,
+    "scope": "all services/platform/tests/test_media_*.py + test_runtime_permissions.py + two original independent adversarial tests",
+    "skip": {
+      "reason": "explicit owned synthetic Docker environment required",
+      "source": "services/platform/tests/test_media_restore_drill.py:247"
+    },
+    "skipped": 1
+  },
+  "independent_pure_before_final": {
+    "elapsed_seconds": 2.34,
+    "overlaps_final_do_not_sum": true,
+    "passed": 46
+  },
+  "input_sha256": {
+    "scripts/validation/verify_central_live_text.py": "08ddc4647242b64bd7a59875f28e7b67e9482872913a355be692fb500c7ab2e3",
+    "services/platform/src/platform_service/app.py": "3b8dde45af17583ef67b8a167d53dfdf75ad6761056225add33ddfc0e5b36991",
+    "services/platform/src/platform_service/media/adapters/newapi_async.py": "0daf56534f7ce4d8519fbcd77c9994153667d4f6445680244d2c8a52cf587380",
+    "services/platform/src/platform_service/media/adapters/newapi_music.py": "20275838f3a1d5de048a63b02be190dc74977e42943ec831cdb1c9ac45c5804e",
+    "services/platform/src/platform_service/media/adapters/newapi_videos.py": "52a60d4522eff0a7726302ed9b37b89fe0ea7942b1901e4d8e6980e112e894f0",
+    "services/platform/src/platform_service/media/artifacts.py": "2e7dfa3e236227b617323ce538ea3444adbd8d7a986e22157aa44eb709cb4ad4",
+    "services/platform/src/platform_service/media/async_contracts.py": "53c45270ac927c7d6bbcf48667b93f6cfb4d2575863230d725865926210cf37f",
+    "services/platform/src/platform_service/media/async_store.py": "a4088e3592bd54bc57b2be1c4765304a258fc481f46604c61a543593d8f5c2ec",
+    "services/platform/src/platform_service/media/av_artifacts.py": "11254764d0b956b7074687ec16fd001e6a62db275ca6e470a9899971adfa002a",
+    "services/platform/src/platform_service/media/contracts.py": "8bb7044d0911f0cb34d4923cbfd35e81084489fbf67575864e0d88a936a5e5d5",
+    "services/platform/src/platform_service/media/core.py": "466619895003be59c9d419700f7520ad132f973c504d3b2515cef13d71965bb3",
+    "services/platform/src/platform_service/media/rates.py": "40b9b54e6aead068bf3f112c2bcdca9f3d161dc6fe8baf169b7c883ac4426d67",
+    "services/platform/src/platform_service/media/storage.py": "e747922e90d0fb08169a693706ac74d78bf6a160b902248aac280ee8c0b783b1",
+    "services/platform/src/platform_service/media/worker.py": "6d87bb454ed70a1270127206074e49598bd363506afbdd01f07d7f90848b9952",
+    "services/platform/src/platform_service/media_config.py": "aa527d402030da4d6312731aaba3c5ef8a3c8b56731752b0951c0569f88fe3b1",
+    "services/platform/src/platform_service/media_runtime.py": "99cd0b5f9bdbd35f0100098f14444cb0e6bdc894d5c08abf6ec9bea652615d62",
+    "services/platform/src/platform_service/migrations/018_media_async_work.sql": "6c7f2ce777064d8a747c6de4fac9b33b0e77792d3a82bbc1a5ab44bf4b1b8496",
+    "services/platform/src/platform_service/permissions.py": "c17a179d8c20321a8d41b749fec78dde6efd519c92448a3adb460c1017c4517c",
+    "services/platform/tests/conftest.py": "bb44b0757f7e3182ba4df979aaec2efa822201e91009ccb04a8ad5b9bfdf4fc7",
+    "services/platform/tests/test_live_validation_runner.py": "05151a78a0291332445d96cf652345c35e7d166e5f9fe606da7a769f0a4a105d",
+    "services/platform/tests/test_media_async_protocol.py": "1e51269f9add5843d3cc65ebbccc8bce369b721a58cf03d76e62e4b00cd8f9fc",
+    "services/platform/tests/test_media_async_runtime.py": "2d09562df819ce8db4ebac87f776c24e1fa020d53519af805263782f531ae012",
+    "services/platform/tests/test_media_async_store.py": "419fc5f6db604148fe97f6aa250a7079e28d74cebb64ef8c7442691e95239c5d",
+    "services/platform/tests/test_media_async_worker.py": "2da65da8e156e3bc98263b2d7e1da939514e6bf082d7df79bac46d29140bbdf1",
+    "services/platform/tests/test_media_av_artifacts.py": "74fa9498368fe9c6e6a01277bce8e9dd669659a228b69aba3ea139902a04ea0d",
+    "services/platform/tests/test_media_storage.py": "94753490d32dd3a336edabc47b20b5b7e9345608dc285f05f357a1dfe45ccc80"
+  },
+  "log_sha256": "bec1fa147bf2007cc52723d33d16bb27c5b565b715bf673365e895dbcff5d677",
+  "old_findings_receipt_sha256": "736251bb44db115920928da1c255753dbd7f84d7e8acb4ab02f5cb4a5b1c51af",
+  "owned_file_count": 14,
+  "production_mutations": 0,
+  "real_supplier_posts": 0,
+  "reviewer_implementation_edits": 0,
+  "running_package_modified": false,
+  "scope_limits": [
+    "No real video/music supplier, live commercial rates, or Linux production AV binaries tested.",
+    "Default missing AV tools, disabled worker, unsupported profiles/meters, and absent music CDN origins/path prefixes remain closed.",
+    "CDN policy currently permits directory prefixes only, not root-flat /track.mp3; real source paths need explicit verification before activation.",
+    "Failure/cancellation without verified supplier cost remains manual/pending with holds; no zero-cost fabrication.",
+    "No new production M2 deployment, desktop activation, or mixed-version restore proof performed."
+  ],
+  "ssh_calls": 0,
+  "status": "limited_m2_independent_review_passed_no_remaining_known_blocker",
+  "ui_copy_independent_review_by_this_reviewer": false,
+  "user_auth_read_or_changed": false
+}
