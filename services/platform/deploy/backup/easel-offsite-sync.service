@@ -1,0 +1,9 @@
+[Unit]
+Description=Easel: copy sealed backups to Cloudflare R2 and alert Feishu
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -B /usr/local/lib/easel-backup/offsite_sync.py --config /etc/easel-backup/backup.env
+Nice=10
