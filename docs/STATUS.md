@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | 桌面工作台（三栏 UI、五套主题、内置 Pi） | 已部署 | 用户本机 `http://127.0.0.1:17868`，v38 |
 | 应用内更新 | 已部署 | 设置 → 版本更新；签名清单 + 哈希 + 库存校验，失败自动回滚；更新源为 GitHub Release `desktop-v38`（最新） |
+| 桌面 v39（路由拆分后首个包） | 隔离验证 | 已构建并签好清单（`~/Easel-build/releases/pi-portable-20261106-v39`、`publish-v39`）；独立实例 11 个接口正常，受管布局 v38→v39 应用内更新 7 秒完成；待发布 Release `desktop-v39` |
 | 中央账号、会员、共享点数钱包、私有 Console | 已部署（据交接手册，未重新巡检） | 生产 154；最后发布 `20261027-images-m1-1-size-v2`，迁移到 016 |
 | 订阅文本模型、两款图片模型 | 已部署（据交接手册） | 有真实调用与扣点记录；新模型需逐个验收 |
 | 自定义接口渠道 | 已部署 | 用户自配供应商，不经中央钱包 |
@@ -38,7 +39,7 @@
 
 - 分支：接手后的全部工作在 `claude/takeover-baseline`（已推送 `jiandanplus/Easel`）。尚未合并到 `codex/ui-redesign` 或 `main`；主目录仍保留前任未提交的同内容工作区。
 - 结构：`web/app.py` 只保留启动、中间件、静态页、状态、画像、技能与对话执行引擎核心（1,913 行）；各领域路由在 `easel/routes/`（[决策 0004](decisions/0004-web-routes-by-domain.md)）。中央服务在 `services/platform/`（独立 uv 项目）。
-- 测试：根目录 2701 passed、前端 597 passed（2026-11-05）；中央服务非 B3 单进程 3237 passed（2026-11-06，真实 PostgreSQL；原先因 B2 耦合在 CI 中排除的 2 个图片测试已修复并恢复），B3 35 个文件逐个进程运行。
+- 测试（2026-11-06 本机）：根目录 2704 passed；前端 597 passed；中央服务非 B3 单进程 3237 passed（真实 PostgreSQL；原先因 B2 耦合在 CI 中排除的 2 个图片测试已修复并恢复），B3 35 个文件逐个进程全部通过。
 - CI：`.github/workflows/ci.yml` 已含中央服务 job，PR [jiandanplus/Easel#1](https://github.com/jiandanplus/Easel/pull/1) 已开（暂不合并）。2026-11-06 首次运行时因 **GitHub 账号账单问题被锁定，任务未启动**，需账号所有者处理后重跑。
 
 ## 4. 待办与卡点

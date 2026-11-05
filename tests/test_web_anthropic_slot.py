@@ -36,6 +36,10 @@ ORIGINAL_ENV = (
 @pytest.fixture()
 def sandbox(tmp_path, monkeypatch):
     """把 .env 与 openclaw.json 都换到沙箱，绝不碰用户真配置。"""
+    # 进程环境里的同名变量（如宿主工具设置的 ANTHROPIC_BASE_URL）会盖过沙箱 .env。
+    for name in ("ANTHROPIC_BASE_URL", "ANTHROPIC_API_KEY", "OPENAI_BASE_URL", "OPENAI_API_KEY",
+                 "EASEL_LLM_BASE_URL", "EASEL_LLM_API_KEY", "EASEL_AGENT_RUNTIME", "EASEL_CHAT_TRANSPORT"):
+        monkeypatch.delenv(name, raising=False)
     env_file = tmp_path / ".env"
     env_file.write_text(ORIGINAL_ENV, encoding="utf-8")
     monkeypatch.setattr(web, "ENV_FILE", env_file)
