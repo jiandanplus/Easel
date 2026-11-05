@@ -49,6 +49,8 @@ def sandbox(tmp_path, monkeypatch):
     env = tmp_path / ".env"
     env.write_text("EASEL_CHAT_TRANSPORT=api\n" + "\n".join(f"{k}={v}" for k, v in SETTINGS.items()))
     monkeypatch.setattr(web, "ENV_FILE", env)
+    # 工作台任务记录要求会话目录位于项目根之内。
+    monkeypatch.setattr(web, "PROJECT_ROOT", tmp_path)
     monkeypatch.setattr(web, "SESSIONS_DIR", tmp_path / "sessions")
     monkeypatch.setattr(web, "OPENCLAW_SESSIONS_DIR", tmp_path / "openclaw-sessions")
     monkeypatch.setattr(web, "OUTPUTS_DIR", tmp_path / "outputs")
@@ -63,7 +65,7 @@ def sandbox(tmp_path, monkeypatch):
         monkeypatch.setattr(web, name, forbidden)
     monkeypatch.setattr(web, "GatewayClient", forbidden)
     local = "http://127.0.0.1:7860"
-    with TestClient(web.app, base_url=local, headers={"Origin": local}) as client:
+    with TestClient(web.app, base_url=local, headers={"Origin": local}, client=("127.0.0.1", 50000)) as client:
         yield client
 
 

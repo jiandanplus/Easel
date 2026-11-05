@@ -4740,7 +4740,7 @@ async def api_chat_stop(req: StopRequest):
         task = _WORKBENCH_TURNS.get((str(SESSIONS_DIR), req.turnId))
         current = {}
         try:
-            current = json.loads(_turn_file(f"web:{sk}").read_text())
+            current = json.loads(_turn_file(f"web:{sk}").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             pass
         if current.get("turn_id") != req.turnId:
