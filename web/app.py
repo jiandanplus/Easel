@@ -52,6 +52,8 @@ from easel.openclaw_cmd import openclaw_base_cmd
 from easel.persona import (load_profile_text, persona_prefix, chat_turn_message,
                            profile_exists, valid_persona_name, _FILE_ORDER)
 from easel.timeouts import TIMEOUT_CHAT, TIMEOUT_DIRECT, TIMEOUT_PRODUCE
+from easel.routes import planning as _planning
+from easel.routes import updates as _updates
 from easel.direct_api import (DirectAPIError, SYSTEM_PROMPT, api_config, api_mode,
                               history_path, read_settings, stream_chat)
 from easel import harnesses
@@ -1992,102 +1994,13 @@ async def api_bundled_provider_save(request: Request):
     return result
 
 
-# ---- 应用内更新（仅 macOS 受管安装布局：<root>/vN + current 链接）----
-_UPDATE: dict = {"state": "idle", "manifest": None, "received": 0, "error": ""}
-
-
 def _busy() -> bool:
     return bool(_RUNNING_CHAT or _BG_TASKS or _DIRECT_CHAT_TASKS or _HARNESS_TASKS or _SYNC_SESSIONS
                 or _PLATFORM_PREFLIGHTS or _platform_router.platform_changes
                 or _central_platform_router.platform_changes)
 
 
-def _update_layout():
-    from easel import updater
-    resource = os.environ.get("EASEL_RESOURCE_ROOT")
-    if os.environ.get("EASEL_PORTABLE") != "1" or not resource:
-        return None
-    return updater.managed_layout(Path(resource))
-
-
-def _update_manifest_url() -> str:
-    from easel import updater
-    return os.environ.get("EASEL_UPDATE_MANIFEST_URL") or updater.DEFAULT_MANIFEST_URL
-
-
-@app.get("/api/update/status")
-async def api_update_status():
-    layout = _update_layout()
-    last = None
-    if layout is not None:
-        try:
-            last = json.loads((layout.root / "update-result.json").read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            pass
-    manifest = _UPDATE["manifest"]
-    return {"managed": layout is not None, "version": layout.version if layout else None,
-            "state": _UPDATE["state"], "error": _UPDATE["error"], "received": _UPDATE["received"],
-            "available": {k: manifest[k] for k in ("version", "notes", "bytes")} if manifest else None,
-            "busy": _busy(), "last": last}
-
-
-@app.post("/api/update/check")
-async def api_update_check():
-    from easel import updater
-    layout = _update_layout()
-    if layout is None:
-        raise HTTPException(409, "当前安装方式不支持应用内更新")
-    if _UPDATE["state"] in ("downloading", "switching"):
-        raise HTTPException(409, "更新正在进行")
-    try:
-        manifest = await asyncio.to_thread(updater.check, layout.resource, _update_manifest_url())
-    except updater.UpdateError as error:
-        _UPDATE.update(state="idle", error=str(error))
-        raise HTTPException(502, str(error)) from None
-    _UPDATE.update(state="available" if manifest else "latest", manifest=manifest, received=0, error="")
-    return await api_update_status()
-
-
-@app.post("/api/update/download")
-async def api_update_download():
-    from easel import updater
-    layout = _update_layout()
-    manifest = _UPDATE["manifest"]
-    if layout is None or manifest is None or _UPDATE["state"] not in ("available", "failed"):
-        raise HTTPException(409, "没有可下载的更新")
-
-    def progress(received):
-        _UPDATE["received"] = received
-
-    async def run():
-        try:
-            await asyncio.to_thread(updater.install, layout, manifest, progress=progress)
-            _UPDATE.update(state="ready", error="")
-        except updater.UpdateError as error:
-            _UPDATE.update(state="failed", error=str(error))
-
-    _UPDATE.update(state="downloading", received=0, error="")
-    task = asyncio.create_task(run())
-    _BG_TASKS.add(task)
-    task.add_done_callback(_BG_TASKS.discard)
-    return await api_update_status()
-
-
-@app.post("/api/update/apply")
-async def api_update_apply():
-    from easel import updater
-    layout = _update_layout()
-    manifest = _UPDATE["manifest"]
-    if layout is None or manifest is None or _UPDATE["state"] != "ready":
-        raise HTTPException(409, "更新尚未下载完成")
-    if _busy():
-        raise HTTPException(409, "请等待当前任务完成或停止后再更新")
-    workspace, port = os.environ.get("EASEL_WORKSPACE_ROOT"), os.environ.get("EASEL_PORT")
-    if not workspace or not port:
-        raise HTTPException(409, "当前安装方式不支持应用内更新")
-    updater.start_switch(layout, manifest["version"], Path(workspace), int(port))
-    _UPDATE.update(state="switching", error="")
-    return {"state": "switching", "version": manifest["version"]}
+app.include_router(_updates.create_router(sys.modules[__name__]))
 
 
 @app.get("/api/settings/harness")
@@ -5933,12 +5846,12 @@ def _run_publish_bg(platform: str, cmd: list, title: str, body: str, cfg: dict,
         pass
     if ok:
         try:
-            items = _read_schedule()
+            items = _planning.read_schedule(OUTPUTS_DIR)
             items.append({'id': uuid.uuid4().hex[:12], 'title': title,
                           'date': time.strftime('%Y-%m-%d'), 'platform': cfg['name'],
                           'time': time.strftime('%H:%M'), 'status': 'published', 'note': body[:200],
                           'kind': 'content', 'source': 'publish-page'})
-            _write_schedule(items)
+            _planning.write_schedule(OUTPUTS_DIR, items)
         except Exception:
             pass
 
@@ -6087,12 +6000,12 @@ async def api_publish(platform: str, req: PublishRequest):
         pass
     if ok:
         try:
-            items = _read_schedule()
+            items = _planning.read_schedule(OUTPUTS_DIR)
             items.append({'id': uuid.uuid4().hex[:12], 'title': title,
                           'date': time.strftime('%Y-%m-%d'), 'platform': cfg['name'],
                           'time': time.strftime('%H:%M'), 'status': 'published',
                           'note': req.body[:200], 'kind': 'content', 'source': 'publish-page'})
-            _write_schedule(items)
+            _planning.write_schedule(OUTPUTS_DIR, items)
         except Exception:
             pass
     return {'ok': ok, 'message': '发布成功' if ok else '发布失败（见 detail）', 'detail': detail}
@@ -6275,304 +6188,7 @@ async def api_delete_session(session_key: str):
     return missing_history("session not found")
 
 
-TREND_SOURCES: dict[str, tuple[str, str | None]] = {
-    "weibo": ("https://v2.xxapi.cn/api/weibohot", "https://60s.viki.moe/v2/weibo"),
-    "douyin": ("https://v2.xxapi.cn/api/douyinhot", "https://60s.viki.moe/v2/douyin"),
-    "zhihu": ("https://api.zhihu.com/topstory/hot-list?limit=50", "https://60s.viki.moe/v2/zhihu"),
-    "bilibili": ("https://v2.xxapi.cn/api/bilibilihot", "https://60s.viki.moe/v2/bili"),
-    "baidu": ("https://v2.xxapi.cn/api/baiduhot", "https://60s.viki.moe/v2/baidu/hot"),
-    "toutiao": ("https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc",
-                "https://60s.viki.moe/v2/toutiao"),
-}
-TREND_LABELS = {
-    "weibo": "微博",
-    "douyin": "抖音",
-    "zhihu": "知乎",
-    "bilibili": "B站",
-    "baidu": "百度",
-    "toutiao": "头条",
-}
-_TREND_CACHE: dict[str, tuple[float, list]] = {}
-_HOT_TITLE_KEYS = ("title", "Title", "word", "name", "keyword")
-_HOT_HOT_KEYS = ("hot", "hot_value", "HotValue", "hotValue", "num", "detail_text")
-_HOT_URL_KEYS = ("url", "Url", "link", "mobil_url")
-
-
-def _http_get_json(url: str, timeout: int = 8):
-    req = urllib.request.Request(url, headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-    })
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8", "replace"))
-
-
-def _pick_str(data: object, keys: tuple[str, ...]) -> str:
-    if not isinstance(data, dict):
-        return ""
-    for key in keys:
-        value = data.get(key)
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
-            return str(value)
-        if isinstance(value, str) and value.strip():
-            return value.strip()
-    return ""
-
-
-def _trend_web_url(url: str) -> str:
-    match = re.fullmatch(r'https?://api\.zhihu\.com/questions/(\d+)', url)
-    return f'https://www.zhihu.com/question/{match.group(1)}' if match else url
-
-
-def _parse_hot(obj: object) -> list[dict]:
-    data = obj.get("data") if isinstance(obj, dict) else None
-    if isinstance(data, dict):
-        data = data.get("data") or data.get("list") or []
-    out: list[dict] = []
-    if not isinstance(data, list):
-        return out
-    for item in data:
-        if isinstance(item, str):
-            if item.strip():
-                out.append({"title": item.strip(), "hot": "", "url": ""})
-            continue
-        if not isinstance(item, dict):
-            continue
-        target = item.get("target") if isinstance(item.get("target"), dict) else {}
-        title = _pick_str(item, _HOT_TITLE_KEYS) or _pick_str(target, _HOT_TITLE_KEYS)
-        if not title:
-            continue
-        hot = _pick_str(item, _HOT_HOT_KEYS) or _pick_str(target.get("metrics_area"), ("text",))
-        url = _pick_str(item, _HOT_URL_KEYS) or _pick_str(target, _HOT_URL_KEYS)
-        out.append({"title": title, "hot": hot, "url": _trend_web_url(url)})
-    return out
-
-
-def _fetch_platform(pf: str) -> list[dict]:
-    primary, backup = TREND_SOURCES.get(pf, (None, None))
-    for url in (primary, backup):
-        if not url:
-            continue
-        try:
-            items = _parse_hot(_http_get_json(url))
-            if items:
-                return items
-        except Exception:
-            continue
-    return []
-
-
-@app.get("/api/trends")
-async def api_trends(platforms: str = "weibo,douyin,zhihu", limit: int = 12):
-    pfs = [p.strip() for p in platforms.split(",") if p.strip() in TREND_SOURCES]
-    now = time.time()
-    loop = asyncio.get_event_loop()
-    result = []
-    for pf in pfs:
-        c = _TREND_CACHE.get(pf)
-        if c and now - c[0] < 300:
-            items = c[1]
-        else:
-            items = await loop.run_in_executor(None, _fetch_platform, pf)
-            if items:
-                _TREND_CACHE[pf] = (now, items)
-            elif c:
-                items = c[1]
-        result.append({
-            "platform": pf,
-            "label": TREND_LABELS.get(pf, pf),
-            "items": items[:max(1, min(limit, 30))],
-            "ok": bool(items),
-        })
-    return {"trends": result, "updated": int(now)}
-
-
-SCHEDULE_FILE = OUTPUTS_DIR / "_schedule.json"
-SCHEDULE_STATUSES = {"idea", "draft", "scheduled", "published"}
-SCHEDULE_KINDS = {"content", "event"}
-
-
-def _read_schedule() -> list[dict]:
-    if not SCHEDULE_FILE.is_file():
-        return []
-    try:
-        d = json.loads(SCHEDULE_FILE.read_text(encoding="utf-8"))
-        return d if isinstance(d, list) else []
-    except Exception:
-        return []
-
-
-def _write_schedule(items: list[dict]) -> None:
-    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-    tmp = SCHEDULE_FILE.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
-    tmp.replace(SCHEDULE_FILE)
-
-
-class ScheduleItem(BaseModel):
-    title: str
-    date: str
-    platform: str = ""
-    time: str = ""
-    status: str = "idea"
-    note: str = ""
-    kind: str = "content"          # content（内容/发布）| event（平台活动/节日/特殊日期）
-    url: str = ""                  # 已发布内容链接（可选）
-    source: str = "manual"         # manual | publish-page | chat | scheduler
-    event_type: str = ""           # event 专属：节日/电商/平台活动/行业
-    end_date: str = ""             # event 专属：活动区间结束日
-
-
-@app.get("/api/schedule")
-async def api_schedule_list():
-    return _read_schedule()
-
-
-@app.post("/api/schedule")
-async def api_schedule_create(req: ScheduleItem):
-    items = _read_schedule()
-    kind = req.kind if req.kind in SCHEDULE_KINDS else "content"
-    st = req.status if req.status in SCHEDULE_STATUSES else "idea"
-    item = {
-        "id": uuid.uuid4().hex[:12],
-        "title": req.title.strip() or ("未命名活动" if kind == "event" else "未命名"),
-        "date": req.date,
-        "platform": req.platform,
-        "time": req.time,
-        "status": st,
-        "note": req.note,
-        "kind": kind,
-        "url": req.url,
-        "source": req.source if req.source in {"manual", "publish-page", "chat", "scheduler"} else "manual",
-        "event_type": req.event_type,
-        "end_date": req.end_date,
-    }
-    items.append(item)
-    _write_schedule(items)
-    return item
-
-
-@app.put("/api/schedule/{sid}")
-async def api_schedule_update(sid: str, req: ScheduleItem):
-    items = _read_schedule()
-    for it in items:
-        if it.get("id") == sid:
-            kind = req.kind if req.kind in SCHEDULE_KINDS else it.get("kind", "content")
-            it.update({
-                "title": req.title.strip() or it.get("title", "未命名"),
-                "date": req.date,
-                "platform": req.platform,
-                "time": req.time,
-                "status": req.status if req.status in SCHEDULE_STATUSES else it.get("status", "idea"),
-                "note": req.note,
-                "kind": kind,
-                "url": req.url,
-                "event_type": req.event_type,
-                "end_date": req.end_date,
-            })
-            _write_schedule(items)
-            return it
-    raise HTTPException(404, "排期不存在")
-
-
-@app.delete("/api/schedule/{sid}")
-async def api_schedule_delete(sid: str):
-    items = _read_schedule()
-    new = [it for it in items if it.get("id") != sid]
-    if len(new) == len(items):
-        raise HTTPException(404, "排期不存在")
-    _write_schedule(new)
-    return {"ok": True, "deleted": sid}
-
-
-@app.get("/api/schedule/context")
-async def api_schedule_context(days: int = 14):
-    """规划摘要（发布节奏/断更缺口 + 待发排期 + 临近节点 + 建议）——薄封装 calendar_ops，
-    前端页头「近期节点/建议」与 Agent 读回共用同一逻辑。失败返回空摘要不抛错。"""
-    cmd = [sys.executable, str(SHARED_SCRIPTS / "calendar_ops.py"),
-           "--data", str(SCHEDULE_FILE), "context", "--days", str(max(1, min(days, 90)))]
-    try:
-        proc = subprocess.run(cmd, cwd=str(PROJECT_ROOT), env=_proxy_env(),
-                              capture_output=True, text=True, timeout=20)
-        return json.loads(proc.stdout) if proc.returncode == 0 and proc.stdout.strip() else {}
-    except Exception:
-        return {}
-
-
-IDEAS_FILE = OUTPUTS_DIR / "_ideas.json"
-IDEA_STATUSES = {"pending", "doing", "done"}
-
-
-def _read_ideas() -> list[dict]:
-    if not IDEAS_FILE.is_file():
-        return []
-    try:
-        d = json.loads(IDEAS_FILE.read_text(encoding="utf-8"))
-        return d if isinstance(d, list) else []
-    except Exception:
-        return []
-
-
-def _write_ideas(items: list[dict]) -> None:
-    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-    tmp = IDEAS_FILE.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
-    tmp.replace(IDEAS_FILE)
-
-
-class IdeaItem(BaseModel):
-    title: str
-    note: str = ""
-    source: str = ""
-    status: str = "pending"
-
-
-@app.get("/api/ideas")
-async def api_ideas_list():
-    return _read_ideas()
-
-
-@app.post("/api/ideas")
-async def api_ideas_create(req: IdeaItem):
-    items = _read_ideas()
-    st = req.status if req.status in IDEA_STATUSES else "pending"
-    item = {
-        "id": uuid.uuid4().hex[:12],
-        "title": req.title.strip() or "未命名选题",
-        "note": req.note,
-        "source": req.source,
-        "status": st,
-        "created": int(time.time()),
-    }
-    items.insert(0, item)
-    _write_ideas(items)
-    return item
-
-
-@app.put("/api/ideas/{iid}")
-async def api_ideas_update(iid: str, req: IdeaItem):
-    items = _read_ideas()
-    for it in items:
-        if it.get("id") == iid:
-            it.update({
-                "title": req.title.strip() or it.get("title", "未命名选题"),
-                "note": req.note,
-                "source": req.source,
-                "status": req.status if req.status in IDEA_STATUSES else it.get("status", "pending"),
-            })
-            _write_ideas(items)
-            return it
-    raise HTTPException(404, "选题不存在")
-
-
-@app.delete("/api/ideas/{iid}")
-async def api_ideas_delete(iid: str):
-    items = _read_ideas()
-    new = [it for it in items if it.get("id") != iid]
-    if len(new) == len(items):
-        raise HTTPException(404, "选题不存在")
-    _write_ideas(new)
-    return {"ok": True, "deleted": iid}
+app.include_router(_planning.create_router(sys.modules[__name__]))
 
 
 # Focused private account bridge. Dynamic roots preserve workspace/test isolation.

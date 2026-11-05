@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "web"))
 import app as web
 from easel import updater
+from easel.routes import updates
 
 LOCAL = "http://127.0.0.1:7860"
 MANIFEST = {"format": updater.FORMAT, "version": 38, "url": "https://example.invalid/v38.zip",
@@ -23,7 +24,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("EASEL_WORKSPACE_ROOT", str(tmp_path / "workspace"))
     monkeypatch.setenv("EASEL_PORT", "17868")
     monkeypatch.setattr(updater, "managed_layout", lambda resource: layout)
-    monkeypatch.setattr(web, "_UPDATE", {"state": "idle", "manifest": None, "received": 0, "error": ""})
+    monkeypatch.setattr(updates, "_UPDATE", {"state": "idle", "manifest": None, "received": 0, "error": ""})
     monkeypatch.setattr(web, "_RUNNING_CHAT", {})
     with TestClient(web.app, base_url=LOCAL, headers={"Origin": LOCAL}, client=("127.0.0.1", 50000)) as c:
         c.layout = layout
@@ -77,7 +78,7 @@ def test_check_surfaces_signature_failure(client, monkeypatch):
 
 
 def test_apply_refused_while_a_task_runs(client, monkeypatch):
-    web._UPDATE.update(state="ready", manifest=MANIFEST)
+    updates._UPDATE.update(state="ready", manifest=MANIFEST)
     monkeypatch.setattr(web, "_RUNNING_CHAT", {"web:s": object()})
     monkeypatch.setattr(updater, "start_switch", lambda *a: pytest.fail("must not switch while busy"))
     response = client.post("/api/update/apply")
@@ -85,6 +86,6 @@ def test_apply_refused_while_a_task_runs(client, monkeypatch):
 
 
 def test_apply_requires_downloaded_update(client, monkeypatch):
-    web._UPDATE.update(state="available", manifest=MANIFEST)
+    updates._UPDATE.update(state="available", manifest=MANIFEST)
     monkeypatch.setattr(updater, "start_switch", lambda *a: pytest.fail("not downloaded yet"))
     assert client.post("/api/update/apply").status_code == 409
