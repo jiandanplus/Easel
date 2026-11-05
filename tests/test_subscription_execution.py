@@ -2,6 +2,7 @@ import pytest
 from easel.harnesses.base import HarnessError
 from easel.service_contracts import task_context
 from easel.routes import settings as settings_routes
+from easel.routes import chat as chat_routes  # noqa: E402
 
 
 def test_subscription_rejects_other_runtime_before_dispatch(tmp_path):
@@ -190,12 +191,12 @@ async def test_web_actual_preflight_rejects_before_attachments(tmp_path, monkeyp
     )
     monkeypatch.setattr(web, "read_settings", lambda *a: {})
     monkeypatch.setattr(
-        web,
+        chat_routes,
         "_chat_message",
         lambda *a: pytest.fail("read attachment/profile before auth"),
     )
     with pytest.raises(HTTPException):
-        await web.api_chat(web.ChatRequest(message="synthetic"))
+        await chat_routes.api_chat(web.ChatRequest(message="synthetic"))
 
 
 @pytest.mark.asyncio

@@ -8,6 +8,7 @@ import web.app as web
 from easel.service_contracts import TaskContext
 from easel.harnesses import store
 from tests.test_agent_harnesses import sandbox  # noqa: F401
+from easel.routes import chat as chat_routes  # noqa: E402
 
 
 CENTRAL = {"service_source": "subscription", "subscription_backend": "central"}
@@ -46,7 +47,7 @@ def test_uncertain_central_turn_rejected_before_authorize_or_launch(sandbox, mon
     assert "中断请求状态" in response.json()["detail"] and "新建对话" in response.json()["detail"]
     assert not accepted and not launched
     assert web._turn_file("web:owned").read_bytes() == original
-    assert not web._job_event_file("new").exists()
+    assert not chat_routes._job_event_file("new").exists()
 
 
 @pytest.mark.parametrize("path", ["/api/chat/stream", "/api/chat"])

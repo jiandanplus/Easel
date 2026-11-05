@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 from web import app as web
 from easel.service_contracts import TaskContext
+from easel.routes import chat as chat_routes  # noqa: E402
 
 @pytest.fixture
 def isolated(tmp_path, monkeypatch):
@@ -34,7 +35,7 @@ def test_real_executor_failure_is_structured_and_callback_false(isolated, monkey
     callback = Mock()
     async def exercise():
         result = await web._submit_sync_task("test", 1, TaskContext(runtime="openclaw"), session_id="failed", on_complete=callback)
-        last = await web.api_chat_last("failed")
+        last = await chat_routes.api_chat_last("failed")
         assert last["clean_end"] is False
         assert last["stop_reason"] == reason
         assert isinstance(result, str)
@@ -62,16 +63,16 @@ def test_sync_ownership_survives_request_cancel_and_rejects_duplicate(isolated, 
         async def request(): return await asyncio.shield(task)
         waiter = asyncio.create_task(request())
         try:
-            with pytest.raises(web.HTTPException): await web.api_delete_session("owned")
+            with pytest.raises(web.HTTPException): await chat_routes.api_delete_session("owned")
             with pytest.raises(web.HTTPException): web._submit_sync_task("duplicate", 1, context, session_id="owned")
             assert await asyncio.to_thread(started.wait, 1)
             waiter.cancel()
             with pytest.raises(asyncio.CancelledError): await waiter
-            with pytest.raises(web.HTTPException): await web.api_delete_session("owned")
-            assert (await web.api_chat_stop(web.StopRequest(sessionId="owned")))["stopped"] is False
+            with pytest.raises(web.HTTPException): await chat_routes.api_delete_session("owned")
+            assert (await chat_routes.api_chat_stop(chat_routes.StopRequest(sessionId="owned")))["stopped"] is False
         finally: finish.set()
         await task
-        assert (await web.api_delete_session("owned"))["deleted"]
+        assert (await chat_routes.api_delete_session("owned"))["deleted"]
         await asyncio.sleep(0)
         assert not web._turn_file("web:owned").exists()
     asyncio.run(exercise())
@@ -127,7 +128,7 @@ def test_native_sync_outcome_preserves_inner_completion(isolated, monkeypatch, m
             with pytest.raises(web.HTTPException): await task
         else:
             assert await task == "partial"
-        last = await web.api_chat_last("native")
+        last = await chat_routes.api_chat_last("native")
         assert last["stop_reason"] == reason
         assert last["clean_end"] is clean
         assert callback.call_args.args[0] is clean

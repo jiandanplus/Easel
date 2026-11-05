@@ -9,6 +9,7 @@ from easel.routes import outputs as output_routes  # noqa: E402
 from easel.harnesses import codex
 from easel.platform.session import SessionStore
 from tests import test_agent_harnesses as harness_tests
+from easel.routes import chat as chat_routes  # noqa: E402
 
 # Reuse the actual Web fixture; it redirects every mutable path to tmp_path.
 sandbox = harness_tests.sandbox
@@ -451,9 +452,9 @@ async def test_cancel_during_scan_closes_worker_snapshot(tmp_path, monkeypatch, 
     )
     assert await asyncio.to_thread(entered.wait, 2)
     # The scanner remains blocked while actual stop/status handlers can progress.
-    stopped = await asyncio.wait_for(web.api_chat_stop(web.StopRequest(sessionId="scan-status")), 0.5)
+    stopped = await asyncio.wait_for(chat_routes.api_chat_stop(chat_routes.StopRequest(sessionId="scan-status")), 0.5)
     assert stopped is not None
-    last = await asyncio.wait_for(web.api_chat_last("scan-status"), 0.5)
+    last = await asyncio.wait_for(chat_routes.api_chat_last("scan-status"), 0.5)
     assert last["status"] == "none"
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
@@ -604,11 +605,11 @@ def test_private_snapshot_spool_cannot_use_public_output_temp_directory(
 def openclaw_web(sandbox, monkeypatch):
     from easel.harnesses import store
     store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {"runtime": "openclaw"})
-    monkeypatch.setattr(web, "DEBUG_DIR", web.OUTPUTS_DIR / "_debug")
-    monkeypatch.setattr(web, "SHARED_RAW_STREAM", web.PROJECT_ROOT / "raw.jsonl")
+    monkeypatch.setattr(chat_routes, "DEBUG_DIR", web.OUTPUTS_DIR / "_debug")
+    monkeypatch.setattr(chat_routes, "SHARED_RAW_STREAM", web.PROJECT_ROOT / "raw.jsonl")
     monkeypatch.setattr(web, "_heal_openclaw_session", lambda *a: None)
     monkeypatch.setattr(web, "openclaw_base_cmd", lambda: ["synthetic-openclaw"])
-    monkeypatch.setattr(web, "_resolve_transport", lambda *a: "cli")
+    monkeypatch.setattr(chat_routes, "_resolve_transport", lambda *a: "cli")
     monkeypatch.setattr(web, "GatewayClient", None)
     return sandbox
 
@@ -637,7 +638,7 @@ def test_openclaw_actual_web_split_stream_and_recovery(openclaw_web, monkeypatch
                 web._STOPPED_CHAT.add("oc-private")
                 raw.append({"runId": "test-run", "event": "assistant_text_stream",
                             "evtType": "text_delta", "delta": secret[:12]})
-            web.SHARED_RAW_STREAM.write_text("".join(json.dumps(v) + "\n" for v in raw))
+            chat_routes.SHARED_RAW_STREAM.write_text("".join(json.dumps(v) + "\n" for v in raw))
             self.stdout = io.StringIO("diagnostic " + secret + "\n")
         def poll(self):
             return 1 if ending == "error" else 0
@@ -648,7 +649,7 @@ def test_openclaw_actual_web_split_stream_and_recovery(openclaw_web, monkeypatch
     assert response.status_code == 200
     public = response.text + openclaw_web.get("/api/chat/last/oc-private").text
     public += openclaw_web.get("/api/chat/jobs/oc-job/stream").text
-    stored = "".join(p.read_text() for root in (web.SESSIONS_DIR, web.DEBUG_DIR)
+    stored = "".join(p.read_text() for root in (web.SESSIONS_DIR, chat_routes.DEBUG_DIR)
                      for p in root.rglob("*") if p.is_file())
     for value in (secret, state["auth"]["access_token"]):
         assert value not in public and value not in stored
@@ -707,7 +708,7 @@ async def test_openclaw_cancel_flushes_pending_before_recovery(openclaw_web, mon
         stdout = io.StringIO("")
         stopped = False
         def __init__(self):
-            web.SHARED_RAW_STREAM.write_text(json.dumps({
+            chat_routes.SHARED_RAW_STREAM.write_text(json.dumps({
                 "runId": "cancel-run", "event": "assistant_text_stream",
                 "evtType": "text_delta", "delta": "safe cancellation " + secret[:12]}) + "\n")
         def poll(self):
@@ -717,7 +718,7 @@ async def test_openclaw_cancel_flushes_pending_before_recovery(openclaw_web, mon
         def wait(self, **kwargs):
             self.stopped = True
     monkeypatch.setattr(web.subprocess, "Popen", lambda *a, **k: Process())
-    response = await web.api_chat_stream(web.ChatRequest(message="hello", sessionId="cancel", turnId="cancel-job"))
+    response = await chat_routes.api_chat_stream(web.ChatRequest(message="hello", sessionId="cancel", turnId="cancel-job"))
     events = []
     async for event in response.body_iterator:
         events.append(event)
@@ -725,7 +726,7 @@ async def test_openclaw_cancel_flushes_pending_before_recovery(openclaw_web, mon
             tasks = list(web._BG_TASKS)
             assert tasks
             tasks[0].cancel()
-    last = await web.api_chat_last("cancel")
+    last = await chat_routes.api_chat_last("cancel")
     public = json.dumps(events, ensure_ascii=False) + json.dumps(last, ensure_ascii=False)
     assert secret[:12] not in public and "[已隐藏]" in public
     assert last["text"] == "safe cancellation [已隐藏]"
@@ -747,7 +748,7 @@ def test_openclaw_http_stream_uses_same_private_sink(openclaw_web, monkeypatch, 
             for value in ("safe " + secret[:10], secret[10:] + " suffix"):
                 lines.append("data: " + json.dumps({"choices": [{"delta": {field: value}}]}) + "\n\n")
         return httpx.Response(200, text="".join(lines) + "data: [DONE]\n\n")
-    monkeypatch.setattr(web, "_resolve_transport", lambda *a: "http")
+    monkeypatch.setattr(chat_routes, "_resolve_transport", lambda *a: "http")
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kwargs: original(
         transport=httpx.MockTransport(provider), **kwargs))
     response = openclaw_web.post("/api/chat/stream", json={

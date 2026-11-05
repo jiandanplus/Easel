@@ -6,6 +6,7 @@ import pytest
 
 import web.app as web
 from tests.test_agent_harnesses import sandbox  # noqa: F401
+from easel.routes import chat as chat_routes  # noqa: E402
 
 
 def test_status_has_versioned_stable_contract_without_paths_or_keys(sandbox, monkeypatch):
@@ -96,7 +97,7 @@ def test_output_reference_is_explicit_signed_and_cannot_cross_source(sandbox, mo
     assert ref["name"] == "copy.md" and ref["size"] == 13
     restored = sandbox.post("/api/workbench/attachments/validate", json={"session_id": "new-session", "attachments": [ref]})
     assert restored.json()["attachments"][0]["state"] == "available"
-    context = web._attachment_context(web.ChatRequest(sessionId="new-session", message="revise", attachments=[ref]))
+    context = chat_routes._attachment_context(web.ChatRequest(sessionId="new-session", message="revise", attachments=[ref]))
     assert "outputs/project/copy.md" in context
     contract = web._workbench_contract
     monkeypatch.setattr(web, "_workbench_contract", lambda *args: {**contract(), "source_scope": "b" * 64})

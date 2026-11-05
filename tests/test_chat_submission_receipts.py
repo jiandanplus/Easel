@@ -8,6 +8,7 @@ import web.app as web
 from easel.service_contracts import TaskContext
 from tests.test_agent_harnesses import sandbox  # noqa: F401
 from tests.test_conversation_recovery_bridge import events
+from easel.routes import chat as chat_routes  # noqa: E402
 
 
 def fake(monkeypatch):
@@ -18,7 +19,7 @@ def fake(monkeypatch):
         async def run(self, request, emit, ask, bind):
             record = web._workbench_state().receipt(request.turn_id)
             assert record["session_id"] == request.session_key
-            assert web._read_job_events(request.turn_id)[0]["event"] == "accepted"
+            assert chat_routes._read_job_events(request.turn_id)[0]["event"] == "accepted"
             calls.append(request)
             emit("token", "complete fixture")
     monkeypatch.setattr(web, "_accept_task_context", accept)
@@ -103,21 +104,21 @@ def test_stop_does_not_claim_confirmation_while_supervisor_is_still_live(sandbox
     import itertools
     times = itertools.count(0, 10)
     monkeypatch.setattr(web.time, "monotonic", lambda: next(times))
-    result = asyncio.run(web.api_chat_stop(web.StopRequest(sessionId="owned", turnId="turn1")))
+    result = asyncio.run(chat_routes.api_chat_stop(chat_routes.StopRequest(sessionId="owned", turnId="turn1")))
     assert result["stopped"] is False and result["state"] == "stopping"
 
 
 @pytest.mark.asyncio
 async def test_stop_before_supervisor_start_confirms_exact_queued_turn_and_closes_stream(sandbox, monkeypatch):
     calls = fake(monkeypatch)
-    response = await web.api_chat_stream(web.ChatRequest(sessionId="queued", turnId="queued-turn", message="fixture"))
-    result = await web.api_chat_stop(web.StopRequest(sessionId="queued", turnId="queued-turn"))
+    response = await chat_routes.api_chat_stream(web.ChatRequest(sessionId="queued", turnId="queued-turn", message="fixture"))
+    result = await chat_routes.api_chat_stop(chat_routes.StopRequest(sessionId="queued", turnId="queued-turn"))
     assert result["stopped"] is True and result["state"] == "stopped"
     async def collect():
         return [item async for item in response.body_iterator]
     captured = await asyncio.wait_for(collect(), 0.5)
     assert any(item["event"] == "accepted" for item in captured) and not calls
-    exact = await web.api_chat_turn("queued", "queued-turn")
+    exact = await chat_routes.api_chat_turn("queued", "queued-turn")
     assert json.loads(exact.body)["state"] == "stopped"
 
 
@@ -130,7 +131,7 @@ async def test_two_simultaneous_posts_with_same_id_only_dispatch_once(sandbox, m
         return await original_accept(*args)
     monkeypatch.setattr(web, "_accept_task_context", accept)
     request = web.ChatRequest(sessionId="owned", turnId="raced", message="fixture")
-    first, second = await asyncio.gather(web.api_chat_stream(request), web.api_chat_stream(request))
+    first, second = await asyncio.gather(chat_routes.api_chat_stream(request), chat_routes.api_chat_stream(request))
     async def consume(response):
         return [item async for item in response.body_iterator]
     await asyncio.wait_for(asyncio.gather(consume(first), consume(second)), 1)
@@ -155,15 +156,15 @@ def test_query_does_not_find_foreign_session_or_private_scope(sandbox, monkeypat
 
 
 def test_event_replay_rejects_nonregular_and_oversized_logs(sandbox, tmp_path):
-    oversized = web._job_event_file("oversized")
+    oversized = chat_routes._job_event_file("oversized")
     oversized.parent.mkdir(parents=True)
     with oversized.open("wb") as stream:
         stream.truncate(16 * 1024 * 1024 + 1)
-    assert web._read_job_events("oversized") == []
+    assert chat_routes._read_job_events("oversized") == []
     outside = tmp_path / "outside.jsonl"
     outside.write_text(json.dumps({"id": 1, "event": "token", "data": "private"}) + "\n")
-    web._job_event_file("alias").symlink_to(outside)
-    assert web._read_job_events("alias") == []
+    chat_routes._job_event_file("alias").symlink_to(outside)
+    assert chat_routes._read_job_events("alias") == []
 
 
 @pytest.mark.parametrize("outcome,expected", [("success", "completed"), ("error", "failed"), ("stop", "stopped")])
@@ -211,7 +212,7 @@ def test_preacceptance_rejection_is_exact_and_creates_no_task_record(sandbox, mo
     assert rejection == {"version": 1, "session_id": "owned", "turn_id": "turn1", "request_hash": expected, "not_dispatched": True}
     decision = web._workbench_state().receipt("turn1")
     assert decision["decision"] == "rejected"
-    assert not web._job_event_file("turn1").exists()
+    assert not chat_routes._job_event_file("turn1").exists()
     assert not web._turn_file("web:owned").exists()
 
 
@@ -254,13 +255,13 @@ async def test_rejection_wins_during_preflight_and_fences_the_racing_accept(sand
         return await original(*args)
     monkeypatch.setattr(web, "_accept_task_context", accept)
     request = web.ChatRequest(sessionId="owned", turnId="raced", message="fixture")
-    task = asyncio.create_task(web.api_chat_stream(request))
+    task = asyncio.create_task(chat_routes.api_chat_stream(request))
     await entered.wait()
     proof = web._workbench_state().reject("owned", "raced", web._workbench_contract()["source_scope"], web._workbench_digest(request.model_dump()))
     proceed.set()
     response = await task
     assert response.status_code == 409 and json.loads(response.body)["rejection"] == proof
-    assert not calls and not web._job_event_file("raced").exists()
+    assert not calls and not chat_routes._job_event_file("raced").exists()
 
 
 def test_atomic_accept_and_reject_share_one_immutable_decision(tmp_path):
@@ -315,7 +316,7 @@ def test_withdraw_requires_same_origin_and_cannot_hide_old_unversioned_log(sandb
     endpoint = "/api/chat/turns/owned/turn1/withdraw"
     wrong_origin = sandbox.post(endpoint, json={"request_hash": "a" * 64}, headers={"Origin": "http://localhost:7860"})
     assert wrong_origin.status_code == 403
-    event = web._job_event_file("turn1")
+    event = chat_routes._job_event_file("turn1")
     event.parent.mkdir(parents=True, exist_ok=True)
     event.write_text(json.dumps({"id": 1, "event": "token", "data": "old"}) + "\n")
     assert sandbox.post(endpoint, json={"request_hash": "a" * 64}).status_code == 409
@@ -333,7 +334,7 @@ async def test_http_withdraw_racing_preflight_prevents_dispatch(sandbox, monkeyp
         return await original(*args)
     monkeypatch.setattr(web, "_accept_task_context", accept)
     request = web.ChatRequest(sessionId="owned", turnId="withdraw-race", message="fixture")
-    task = asyncio.create_task(web.api_chat_stream(request))
+    task = asyncio.create_task(chat_routes.api_chat_stream(request))
     await entered.wait()
     body_hash = web._workbench_digest(request.model_dump())
     response = sandbox.post("/api/chat/turns/owned/withdraw-race/withdraw", json={"request_hash": body_hash})

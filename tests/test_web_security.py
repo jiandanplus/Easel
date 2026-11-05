@@ -24,6 +24,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "skills" / "shared" / "scripts"))
 from easel.routes import settings as settings_routes  # noqa: E402
 import app as web  # noqa: E402
 import install_tool  # noqa: E402
+from easel.routes import chat as chat_routes  # noqa: E402
 
 ORIGINAL_ENV = (
     "OPENAI_BASE_URL=https://api.openai.com/v1\n"
@@ -305,7 +306,7 @@ def test_http_path_falls_back_without_httpx(monkeypatch):
         return real_import(name, *a, **k)
 
     monkeypatch.setattr(builtins, "__import__", _no_httpx)
-    assert web._gateway_http_ready(force=True) is False
+    assert chat_routes._gateway_http_ready(force=True) is False
 
 
 def test_ready_probe_hits_chat_completions_not_models():
@@ -317,7 +318,7 @@ def test_ready_probe_hits_chat_completions_not_models():
     所以 URL 一律走 easel/gateway_endpoint 解析。"""
     import inspect
     # 去掉 docstring 再比 —— 注释里本来就要写清为什么不能探 /v1/models
-    body = inspect.getsource(web._gateway_http_ready).split('"""')[-1]
+    body = inspect.getsource(chat_routes._gateway_http_ready).split('"""')[-1]
     assert "chat_completions_url()" in body
     assert "127.0.0.1" not in body
     assert "/v1/models" not in body
@@ -333,7 +334,7 @@ def test_ready_probe_reads_status_code(monkeypatch, code, expected):
         raise web.urllib.error.HTTPError("u", code, "x", None, None)
 
     monkeypatch.setattr(web.urllib.request, "urlopen", _raise)
-    assert web._gateway_http_ready(force=True) is expected
+    assert chat_routes._gateway_http_ready(force=True) is expected
 
 
 @pytest.fixture()
@@ -343,7 +344,7 @@ def _tp(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "OPENCLAW_SESSIONS_DIR", tmp_path / "oc")
     (tmp_path / "oc").mkdir()
     monkeypatch.setattr(web, "CHAT_TRANSPORT", "http")
-    monkeypatch.setattr(web, "_gateway_http_ready", lambda *a, **k: True)
+    monkeypatch.setattr(chat_routes, "_gateway_http_ready", lambda *a, **k: True)
     return tmp_path
 
 
@@ -356,42 +357,42 @@ def test_existing_cli_session_never_switches_to_http(_tp):
     """
     sk = "web-existing"
     (_tp / "oc" / f"{web._openclaw_session_id(sk)}.jsonl").write_text("{}", encoding="utf-8")
-    assert web._resolve_transport(sk) == "cli"
+    assert chat_routes._resolve_transport(sk) == "cli"
 
 
 def test_pinned_http_session_stays_http(_tp, monkeypatch):
     """钉过 http 的会话即使探针此刻说不可用也不能改判 cli —— 网关那份 transcript 我们按
     名字找不回来，改判就是静默丢历史。"""
     sk = "web-pinned"
-    web._pin_transport(sk, "http")
-    monkeypatch.setattr(web, "_gateway_http_ready", lambda *a, **k: False)
-    assert web._resolve_transport(sk) == "http"
+    chat_routes._pin_transport(sk, "http")
+    monkeypatch.setattr(chat_routes, "_gateway_http_ready", lambda *a, **k: False)
+    assert chat_routes._resolve_transport(sk) == "http"
 
 
 def test_new_session_uses_http_when_endpoint_live(_tp):
-    assert web._resolve_transport("web-brand-new") == "http"
+    assert chat_routes._resolve_transport("web-brand-new") == "http"
 
 
 def test_new_session_falls_back_when_endpoint_dead(_tp, monkeypatch):
-    monkeypatch.setattr(web, "_gateway_http_ready", lambda *a, **k: False)
-    assert web._resolve_transport("web-brand-new") == "cli"
+    monkeypatch.setattr(chat_routes, "_gateway_http_ready", lambda *a, **k: False)
+    assert chat_routes._resolve_transport("web-brand-new") == "cli"
 
 
 def test_transport_env_switch_forces_cli(_tp, monkeypatch):
     monkeypatch.setattr(web, "CHAT_TRANSPORT", "cli")
-    assert web._resolve_transport("web-brand-new") == "cli"
+    assert chat_routes._resolve_transport("web-brand-new") == "cli"
 
 
 def test_pin_transport_never_pins_cli(_tp):
     """cli 侧由 uuid5 transcript 文件自证，不该再落一份可能跟现实打架的状态。"""
-    web._pin_transport("web-x", "cli")
+    chat_routes._pin_transport("web-x", "cli")
     assert not web._transport_pin_file("web-x").exists()
 
 
 def test_http_mode_drops_raw_text_delta():
     """HTTP 模式正文以 SSE 为准；raw 流里的 text_delta 必须丢弃，否则每个字进两次队列。"""
     import inspect
-    src = inspect.getsource(web.api_chat_stream)
+    src = inspect.getsource(chat_routes.api_chat_stream)
     seg = src.split('et == "text_delta"')[1][:220]
     assert "is_http" in seg, "HTTP 模式没有屏蔽 raw 流的正文，前端会看到重复内容"
 
@@ -400,6 +401,6 @@ def test_http_mode_still_tails_raw_stream_for_thinking():
     """openclaw 的 chat/completions 不回传任何 reasoning 增量（实测该实现里 thinking/reasoning
     出现 0 次），思考只在共享 raw 流里。HTTP 模式不 tail 它，思考面板就永远是空的。"""
     import inspect
-    src = inspect.getsource(web.api_chat_stream)
+    src = inspect.getsource(chat_routes.api_chat_stream)
     seg = src.split("stdout_fut = None")[1][:600]
     assert seg.count("_tail") >= 2, "HTTP 分支没有启动 raw 流 tail，思考流会整个丢失"

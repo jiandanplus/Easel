@@ -19,6 +19,7 @@ import app as web
 from easel.routes import settings as settings_routes  # noqa: E402
 from easel import direct_api
 from easel.harnesses import store
+from easel.routes import chat as chat_routes  # noqa: E402
 
 BASE = "http://localhost:50288/v1"
 SETTINGS = {"EASEL_DIRECT_API_BASE_URL": BASE, "EASEL_DIRECT_API_MODEL": "gpt-6.1-sol", "EASEL_DIRECT_API_KEY": "gateway-secret"}
@@ -61,8 +62,9 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "_DIRECT_CHAT_TASKS", set())
     def forbidden(*args, **kwargs):
         raise AssertionError("API mode must not call OpenClaw")
-    for name in ("openclaw_base_cmd", "_gateway_http_ready", "check_gateway", "_heal_openclaw_session"):
+    for name in ("openclaw_base_cmd", "check_gateway", "_heal_openclaw_session"):
         monkeypatch.setattr(web, name, forbidden)
+    monkeypatch.setattr(chat_routes, "_gateway_http_ready", forbidden)
     for name in ("_sync_openclaw_chat", "_openclaw_provider_creds"):
         monkeypatch.setattr(settings_routes, name, forbidden)
     monkeypatch.setattr(web, "GatewayClient", forbidden)
@@ -362,9 +364,9 @@ def test_queued_turn_does_not_overwrite_running_snapshot(sandbox, monkeypatch):
         monkeypatch.setattr(web, "stream_chat", fake_stream)
         first = web.ChatRequest(message="first", sessionId="queue", turnId="first")
         second = web.ChatRequest(message="second", sessionId="queue", turnId="second")
-        active = asyncio.create_task(web._run_direct_chat(first, "queue", "first", "", lambda *args: None))
+        active = asyncio.create_task(chat_routes._run_direct_chat(first, "queue", "first", "", lambda *args: None))
         await started.wait()
-        queued = asyncio.create_task(web._run_direct_chat(second, "queue", "second", "", lambda *args: None))
+        queued = asyncio.create_task(chat_routes._run_direct_chat(second, "queue", "second", "", lambda *args: None))
         await asyncio.sleep(0)
         snapshot = json.loads(web._turn_file("web:queue").read_text(encoding="utf-8"))
         assert snapshot["status"] == "running" and snapshot["turn_id"] == "first"
@@ -435,7 +437,7 @@ def test_cancelled_queue_releases_tracking_without_overwriting_active_turn(sandb
         def emit(kind, text):
             if kind == "activity":
                 waiting.set()
-        queued = asyncio.create_task(web._run_direct_chat(request, "queue", "", "", emit))
+        queued = asyncio.create_task(chat_routes._run_direct_chat(request, "queue", "", "", emit))
         # Acceptance is offloaded before queue tracking; wait for the actual
         # queued state rather than assuming one event-loop tick is sufficient.
         await asyncio.wait_for(waiting.wait(), timeout=2)
@@ -496,7 +498,7 @@ def test_generated_stream_turn_id_matches_recovery_and_replay(sandbox, monkeypat
     response = sandbox.post("/api/chat/stream", json={"message": "test", "sessionId": "generated"})
     snapshot = sandbox.get("/api/chat/last/generated").json()
     assert "event: done" in response.text
-    assert web._job_event_file(snapshot["turn_id"]).is_file()
+    assert chat_routes._job_event_file(snapshot["turn_id"]).is_file()
     recovered = sandbox.get("/api/chat/last/generated", params={"turn_id": snapshot["turn_id"]}).json()
     assert recovered["status"] == "done" and recovered["text"] == "complete"
 
@@ -551,13 +553,13 @@ def test_submitted_direct_model_survives_waiting_defaults_change(sandbox, monkey
             yield "token", "done"
             yield "finish", "stop"
         monkeypatch.setattr(web, "stream_chat", fake_stream)
-        response = await web.api_chat_stream(web.ChatRequest(message="hello", sessionId="queued"))
+        response = await chat_routes.api_chat_stream(web.ChatRequest(message="hello", sessionId="queued"))
         await asyncio.sleep(0)
         web.ENV_FILE.write_text("EASEL_DIRECT_API_MODEL=changed\n")
         lock.release()
         await asyncio.wait_for(asyncio.gather(*web._BG_TASKS), 2)
         assert seen == ["gpt-6.1-sol"]
-        last = await web.api_chat_last("queued")
+        last = await chat_routes.api_chat_last("queued")
         assert last["route"]["model"] == "gpt-6.1-sol"
         assert last["route"]["tools"] is False
         await response.body_iterator.aclose()

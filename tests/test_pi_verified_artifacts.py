@@ -10,6 +10,7 @@ import pytest
 
 from easel.harnesses.base import HarnessError, RunRequest
 from tests.test_agent_harnesses import sandbox  # noqa: F401
+from easel.routes import chat as chat_routes  # noqa: E402
 
 
 async def deny(_):
@@ -181,8 +182,8 @@ async def test_last_does_not_add_new_reference_visibility_for_foreign_scope(tmp_
     payload = {'status': 'done', 'text': 'original', 'turn_id': 'synthetic-turn',
                'artifacts': [{**descriptor(), 'session_id': 'synthetic-session', 'turn_id': 'synthetic-turn'}]}
     web._turn_file('web:synthetic-session').write_text(json.dumps(payload))
-    monkeypatch.setattr(web, '_workbench_receipt', lambda *a: (_ for _ in ()).throw(HTTPException(403, 'foreign')))
-    value = await web.api_chat_last('synthetic-session')
+    monkeypatch.setattr(chat_routes, '_workbench_receipt', lambda *a: (_ for _ in ()).throw(HTTPException(403, 'foreign')))
+    value = await chat_routes.api_chat_last('synthetic-session')
     assert value['text'] == 'original' and not value.get('artifacts')
 
 
@@ -190,7 +191,7 @@ def test_snapshot_references_changed_by_redaction_are_omitted(monkeypatch):
     import web.app as web
     ref = {**descriptor(), 'session_id': 'synthetic-session', 'turn_id': 'synthetic-turn'}
     monkeypatch.setattr(web, '_scrub_secrets', lambda text: text.replace('"path"', '"[已隐藏]"'))
-    assert web._snapshot_artifacts({'artifacts': [ref]}, 'synthetic-session', 'synthetic-turn') == []
+    assert chat_routes._snapshot_artifacts({'artifacts': [ref]}, 'synthetic-session', 'synthetic-turn') == []
 
 
 @pytest.mark.parametrize('source', ['custom', 'central'])
@@ -215,7 +216,7 @@ def test_real_host_write_reaches_single_layer_sse_replay_and_exact_turn(sandbox,
     monkeypatch.setattr(web, '_accept_task_context', accept)
     monkeypatch.setattr(web, '_chat_backend', lambda *_: 'pi')
     monkeypatch.setattr(web.harnesses, 'adapter', lambda _: Host())
-    monkeypatch.setattr(web, '_chat_message', lambda req: req.message)
+    monkeypatch.setattr(chat_routes, '_chat_message', lambda req: req.message)
     def read_events(text):
         result = []
         for block in text.replace('\r\n', '\n').split('\n\n'):

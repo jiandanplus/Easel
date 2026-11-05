@@ -18,6 +18,7 @@ from easel.harnesses.codex import CodexAdapter
 from easel.harnesses.commands import acp_command, base_command
 from easel.harnesses.rpc import RPC
 from easel.harnesses import models as native_models
+from easel.routes import chat as chat_routes  # noqa: E402
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "harness_rpc.py"
@@ -779,7 +780,7 @@ def test_native_stream_disconnect_keeps_background_turn_and_result(sandbox, monk
                 emit("token", "断线后完成")
 
         monkeypatch.setattr(web.harnesses, "adapter", lambda runtime: Fake())
-        response = await web.api_chat_stream(web.ChatRequest(
+        response = await chat_routes.api_chat_stream(web.ChatRequest(
             message="hello", sessionId="disconnect", turnId="disconnect-turn"))
         await response.body_iterator.__anext__()
         await asyncio.wait_for(started.wait(), 2)
@@ -790,10 +791,10 @@ def test_native_stream_disconnect_keeps_background_turn_and_result(sandbox, monk
         finish.set()
         await asyncio.wait_for(asyncio.gather(*tasks), 2)
         await asyncio.sleep(0)
-        result = await web.api_chat_last("disconnect")
+        result = await chat_routes.api_chat_last("disconnect")
         assert result["text"] == "断线后完成" and result["clean_end"] is True
         assert not web._RUNNING_CHAT and not web._HARNESS_TASKS and not web._BG_TASKS
-        events = web._read_job_events("disconnect-turn", 0)
+        events = chat_routes._read_job_events("disconnect-turn", 0)
         assert any(event["event"] == "token" and event["data"] == "断线后完成" for event in events)
         assert events[-1]["event"] == "done"
 
@@ -830,7 +831,7 @@ def test_web_stop_timeout_and_lock_cleanup(sandbox, monkeypatch):
         task = asyncio.create_task(web._run_harness_chat(req, "stoppable", "hello", "codex",
                                                        web._harness_settings(), emit))
         await asyncio.wait_for(started.wait(), 3)
-        result = await web.api_chat_stop(web.StopRequest(sessionId="stoppable"))
+        result = await chat_routes.api_chat_stop(chat_routes.StopRequest(sessionId="stoppable"))
         await task
         assert result["stopped"] and not web._RUNNING_CHAT and not web._HARNESS_TASKS
         assert not web._session_lock("stoppable").locked()
@@ -896,7 +897,7 @@ def test_web_question_answer_and_cancellation_cleanup(sandbox):
         ], lambda kind, text: events.append((kind, text))))
         await asyncio.sleep(0)
         identifier = next(iter(web._HARNESS_QUESTIONS))
-        result = await web.api_question_answer(web.QuestionAnswerRequest(
+        result = await chat_routes.api_question_answer(chat_routes.QuestionAnswerRequest(
             questionId=identifier, answers={"permission": ["拒绝"]}))
         assert result["ok"] and await task == {"permission": ["拒绝"]}
         assert not web._HARNESS_QUESTIONS
@@ -921,8 +922,8 @@ def test_unavailable_routes_rejected_before_writes_and_attachments(sandbox, monk
     response = sandbox.post("/api/settings/harness", json={"runtime": "openclaw", **fields})
     assert response.status_code == 409
     assert path.read_bytes() == before and web.ENV_FILE.read_bytes() == env
-    monkeypatch.setattr(web, "_chat_message", Mock(side_effect=AssertionError("attachment read")))
-    monkeypatch.setattr(web, "_direct_chat_content", Mock(side_effect=AssertionError("attachment read")))
+    monkeypatch.setattr(chat_routes, "_chat_message", Mock(side_effect=AssertionError("attachment read")))
+    monkeypatch.setattr(chat_routes, "_direct_chat_content", Mock(side_effect=AssertionError("attachment read")))
     for endpoint in ("/api/chat", "/api/chat/stream"):
         assert sandbox.post(endpoint, json={"message": "hello", **fields}).status_code == 409
     assert not web.SESSIONS_DIR.exists()
@@ -949,7 +950,7 @@ def test_submitted_native_context_survives_default_change_while_waiting(sandbox,
                 bind("queued-native")
                 emit("token", "done")
         monkeypatch.setattr(web.harnesses, "adapter", lambda runtime: Fake())
-        response = await web.api_chat_stream(web.ChatRequest(message="hello", sessionId="queued"))
+        response = await chat_routes.api_chat_stream(web.ChatRequest(message="hello", sessionId="queued"))
         await asyncio.sleep(0)
         store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {
             "runtime": "opencode", "models": {"codex": "changed"},
@@ -958,7 +959,7 @@ def test_submitted_native_context_survives_default_change_while_waiting(sandbox,
         await asyncio.wait_for(asyncio.gather(*web._BG_TASKS), 2)
         assert requests[0].model == "test-model"
         assert requests[0].env["EASEL_AGENT_RUNTIME"] == "codex"
-        last = await web.api_chat_last("queued")
+        last = await chat_routes.api_chat_last("queued")
         assert last["route"]["service_source"] == "custom"
         assert last["route"]["execution_target"] == "local"
         assert last["route"]["model"] == "test-model"
@@ -980,7 +981,7 @@ def test_bound_route_conflict_rejected_before_attachment_read(sandbox, monkeypat
     path = store.binding_path(web.SESSIONS_DIR, "owned")
     store.write_json(path, {"runtime": "codex", "native_id": "keep", field: value})
     before = path.read_bytes()
-    monkeypatch.setattr(web, "_chat_message", Mock(side_effect=AssertionError("attachment read")))
+    monkeypatch.setattr(chat_routes, "_chat_message", Mock(side_effect=AssertionError("attachment read")))
     for endpoint in ("/api/chat", "/api/chat/stream"):
         assert sandbox.post(endpoint, json={"sessionId": "owned", "message": "hello"}).status_code == 409
     assert path.read_bytes() == before
@@ -1067,9 +1068,9 @@ def test_sync_openclaw_failure_persists_terminal_turn(sandbox, monkeypatch):
     monkeypatch.setattr(web, "run_agent_sync", Mock(side_effect=RuntimeError("private failure")))
     async def exercise():
         with pytest.raises(web.HTTPException) as error:
-            await web.api_chat(web.ChatRequest(message="hello", sessionId="broken"))
+            await chat_routes.api_chat(web.ChatRequest(message="hello", sessionId="broken"))
         assert error.value.status_code == 502
-        last = await web.api_chat_last("broken")
+        last = await chat_routes.api_chat_last("broken")
         assert last["status"] == "done" and last["stop_reason"] == "error"
         assert "private failure" not in last["text"]
         assert last["route"]["model_resolution"] == "gateway-agent-default"
@@ -1087,7 +1088,7 @@ def test_sync_request_disconnect_keeps_worker_protected_until_completion(sandbox
         return "finished"
     monkeypatch.setattr(web, "run_agent_sync", worker)
     async def exercise():
-        request = asyncio.create_task(web.api_chat(web.ChatRequest(message="hello", sessionId="detached")))
+        request = asyncio.create_task(chat_routes.api_chat(web.ChatRequest(message="hello", sessionId="detached")))
         try:
             assert await asyncio.to_thread(started.wait, 2)
             request.cancel()
@@ -1097,11 +1098,11 @@ def test_sync_request_disconnect_keeps_worker_protected_until_completion(sandbox
             with pytest.raises(web.HTTPException) as error:
                 await settings_routes.api_harness_settings_save(settings_routes.HarnessSettingsRequest(runtime="codex"))
             assert error.value.status_code == 409
-            assert (await web.api_chat_last("detached"))["status"] == "running"
+            assert (await chat_routes.api_chat_last("detached"))["status"] == "running"
         finally:
             finish.set()
         await asyncio.wait_for(asyncio.gather(*web._BG_TASKS), 2)
-        assert (await web.api_chat_last("detached"))["text"] == "finished"
+        assert (await chat_routes.api_chat_last("detached"))["text"] == "finished"
         assert not web._HARNESS_TASKS and not web._BG_TASKS
     asyncio.run(exercise())
 
