@@ -35,7 +35,19 @@
 
 按手册第 8 节：关闭新准入 → 停 API 写入 → 新备份收据 → owner 执行 `migrate`（只会追加 017–021）→ `grant-runtime` → 新 release 目录安装并切换 unit → 启动 → `/health` 与 `/v2/capabilities` → 本人登录，先用已上线的两款图片模型做一次真实扣点回归，再逐个开放新模型。
 
+### 生产升级记录（2026-11-06）
+
+- 停服 02:07:53–02:10:42Z（约 3 分钟）；停服后先做备份 `20261106T020708Z-19fe2e34…` 并同步到 R2。
+- owner 执行 `migrate`，追加 017–021；`grant-runtime` 通过；Console 角色的权限清单与升级前相同，未重授。
+- 新 release `/srv/easel/releases/20261106-media-021-v1`（wheel `49e25f31…`，依赖带哈希安装）；两个 unit 通过 drop-in `91-p3-media.conf` 切换，原 `90-m1-images.conf`（媒体配置与媒体目录写入例外）保留。
+- 启动后两个服务 `/health` 正常，公网 200，`/v2/capabilities` 显示媒体执行在线，付款仍关闭；巡检 `ok`。
+- 账务快照（钱包、额度批次、预留、冻结、凭证、分录、文本与媒体任务、存储预算等 13 张表）在停服时、迁移后、启动后三次完全一致。
+- 回滚：删除两个 unit 的 `91-p3-media.conf`，`daemon-reload` 后重启，即回到 `20261027-images-m1-1-size-v2`。`serve` 不校验迁移集合，旧版本可以在 021 schema 上运行。
+- 环境变量注意：`central.env` 按 systemd 规则在双引号内转义 `\"`。手工加载时必须同样反转义，否则 `CENTRAL_OIDC_CLIENTS` 会被配置校验拒绝（首次 `migrate` 即因此被拒，未写库）。
+
 ## 处置 10-27 待核算任务（升级后、开放新模型前）
+
+**已完成（2026-11-06）**：计划哈希 `03baae0e…6ef0` 经用户确认后执行，操作 `bad9d916-5268-4bf0-922f-164b3d9da960`；任务 `waived / platform_absorbed / unavailable`，`actual` 为空，无 receipt，预留 1,000,000 点释放，存储预算释放；`media-writeoff-operation` 返回同一结果。注意 `--plan` 要写绝对路径，因为主机入口在 `/` 下运行。
 
 用 owner 身份在服务器上运行，命令形状见[核算部署文档](../../../docs/platform/reconciliation-r2-deployment.md)的“媒体任务”一节：
 
