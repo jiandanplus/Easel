@@ -73,7 +73,7 @@ rtk proxy uv run --project services/platform --frozen \
 1. **链接过期：** 回工作台头像或后台首页发起新登录。不要刷新／重复提交旧 callback，也不要传播包含 code／state 的 URL。历史登录事务期限为 5 分钟，以实际配置为准。
 2. **login 白屏／转圈：** 核对当前域名 DNS／TLS、静态资源、Logto／身份 PG 和代理，不将“本机页面 200”当成身份系统正常。
 3. **回调 invalid_request：** 核对发起端事务是否仍存在、精确 origin／issuer／redirect URI、应用 ID、时间窗口和本次会话；用 correlation ID 定位，避免输出 code／secret。
-4. **refresh_uncertain：** 先查询真实会话状态，保留本地私有文件；通过界面取消旧登录或重新发起。不要复制旧 refresh token 续接任务，也不要删全部历史解决登录。
+4. **refresh_uncertain：** 先查询真实会话状态，保留本地私有文件；通过界面取消旧登录或重新发起。不要复制旧 refresh token 续接任务，也不要删全部历史解决登录。连接没建立成功（断网、握手失败）时请求没发出去，不算 uncertain，日志记 `refresh_not_sent`，下次自动重试；请求已发出但没收到回复时才会出现 uncertain。
 5. **登录错账号／无管理员权限：** 退出该浏览器会话，使用独立管理员账号重新登录；产品登录不会提升后台权限。
 
 后台只能用精确 `http://127.0.0.1:18885/`，先确认隧道仍运行。若是端口冲突，核对占用者，不能随意杀掉其他会话。

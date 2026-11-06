@@ -1,7 +1,8 @@
 """One serialized refresh with a durable fence for an unknown response.
 
 Callers hold the existing central session file lock. No token or response body
-is logged, and an uncertain refresh is never automatically submitted again.
+is logged, and an uncertain refresh is never automatically submitted again. A
+connection that never opened sent nothing, so that refresh is not uncertain.
 """
 from hashlib import sha256
 import json
@@ -90,6 +91,13 @@ def access(central,state,*,send,clock,force=False):
             write_durable(central.store,state)
             diagnostic(error.code,error.status,'/v2/auth/refresh',auth['scope'])
             raise
+        if getattr(error,'not_sent',False):
+            try:write_durable(central.store,{key:value for key,value in state.items() if key!=GUARD})
+            except(HarnessError,OSError,ValueError):pass
+            else:
+                state.pop(GUARD,None)
+                diagnostic('refresh_not_sent',error.status,'/v2/auth/refresh',auth['scope'])
+                raise
         uncertain={**marked,GUARD:{**marker,'state':'uncertain'}}
         try:write_durable(central.store,uncertain);state[GUARD]=uncertain[GUARD]
         except(HarnessError,OSError,ValueError):pass

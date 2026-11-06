@@ -106,6 +106,34 @@ def test_unknown_rotation_is_durable_and_restart_never_replays_old_refresh(tmp_p
     assert calls==['/v2/auth/refresh']
 
 
+@pytest.mark.parametrize('fault',[httpx.ConnectError,httpx.ConnectTimeout])
+@pytest.mark.parametrize('caller',['central','bounded','media'])
+def test_refresh_that_never_connected_keeps_the_login_and_retries(tmp_path,caller,fault):
+    calls=[];down=[True]
+    def handler(request):
+        calls.append(request.url.path)
+        if request.url.path=='/v2/auth/refresh':
+            if down[0]:raise fault('synthetic connection never opened',request=request)
+            return httpx.Response(200,json=fresh())
+        if request.url.path=='/v2/me':return httpx.Response(200,json={'scope':auth()['scope'],'account':auth()['account']})
+        return httpx.Response(200,json={'models':[definition()]})
+    central,media=clients(tmp_path,handler,expired=True)
+    if caller=='bounded':central.absolute_deadline=time.monotonic()+5
+    before=central.store.read()['auth']
+    with pytest.raises(PlatformError)as error:
+        if caller=='media':media.catalog()
+        else:
+            with central.store.locked():central._access(central.store.read())
+    assert error.value.code!='refresh_uncertain'
+    saved=central.store.read()
+    assert saved['auth']==before and'refresh_guard'not in saved
+    down[0]=False
+    if caller=='media':media.catalog()
+    else:assert central.status()['authenticated']
+    assert central.store.read()['auth']['refresh_token']==fresh()['refresh_token']
+    assert calls.count('/v2/auth/refresh')==2
+
+
 def test_guard_write_failure_happens_before_any_post(tmp_path,monkeypatch):
     calls=[]
     central,media=clients(tmp_path,lambda r:calls.append(r)or httpx.Response(200,json=fresh()),expired=True)

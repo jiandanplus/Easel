@@ -18,7 +18,7 @@ import warnings
 import httpx
 
 from easel.harnesses.base import HarnessError
-from .central import CentralClient, CentralError, timestamp
+from .central import CentralClient, CentralError, not_sent_error, timestamp
 from .client import PlatformError, validate_url
 from .execution_records import operation_owner, operation_turn_key
 from .media_records import MediaRecords, MediaRecordError, digest
@@ -267,6 +267,8 @@ class MediaClient:
             return asyncio.run(exchange())
         except PlatformError:
             raise
+        except (httpx.ConnectError, httpx.ConnectTimeout):
+            raise not_sent_error(MediaError()) from None
         except (httpx.HTTPError, ValueError, TypeError, AttributeError, RecursionError, TimeoutError):
             raise MediaError() from None
 

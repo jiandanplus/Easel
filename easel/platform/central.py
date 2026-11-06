@@ -52,6 +52,9 @@ _DESKTOP_CENTRAL_URL = "https://accounts.drawbookai.cn"
 
 
 class CentralError(PlatformError):
+    # True only when the connection never opened, so no request bytes left this machine.
+    not_sent = False
+
     def __init__(self, code="platform_unavailable", status=503):
         super().__init__(code, status)
         if code in _AUTH_INVALID:
@@ -130,6 +133,11 @@ async def _status_addresses(host, port):
                 pass
         # A resolver process is reaped before the caller can release its lock.
         await process.wait()
+
+
+def not_sent_error(error):
+    error.not_sent = True
+    return error
 
 
 class CentralClient:
@@ -235,6 +243,8 @@ class CentralClient:
             return asyncio.run(exchange())
         except PlatformError:
             raise
+        except (httpx.ConnectError, httpx.ConnectTimeout):
+            raise not_sent_error(CentralError()) from None
         except (httpx.HTTPError, ValueError, TypeError, AttributeError, RecursionError, TimeoutError, OSError):
             raise CentralError(status=failure_status) from None
 
@@ -261,6 +271,8 @@ class CentralClient:
                     return self._response_value(response.status_code, content)
         except PlatformError:
             raise
+        except (httpx.ConnectError, httpx.ConnectTimeout):
+            raise not_sent_error(CentralError()) from None
         except (httpx.HTTPError, ValueError, TypeError, AttributeError, RecursionError):
             raise CentralError(status=failure_status) from None
 
