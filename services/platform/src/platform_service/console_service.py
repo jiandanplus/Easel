@@ -99,6 +99,16 @@ class ConsoleQueries:
                                ('executions','execution_jobs'),('wallet_count','billing_accounts')):
                 result[key] = (await (await conn.execute('SELECT count(*) AS n FROM ' + table)).fetchone())['n']
             result['pending_reconciliation'] = (await (await conn.execute("SELECT count(*) AS n FROM execution_jobs WHERE status='pending_reconciliation'")).fetchone())['n']
+            today = await (await conn.execute("""SELECT count(*) AS calls,
+                coalesce(sum(actual) FILTER(WHERE status='settled'),0) AS spent,
+                count(*) FILTER(WHERE status IN ('pending_reconciliation','waived')) AS problems
+                FROM credit_reservations WHERE funding_mode='live' AND created_at>=
+                date_trunc('day',transaction_timestamp() AT TIME ZONE 'Asia/Shanghai') AT TIME ZONE 'Asia/Shanghai'""")).fetchone()
+            result['today'] = projected(today)
+            result['expiring_soon'] = (await (await conn.execute("""SELECT count(*) AS n FROM (
+                SELECT m.billing_account_id,max(m.expires_at) AS last FROM memberships m JOIN plans p ON p.id=m.plan_id
+                WHERE NOT (p.definition->>'test_only')::boolean GROUP BY m.billing_account_id) x
+                WHERE x.last>transaction_timestamp() AND x.last<=transaction_timestamp()+interval '7 days'""")).fetchone())['n']
             rows = await (await conn.execute("""SELECT CASE WHEN l.test_only THEN 'test' ELSE 'live' END AS funding_mode,
                 sum(l.issued) AS issued,sum(l.available) AS available,sum(l.held) AS held,sum(l.spent) AS spent,
                 sum(l.expired) AS expired,sum(l.refunded) AS refunded,
@@ -119,7 +129,12 @@ class ConsoleQueries:
     async def users(self, principal, limit=25, offset=0, q=''):
         return await self._list(principal, """SELECT u.id,u.active,u.created_at,
             (SELECT count(*) FROM tenants t WHERE t.owner_user_id=u.id) AS tenant_count,
-            (SELECT count(*) FROM billing_accounts b JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id) AS wallet_count
+            (SELECT count(*) FROM billing_accounts b JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id) AS wallet_count,
+            (SELECT coalesce(sum(l.available) FILTER(WHERE NOT l.frozen AND l.expires_at>transaction_timestamp()),0)
+                FROM credit_lots l JOIN billing_accounts b ON b.id=l.billing_account_id JOIN tenants t ON t.id=b.tenant_id
+                WHERE t.owner_user_id=u.id AND NOT l.test_only) AS spendable_available,
+            (SELECT max(m.expires_at) FROM memberships m JOIN billing_accounts b ON b.id=m.billing_account_id
+                JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id) AS expires_at
             FROM users u WHERE %s='' OR strpos(lower(u.id),lower(%s))>0 ORDER BY u.created_at DESC,u.id DESC""", (q,q),limit,offset,q)
 
     async def user(self, principal, id):

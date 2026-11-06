@@ -6,7 +6,7 @@ export type AuthState = { kind: 'loading' | 'anonymous' } | { kind: 'pending'; r
 export const domains = ['users', 'products', 'plans', 'wallets', 'orders', 'offers', 'models', 'providers', 'executions', 'audits'] as const;
 export type Domain = typeof domains[number];
 export type Catalog = 'plans' | 'offers' | 'models';
-export const titles: Record<Domain | 'overview' | 'reconciliation', string> = { overview: '运营概览', reconciliation: '待核算处理', users: '用户', products: '产品', plans: '套餐版本', wallets: '共享钱包', orders: '订单与支付', offers: '报价目录', models: '模型目录', providers: '供应商渠道', executions: '调用记录', audits: '运营审计' };
+export const titles: Record<Domain | 'overview' | 'reconciliation', string> = { overview: '今天', reconciliation: '结果不明的任务', users: '用户', products: '产品', plans: '套餐', wallets: '钱包明细', orders: '订单与支付', offers: '售卖价格', models: '模型', providers: '供应商', executions: '用量与费用', audits: '操作记录' };
 export const writePermissions: Record<Catalog, string> = { plans: 'plans:publish', offers: 'billing:publish', models: 'execution:publish' };
 
 export function formatCredits(value: unknown): string {

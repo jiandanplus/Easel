@@ -231,6 +231,7 @@ async def test_every_query_and_catalog_runs_with_actual_low_role_and_auth(db,con
     principal=await auth.authenticate(session['session_token'])
     queries=ConsoleQueries(low,auth,provider_ids=REGISTRY)
     assert 'wallets' in await queries.overview(principal)
+    assert all('spendable_available' in row for row in (await queries.users(principal))['items'])
     for name in ('users','products','plans','wallets','orders','offers','models','providers','executions','audits'):
         result=await getattr(queries,name)(principal,limit=2)
         assert set(result)=={'items','limit','offset','has_more'}

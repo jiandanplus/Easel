@@ -37,7 +37,7 @@ test('real navigation clears stale data in both directions and repeated-page cli
   const again=render();driver.flush();await settle();const final=render();
   assert.ok(again);assert.equal(find(final,n=>typeof n.type==='function'&&n.type.name==='DataPage').props.state.kind,'ready');
   const usersRequest=calls.filter(c=>c.path.startsWith('/api/users')).at(-1);
-  find(final,n=>n.type==='button'&&n.props.children?.includes('运营概览')).props.onClick();
+  find(final,n=>n.type==='button'&&n.props.children?.includes('今天')).props.onClick();
   const back=render();assert.equal(find(back,n=>typeof n.type==='function'&&n.type.name==='Overview').props.state.kind,'loading');
   assert.equal(usersRequest.signal.aborted,true);driver.flush();await settle();
   assert.equal(find(render(),n=>typeof n.type==='function'&&n.type.name==='Overview').props.state.data.users,7);

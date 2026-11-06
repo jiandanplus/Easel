@@ -62,6 +62,7 @@ async def test_read_pages_real_snapshot_no_expiry_mutation(db):
     overview = await api.overview(PRINCIPAL)
     assert overview['users'] == 2 and overview['products'] == 2
     assert overview['payments_mode'] == 'disabled'
+    assert overview['today'] == {'calls': 0, 'spent': '0', 'problems': 0} and overview['expiring_soon'] == 0
     assert any(row['available'] == '9007199254740993' for row in overview['wallets'])
     result = await api.wallet(PRINCIPAL, 'wallet')
     assert result['issued'] == result['available'] == '9007199254740993'
