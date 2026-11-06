@@ -19,6 +19,10 @@ Python 来自固定的 python-build-standalone CPython 3.12.13 归档及其离�
 
 实际交付的 `artifact.json`、资源 `build-provenance.json`、`source-manifest.json` 与 `build-inventory.json` 记录该轮版本与哈希。构建成功与真实模型、中央扣点、干净设备验收是独立证据。
 
+## 原生窗口
+
+`Easel.app` 是 Swift 写的原生窗口（[决策 0008](../../docs/decisions/0008-native-mac-window.md)），固定使用工作区 `~/Library/Application Support/Easel/workspaces/main` 和端口 17868。关闭窗口后服务继续运行，退出 App 才停止服务。构建需要 Xcode 命令行工具。
+
 ## 应用内更新与发布
 
 受管安装布局为 `<根目录>/v<N>/Easel/Easel.app`，并由 `<根目录>/current` 链接指向正在使用的版本；启动、停止脚本都经由 `current`。只有这种布局支持应用内更新，旧版本目录保留，便于回滚。

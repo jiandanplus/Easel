@@ -22,6 +22,7 @@ import sys
 import tarfile
 
 ROOT = Path(__file__).resolve().parents[2]
+SHELL_SOURCE = ROOT / "packaging/macos-shell/EaselShell.swift"
 sys.path.insert(0, str(ROOT))
 from easel.packaging_sources import source_records, frontend_records, verify_source_records
 from easel.portable import digest
@@ -308,8 +309,13 @@ mkdir -p "$LOG"
 export PYTHONDONTWRITEBYTECODE=1
 unset PYTHONHOME PYTHONUSERBASE PYTHONPATH PYTHONSTARTUP PYTHONINSPECT PYTHONPLATLIBDIR PYTHONPYCACHEPREFIX
 cd "$HERE" || exit 1
-exec "$HERE/python/bin/python3" -I -B -c 'import sys; sys.path.insert(0, sys.argv.pop(1)); from easel.portable import main; raise SystemExit(main())' "$HERE" "$@" >>"$LOG/launcher.log" 2>&1
+exec "$HERE/python/bin/python3" -I -B -c 'import sys; sys.path.insert(0, sys.argv.pop(1)); from easel.portable import main; raise SystemExit(main())' "$HERE" "$@" >>"${EASEL_LOG_FILE:-$LOG/launcher.log}" 2>&1
 '''
+
+
+def compile_shell(destination):
+    """Native window (decision 0008); needs the Xcode command line tools on the build Mac."""
+    subprocess.run(["/usr/bin/swiftc", "-O", "-swift-version", "5", "-target", "arm64-apple-macos15.0", "-framework", "AppKit", "-framework", "WebKit", str(SHELL_SOURCE), "-o", str(destination)], check=True)
 
 
 def build(inputs, pi_root, output, authority, *, copy_on_write=False, version=None):
@@ -359,16 +365,18 @@ def build(inputs, pi_root, output, authority, *, copy_on_write=False, version=No
     for name in METADATA:
         shutil.copy2(ROOT / "packaging/macos" / name, resource / name)
     shutil.copy2(authority, resource / "source-manifest.json")
-    provenance = {"schema_version": 1, "engine": "pi", "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), "source_manifest_sha256": digest(authority), "pi_manifest_sha256": digest(pi_root / "runtime-manifest.json"), "frontend_receipt_sha256": digest(ROOT / "web/frontend/dist/portable-assets.json"), "python_archive_verified": python_proof["archive_verified"], "python_archive_sha256": python_proof["archive_sha256"], "python_source_provenance_sha256": python_proof["source_provenance_sha256"], "python_runtime_inventory_sha256": python_proof["runtime_inventory_sha256"], "python_runtime_inventory_verified": True, "copy_strategy": copy_strategy, "clonefile_flags": CLONEFILE_FLAGS if copy_on_write else None, "python_version": PYTHON_VERSION, "wheel_count": len(list((inputs / "wheels").glob("*.whl"))), "minimum_macos": "15.0", "unsigned": True, "notarized": False, "ui": "loopback web browser"}
+    provenance = {"schema_version": 1, "engine": "pi", "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), "source_manifest_sha256": digest(authority), "shell_source_sha256": digest(SHELL_SOURCE), "pi_manifest_sha256": digest(pi_root / "runtime-manifest.json"), "frontend_receipt_sha256": digest(ROOT / "web/frontend/dist/portable-assets.json"), "python_archive_verified": python_proof["archive_verified"], "python_archive_sha256": python_proof["archive_sha256"], "python_source_provenance_sha256": python_proof["source_provenance_sha256"], "python_runtime_inventory_sha256": python_proof["runtime_inventory_sha256"], "python_runtime_inventory_verified": True, "copy_strategy": copy_strategy, "clonefile_flags": CLONEFILE_FLAGS if copy_on_write else None, "python_version": PYTHON_VERSION, "wheel_count": len(list((inputs / "wheels").glob("*.whl"))), "minimum_macos": "15.0", "unsigned": True, "notarized": False, "ui": "loopback web browser"}
     if version is not None:
         # In-app updates compare this number; it is covered by build-inventory.json.
         provenance["version"] = version
     (resource / "build-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     macos = app / "Contents/MacOS"
     macos.mkdir()
-    launcher = macos / "Easel"
+    launcher = macos / "easel-launcher"
     launcher.write_text(launcher_script())
     launcher.chmod(0o755)
+    compile_shell(macos / "Easel")
+    shutil.copy2(SHELL_SOURCE.with_name("Easel.icns"), resource / "Easel.icns")
     stop = container / "Stop Easel.command"
     stop.write_text('''#!/bin/sh
 HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
@@ -376,7 +384,7 @@ exec "$HERE/Easel.app/Contents/MacOS/Easel" --stop "$@"
 ''')
     stop.chmod(0o755)
     with (app / "Contents/Info.plist").open("wb") as stream:
-        plistlib.dump({"CFBundleExecutable": "Easel", "CFBundleIdentifier": "local.easel.pi-preview", "CFBundleName": "Easel", "CFBundleVersion": "0.1.0", "CFBundlePackageType": "APPL", "LSMinimumSystemVersion": "15.0", "LSArchitecturePriority": ["arm64"]}, stream)
+        plistlib.dump({"CFBundleExecutable": "Easel", "CFBundleIdentifier": "local.easel.pi-preview", "CFBundleName": "Easel", "CFBundleVersion": str(version or 0), "CFBundleShortVersionString": str(version or 0), "CFBundleIconFile": "Easel", "CFBundleDevelopmentRegion": "zh_CN", "CFBundleLocalizations": ["zh_CN"], "CFBundlePackageType": "APPL", "LSMinimumSystemVersion": "15.0", "LSArchitecturePriority": ["arm64"], "NSHighResolutionCapable": True, "NSAppTransportSecurity": {"NSAllowsLocalNetworking": True, "NSAllowsArbitraryLoadsInWebContent": True}}, stream)
     shutil.copy2(ROOT / "packaging/pi/README.md", container / "README.md")
     verified_sources(authority)
     inventory = {}

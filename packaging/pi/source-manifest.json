@@ -48,7 +48,7 @@
     "packaging/macos/python-runtime-files.json": "25b1bb10c833bd8afca6106867d53cefd789ce88ed6de1dca2c0c761038a1ce0",
     "packaging/macos/python-source-provenance.json": "3aab5044d4bdaf99da45fc795045e36b1833565c79ddb019a3578096eda8d8eb",
     "packaging/macos/wheels-provenance.json": "485e482a6ad0ac817891757a3c27cd30a486af2d3b07897523edbd438ad80a55",
-    "packaging/pi/README.md": "7ec791d5e0bb87de85103b8d4d684199c56dfc7627a61a9e21f417a5f60fcbff",
+    "packaging/pi/README.md": "e710d9e49c6ee6702c9887af24364bf7dc50c3970c7ee5685033231414755720",
     "packaging/pi/dependencies-provenance.json": "7d8aacb172d50b087177560250b46fe03e33172b8f7916fe44a291b6ddcd09db",
     "packaging/pi/licenses/README.md": "23f95dd5379ad575c8bb153620e29a0b6c269d044c84289bfe525eee2891d492",
     "packaging/pi/node-provenance.json": "cb9bbb312bf1258c2159d1fe6f28c20e6f64d7fcb070b8059d113dc35459920e",
@@ -57,7 +57,7 @@
     "runtime/pi/package.json": "d28b035a5d69d30281826adabede2baccf3fa11361f246bc39082c5b4801ac01",
     "runtime/pi/worker.mjs": "7fc068daae8e9cc9dc201252dbb412de9adb935569e0cb20e641ad6e2b193f6d",
     "scripts/packaging/build_macos.py": "8ef340d137ed778f41ea82d573fb05541a05c88ea5ab45ea3ec1e61ae7c26466",
-    "scripts/packaging/build_pi_macos.py": "775d36871acc498062f725e347851bb836c0c2df09cf94192752a7c7fba4b404",
+    "scripts/packaging/build_pi_macos.py": "8e8402d29109bb21ad83fc7592198f4c203d58715c91a27b8462274952c8f688",
     "scripts/packaging/prepare_pi_runtime.py": "d033fb6e7ac12a01cab4a2b4ebfda6aac35d1d05d4874e1ace106212a48d8b44"
   },
   "files": {

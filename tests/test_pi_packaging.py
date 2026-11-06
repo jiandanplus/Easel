@@ -176,6 +176,27 @@ def test_bundled_launcher_ignores_poisoned_python_startup(tmp_path):
     assert not marker.exists()
 
 
+def test_launcher_log_can_be_redirected_for_the_native_shell():
+    module = load("build_pi_macos")
+    assert '>>"${EASEL_LOG_FILE:-$LOG/launcher.log}" 2>&1' in module.launcher_script()
+
+
+@pytest.mark.skipif(not Path("/usr/bin/swiftc").exists(), reason="needs the Xcode command line tools")
+def test_native_shell_forwards_arguments_to_the_launcher(tmp_path):
+    import subprocess
+    module = load("build_pi_macos")
+    macos = tmp_path / "Easel.app/Contents/MacOS"
+    macos.mkdir(parents=True)
+    module.compile_shell(macos / "Easel")
+    seen = tmp_path / "seen"
+    forward = macos / "easel-launcher"
+    forward.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" > {seen}\nexit 7\n')
+    forward.chmod(0o755)
+    result = subprocess.run([str(macos / "Easel"), "--workspace", "/a b", "--stop"], timeout=30)
+    assert result.returncode == 7
+    assert seen.read_text().splitlines() == ["--workspace", "/a b", "--stop"]
+
+
 def test_desktop_image_decoder_is_pinned_and_licensed():
     lock=(ROOT/'packaging/macos/core-requirements.txt').read_text()
     sha='ffd0c5368496f41b0944be820fcb7a838aa6e623d250b01acf2643939c3f99d7'
