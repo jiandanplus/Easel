@@ -68,6 +68,7 @@
 :root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) input::placeholder, :root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) textarea::placeholder { color: var(--text-tertiary); opacity: 1; }
 
 :root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) input:focus-visible, :root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) textarea:focus-visible, :root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) .settings-overlay input.mock:focus, :root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) .settings-overlay .settings-select:focus-visible { outline: 2px solid var(--accent-start); outline-offset: 2px; border-color: var(--accent-start); box-shadow: var(--glow); }
+:root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) .composer textarea.chat-input:focus-visible { outline: none; border-color: transparent; box-shadow: none; }
 
 :root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) .settings-overlay input.mock[disabled], :root:is([data-theme='minimal'],[data-theme='forest'],[data-theme='pastel'],[data-theme='swiss']) .settings-overlay .settings-select:disabled { background: var(--surface-2); color: var(--text-tertiary); }
 
