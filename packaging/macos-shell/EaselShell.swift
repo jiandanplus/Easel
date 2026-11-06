@@ -57,7 +57,6 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
         let current = root.appendingPathComponent("current/Easel/Easel.app")
         guard FileManager.default.fileExists(atPath: current.path), current.resolvingSymlinksInPath() != app else { return false }
         let configuration = NSWorkspace.OpenConfiguration()
-        configuration.createsNewApplicationInstance = true
         configuration.environment = environment
         NSWorkspace.shared.openApplication(at: current, configuration: configuration) { _, _ in exit(0) }
         return true
