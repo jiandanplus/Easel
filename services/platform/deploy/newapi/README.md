@@ -11,6 +11,8 @@ The central service keeps `https://api.drawbookai.cn:19443` and the same busines
 | TLS for the central service | nginx `127.0.0.1:19443`, certificate `easel-gateway`; `/etc/hosts` maps the name to 127.0.0.1 |
 | Admin page | `ssh -N -L 127.0.0.1:18887:127.0.0.1:19880 easel-zhiyin`, then http://127.0.0.1:18887 |
 
+Status 2026-11-06: steps 1-5 are done. Only the DeepSeek channel exists; the two image models have no channel yet.
+
 Order, as root on the server:
 
 1. `./bootstrap.sh` starts the stack.
