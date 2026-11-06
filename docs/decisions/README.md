@@ -12,3 +12,4 @@
 | [0006](0006-media-maintenance-optional.md) | 媒体维护许可改为可选，默认关闭 |
 | [0007](0007-media-writeoffs.md) | 媒体任务也走审计过的平台承担（迁移 021） |
 | [0008](0008-native-mac-window.md) | 桌面版用 Mac 原生窗口 |
+| [0009](0009-product-name-youchuang.md) | 产品对外名称改为优创，内部标识不变 |
