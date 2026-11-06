@@ -8,21 +8,30 @@ opens is proven by the weekly off-host restore drill, which holds the only
 private key.
 """
 import argparse
-import importlib.util
+import hashlib
 import json
 import os
 import socket
+import types
 import uuid
 from pathlib import Path
 
-FROZEN = Path("/root/easel-migration-20261024/encrypted_backup.py")
+FROZEN = Path("/root/easel-migration-20261024/easel_encrypted_backup.py")
+FROZEN_SHA256 = "d330bccf0c71f9c4d808411ba48d87c217048dde0763023e4e9ca0cb45bb14a1"
 PUBLIC_KEY = Path("/etc/easel-backup/backup-public.pem")
 
 
-def load_frozen(path):
-    spec = importlib.util.spec_from_file_location("easel_frozen_encrypted_backup", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+class FrozenMismatch(RuntimeError):
+    pass
+
+
+def load_frozen(path, expected=FROZEN_SHA256):
+    source = Path(path).read_bytes()
+    if hashlib.sha256(source).hexdigest() != expected:
+        raise FrozenMismatch(f"{path} is not the pinned encrypted_backup")
+    # Compile the verified bytes instead of rereading a file that could change in between.
+    module = types.ModuleType("easel_frozen_encrypted_backup")
+    exec(compile(source, str(path), "exec"), module.__dict__)
     return module
 
 

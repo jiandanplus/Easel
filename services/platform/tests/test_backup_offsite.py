@@ -114,6 +114,16 @@ def test_sealed_backup_refuses_wrong_host_or_user():
         sealed_backup.run(module, b"PUBLIC", euid=0, hostname="other")
 
 
+def test_sealed_backup_loads_only_the_pinned_frozen_script(tmp_path):
+    assert sealed_backup.FROZEN.name == "easel_encrypted_backup.py"  # the file name on the server
+    module = sealed_backup.load_frozen(LEGACY / "encrypted_backup.py")
+    assert module.TARGET == TARGET and callable(module.collect) and callable(module.save)
+    tampered = tmp_path / "easel_encrypted_backup.py"
+    tampered.write_bytes((LEGACY / "encrypted_backup.py").read_bytes() + b"\n")
+    with pytest.raises(sealed_backup.FrozenMismatch):
+        sealed_backup.load_frozen(tampered)
+
+
 def test_real_envelope_from_public_key_opens_only_with_private_key():
     public, private = rsa_pair()
     transfer = helper()
