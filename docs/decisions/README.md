@@ -10,3 +10,4 @@
 | [0004](0004-web-routes-by-domain.md) | 按领域拆分 web/app.py |
 | [0005](0005-b3-tests-per-process.md) | B3 测试逐文件单独进程运行 |
 | [0006](0006-media-maintenance-optional.md) | 媒体维护许可改为可选，默认关闭 |
+| [0007](0007-media-writeoffs.md) | 媒体任务也走审计过的平台承担（迁移 021） |

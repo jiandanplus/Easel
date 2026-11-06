@@ -50,6 +50,10 @@ python -m platform_service execution-writeoff-operation \
 
 通用运营角色、Console 的 `execution:review`／publish 和产品 runtime 不自动拥有 writeoff 能力。Console 不提供资金处理按钮；其工单处理进度独立于实际财务终态。
 
+## 媒体任务（迁移 021）
+
+媒体待核算任务使用同一入口和同一套规则（[决策 0007](../decisions/0007-media-writeoffs.md)），命令为 `media-writeoff-plan`、`media-writeoff-apply`、`media-writeoff-operation`，参数与上面相同。计划多一个 `"subject": "media"`，快照还包含存储预算与异步任务阶段。可处置条件：已派发、租约已过期、无 receipt、无终态证据、`media_work` 不存在或为 `manual`。apply 在同一事务内释放点数预留与存储预算，任务变为 `waived`、`delivery_state=unavailable`，不重新生成、不恢复产物。
+
 ## 查询协议与用户显示
 
 对已承担的请求，安全查询字段必须同时满足：

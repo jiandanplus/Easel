@@ -54,6 +54,7 @@ REQUIRED_MIGRATIONS = [
     "011_console_reconciliation.sql",
     "012_execution_writeoffs.sql", "013_execution_evidence.sql", "014_media_execution.sql", "015_media_storage.sql",
     "016_m1_image_enablement.sql", "017_voice_stages.sql", "018_media_async_work.sql", "019_media_voice_runtime.sql", "020_media_incho_runtime.sql",
+    "021_media_writeoffs.sql",
 ]
 ACCEPTANCE_CREDITS = 100_000_000
 ACCEPTANCE_RATE = {

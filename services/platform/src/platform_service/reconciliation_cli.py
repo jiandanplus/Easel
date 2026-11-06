@@ -55,12 +55,22 @@ async def operate_reconciliation(args):
             )).fetchone()
             if not row or not row['owned']:
                 raise PlatformError(403, 'reconciliation_owner_required')
-        from .execution.core import ExecutionService
-        from .execution.reconciliation import ExecutionReconciliation
-        service = ExecutionReconciliation(ExecutionService(db, None))
         # This capability is deliberately absent from all generic operator and
         # Console roles; only this independently verified host-owner entry uses it.
         operator = OperatorIdentity(args.operator, frozenset({'execution:writeoff'}))
+        if args.command.startswith('media-'):
+            from .media.reconciliation import MediaReconciliation
+            media = MediaReconciliation(db)
+            if args.command == 'media-writeoff-plan':
+                return await media.plan_waivers(operator, args.jobs, args.reason, args.approval_reference)
+            if args.command == 'media-writeoff-apply':
+                return await media.apply_waivers(operator, read_plan(args.plan), args.reviewed_plan_hash, args.key)
+            if args.command == 'media-writeoff-operation':
+                return await media.operation(operator, args.key)
+            raise ValueError('invalid_reconciliation_operator_command')
+        from .execution.core import ExecutionService
+        from .execution.reconciliation import ExecutionReconciliation
+        service = ExecutionReconciliation(ExecutionService(db, None))
         if args.command == 'execution-writeoff-plan':
             return await service.plan_waivers(operator, args.jobs, args.reason, args.approval_reference)
         if args.command == 'execution-writeoff-apply':

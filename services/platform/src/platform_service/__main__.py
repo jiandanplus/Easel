@@ -87,7 +87,8 @@ async def _test_payment(db, runtime, args, operator):
 
 
 async def operate(args):
-    if args.command in {'execution-writeoff-plan', 'execution-writeoff-apply', 'execution-writeoff-operation'}:
+    if args.command in {'execution-writeoff-plan', 'execution-writeoff-apply', 'execution-writeoff-operation',
+                        'media-writeoff-plan', 'media-writeoff-apply', 'media-writeoff-operation'}:
         from .reconciliation_cli import operate_reconciliation
         return await operate_reconciliation(args)
     if args.command in {'identity-restore-proof', 'identity-migration-inspect', 'identity-migration-apply'}:
@@ -289,7 +290,17 @@ def main(argv=None):
     writeoff_apply.add_argument('--key', required=True)
     writeoff_operation = sub.add_parser('execution-writeoff-operation', help='Owner-only lookup of original waiver operation; no retries or writes')
     writeoff_operation.add_argument('--key', required=True)
-    for child in (writeoff_plan, writeoff_apply, writeoff_operation):
+    media_plan = sub.add_parser('media-writeoff-plan', help='Owner-only read-only media customer waiver plan; never changes money')
+    media_plan.add_argument('--job', dest='jobs', action='append', required=True)
+    media_plan.add_argument('--reason', required=True)
+    media_plan.add_argument('--approval-reference', required=True)
+    media_apply = sub.add_parser('media-writeoff-apply', help='Owner-only approved media waiver; exact reviewed plan and idempotency key required')
+    media_apply.add_argument('--plan', required=True)
+    media_apply.add_argument('--reviewed-plan-hash', required=True)
+    media_apply.add_argument('--key', required=True)
+    media_operation = sub.add_parser('media-writeoff-operation', help='Owner-only lookup of original media waiver operation; no retries or writes')
+    media_operation.add_argument('--key', required=True)
+    for child in (writeoff_plan, writeoff_apply, writeoff_operation, media_plan, media_apply, media_operation):
         child.add_argument('--operator', required=True, help='Audited host-owner operator identity')
     offer = sub.add_parser("offer-publish")
     offer.add_argument("--file", required=True)
@@ -339,10 +350,12 @@ def main(argv=None):
                 json.dumps(asyncio.run(operate(args)), ensure_ascii=False, default=str)
             )
         return 0
-    except (ValueError, OSError, PlatformError, DatabaseError, PoolTimeout):
-        # Do not echo file contents, connection strings or provider responses.
+    except (ValueError, OSError, PlatformError, DatabaseError, PoolTimeout) as error:
+        # Do not echo file contents, connection strings or provider responses. A
+        # PlatformError code is a validated fixed token, so the operator may see it.
+        code = f" ({error.code})" if isinstance(error, PlatformError) else ""
         print(
-            "Central command failed; check server configuration and operator parameters.",
+            f"Central command failed{code}; check server configuration and operator parameters.",
             file=sys.stderr,
         )
         return 1

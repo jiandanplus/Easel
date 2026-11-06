@@ -109,7 +109,7 @@
     "easel/platform/client.py": "b55d00a4178397e5ef5fc795b065ed6c99ba8a280f34e25f5a37643a0251feee",
     "easel/platform/execution_proxy.py": "3646e8349b9b70c0edd4e628b3a3f8bc11793680b9115e335e0417a0c6301730",
     "easel/platform/execution_records.py": "05a89ee21c6864ee3df6f3c529cc70e7a57eec361e34bb37ec2599430c093eee",
-    "easel/platform/media.py": "2ddd16bc0d342d10a5ebe683d49ca2736ed5c5bf3155a26cf039b4309df37ec8",
+    "easel/platform/media.py": "cd0a800adb130a97763972ef2009764822c71067fb47e9d31b5ec20c7e1276d3",
     "easel/platform/media_contracts.py": "af1409356af8d850d3ce3ba6bc451bffab9f9841547e4f56b50640410e7b6ee0",
     "easel/platform/media_files.py": "31985a835c5d81e8790c7bdffb02623e36aadf4a7b74166a6b3519a012c35ea2",
     "easel/platform/media_records.py": "cb99d70268f0c6dc7e0739aee344efeff5c5ca9c967bcb7bd13fa8d9137e60cf",

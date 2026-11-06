@@ -1,13 +1,14 @@
 # P3 媒体候选版本上线清单
 
-目标：生产从迁移 016 升到 020，媒体维护许可使用默认的本地模式（[决策 0006](../../../docs/decisions/0006-media-maintenance-optional.md)），然后逐个开放视频、音乐、语音模型。通用顺序见[部署手册第 8 节](../../../docs/handbook/2026-11-05/03-deployment.md)，本清单只补本次特有的检查。
+目标：生产从迁移 016 升到 021，媒体维护许可使用默认的本地模式（[决策 0006](../../../docs/decisions/0006-media-maintenance-optional.md)），然后逐个开放视频、音乐、语音模型。通用顺序见[部署手册第 8 节](../../../docs/handbook/2026-11-05/03-deployment.md)，本清单只补本次特有的检查。
 
 ## 已在隔离环境完成（无需生产权限）
 
 - 从锁文件带哈希干净安装 wheel，`prepare_deployment.py` 通过。
-- PostgreSQL 16 先迁到 016，再用候选版本自己的 `migrate` 升到 020，`grant-runtime` 通过；全程没有 `easel_backup_control`。
+- PostgreSQL 16 先迁到 016，再用候选版本自己的 `migrate` 升到 021，`grant-runtime` 通过；全程没有 `easel_backup_control`。演练使用与生产相同的形态：独立 owner 角色拥有的 `workbench_*` schema。
+- 021（[决策 0007](../../../docs/decisions/0007-media-writeoffs.md)）新增媒体平台承担：`media-writeoff-plan` 在演练库上走通 owner 校验并拒绝不存在的任务；runtime 对处置表无权限。
 - 带媒体配置启动 API，媒体运行时以本地维护模式启动，`/health` 正常。
-- 017–020 对生产已有表只有一处改动：018 给 `media_provider_associations` 加唯一约束 `(job_id, attempt_id, binding_hash, provider_scope_hash, provider_job_id)`。该表主键是 `(job_id, kind)`，只有 `kind='job'` 行的 `provider_job_id` 非空，其余为 NULL，因此已有数据不可能违反该约束。其余语句只新建表、函数、触发器，或修改 018 才新建的 `media_work`。
+- 017–020 对生产已有表只有一处改动：018 给 `media_provider_associations` 加唯一约束 `(job_id, attempt_id, binding_hash, provider_scope_hash, provider_job_id)`。该表主键是 `(job_id, kind)`，只有 `kind='job'` 行的 `provider_job_id` 非空，其余为 NULL，因此已有数据不可能违反该约束。其余语句只新建表、函数、触发器，或修改 018 才新建的 `media_work`。021 放宽 `media_jobs` 的状态约束（加 `waived`）并加一个只约束 `waived` 行的检查，已有数据都满足；其余是新表和替换的检查函数。
 
 ## 部署前只读预检（需要你授权连接 154）
 
@@ -27,12 +28,21 @@
 |---|---|
 | 迁移校验和 | 生产 16 行，001–016 与候选逐个相同，无多余版本 |
 | 媒体配置 | `/etc/easel-central/media.json`（0600，属主 easel-central）；候选与生产代码对去掉密钥后的同一配置算出的两款图片模型 `binding_hash` 完全一致（flare `599e27e6…`、sunburst `da985099…`），已发布的模型定义不受影响；未写 `maintenance`，即本地模式；`storage_root` 存在、是目录、非符号链接 |
-| 在途媒体任务 | 共 3 笔：2 笔 settled；1 笔 `81a6155d…` 为 `pending_reconciliation / unknown / processing`，`upstream_uncertain`，预留 1,000,000 点未结。即 10-27 媒体目录只读事故那笔（[交付记录](../../../docs/validation/2026-10-27-newapi-image-workbench-delivery.md) 第 50–54 行）：上游已生成，但写盘失败、用户未收到。升级不碰它，但需要你在控制台核算页做运营决定（释放预留或按证据结算） |
+| 在途媒体任务 | 共 3 笔：2 笔 settled；1 笔 `81a6155d…` 为 `pending_reconciliation / unknown / processing`，`upstream_uncertain`，预留 1,000,000 点未结。即 10-27 媒体目录只读事故那笔（[交付记录](../../../docs/validation/2026-10-27-newapi-image-workbench-delivery.md) 第 50–54 行）：上游已生成，但写盘失败、用户未收到。升级不碰它。你已决定释放预留：控制台做不到，改由 021 的 `media-writeoff-*` 在升级后处置（见下文） |
 | 备份 | P1 已上线；11-06 最新备份已在 R2 并通过恢复演练（账本核对通过） |
 
 ## 正式升级（需要你逐步确认）
 
-按手册第 8 节：关闭新准入 → 停 API 写入 → 新备份收据 → owner 执行 `migrate`（只会追加 017–020）→ `grant-runtime` → 新 release 目录安装并切换 unit → 启动 → `/health` 与 `/v2/capabilities` → 本人登录，先用已上线的两款图片模型做一次真实扣点回归，再逐个开放新模型。
+按手册第 8 节：关闭新准入 → 停 API 写入 → 新备份收据 → owner 执行 `migrate`（只会追加 017–021）→ `grant-runtime` → 新 release 目录安装并切换 unit → 启动 → `/health` 与 `/v2/capabilities` → 本人登录，先用已上线的两款图片模型做一次真实扣点回归，再逐个开放新模型。
+
+## 处置 10-27 待核算任务（升级后、开放新模型前）
+
+用 owner 身份在服务器上运行，命令形状见[核算部署文档](../../../docs/platform/reconciliation-r2-deployment.md)的“媒体任务”一节：
+
+1. `media-writeoff-plan --job 81a6155d-c7dd-4b98-bd3f-5e909a4d3ba9 --reason … --approval-reference … --operator …`，输出写入 root 私有目录（0600）。
+2. 你审核计划：1 项、金额 1000000、`subject=media`，记下 `plan_sha256`。
+3. `media-writeoff-apply --plan … --reviewed-plan-hash <你确认的哈希> --key <一次性幂等键>`。
+4. 只读核对：该任务 `waived`、钱包待核算 0、预留释放 1,000,000 点；`media-writeoff-operation --key …` 返回同一结果。
 
 ## 逐个开放新模型
 

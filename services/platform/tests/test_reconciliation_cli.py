@@ -32,6 +32,30 @@ def test_writeoff_apply_requires_exact_review_hash_and_original_key(monkeypatch,
         command.main(['execution-writeoff-apply','--plan','/private/controlled-plan.json','--key','single-operation','--operator','synthetic-owner'])
 
 
+
+def test_media_writeoff_commands_route_to_the_same_owner_only_entry(monkeypatch,capsys):
+    import platform_service.__main__ as command
+    seen=[]
+    async def reconcile(args):
+        seen.append(args.command);return {'subject':'media'}
+    monkeypatch.setattr('platform_service.reconciliation_cli.operate_reconciliation',reconcile)
+    assert command.main(['media-writeoff-plan','--job','81a6155d-c7dd-4b98-bd3f-5e909a4d3ba9','--reason','Synthetic undelivered image','--approval-reference','pending-human-review','--operator','synthetic-owner'])==0
+    assert command.main(['media-writeoff-apply','--plan','/private/controlled-plan.json','--reviewed-plan-hash','a'*64,'--key','single-operation','--operator','synthetic-owner'])==0
+    assert command.main(['media-writeoff-operation','--key','single-operation','--operator','synthetic-owner'])==0
+    assert seen==['media-writeoff-plan','media-writeoff-apply','media-writeoff-operation']
+    with pytest.raises(SystemExit):
+        command.main(['media-writeoff-apply','--plan','/private/controlled-plan.json','--key','single-operation','--operator','synthetic-owner'])
+
+
+@pytest.mark.asyncio
+async def test_media_writeoff_cli_requires_owner_before_other_configuration(monkeypatch):
+    from platform_service.reconciliation_cli import operate_reconciliation
+    from platform_service.errors import PlatformError
+    monkeypatch.delenv('CENTRAL_MIGRATION_DATABASE_URL',raising=False)
+    with pytest.raises(PlatformError) as failure:
+        await operate_reconciliation(argparse.Namespace(command='media-writeoff-plan'))
+    assert failure.value.code=='reconciliation_owner_required'
+
 @pytest.mark.asyncio
 async def test_reconciliation_cli_requires_owner_before_other_configuration(monkeypatch):
     from platform_service.reconciliation_cli import operate_reconciliation

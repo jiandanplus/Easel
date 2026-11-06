@@ -110,7 +110,7 @@ def _job(value, *, artifact_detail=True):
     row["id"] = _uuid(value["id"])
     for name in ("created_at", "updated_at"): timestamp(row[name])
     if (value["capability"] not in CAPABILITIES
-            or value["status"] not in {"reserved", "dispatched", "pending_reconciliation", "settled", "released"}
+            or value["status"] not in {"reserved", "dispatched", "pending_reconciliation", "settled", "released", "waived"}
             or value["financial_state"] != value["status"]
             or value["execution_state"] not in {"queued", "running", "completed", "failed", "cancel_requested", "cancelled", "unknown"}
             or value["delivery_state"] not in {"processing", "available", "unavailable", "expired"}
@@ -121,6 +121,8 @@ def _job(value, *, artifact_detail=True):
     if row["amount"] != row["reserved"]: raise ValueError
     row["actual"] = None if value.get("actual") is None else _money(value["actual"])
     if row["status"] in {"settled", "released"} and row["actual"] is None: raise ValueError
+    # Platform-absorbed (central migration 021): the customer pays 0 and supplier usage stays unknown.
+    if row["status"] == "waived" and row["actual"] is not None: raise ValueError
     artifacts = value.get("artifacts", [])
     if not isinstance(artifacts, list) or len(artifacts) > 32: raise ValueError
     row["artifacts"] = [_artifact(item) for item in artifacts]

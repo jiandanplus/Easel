@@ -533,3 +533,12 @@ def test_capacity_error_is_actionable_and_never_sends_a_new_paid_post(tmp_path,m
     result=host.execute('create_media',{'model':MODEL,'prompt':'blue circle'},'one')
     assert result['ok'] is False and result['text']=='本机生图记录已满'
     assert not any(r.method=='POST' for r in fixture.calls)
+
+
+def test_platform_absorbed_media_job_is_read_with_unknown_actual():
+    from easel.platform.media import _job
+    waived = {**Fixture().job, "status": "waived", "financial_state": "waived", "execution_state": "unknown",
+              "delivery_state": "unavailable", "actual": None, "artifacts": []}
+    assert _job(waived)["status"] == "waived"
+    with pytest.raises(ValueError):
+        _job({**waived, "actual": "0"})

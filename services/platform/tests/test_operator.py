@@ -54,3 +54,15 @@ def test_cli_connection_errors_are_safe(monkeypatch, capsys, error_kind):
     output = capsys.readouterr()
     assert "fixture-secret-must-not-escape" not in output.err
     assert "Central command failed" in output.err
+
+
+def test_cli_failure_names_only_the_platform_error_code(monkeypatch, capsys):
+    import platform_service.__main__ as command
+    from platform_service.errors import PlatformError
+
+    async def refused(args):
+        raise PlatformError(404, "media_not_found")
+
+    monkeypatch.setattr(command, "operate", refused)
+    assert command.main(["accounts"]) == 1
+    assert "Central command failed (media_not_found);" in capsys.readouterr().err
