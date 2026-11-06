@@ -21,4 +21,4 @@ Order, as root on the server:
 4. Point the public `api` A record at 154.217.245.179. Let's Encrypt needs it; port 443 still answers 404 for this name, so the gateway stays private.
 5. `python3 finish.py switch` issues the certificate, moves nginx onto 19443 and disables `easel-gateway-tunnel`.
 
-`backup/newapi_backup.py` seals a daily database dump (without request logs) to its own R2 prefix (`newapi`). The envelope kind is `central` because the frozen sealing helper accepts only `central` and `logto`; open one with the same private key and kind. The 2026-11-06 copy was fetched from R2 and restored into a temporary database. The weekly drill does not cover this prefix.
+`backup/newapi_backup.py` seals a daily database dump (without request logs) to its own R2 prefix (`newapi`). The envelope kind is `central` because the frozen sealing helper accepts only `central` and `logto`; open one with the same private key and kind. The 2026-11-06 copy was fetched from R2 and restored into a temporary database. The weekly drill restores it too and fails if channels or tokens are missing; the hourly Mac watch alerts when it goes stale.

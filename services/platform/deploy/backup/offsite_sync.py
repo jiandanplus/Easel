@@ -5,13 +5,16 @@ Server (hourly, default): uploads are add-only (`--immutable`, never deletes);
 the envelopes are already encrypted with the off-host public key.
 Watch (`--watch`, hourly on the Mac that holds the private key): alerts when
 the newest backup in R2 is older than STALE_HOURS or R2 cannot be read, which
-also covers a server that has stopped backing up or syncing.
+also covers a server that has stopped backing up or syncing. It also reads the
+server's health record, because the server itself has no alert channel.
 
 Either way an alert is sent when the set of problems changes, repeated once a
 day while unresolved, and a recovery message is sent when healthy again.
 
 Private config (server /etc/easel-backup/backup.env, Mac drill.env; 0600):
   R2_REMOTE=r2:<bucket>/central          rclone remote path
+  NEWAPI_R2_REMOTE=r2:<bucket>/newapi    optional, watch only: gateway backups
+  HEALTH_SSH=easel-zhiyin                optional, watch only: ssh host of the health record
   RCLONE_CONFIG=/etc/easel-backup/rclone.conf
   FEISHU_USER=ou_...                       lark-cli app bot direct message, or
   FEISHU_WEBHOOK=https://open.feishu.cn/open-apis/bot/v2/hook/...  (+ FEISHU_SECRET)
@@ -33,6 +36,9 @@ REQUIRED = ("R2_REMOTE",)
 DEFAULTS = {"BACKUP_DIR": "/var/backups/easel-encrypted", "STALE_HOURS": "30",
             "STATE_FILE": "/var/lib/easel-backup/state.json", "RCLONE_CONFIG": "/etc/easel-backup/rclone.conf"}
 REPEAT_SECONDS = 24 * 3600
+HEALTH_STALE_SECONDS = 30 * 60
+HEALTH_LABELS = {"gateway_unhealthy": "模型网关不可用", "api_unhealthy": "中央服务不可用",
+                 "console_unhealthy": "运营后台不可用", "backup_failed": "服务器备份失败"}
 
 
 class SyncError(Exception):
@@ -111,33 +117,66 @@ def run(config, *, rclone, now=time.time, notify):
     return {"problems": [problems[code] for code in sorted(problems)], "uploaded": uploaded, "local": len(local)}
 
 
-def watch(config, *, rclone, now=time.time, notify):
-    current = now()
-    stale = float(config["STALE_HOURS"])
-    problems, newest = {}, None
+def health_reader(host):
+    def read():
+        try:
+            result = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", host,
+                                     "cat /var/lib/easel-health/status.json"],
+                                    capture_output=True, text=True, timeout=40)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise SyncError(type(error).__name__) from None
+        if result.returncode != 0:
+            raise SyncError("ssh 退出码 %d" % result.returncode)
+        return json.loads(result.stdout)
+    return read
+
+
+def health_problems(read, current):
     try:
-        names = sorted(name for name in rclone(["lsf", config["R2_REMOTE"].rstrip("/"), "--files-only"]).split()
+        value = read()
+    except (SyncError, ValueError) as error:
+        return {"health_unreachable": f"无法读取服务器巡检结果：{error}"}
+    if current - value.get("checked_at", 0) > HEALTH_STALE_SECONDS:
+        return {"health_stale": "服务器巡检已超过 30 分钟没有更新"}
+    return {"health:" + alert["code"]: "服务器巡检：" + HEALTH_LABELS.get(alert["code"], alert["code"])
+            for alert in value.get("alerts", []) if alert.get("severity") == "error"}
+
+
+def remote_problems(rclone, remote, current, stale, *, label="", prefix=""):
+    """Return the problems for one R2 prefix and the newest backup found there."""
+    try:
+        names = sorted(name for name in rclone(["lsf", remote.rstrip("/"), "--files-only"]).split()
                        if NAME.match(name))
     except SyncError as error:
-        problems["r2"] = f"无法读取 R2：{error}"
-    else:
-        if not names:
-            problems["no_remote"] = "R2 上没有找到备份"
-        else:
-            newest = names[-1]
-            if (age := age_hours(newest, current)) > stale:
-                problems["stale_remote"] = (f"R2 上最新备份已有 {int(age)} 小时，超过 {int(stale)} 小时"
-                                            "（服务器备份或同步可能已停止）")
-    _report(config, problems, current, notify, f"【Easel 备份恢复正常】R2 最新备份 {newest}")
+        return {prefix + "r2": f"无法读取 R2：{error}"}, None
+    if not names:
+        return {prefix + "no_remote": f"R2 上没有找到{label}备份"}, None
+    if (age := age_hours(names[-1], current)) > stale:
+        return {prefix + "stale_remote": (f"R2 上最新{label}备份已有 {int(age)} 小时，超过 {int(stale)} 小时"
+                                          "（服务器备份或同步可能已停止）")}, names[-1]
+    return {}, names[-1]
+
+
+def watch(config, *, rclone, now=time.time, notify, read_health=None):
+    current = now()
+    stale = float(config["STALE_HOURS"])
+    problems, newest = remote_problems(rclone, config["R2_REMOTE"], current, stale)
+    if config.get("NEWAPI_R2_REMOTE"):
+        problems.update(remote_problems(rclone, config["NEWAPI_R2_REMOTE"], current, stale,
+                                        label="网关", prefix="newapi_")[0])
+    if read_health is not None:
+        problems.update(health_problems(read_health, current))
+    _report(config, problems, current, notify, f"【Easel 已恢复正常】服务器巡检和备份正常，R2 最新备份 {newest}",
+            label="运行")
     return {"problems": [problems[code] for code in sorted(problems)], "newest": newest}
 
 
-def _report(config, problems, current, notify, recovered):
+def _report(config, problems, current, notify, recovered, label="备份"):
     state = _state(config["STATE_FILE"])
     previous = state.get("problems", [])
     codes = sorted(problems)
     if codes and (codes != previous or current - state.get("alerted_at", 0) >= REPEAT_SECONDS):
-        if notify("【Easel 备份告警】\n" + "\n".join(problems[code] for code in codes)):
+        if notify(f"【Easel {label}告警】\n" + "\n".join(problems[code] for code in codes)):
             state["alerted_at"] = current
     elif not codes and previous:
         notify(recovered)
@@ -161,8 +200,12 @@ def main():
         if args.watch:
             raise SyncError("配置缺少 FEISHU_USER 或 FEISHU_WEBHOOK")
         notify = lambda text: False  # the Mac watch reports a server that stops syncing
-    task = watch if args.watch else run
-    result = task(config, rclone=rclone_runner(config["RCLONE_CONFIG"]), notify=notify)
+    rclone = rclone_runner(config["RCLONE_CONFIG"])
+    if args.watch:
+        reader = health_reader(config["HEALTH_SSH"]) if config.get("HEALTH_SSH") else None
+        result = watch(config, rclone=rclone, notify=notify, read_health=reader)
+    else:
+        result = run(config, rclone=rclone, notify=notify)
     print(json.dumps(result, ensure_ascii=False))
     return 1 if result["problems"] else 0
 

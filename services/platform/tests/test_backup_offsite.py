@@ -252,6 +252,45 @@ def test_watch_alerts_when_r2_goes_stale_or_unreadable_and_recovers(tmp_path):
     assert "没有找到" in sent[3]
 
 
+def test_watch_pushes_server_health_errors_but_not_warnings(tmp_path):
+    now = 1_800_000_000
+    cfg = config(tmp_path)
+    sent = []
+    notify = lambda text: sent.append(text) or True
+    remote = FakeRclone(remote={sealed_name(3, now)})
+    record = lambda *alerts: (lambda: {"checked_at": now - 60, "alerts": list(alerts)})
+    offsite_sync.watch(cfg, rclone=remote, now=lambda: now, notify=notify,
+                       read_health=record({"code": "memory_pressure", "severity": "warning"}))
+    assert sent == []
+    result = offsite_sync.watch(cfg, rclone=remote, now=lambda: now, notify=notify,
+                                read_health=record({"code": "gateway_unhealthy", "severity": "error"}))
+    assert result["problems"] == ["服务器巡检：模型网关不可用"] and "运行告警" in sent[0]
+    offsite_sync.watch(cfg, rclone=remote, now=lambda: now, notify=notify, read_health=record())
+    assert len(sent) == 2 and "恢复" in sent[1]
+
+
+def test_watch_treats_a_silent_server_as_a_problem(tmp_path):
+    now = 1_800_000_000
+    remote = FakeRclone(remote={sealed_name(3, now)})
+
+    def unreachable():
+        raise offsite_sync.SyncError("ssh 退出码 255")
+    cfg = config(tmp_path)
+    run = lambda read: offsite_sync.watch(cfg, rclone=remote, now=lambda: now,
+                                          notify=lambda text: True, read_health=read)["problems"]
+    assert "无法读取服务器巡检结果" in run(unreachable)[0]
+    assert "没有更新" in run(lambda: {"checked_at": now - 3600, "alerts": []})[0]
+
+
+def test_watch_covers_the_gateway_backup_prefix(tmp_path):
+    now = 1_800_000_000
+    cfg = {**config(tmp_path), "NEWAPI_R2_REMOTE": "r2:bucket/newapi"}
+    fresh, old = sealed_name(3, now), sealed_name(40, now)
+    rclone = lambda args: (old if "newapi" in args[1] else fresh)
+    result = offsite_sync.watch(cfg, rclone=rclone, now=lambda: now, notify=lambda text: True)
+    assert len(result["problems"]) == 1 and "网关备份" in result["problems"][0] and result["newest"] == fresh
+
+
 # ---- restore drill pieces ----
 
 def archive(files):
@@ -304,3 +343,31 @@ def test_ledger_check_sql_flags_unbalanced_rows():
     rows = {"journal_unbalanced": 0, "bucket_mismatch": 0, "issued_mismatch": 0}
     assert restore_drill.ledger_problems(rows) == []
     assert restore_drill.ledger_problems({**rows, "journal_unbalanced": 2}) == ["2 笔凭证借贷不平"]
+
+
+def fake_docker(calls, failing=()):
+    def docker(args, data=None, timeout=600):
+        calls.append(args)
+        return (1, "", "boom") if args[0] in failing or (len(args) > 3 and args[3] in failing) else (0, "", "")
+    return docker
+
+
+def test_gateway_restore_reports_counts_and_always_removes_the_container():
+    calls = []
+    counts = {"channels": 1, "tokens": 1, "users": 1}
+    assert restore_drill.restore_newapi(b"PGDMP", fake_docker(calls), lambda *a: counts) == counts
+    assert calls[-1][:2] == ["rm", "-f"]
+    assert any("pg_restore" in args and "--no-owner" in args for args in calls)
+
+
+@pytest.mark.parametrize("counts", [{"channels": 0, "tokens": 1, "users": 1}, {"channels": 1, "tokens": 0, "users": 1}])
+def test_gateway_restore_fails_when_channels_or_tokens_are_gone(counts):
+    with pytest.raises(restore_drill.DrillError, match="缺少数据"):
+        restore_drill.restore_newapi(b"PGDMP", fake_docker([]), lambda *a: counts)
+
+
+def test_gateway_restore_failure_still_removes_the_container():
+    calls = []
+    with pytest.raises(restore_drill.DrillError, match="网关库恢复失败"):
+        restore_drill.restore_newapi(b"x", fake_docker(calls, failing=("pg_restore",)), lambda *a: {})
+    assert calls[-1][:2] == ["rm", "-f"]

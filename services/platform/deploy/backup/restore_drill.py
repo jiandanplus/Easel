@@ -4,16 +4,20 @@
 Takes the newest sealed backup from R2, opens it with the private key, checks
 every archive member against the manifest, restores roles and both databases
 into a throwaway PostgreSQL 16 container with no network, verifies the credit
-ledger, removes the container and reports the result to Feishu.
+ledger, removes the container and reports the result to Feishu. When
+NEWAPI_R2_REMOTE is set it does the same for the newest gateway backup, which
+is a plain pg_dump rather than an archive.
 
 Private config (~/Easel-build/backup-drill/drill.env, 0600):
   R2_REMOTE=r2:<bucket>/central
+  NEWAPI_R2_REMOTE=r2:<bucket>/newapi                      optional
   RCLONE_CONFIG=~/Easel-build/backup-drill/rclone.conf   (read-only R2 token)
   PRIVATE_KEY=~/Easel-build/backup-keys/backup-private.pem
   FEISHU_USER=ou_...                                       lark-cli app bot direct message, or
   FEISHU_WEBHOOK=https://open.feishu.cn/open-apis/bot/v2/hook/...  (+ FEISHU_SECRET)
 """
 import argparse
+import contextlib
 import hashlib
 import importlib.util
 import io
@@ -55,6 +59,8 @@ SELECT json_build_object(
                         WHERE bucket = 'issuance'), 0) = coalesce((SELECT sum(issued) FROM credit_lots), 0)
                       THEN 0 ELSE 1 END))
 """
+NEWAPI_COUNT_SQL = """SELECT json_build_object('channels', (SELECT count(*) FROM channels),
+  'tokens', (SELECT count(*) FROM tokens), 'users', (SELECT count(*) FROM users))"""
 ROW_COUNT_SQL = """
 SELECT json_build_object('tables', count(*), 'rows', coalesce(sum((xpath('/row/c/text()',
   query_to_xml(format('SELECT count(*) AS c FROM %I.%I', table_schema, table_name), false, true, '')))[1]::text::bigint), 0))
@@ -148,11 +154,9 @@ def _sql(name, database, sql):
     return json.loads(out.strip())
 
 
-def restore(members, manifest, docker=_docker):
+@contextlib.contextmanager
+def scratch_postgres(docker=_docker):
     name = "easel-restore-drill-" + secrets.token_hex(4)
-    databases = [snapshot["database"] for snapshot in manifest.get("snapshots", [])]
-    if len(databases) != len(KINDS):
-        raise DrillError("清单缺少数据库快照信息")
     code, _, err = docker(["run", "-d", "--rm", "--name", name, "--network", "none",
                            "-e", "POSTGRES_PASSWORD=" + secrets.token_hex(16), IMAGE])
     if code != 0:
@@ -164,6 +168,31 @@ def restore(members, manifest, docker=_docker):
             time.sleep(1)
         else:
             raise DrillError("临时数据库未就绪")
+        yield name
+    finally:
+        docker(["rm", "-f", name])
+
+
+def restore_newapi(payload, docker=_docker, query=_sql):
+    with scratch_postgres(docker) as name:
+        if docker(["exec", name, "createdb", "-U", "postgres", "newapi"])[0] != 0:
+            raise DrillError("无法创建 newapi")
+        code, _, err = docker(["exec", "-i", name, "pg_restore", "-U", "postgres", "-d", "newapi",
+                               "--no-owner", "--no-acl", "--exit-on-error"], data=payload)
+        if code != 0:
+            raise DrillError(f"网关库恢复失败：{err.strip()[-200:]}")
+        counts = query(name, "newapi", NEWAPI_COUNT_SQL)
+    # An empty channel table would restore cleanly and still leave the gateway useless.
+    if not all(counts.get(key) for key in ("channels", "tokens", "users")):
+        raise DrillError(f"网关库恢复后缺少数据：{counts}")
+    return counts
+
+
+def restore(members, manifest, docker=_docker):
+    databases = [snapshot["database"] for snapshot in manifest.get("snapshots", [])]
+    if len(databases) != len(KINDS):
+        raise DrillError("清单缺少数据库快照信息")
+    with scratch_postgres(docker) as name:
         report = {}
         for kind, database in zip(KINDS, databases):
             code, _, err = docker(["exec", "-i", name, "psql", "-U", "postgres", "-q"],
@@ -187,8 +216,6 @@ def restore(members, manifest, docker=_docker):
                     raise DrillError("中央库有多个账本表：" + "、".join(schemas))
                 report["ledger"] = ledger_problems(_sql(name, database, ledger_sql(schemas[0]))) if schemas else None
         return report
-    finally:
-        docker(["rm", "-f", name])
 
 
 def message(name, age, report, seconds):
@@ -197,8 +224,24 @@ def message(name, age, report, seconds):
     for kind in KINDS:
         lines.append(f"{labels[kind]}：{report[kind]['tables']} 张表，{report[kind]['rows']} 行")
     lines.append("账本核对通过" if report.get("ledger") == [] else "账本核对：未找到账本表")
+    if gateway := report.get("newapi"):
+        lines.append(f"网关库：{gateway['channels']} 个渠道，{gateway['tokens']} 个令牌，{gateway['users']} 个用户")
     lines.append(f"用时 {int(seconds)} 秒")
     return "\n".join(lines)
+
+
+def fetch_newest(rclone, remote, work, started, label=""):
+    """Copy the newest backup of one R2 prefix into the work directory."""
+    remote = remote.rstrip("/")
+    name = newest(rclone(["lsf", remote, "--files-only"]).split())
+    if name is None:
+        raise DrillError(f"R2 上没有找到{label}备份")
+    age = age_hours(name, started)
+    if age > MAX_AGE_HOURS:
+        raise DrillError(f"R2 上最新{label}备份已有 {int(age)} 小时")
+    local = work / name
+    rclone(["copyto", f"{remote}/{name}", str(local), "--checksum"])
+    return name, age, local
 
 
 def main():
@@ -212,24 +255,22 @@ def main():
     notify = feishu.notifier(config)
     work = Path(config.get("WORK_DIR", str(Path.home() / "Easel-build/backup-drill/work")))
     work.mkdir(mode=0o700, parents=True, exist_ok=True)
-    local = None
+    fetched = []
     try:
         rclone = rclone_runner(config["RCLONE_CONFIG"])
-        remote = config["R2_REMOTE"].rstrip("/")
-        name = newest(rclone(["lsf", remote, "--files-only"]).split())
-        if name is None:
-            raise DrillError("R2 上没有找到备份")
-        age = age_hours(name, started)
-        if age > MAX_AGE_HOURS:
-            raise DrillError(f"R2 上最新备份已有 {int(age)} 小时")
-        local = work / name
-        rclone(["copyto", f"{remote}/{name}", str(local), "--checksum"])
+        name, age, local = fetch_newest(rclone, config["R2_REMOTE"], work, started)
+        fetched.append(local)
         transfer = load_module(args.transfer, "easel_sealed_transfer")
-        payload = unseal(transfer, Path(config["PRIVATE_KEY"]).read_bytes(), local.read_bytes(), name)
+        private_key = Path(config["PRIVATE_KEY"]).read_bytes()
+        payload = unseal(transfer, private_key, local.read_bytes(), name)
         members, manifest = read_archive(payload)
         report = restore(members, manifest)
         if report.get("ledger"):
             raise DrillError("账本核对失败：" + "；".join(report["ledger"]))
+        if config.get("NEWAPI_R2_REMOTE"):
+            gateway, _, local = fetch_newest(rclone, config["NEWAPI_R2_REMOTE"], work, started, "网关")
+            fetched.append(local)
+            report["newapi"] = restore_newapi(unseal(transfer, private_key, local.read_bytes(), gateway))
         text = message(name, age, report, time.time() - started)
         ok = True
     except (DrillError, SyncError, OSError, ValueError) as error:
@@ -237,8 +278,8 @@ def main():
     except Exception as error:  # Opening the envelope fails closed with library-specific errors.
         text, ok = f"【Easel 恢复演练失败】{type(error).__name__}", False
     finally:
-        if local is not None:
-            local.unlink(missing_ok=True)
+        for path in fetched:
+            path.unlink(missing_ok=True)
     notify(text)
     print(text)
     return 0 if ok else 1

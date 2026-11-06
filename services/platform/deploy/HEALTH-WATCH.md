@@ -32,3 +32,7 @@ systemd每5分钟检查，启动后2分钟首次检查，随机抖动最多20秒
 运维只读查看：`systemctl status easel-health-watch.timer`、`systemctl show easel-health-watch.service -p Result -p ExecMainStatus`和`journalctl -u easel-health-watch.service`。实际状态文件包含主机资源、服务状态、备份时间和证书过期时间，不含业务身份或凭据。需要对外通知时另行明确接收方和通道。
 
 测试：`rtk proxy .venv/bin/python -m pytest --noconftest services/platform/tests/test_service_health_watch.py -q --tb=short`，5 passed；服务器安装证据另见上述安全回执，真实业务故障注入尚未执行。
+
+## 告警推送
+
+服务器本身不发通知。Mac 上每小时的 `offsite_sync.py --watch` 通过 `HEALTH_SSH` 读取 `/var/lib/easel-health/status.json`，把错误级告警推到飞书；读不到结果或结果超过 30 分钟没更新也会告警，警告级不推送。网关用真实 HTTPS 探测，不看隧道或容器是否 active。因此 Mac 关机时不会有告警，开机后下一次检查补上。

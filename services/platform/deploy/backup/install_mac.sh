@@ -32,6 +32,8 @@ case "${1:-}" in
     if [ ! -f "$DEST/drill.env" ]; then
       (umask 077; cat > "$DEST/drill.env" <<EOF
 R2_REMOTE=r2:easel-backups/central
+NEWAPI_R2_REMOTE=r2:easel-backups/newapi
+HEALTH_SSH=easel-zhiyin
 RCLONE_CONFIG=$DEST/rclone.conf
 PRIVATE_KEY=$HOME/Easel-build/backup-keys/backup-private.pem
 FEISHU_USER=$1
@@ -39,6 +41,8 @@ LARK_CLI=$(command -v lark-cli)
 EOF
 )
     fi
+    grep -q '^NEWAPI_R2_REMOTE=' "$DEST/drill.env" || echo 'NEWAPI_R2_REMOTE=r2:easel-backups/newapi' >> "$DEST/drill.env"
+    grep -q '^HEALTH_SSH=' "$DEST/drill.env" || echo 'HEALTH_SSH=easel-zhiyin' >> "$DEST/drill.env"
     echo "installed in $DEST"
     ;;
   *)
