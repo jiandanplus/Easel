@@ -19,7 +19,7 @@
 
 ```bash
 rtk proxy ssh -o StrictHostKeyChecking=yes easel-zhiyin \
-  'systemctl is-active easel-central-production.service easel-console-production.service easel-gateway-tunnel.service nginx.service easel-health-watch.timer'
+  'systemctl is-active easel-central-production.service easel-console-production.service nginx.service easel-health-watch.timer'
 rtk proxy ssh -o StrictHostKeyChecking=yes easel-zhiyin \
   'systemctl list-timers --all --no-pager'
 ```

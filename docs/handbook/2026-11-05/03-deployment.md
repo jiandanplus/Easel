@@ -6,8 +6,8 @@
 
 | 位置 | 已记录职责 | 对外入口 | 维护边界 |
 | --- | --- | --- | --- |
-| 新服务器 `154.217.245.179` | 中央 API、私有 Console、Logto、中央 PG16、身份 PG16、Nginx、备份／健康检查 | accounts／login HTTPS | 管理、数据库与原始应用端口私有 |
-| 火山引擎 `115.190.211.112` | New API、PG17、Redis、插件；通过受控隧道提供模型 | 原 `api.drawbookai.cn` 网关配置 | 备案导致的直接公网限制不通过裸露后端规避 |
+| 新服务器 `154.217.245.179` | 中央 API、私有 Console、Logto、中央 PG16、身份 PG16、New API（2026-11-06 起）、Nginx、备份／健康检查 | accounts／login HTTPS | 管理、数据库与原始应用端口私有 |
+| 火山引擎 `115.190.211.112` | 已停用，不续费（2026-11-04 起不通，旧 New API 数据未取回） | 无 | 不再使用 |
 | 阿里云 `139.196.51.51` | 历史迁移中原网站保持原状 | 原网站 | 本项目未因该次分配自动部署额外服务 |
 | 用户 Mac | Easel UI、本地 FastAPI、Pi、工作区、私有会话 | `127.0.0.1` | 不部署中央数据库或供应商公共密钥 |
 
@@ -24,7 +24,9 @@
 | 154 上 `127.0.0.1:19875` | Console | SSH 私有转发 |
 | 维护者 `127.0.0.1:18885` | Console 浏览器入口 | 本机 SSH 隧道 |
 | 维护者 `127.0.0.1:18886` | Logto 管理入口 | 本机 SSH 隧道 |
-| 154 上 `127.0.0.1:19443` | 到火山网关的 TLS 隧道 | 中央服务 |
+| 154 上 `127.0.0.1:19443` | Nginx 到本机 New API 的 TLS 入口，见 [网关说明](../../../services/platform/deploy/newapi/README.md) | 中央服务 |
+| 154 上 `127.0.0.1:19880` | New API | Nginx／SSH 私有转发 |
+| 维护者 `127.0.0.1:18887` | New API 管理入口 | 本机 SSH 隧道 |
 | 用户 `127.0.0.1:17868` | 已有原工作台 | 用户本机；端口不是服务版本标识 |
 
 1Panel 原专用入口曾通过本机 18880 访问；具体目标端口和安全路径沿用私有维护记录，不在公开手册存凭据。容器内部 IP 如 `172.29.24.20` 是历史分配值，重建后要核对。
@@ -37,7 +39,8 @@
 | --- | --- |
 | 中央 API | `easel-central-production.service` |
 | Console | `easel-console-production.service` |
-| 到网关的隧道 | `easel-gateway-tunnel.service` |
+| New API | compose 项目 `easel-newapi`（`/srv/easel/newapi`），容器 `easel-newapi`、`easel-newapi-pg`、`easel-newapi-redis` |
+| 网关备份 | `easel-newapi-backup.timer` |
 | HTTPS 代理 | `nginx.service` |
 | 健康检查 | `easel-health-watch.service`、`easel-health-watch.timer` |
 | 中央 PG | `easel-central-pg-20261024` |
@@ -64,7 +67,7 @@
 
 ```bash
 rtk proxy ssh -o StrictHostKeyChecking=yes easel-zhiyin \
-  'hostname; df -h /; free -m; systemctl is-active easel-central-production.service easel-console-production.service easel-gateway-tunnel.service nginx.service; docker ps --format "{{.ID}} {{.Names}} {{.Image}} {{.Status}}"'
+  'hostname; df -h /; free -m; systemctl is-active easel-central-production.service easel-console-production.service nginx.service; docker ps --format "{{.ID}} {{.Names}} {{.Image}} {{.Status}}"'
 ```
 
 SSH 别名须已经安全配置并核验主机密钥。不要输出 `docker inspect` 全环境、`env`、私有配置或完整回调日志。
