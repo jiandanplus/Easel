@@ -7,7 +7,7 @@ def lib():
  s=importlib.util.spec_from_file_location('health_watch',SCRIPT);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
 
 def healthy(now=1000000):
- return {'services':{name:'active' for name in ('easel-central-production','easel-console-production','easel-gateway-tunnel','nginx')},'containers':{name:True for name in ('easel-central-pg-20261024','easel-identity-pg-v2-20261024','easel-logto-v2-20261024')},'api':True,'console':True,'backup_timer':True,'backup_result':'success','backup_mtime':now-3600,'disk_percent':30,'memory_available_mib':2000,'tls_expires':{'accounts.drawbookai.cn':now+90*86400,'login.drawbookai.cn':now+90*86400}}
+ return {'services':{name:'active' for name in ('easel-central-production','easel-console-production','nginx')},'containers':{name:True for name in ('easel-central-pg-20261024','easel-identity-pg-v2-20261024','easel-logto-v2-20261024','easel-newapi','easel-newapi-pg','easel-newapi-redis')},'api':True,'gateway':True,'console':True,'backup_timer':True,'backup_result':'success','backup_mtime':now-3600,'disk_percent':30,'memory_available_mib':2000,'tls_expires':{'accounts.drawbookai.cn':now+90*86400,'login.drawbookai.cn':now+90*86400,'api.drawbookai.cn':now+90*86400}}
 
 def test_healthy_snapshot_has_no_alerts(lib):assert lib.evaluate(healthy(),1000000)==[]
 
@@ -29,3 +29,9 @@ def test_alert_signature_changes_only_on_actionable_state_changes(lib):
  assert lib.alert_signature(a)==lib.alert_signature(list(reversed(a)))
  assert lib.alert_signature(a)!=lib.alert_signature([])
  assert lib.alert_signature(a)!=lib.alert_signature([{'code':'memory_pressure','severity':'error'}])
+
+def test_gateway_outage_alerts_even_while_services_read_active(lib):
+ x=healthy();x['gateway']=False
+ assert {a['code'] for a in lib.evaluate(x,1000000)}=={'gateway_unhealthy'}
+ x=healthy();x['tls_expires']['api.drawbookai.cn']=None
+ assert {a['code'] for a in lib.evaluate(x,1000000)}=={'tls_unavailable:api.drawbookai.cn'}

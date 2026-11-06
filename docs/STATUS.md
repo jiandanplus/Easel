@@ -35,7 +35,7 @@
 | 备份解密私钥（新） | `~/Easel-build/backup-keys/backup-private.pem`（仅本机，需另行备份；公钥在 `services/platform/deploy/backup/`） |
 | 恢复演练与 R2 监视 | `~/Easel-build/backup-drill`（`rclone.conf` 为只读令牌；launchd 任务已加载，日志在 `~/Library/Logs/Easel/backup-{watch,drill}.log`） |
 | 中央服务、Console、Logto、两个 PostgreSQL | 154.217.245.179（`ssh easel-zhiyin`），详见 [部署手册](handbook/2026-11-05/03-deployment.md) |
-| New API 网关 | 火山引擎 115.190.211.112 |
+| New API 网关 | 154 上 `/srv/easel/newapi`（2026-11-06 重新部署，见 [说明](../services/platform/deploy/newapi/README.md)）；火山引擎 115.190.211.112 已停用不续费，旧渠道数据未能取回 |
 | 生产备份 | 154 每日封装备份 + R2 异地副本，已恢复演练；旧的 23 份备份只能用旧私钥打开，已另存到 `~/Easel-build/backup-keys/transfer-private-legacy.pem`（仅本机，哈希与服务器一致），服务器上的 `transfer-private.pem` 暂留 |
 
 ## 3. 代码与质量
@@ -52,7 +52,7 @@
 | P1 收尾 | 服务器旧私钥暂留 | 已另存到 Mac；需要时由你手动删除 `/root/easel-migration-20261024/transfer-private.pem` |
 | 桌面签名公证 | Apple 开发者身份 | — |
 | 订阅媒体开放（P3） | 升级与核销已完成（11-06）；权益已恢复（所有者额度 100 点、365 天，文本和图片，[决策 0010](decisions/0010-owner-allowance.md)）；图片回归被下面的网关故障挡住 | 回归通过后，视频、音乐、语音逐个真实验收（产生供应商费用，逐个确认）；明细见 [P3 上线清单](../services/platform/deploy/P3-MEDIA-RELEASE.md) |
-| **模型网关中断** | 火山引擎 `115.190.211.112`（实例 `iv-ye8aaj2u4gcva4gofev6`）自 2026-11-04 00:05（北京时间）起 22/80/443 全部不通，154 与 Mac 两侧都超时；`easel-gateway-tunnel` 持续重连失败，文本和图片模型都走不通 | 用户在火山引擎控制台查实例状态（到期、欠费、关机、安全组）。恢复后：确认隧道、核销 11-06 测试留下的结果不明请求（预留 9728）、重做图片回归；健康巡检要加上隧道检查，这次中断两天多没有告警 |
+| **模型网关迁移** | 火山引擎自 2026-11-04 00:05（北京时间）不通，用户决定不续费；New API 已在 154 跑起来，但渠道和供应商密钥随旧服务器丢失 | 用户在管理页建管理员、填渠道，并把 `api` 解析改到 154；之后跑 `finish.py seed`、`finish.py switch`，核销 11-06 测试留下的结果不明请求（预留 9728），重做图片回归。巡检已改成真实探测网关（待部署）；每日封装备份脚本已写好，服务器定时任务待用户同意 |
 | 优创改名收尾 | 不急 | 技能元数据、命令行工具和开发文档仍写 Easel |
 | 运营后台优化 | 第一期已上线（11-06） | 第二期显示用户名和邮箱（读取身份系统，涉及隐私）；第三期网页发额度（要改“网页不能发点”的规则，需用户同意） |
 | 创作者价值（P4） | 用户确定最重要的创作流程 | — |

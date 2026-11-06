@@ -16,9 +16,11 @@ import urllib.request
 
 TARGET='ser362540173134'
 STATE=Path('/var/lib/easel-health/status.json')
-SERVICES=('easel-central-production','easel-console-production','easel-gateway-tunnel','nginx')
-CONTAINERS=('easel-central-pg-20261024','easel-identity-pg-v2-20261024','easel-logto-v2-20261024')
+SERVICES=('easel-central-production','easel-console-production','nginx')
+CONTAINERS=('easel-central-pg-20261024','easel-identity-pg-v2-20261024','easel-logto-v2-20261024','easel-newapi','easel-newapi-pg','easel-newapi-redis')
 HOSTS=('accounts.drawbookai.cn','login.drawbookai.cn')
+GATEWAY_HOST='api.drawbookai.cn'
+GATEWAY_PORT=19443
 
 def evaluate(value,now):
     alerts=[]
@@ -27,7 +29,7 @@ def evaluate(value,now):
         if value.get('services',{}).get(unit)!='active':add('service_inactive:'+unit)
     for container in CONTAINERS:
         if value.get('containers',{}).get(container) is not True:add('container_inactive:'+container)
-    for probe in ('api','console'):
+    for probe in ('api','console','gateway'):
         if value.get(probe) is not True:add(probe+'_unhealthy')
     if value.get('backup_timer') is not True:add('backup_timer_inactive')
     if value.get('backup_result')!='success':add('backup_failed')
@@ -40,7 +42,7 @@ def evaluate(value,now):
         if not isinstance(metric,(int,float)):add('metric_unavailable:'+('disk' if key=='disk_percent' else 'memory'))
         elif (metric<=critical if inverse else metric>=critical):add(code)
         elif (metric<=threshold if inverse else metric>=threshold):add(code,'warning')
-    for host in HOSTS:
+    for host in HOSTS+(GATEWAY_HOST,):
         expires=value.get('tls_expires',{}).get(host)
         if not isinstance(expires,(int,float)):add('tls_unavailable:'+host)
         elif expires-now<3*86400:add('tls_expiring:'+host)
@@ -72,9 +74,15 @@ def health(port,host,console=False):
         value=json.loads(body)
         return value.get('ok') is True and (not console or value.get('assets_ready') is True)
 
-def certificate_expiry(host):
+def gateway():
+    # A live request through the verified TLS path: a unit that restarts forever still reads as active.
+    opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
+    with opener.open('https://'+GATEWAY_HOST+':'+str(GATEWAY_PORT)+'/api/status',timeout=3) as response:
+        return response.status==200 and json.loads(response.read(262144)).get('success') is True
+
+def certificate_expiry(host,port=443):
     context=ssl.create_default_context()
-    with socket.create_connection(('127.0.0.1',443),timeout=3) as stream:
+    with socket.create_connection(('127.0.0.1',port),timeout=3) as stream:
         with context.wrap_socket(stream,server_hostname=host) as connection:
             return ssl.cert_time_to_seconds(connection.getpeercert()['notAfter'])
 
@@ -97,12 +105,12 @@ def collect():
         key,text=line.split(':',1);memory[key]=int(text.strip().split()[0])
     return {'services':{unit:attempt(lambda u=unit:command(['/usr/bin/systemctl','is-active',u]).decode().strip()) for unit in SERVICES},
             'containers':{name:attempt(lambda n=name:json.loads(command(['/usr/bin/docker','inspect','--format','{{json .State.Running}}',n]))) for name in CONTAINERS},
-            'api':attempt(lambda:health(19874,'accounts.drawbookai.cn'),False),'console':attempt(lambda:health(19875,'127.0.0.1:18885',True),False),
+            'api':attempt(lambda:health(19874,'accounts.drawbookai.cn'),False),'console':attempt(lambda:health(19875,'127.0.0.1:18885',True),False),'gateway':attempt(gateway,False),
             'backup_timer':attempt(lambda:command(['/usr/bin/systemctl','is-active','easel-encrypted-backup.timer']).decode().strip()=='active',False),
             'backup_result':attempt(lambda:command(['/usr/bin/systemctl','show','--property=Result','--value','easel-encrypted-backup.service']).decode().strip()),
             'backup_mtime':attempt(backup_mtime),'disk_percent':round(100*(1-disk.f_bavail/disk.f_blocks),2),
             'memory_available_mib':memory.get('MemAvailable',0)/1024 if 'MemAvailable' in memory else None,
-            'tls_expires':{host:attempt(lambda h=host:certificate_expiry(h)) for host in HOSTS}}
+            'tls_expires':{**{host:attempt(lambda h=host:certificate_expiry(h)) for host in HOSTS},GATEWAY_HOST:attempt(lambda:certificate_expiry(GATEWAY_HOST,GATEWAY_PORT))}}
 
 def record(value):
     root=STATE.parent;root.mkdir(mode=0o700,exist_ok=True);meta=root.lstat()
