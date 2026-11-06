@@ -39,7 +39,7 @@ export default function Sidebar({
     <aside className="sidebar workspace-toolrail" aria-label="主导航">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <h1>Easel</h1>
+          <h1>优创</h1>
           <span className="sidebar-edition">创作工作室</span>
         </div>
       </div>

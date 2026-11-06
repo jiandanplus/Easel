@@ -120,7 +120,7 @@ export default function HarnessSettings({ onChange, onSelect, onSettingsChange }
         <div className="settings-field-body">
           <div className="settings-engine-control">
             <SettingsSelect label="执行引擎" value={runtime} disabled={!settings || settingsLoading || busy || settings.locked}
-              options={(settings?.agents || [{ id: 'pi', label: 'Easel 内置智能体 · Pi', installed: false }])
+              options={(settings?.agents || [{ id: 'pi', label: '优创内置智能体 · Pi', installed: false }])
                 .filter(agent => source === 'custom' || supportsSubscription(agent as HarnessSettingsResponse['agents'][number])).map((agent) => ({
                 value: agent.id,
                 label: `${agent.label}${agent.installed ? '' : '（未安装 / 未配置）'}`,
@@ -138,8 +138,8 @@ export default function HarnessSettings({ onChange, onSelect, onSettingsChange }
           </div>
           {selected && !selected.installed && (
             <p className="desc" role="status">{runtime === 'pi'
-              ? '内置 Pi 不可用，请重新安装 Easel'
-              : `未检测到 ${selected.label}，请安装后重启 Easel`}</p>
+              ? '内置 Pi 不可用，请重新安装优创'
+              : `未检测到 ${selected.label}，请安装后重启优创`}</p>
           )}
           {runtime !== settings?.runtime && <p className="desc">切换待保存</p>}
         </div>

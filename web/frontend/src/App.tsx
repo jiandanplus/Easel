@@ -1275,7 +1275,7 @@ export default function App() {
         <div className="overlay">
           <div className="modal" style={{ width: 420, maxWidth: '100%', textAlign: 'center' }}>
             <div style={{ fontSize: 40 }}>👋</div>
-            <h2 style={{ margin: '12px 0 8px', fontSize: 20 }}>欢迎使用 Easel</h2>
+            <h2 style={{ margin: '12px 0 8px', fontSize: 20 }}>欢迎使用优创</h2>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'center' }}>
               <button className="btn" onClick={dismissRecommend}>先用通用模式</button>
               <button className="btn btn-primary" onClick={openWizard}>开始配置</button>

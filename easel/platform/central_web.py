@@ -42,7 +42,7 @@ class _Listener:
                     status = future.result(timeout=25)
                 except Exception:
                     status = 400
-                content = ("登录已完成，可以关闭此页面。" if status == 200 else "登录未完成，请返回 Easel 重新登录。").encode()
+                content = ("登录已完成，可以关闭此页面。" if status == 200 else "登录未完成，请返回优创重新登录。").encode()
                 self.send_response(status)
                 self.send_header("Content-Type", "text/plain; charset=utf-8")
                 self.send_header("Content-Length", str(len(content)))

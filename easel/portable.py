@@ -116,7 +116,7 @@ def prepare_workspace(resource, workspace):
         try: owned = json.loads(ownership.read_text())['target']
         except (OSError, ValueError, KeyError): owned = None
         if not link.is_symlink() or str(link.readlink()) != owned:
-            raise ValueError('已有 .venv 不属于 Easel；请选择独立工作区')
+            raise ValueError('已有 .venv 不属于优创；请选择独立工作区')
     workspace.mkdir(parents=True, exist_ok=True)
     seed_workspace(resource, workspace)
     if link.is_symlink(): link.unlink()
@@ -210,7 +210,7 @@ def main(argv=None):
     try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
         lock.close()
-        raise ValueError('此工作区已有正在启动或运行的 Easel 实例')
+        raise ValueError('此工作区已有正在启动或运行的优创实例')
     sock = socket.socket()
     token = None
     try:
@@ -261,5 +261,5 @@ def main(argv=None):
 if __name__ == '__main__':
     try: raise SystemExit(main())
     except Exception as error:
-        print(f'Easel 启动失败：{error}', file=sys.stderr)
+        print(f'优创启动失败：{error}', file=sys.stderr)
         raise SystemExit(1)

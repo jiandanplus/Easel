@@ -377,6 +377,10 @@ def build(inputs, pi_root, output, authority, *, copy_on_write=False, version=No
     launcher.chmod(0o755)
     compile_shell(macos / "Easel")
     shutil.copy2(SHELL_SOURCE.with_name("Easel.icns"), resource / "Easel.icns")
+    # Finder and Spotlight read the localized name; the bundle path stays Easel.app for the updater.
+    strings = resource / "zh-Hans.lproj/InfoPlist.strings"
+    strings.parent.mkdir()
+    strings.write_text('CFBundleDisplayName = "优创";\nCFBundleName = "优创";\n', encoding="utf-8")
     stop = container / "Stop Easel.command"
     stop.write_text('''#!/bin/sh
 HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
@@ -384,7 +388,7 @@ exec "$HERE/Easel.app/Contents/MacOS/Easel" --stop "$@"
 ''')
     stop.chmod(0o755)
     with (app / "Contents/Info.plist").open("wb") as stream:
-        plistlib.dump({"CFBundleExecutable": "Easel", "CFBundleIdentifier": "local.easel.pi-preview", "CFBundleName": "Easel", "CFBundleVersion": str(version or 0), "CFBundleShortVersionString": str(version or 0), "CFBundleIconFile": "Easel", "CFBundleDevelopmentRegion": "zh_CN", "CFBundleLocalizations": ["zh_CN"], "CFBundlePackageType": "APPL", "LSMinimumSystemVersion": "15.0", "LSArchitecturePriority": ["arm64"], "NSHighResolutionCapable": True, "NSAppTransportSecurity": {"NSAllowsLocalNetworking": True, "NSAllowsArbitraryLoadsInWebContent": True}}, stream)
+        plistlib.dump({"CFBundleExecutable": "Easel", "CFBundleIdentifier": "local.easel.pi-preview", "CFBundleName": "优创", "CFBundleDisplayName": "优创", "LSHasLocalizedDisplayName": True, "CFBundleVersion": str(version or 0), "CFBundleShortVersionString": str(version or 0), "CFBundleIconFile": "Easel", "CFBundleDevelopmentRegion": "zh-Hans", "CFBundleLocalizations": ["zh-Hans"], "CFBundlePackageType": "APPL", "LSMinimumSystemVersion": "15.0", "LSArchitecturePriority": ["arm64"], "NSHighResolutionCapable": True, "NSAppTransportSecurity": {"NSAllowsLocalNetworking": True, "NSAllowsArbitraryLoadsInWebContent": True}}, stream)
     shutil.copy2(ROOT / "packaging/pi/README.md", container / "README.md")
     verified_sources(authority)
     inventory = {}

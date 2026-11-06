@@ -189,7 +189,7 @@ async def api_settings_bootstrap():
             detail = ("内置供应商本地设置已完成；尚未验证上游认证，请发送消息验证模型可用性"
                       if ready else "请在设置中配置内置供应商的地址、模型与 API Key")
             if not installed:
-                detail += "；内置运行时不可用，请重新安装完整 Easel 应用"
+                detail += "；内置运行时不可用，请重新安装完整优创应用"
             return {"modelConfigured": ready, "envKeyOk": configured, "routeOk": ready,
                     "routeDetail": detail, "gatewayUp": ready, "openclawConfigExists": False,
                     "installWarnings": [], "runtime": runtime, "authVerified": False}
@@ -713,7 +713,7 @@ async def api_harness_settings_save(req: HarnessSettingsRequest):
     if _core._RUNNING_CHAT or _core._BG_TASKS or _core._DIRECT_CHAT_TASKS or _core._HARNESS_TASKS or _core._SYNC_SESSIONS or _core._PLATFORM_PREFLIGHTS or _core._platform_router.platform_changes or _core._central_platform_router.platform_changes:
         raise HTTPException(409, "请等待当前任务完成或停止后切换底座")
     if req.runtime not in ("api", "openclaw") and not harnesses.describe(req.runtime)["installed"]:
-        raise HTTPException(409, "内置 Pi 请重新安装完整 Easel 应用；外部引擎请先安装并配置后再切换" if req.runtime == "pi" else "请先在终端安装并配置对应 Agent CLI，再切换")
+        raise HTTPException(409, "内置 Pi 请重新安装完整优创应用；外部引擎请先安装并配置后再切换" if req.runtime == "pi" else "请先在终端安装并配置对应 Agent CLI，再切换")
     if req.runtime == "openclaw" and api_mode(_core.read_settings(_core.ENV_FILE)):
         if "EASEL_CHAT_TRANSPORT" in os.environ:
             raise HTTPException(409, "运行环境已固定仅聊天模式，请修改 EASEL_CHAT_TRANSPORT 后重启")
@@ -829,7 +829,7 @@ def _write_env_direct(updates: dict[str, str]) -> None:
     if appended:
         if out and out[-1].strip() != '':
             out.append('')
-        out.append('# ---- Easel 模型配置（Web 设置面板写入）----')
+        out.append('# ---- 优创模型配置（Web 设置面板写入）----')
         out.extend(appended)
     tmp = _core.ENV_FILE.with_suffix('.env.tmp')
     tmp.write_text('\n'.join(out) + '\n', encoding='utf-8')
@@ -1289,7 +1289,7 @@ async def api_local_agents():
 
 @router.post("/api/settings/local-agents/enable")
 async def api_local_agent_enable(req: LocalAgentEnableRequest):
-    """把一个本机 CLI agent（目前支持 claude-code / gemini-cli）接入 Easel。
+    """把一个本机 CLI agent（目前支持 claude-code / gemini-cli）接入优创。
 
     实现是把对应 provider 写进 openclaw.json（复用 _sync_anthropic_provider 的
     原子写套路）。CLI 登录态本身由 openclaw 的 auth store 管理 —— 这里只负责

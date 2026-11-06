@@ -38,7 +38,7 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
         webView = makeWebView(configuration)
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1400, height: 900),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.title = "Easel"
+        window.title = "优创"
         window.minSize = NSSize(width: 900, height: 600)
         window.isReleasedWhenClosed = false
         window.contentView = webView
@@ -81,7 +81,7 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
 
     func start() {
         started = Date()
-        showPage("正在启动 Easel…", detail: "")
+        showPage("正在启动优创…", detail: "")
         let process = Process()
         process.executableURL = URL(fileURLWithPath: launcher)
         process.arguments = ["--workspace", workspace, "--port", port, "--no-browser"]
@@ -91,7 +91,7 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
         values["PATH"] = "/opt/homebrew/bin:/usr/local/bin:" + (values["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin")
         process.environment = values
         do { try process.run() } catch {
-            showPage("Easel 启动失败", detail: error.localizedDescription, retry: true)
+            showPage("优创启动失败", detail: error.localizedDescription, retry: true)
             return
         }
         server = process
@@ -106,9 +106,9 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
                 if (response as? HTTPURLResponse)?.statusCode == 200 {
                     self.webView.load(URLRequest(url: home))
                 } else if let server = self.server, !server.isRunning, server.terminationStatus != 0 {
-                    self.showPage("Easel 启动失败", detail: "详情见日志：\(logPath)", retry: true)
+                    self.showPage("优创启动失败", detail: "详情见日志：\(logPath)", retry: true)
                 } else if Date().timeIntervalSince(self.started) > 120 {
-                    self.showPage("Easel 启动超时", detail: "详情见日志：\(logPath)", retry: true)
+                    self.showPage("优创启动超时", detail: "详情见日志：\(logPath)", retry: true)
                 } else {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { self.waitForServer() }
                 }
@@ -186,7 +186,7 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
     func webView(_ view: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         let code = (error as NSError).code
         if view === webView, code != NSURLErrorCancelled, code != 102 {  // 102: handed to a download
-            showPage("连接不上 Easel", detail: "服务可能已停止。", retry: true)
+            showPage("连接不上优创", detail: "服务可能已停止。", retry: true)
         }
     }
 
@@ -219,7 +219,7 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
         let popup = makeWebView(configuration)
         let child = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 760),
                              styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        child.title = "Easel"
+        child.title = "优创"
         child.isReleasedWhenClosed = false
         child.contentView = popup
         child.delegate = self
@@ -284,9 +284,9 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
         let fullScreen = item("进入全屏幕", #selector(NSWindow.toggleFullScreen(_:)), "f")
         fullScreen.keyEquivalentModifierMask = [.command, .control]
         let main = NSMenu()
-        [menu("Easel", [item("关于 Easel", #selector(NSApplication.orderFrontStandardAboutPanel(_:))), .separator(),
-                        item("隐藏 Easel", #selector(NSApplication.hide(_:)), "h"), .separator(),
-                        item("退出 Easel", #selector(NSApplication.terminate(_:)), "q")]),
+        [menu("优创", [item("关于优创", #selector(NSApplication.orderFrontStandardAboutPanel(_:))), .separator(),
+                        item("隐藏优创", #selector(NSApplication.hide(_:)), "h"), .separator(),
+                        item("退出优创", #selector(NSApplication.terminate(_:)), "q")]),
          menu("编辑", [item("撤销", Selector(("undo:")), "z"), item("重做", Selector(("redo:")), "Z"), .separator(),
                        item("剪切", #selector(NSText.cut(_:)), "x"), item("拷贝", #selector(NSText.copy(_:)), "c"),
                        item("粘贴", #selector(NSText.paste(_:)), "v"), item("全选", #selector(NSText.selectAll(_:)), "a")]),

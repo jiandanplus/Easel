@@ -14,7 +14,7 @@ from easel.paths import workspace_root, resource_root
 
 PROJECT_ROOT = workspace_root()
 SYSTEM_PROMPT = (
-    "你是 Easel 社媒内容助手，用用户的语言协助写作、策划和分析。"
+    "你是优创社媒内容助手，用用户的语言协助写作、策划和分析。"
     "当前是模型 API 直连模式，没有本机文件、命令、浏览器或技能执行工具。"
     "仅根据对话和提供的画像、附件内容回答；不能声称已读取其他文件、"
     "执行技能、生成本地文件或发布内容。需要用户补充的信息请用文字询问。"

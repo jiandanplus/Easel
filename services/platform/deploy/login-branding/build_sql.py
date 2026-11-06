@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write apply.sql: the Easel look for the Logto sign-in pages (brand only, no accounts)."""
+"""Write apply.sql: the 优创 look for the Logto sign-in pages (brand only, no accounts)."""
 import base64
 import json
 from pathlib import Path
@@ -19,7 +19,7 @@ logo = data_uri("easel-wordmark.png")
 branding = {"logoUrl": logo, "darkLogoUrl": logo, "favicon": data_uri("easel-favicon.png")}
 color = {"primaryColor": "#B74F30", "isDarkModeEnabled": False, "darkPrimaryColor": "#D9764F"}
 language = {"autoDetect": False, "fallbackLanguage": "zh-CN"}
-phrases = {"description": {"sign_in_to_your_account": "登录 Easel", "create_your_account": "注册 Easel 账号"}}
+phrases = {"description": {"sign_in_to_your_account": "登录优创", "create_your_account": "注册优创账号"}}
 (HERE / "apply.sql").write_text(f"""BEGIN;
 UPDATE sign_in_experiences SET
   branding = {literal(json.dumps(branding))}::jsonb,

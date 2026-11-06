@@ -284,7 +284,7 @@ export default function ChatPage({ apiDirect, composerOnly = false, draftScopeKe
         <div className="chat-hero">
           <div className="chat-hero-brand">
             <img src="./static/easel-icon-transparent.png" alt="" />
-            <span>Easel</span>
+            <span>优创</span>
           </div>
           <h1 className="chat-hero-title">{greeting()}</h1>
           {inputBox(true)}
