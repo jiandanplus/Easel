@@ -21,6 +21,7 @@ CONTAINERS=('easel-central-pg-20261024','easel-identity-pg-v2-20261024','easel-l
 HOSTS=('accounts.drawbookai.cn','login.drawbookai.cn')
 GATEWAY_HOST='api.drawbookai.cn'
 GATEWAY_PORT=19443
+CONSOLE_CERT='api.drawbookai.cn:443'
 
 def evaluate(value,now):
     alerts=[]
@@ -42,7 +43,7 @@ def evaluate(value,now):
         if not isinstance(metric,(int,float)):add('metric_unavailable:'+('disk' if key=='disk_percent' else 'memory'))
         elif (metric<=critical if inverse else metric>=critical):add(code)
         elif (metric<=threshold if inverse else metric>=threshold):add(code,'warning')
-    for host in HOSTS+(GATEWAY_HOST,):
+    for host in HOSTS+(GATEWAY_HOST,CONSOLE_CERT):
         expires=value.get('tls_expires',{}).get(host)
         if not isinstance(expires,(int,float)):add('tls_unavailable:'+host)
         elif expires-now<3*86400:add('tls_expiring:'+host)
@@ -110,7 +111,7 @@ def collect():
             'backup_result':attempt(lambda:command(['/usr/bin/systemctl','show','--property=Result','--value','easel-encrypted-backup.service']).decode().strip()),
             'backup_mtime':attempt(backup_mtime),'disk_percent':round(100*(1-disk.f_bavail/disk.f_blocks),2),
             'memory_available_mib':memory.get('MemAvailable',0)/1024 if 'MemAvailable' in memory else None,
-            'tls_expires':{**{host:attempt(lambda h=host:certificate_expiry(h)) for host in HOSTS},GATEWAY_HOST:attempt(lambda:certificate_expiry(GATEWAY_HOST,GATEWAY_PORT))}}
+            'tls_expires':{**{host:attempt(lambda h=host:certificate_expiry(h)) for host in HOSTS},GATEWAY_HOST:attempt(lambda:certificate_expiry(GATEWAY_HOST,GATEWAY_PORT)),CONSOLE_CERT:attempt(lambda:certificate_expiry(GATEWAY_HOST))}}
 
 def record(value):
     root=STATE.parent;root.mkdir(mode=0o700,exist_ok=True);meta=root.lstat()

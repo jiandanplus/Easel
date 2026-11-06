@@ -35,7 +35,7 @@
 | 备份解密私钥（新） | `~/Easel-build/backup-keys/backup-private.pem`（仅本机，需另行备份；公钥在 `services/platform/deploy/backup/`） |
 | 恢复演练与 R2 监视 | `~/Easel-build/backup-drill`（`rclone.conf` 为只读令牌；launchd 任务已加载，日志在 `~/Library/Logs/Easel/backup-{watch,drill}.log`） |
 | 中央服务、Console、Logto、两个 PostgreSQL | 154.217.245.179（`ssh easel-zhiyin`），详见 [部署手册](handbook/2026-11-05/03-deployment.md) |
-| New API 网关 | 154 上 `/srv/easel/newapi`（2026-11-06 重新部署并切换，见 [说明](../services/platform/deploy/newapi/README.md)）；管理页 `https://api.drawbookai.cn/console`，先过一道访问密码（Mac 上 `~/Easel-build/newapi-console-access.txt`），SSH 转发 18887 作备用；当前只有 DeepSeek 渠道；火山引擎 115.190.211.112 已停用不续费，旧渠道数据未能取回 |
+| New API 网关 | 154 上 `/srv/easel/newapi`（2026-11-06 重新部署并切换，见 [说明](../services/platform/deploy/newapi/README.md)）；管理页 `https://api.drawbookai.cn/console`，先过一道访问密码（Mac 上 `~/Easel-build/newapi-console-access.txt`），SSH 转发 18887 作备用；11-06 按用户要求，域名网站和公网证书改由 1Panel 管理（OpenResty 在 18480/18443，不对外；80/443 仍归主机 nginx，账号和登录在上面）；当前只有 DeepSeek 渠道；火山引擎 115.190.211.112 已停用不续费，旧渠道数据未能取回 |
 | 生产备份 | 154 每日封装备份 + R2 异地副本，已恢复演练；旧的 23 份备份只能用旧私钥打开，已另存到 `~/Easel-build/backup-keys/transfer-private-legacy.pem`（仅本机，哈希与服务器一致），服务器上的 `transfer-private.pem` 暂留 |
 
 ## 3. 代码与质量
