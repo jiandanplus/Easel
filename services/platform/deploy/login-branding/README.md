@@ -1,6 +1,6 @@
 # 登录页品牌
 
-把 Logto 托管的登录、注册页改成优创风格：优创标识、工作台的暖色配色、中文标题，语言固定为简体中文。只改 `sign_in_experiences` 的外观字段并新增一条 `custom_phrases`，不碰账号和应用。
+把 Logto 托管的登录、注册页改成优创风格：优创标识、工作台主题 B 的冷白蓝配色、中文标题，语言固定为简体中文。只改 `sign_in_experiences` 的外观字段并新增一条 `custom_phrases`，不碰账号和应用。
 
 - `login.css`、`easel-wordmark.png`、`easel-favicon.png`：源文件。
 - `build_sql.py`：生成 `apply.sql`。

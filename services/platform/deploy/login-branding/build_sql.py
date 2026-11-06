@@ -17,7 +17,7 @@ def literal(value):
 
 logo = data_uri("easel-wordmark.png")
 branding = {"logoUrl": logo, "darkLogoUrl": logo, "favicon": data_uri("easel-favicon.png")}
-color = {"primaryColor": "#B74F30", "isDarkModeEnabled": False, "darkPrimaryColor": "#D9764F"}
+color = {"primaryColor": "#2457EF", "isDarkModeEnabled": False, "darkPrimaryColor": "#6F93F7"}
 language = {"autoDetect": False, "fallbackLanguage": "zh-CN"}
 phrases = {"description": {"sign_in_to_your_account": "登录优创", "create_your_account": "注册优创账号"}}
 (HERE / "apply.sql").write_text(f"""BEGIN;
