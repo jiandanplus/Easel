@@ -55,6 +55,11 @@ async def operate_reconciliation(args):
             )).fetchone()
             if not row or not row['owned']:
                 raise PlatformError(403, 'reconciliation_owner_required')
+        if args.command == 'owner-grant':
+            from .owner_grants import OwnerGrantService
+            return await OwnerGrantService(db).issue(
+                OperatorIdentity(args.operator, frozenset({'owner:grant'})), wallet=args.wallet,
+                key=args.key, reason=args.reason, approval_reference=args.approval_reference)
         # This capability is deliberately absent from all generic operator and
         # Console roles; only this independently verified host-owner entry uses it.
         operator = OperatorIdentity(args.operator, frozenset({'execution:writeoff'}))

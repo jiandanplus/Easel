@@ -88,7 +88,7 @@ async def _test_payment(db, runtime, args, operator):
 
 async def operate(args):
     if args.command in {'execution-writeoff-plan', 'execution-writeoff-apply', 'execution-writeoff-operation',
-                        'media-writeoff-plan', 'media-writeoff-apply', 'media-writeoff-operation'}:
+                        'media-writeoff-plan', 'media-writeoff-apply', 'media-writeoff-operation', 'owner-grant'}:
         from .reconciliation_cli import operate_reconciliation
         return await operate_reconciliation(args)
     if args.command in {'identity-restore-proof', 'identity-migration-inspect', 'identity-migration-apply'}:
@@ -300,7 +300,10 @@ def main(argv=None):
     media_apply.add_argument('--key', required=True)
     media_operation = sub.add_parser('media-writeoff-operation', help='Owner-only lookup of original media waiver operation; no retries or writes')
     media_operation.add_argument('--key', required=True)
-    for child in (writeoff_plan, writeoff_apply, writeoff_operation, media_plan, media_apply, media_operation):
+    owner_grant = sub.add_parser('owner-grant', help='Owner-only fixed allowance while payments are off; never a payment')
+    for field in ('wallet', 'key', 'reason', 'approval-reference'):
+        owner_grant.add_argument('--' + field, required=True)
+    for child in (writeoff_plan, writeoff_apply, writeoff_operation, media_plan, media_apply, media_operation, owner_grant):
         child.add_argument('--operator', required=True, help='Audited host-owner operator identity')
     offer = sub.add_parser("offer-publish")
     offer.add_argument("--file", required=True)

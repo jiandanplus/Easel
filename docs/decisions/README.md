@@ -13,3 +13,4 @@
 | [0007](0007-media-writeoffs.md) | 媒体任务也走审计过的平台承担（迁移 021） |
 | [0008](0008-native-mac-window.md) | 桌面版用 Mac 原生窗口 |
 | [0009](0009-product-name-youchuang.md) | 产品对外名称改为优创，内部标识不变 |
+| [0010](0010-owner-allowance.md) | 付款关闭期间的所有者额度（迁移 022） |

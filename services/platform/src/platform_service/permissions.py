@@ -238,7 +238,7 @@ async def assert_safe_runtime_role(conn, role=None, *, check_grants=True):
             # read private approval notes or insert a waiver operation.
             resolution_access = await (await conn.execute(
                 "SELECT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "
-                "WHERE n.nspname=%s AND c.relname IN ('execution_resolutions','execution_resolution_operations','media_resolutions','media_resolution_operations') "
+                "WHERE n.nspname=%s AND c.relname IN ('execution_resolutions','execution_resolution_operations','media_resolutions','media_resolution_operations','owner_grants') "
                 "AND has_any_column_privilege(%s,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')) AS unsafe",
                 (context["schema"], name),
             )).fetchone()
