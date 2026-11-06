@@ -24,17 +24,10 @@ FOR EACH STATEMENT EXECUTE FUNCTION deny_immutable_change();
 CREATE FUNCTION check_owner_grant() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE g record; mid text; n bigint; issued numeric; available numeric;
 BEGIN
-    IF TG_TABLE_NAME='memberships' THEN
-        IF NEW.plan_id <> 'easel-owner-allowance-v1' THEN RETURN NULL; END IF;
-        mid:=NEW.id;
-    ELSE mid:=NEW.membership_id;
-    END IF;
+    IF TG_TABLE_NAME='memberships' THEN mid:=NEW.id; ELSE mid:=NEW.membership_id; END IF;
     SELECT * INTO g FROM owner_grants WHERE membership_id=mid;
     IF NOT FOUND THEN
-        IF EXISTS(SELECT 1 FROM memberships WHERE id=mid AND plan_id='easel-owner-allowance-v1') THEN
-            RAISE EXCEPTION 'missing owner grant audit' USING ERRCODE='23514';
-        END IF;
-        RETURN NULL;
+        RAISE EXCEPTION 'missing owner grant audit' USING ERRCODE='23514';
     END IF;
     IF NOT EXISTS(SELECT 1 FROM memberships m JOIN plans p ON p.id=m.plan_id
         JOIN credit_lots l ON l.membership_id=m.id
@@ -57,7 +50,9 @@ BEGIN
 END $$;
 CREATE CONSTRAINT TRIGGER owner_grants_consistent AFTER INSERT ON owner_grants
 DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_owner_grant();
+-- Only this plan fires it: runtime has no access to owner_grants and must keep issuing
+-- other memberships, and a forged owner membership from runtime fails here. credit_lots
+-- needs no trigger of its own: membership_id is unique and this check covers the lot.
 CREATE CONSTRAINT TRIGGER owner_membership_audited AFTER INSERT ON memberships
-DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_owner_grant();
-CREATE CONSTRAINT TRIGGER owner_lot_consistent AFTER INSERT ON credit_lots
-DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_owner_grant();
+DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (NEW.plan_id='easel-owner-allowance-v1')
+EXECUTE FUNCTION check_owner_grant();
