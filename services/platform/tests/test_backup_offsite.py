@@ -275,10 +275,29 @@ def test_drill_reads_archive_and_checks_member_hashes():
         restore_drill.read_archive(tampered)
 
 
+def test_drill_drops_grantor_from_role_grants_only():
+    sql = (b"CREATE ROLE preview_owner;\n"
+           b"GRANT tenant TO tenant_admin WITH INHERIT TRUE GRANTED BY preview_owner;\n"
+           b'GRANT tenant TO "odd role" GRANTED BY "odd owner";\n'
+           b"COMMENT ON ROLE x IS 'GRANTED BY y';\n")
+    assert restore_drill.role_script(sql) == (
+        b"CREATE ROLE preview_owner;\n"
+        b"GRANT tenant TO tenant_admin WITH INHERIT TRUE;\n"
+        b'GRANT tenant TO "odd role";\n'
+        b"COMMENT ON ROLE x IS 'GRANTED BY y';\n")
+
+
 def test_drill_picks_newest_backup_and_rejects_foreign_names():
     names = ["20261101T193000Z-%s.sealed" % uuid.uuid4(), "20261104T193000Z-%s.sealed" % uuid.uuid4(), "evil.sealed"]
     assert restore_drill.newest(names) == names[1]
     assert restore_drill.newest(["evil.sealed"]) is None
+
+
+def test_ledger_check_runs_in_the_schema_that_holds_the_ledger():
+    sql = restore_drill.ledger_sql('workbench_e6467e17dc33')
+    assert sql.startswith('SET search_path TO "workbench_e6467e17dc33";\n')
+    assert sql.endswith(restore_drill.LEDGER_SQL)
+    assert restore_drill.ledger_sql('a"b').startswith('SET search_path TO "a""b";')
 
 
 def test_ledger_check_sql_flags_unbalanced_rows():

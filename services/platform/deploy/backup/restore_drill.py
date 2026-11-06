@@ -105,6 +105,25 @@ def read_archive(payload):
     return members, manifest
 
 
+GRANTED_BY = re.compile(rb"^(GRANT .*?) GRANTED BY (?:\"[^\"]+\"|\w+);$", re.MULTILINE)
+
+
+def role_script(sql):
+    """pg_dumpall 16 records role grants as made by the source's bootstrap superuser, which is an
+    ordinary superuser in the drill cluster and may not be named as grantor; the grantor carries
+    no privilege, so drop it."""
+    return GRANTED_BY.sub(rb"\1;", sql)
+
+
+# The central platform lives in a workbench_<id> schema, not public.
+LEDGER_SCHEMAS_SQL = """SELECT json_agg(n.nspname ORDER BY n.nspname) FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'credit_entries' AND c.relkind IN ('r', 'p')"""
+
+
+def ledger_sql(schema):
+    return 'SET search_path TO "%s";\n%s' % (schema.replace('"', '""'), LEDGER_SQL)
+
+
 def ledger_problems(rows):
     problems = []
     if rows.get("journal_unbalanced"):
@@ -122,7 +141,7 @@ def _docker(args, data=None, timeout=600):
 
 
 def _sql(name, database, sql):
-    code, out, err = _docker(["exec", "-i", name, "psql", "-U", "postgres", "-d", database, "-tA", "-v",
+    code, out, err = _docker(["exec", "-i", name, "psql", "-U", "postgres", "-d", database, "-qtA", "-v",
                               "ON_ERROR_STOP=1"], data=sql.encode())
     if code != 0:
         raise DrillError(f"{database} 查询失败：{err.strip()[-200:]}")
@@ -148,7 +167,7 @@ def restore(members, manifest, docker=_docker):
         report = {}
         for kind, database in zip(KINDS, databases):
             code, _, err = docker(["exec", "-i", name, "psql", "-U", "postgres", "-q"],
-                                  data=members[f"roles/{kind}.sql"])
+                                  data=role_script(members[f"roles/{kind}.sql"]))
             role_errors = [line for line in err.splitlines() if "ERROR" in line and "already exists" not in line]
             if code != 0 or role_errors:
                 raise DrillError(f"{kind} 角色恢复失败：{(role_errors or [err.strip()])[-1][-200:]}")
@@ -163,8 +182,10 @@ def restore(members, manifest, docker=_docker):
                 raise DrillError(f"{kind} 恢复后没有数据表")
             report[kind] = counts
             if kind == "central":
-                has_ledger = _sql(name, database, "SELECT to_json(to_regclass('public.credit_entries') IS NOT NULL)")
-                report["ledger"] = ledger_problems(_sql(name, database, LEDGER_SQL)) if has_ledger else None
+                schemas = _sql(name, database, LEDGER_SCHEMAS_SQL) or []
+                if len(schemas) > 1:
+                    raise DrillError("中央库有多个账本表：" + "、".join(schemas))
+                report["ledger"] = ledger_problems(_sql(name, database, ledger_sql(schemas[0]))) if schemas else None
         return report
     finally:
         docker(["rm", "-f", name])
