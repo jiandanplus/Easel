@@ -8,9 +8,9 @@
 
 | 能力 | 状态 | 说明 |
 | --- | --- | --- |
-| 桌面工作台（三栏 UI、五套主题、内置 Pi） | 已部署 | 用户本机 `http://127.0.0.1:17868`，v40 |
-| 应用内更新 | 已部署 | 设置 → 版本更新；签名清单 + 哈希 + 库存校验，失败自动回滚；更新源为 GitHub Release `desktop-v40`（最新）；11-06 本机 v38→v40 实际更新成功 |
-| 桌面 v40（路由拆分 + 媒体 `waived` 显示） | 已部署 | 提交 `7bf865e` 构建，安装包 `4e4990d1…`，Release [`desktop-v40`](https://github.com/jiandanplus/Easel/releases/tag/desktop-v40) 已发布；未做 Apple 签名公证。v39 被 v40 取代，未发布 |
+| 桌面工作台（三栏 UI、五套主题、内置 Pi） | 已部署 | 用户本机 v41，独立 Mac 窗口（[决策 0008](decisions/0008-native-mac-window.md)），服务在 `http://127.0.0.1:17868` |
+| 应用内更新 | 已部署 | 设置 → 版本更新；签名清单 + 哈希 + 库存校验，失败自动回滚；公开更新源目前是 GitHub Release `desktop-v40`；11-06 本机 v38→v40 实际更新成功 |
+| 桌面 v41（独立窗口） | 本机已部署，未公开发布 | 提交 `5a79c83` 构建（`~/Easel-build/releases/pi-portable-20261106-v41`、`publish-v41`，安装包 `7078b968…`），已手动装到本机；隔离演练 v40→v41 应用内更新 8 秒完成；文件选择、确认框、下载、复制、外部链接、登录弹窗实测正常。公开 Release `desktop-v41` 被权限系统拦下，未发布；最新公开版仍是 v40 |
 | 中央账号、会员、共享点数钱包、私有 Console | 已部署（2026-11-06 升级后巡检正常） | 生产 154；当前发布 `20261106-media-021-v1`，迁移到 021；回滚：删除两个 unit 的 `91-p3-media.conf` 后重启即回到 `20261027-images-m1-1-size-v2` |
 | 订阅文本模型、两款图片模型 | 已部署（据交接手册） | 有真实调用与扣点记录；新模型需逐个验收 |
 | 自定义接口渠道 | 已部署 | 用户自配供应商，不经中央钱包 |
@@ -25,7 +25,7 @@
 
 | 对象 | 位置 |
 | --- | --- |
-| 用户工作台程序 | `~/Applications/Easel/current -> v40`（v36、v37、v38 保留用于回滚）；启动/停止：同目录 `Start Easel.command`、`Stop Easel.command` |
+| 用户工作台程序 | `~/Applications/Easel/current -> v41`（v36–v40 保留用于回滚；这些旧版本的 `Contents/MacOS` 已换成 v41 外壳，从旧路径或系统搜索打开都会转到当前版本，原脚本备份在 `~/Easel-build/old-launcher-v*`）；`Start Easel.command` 现在只是打开 App |
 | 用户工作区 | `~/Library/Application Support/Easel/workspaces/main`（2026-10-30 备份恢复；原 `/private/tmp` 工作区已被系统清理） |
 | 工作台日志 | `~/Library/Logs/Easel/workbench-17868.log` |
 | 桌面构建输入与产物 | `~/Easel-build/python-inputs`、`~/Easel-build/pi-runtime-v37`、`~/Easel-build/releases/` |
@@ -49,7 +49,7 @@
 | --- | --- | --- |
 | P1 收尾 | 服务器旧私钥暂留 | 已另存到 Mac；需要时由你手动删除 `/root/easel-migration-20261024/transfer-private.pem` |
 | 桌面签名公证 | Apple 开发者身份 | — |
-| 订阅媒体开放（P3） | 升级与核销已完成（11-06）；等你在桌面端做一次图片真实扣点回归 | 回归通过后，视频、音乐、语音逐个真实验收（产生供应商费用，逐个确认）；明细见 [P3 上线清单](../services/platform/deploy/P3-MEDIA-RELEASE.md) |
+| 订阅媒体开放（P3） | 升级与核销已完成（11-06）；真实工作区的中央账号自 11-05 起未登录，等你登录后做一次图片真实扣点回归 | 回归通过后，视频、音乐、语音逐个真实验收（产生供应商费用，逐个确认）；明细见 [P3 上线清单](../services/platform/deploy/P3-MEDIA-RELEASE.md) |
 | 创作者价值（P4） | 用户确定最重要的创作流程 | — |
 | 合并策略 | 用户决定 | 开 PR 让 CI 真正运行，再决定合入哪里 |
 | 商业付款、第二产品 | 商户信息、产品定位 | — |
