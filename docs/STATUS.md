@@ -17,7 +17,7 @@
 | 社媒账号登录与发布（7 个平台） | 源码 + 测试 | 依赖各平台页面，改版易失效；小红书自动发布有风控风险 |
 | 微信 / 支付宝付款 | 源码 + 隔离验证 | 按用户决定保持关闭 |
 | 订阅媒体 M2/M3/M4（视频、音乐、语音） | 源码 + 测试 + 隔离验证 | 未部署；维护许可已改为可选、默认关闭（[决策 0006](decisions/0006-media-maintenance-optional.md)）。候选版本已在隔离环境完成干净安装、016→020 升级与启动，上线按 [P3 清单](../services/platform/deploy/P3-MEDIA-RELEASE.md) |
-| 异地备份、恢复演练、飞书告警（P1） | 生产已部署（2026-11-06） | 154 每日备份改为只用公钥封装（drop-in `sealed.conf`），每小时同步到 R2 `easel-backups/central`（90 天锁定、400 天过期）；首次恢复演练通过（中央库 75 表、身份库 79 表、账本核对通过）；Mac 端 launchd 定时任务待你加载 |
+| 异地备份、恢复演练、飞书告警（P1） | 生产已部署（2026-11-06） | 154 每日备份改为只用公钥封装（drop-in `sealed.conf`），每小时同步到 R2 `easel-backups/central`（90 天锁定、400 天过期）；首次恢复演练通过（中央库 75 表、身份库 79 表、账本核对通过）；Mac 端每小时 R2 检查、每周一 10:00 恢复演练已加载 |
 | B2/B3 媒体备份恢复、AV 自建构建 | 冻结 | 代码与测试保留，不再开发或部署（[决策 0001](decisions/0001-freeze-b2-b3-av.md)） |
 
 ## 2. 部署与运行位置
@@ -30,7 +30,7 @@
 | 桌面构建输入与产物 | `~/Easel-build/python-inputs`、`~/Easel-build/pi-runtime-v37`、`~/Easel-build/releases/` |
 | 更新签名私钥 | `~/Easel-build/release-signing/update-signing-key.pem`（仅本机，需另行备份） |
 | 备份解密私钥（新） | `~/Easel-build/backup-keys/backup-private.pem`（仅本机，需另行备份；公钥在 `services/platform/deploy/backup/`） |
-| 恢复演练与 R2 监视 | `~/Easel-build/backup-drill`（`rclone.conf` 为只读令牌；launchd 任务未加载，运行 `install_mac.sh --activate`） |
+| 恢复演练与 R2 监视 | `~/Easel-build/backup-drill`（`rclone.conf` 为只读令牌；launchd 任务已加载，日志在 `~/Library/Logs/Easel/backup-{watch,drill}.log`） |
 | 中央服务、Console、Logto、两个 PostgreSQL | 154.217.245.179（`ssh easel-zhiyin`），详见 [部署手册](handbook/2026-11-05/03-deployment.md) |
 | New API 网关 | 火山引擎 115.190.211.112 |
 | 生产备份 | 154 每日封装备份 + R2 异地副本，已恢复演练；服务器上旧私钥 `transfer-private.pem` 仍在，旧的 23 份备份只能用它打开，删除前先决定是否另存 |
@@ -46,7 +46,7 @@
 
 | 事项 | 卡在 | 下一步 |
 | --- | --- | --- |
-| P1 收尾 | 在自己终端加载 launchd 定时任务；决定旧私钥去留 | `install_mac.sh --activate`（每小时 R2 检查 + 每周一 10:00 恢复演练）→ 另存或删除服务器旧私钥 |
+| P1 收尾 | 决定服务器旧私钥去留 | 另存到 Mac（旧的 23 份备份仍可打开）或直接删除 `/root/easel-migration-20261024/transfer-private.pem` |
 | 桌面签名公证 | Apple 开发者身份 | — |
 | 订阅媒体开放（P3） | 授权连接 154 做只读预检；P1 先完成 | 核对生产 001–016 迁移校验和与媒体配置 → 按手册第 8 节升级 → 视频、音乐、语音逐个真实验收（产生供应商费用） |
 | 创作者价值（P4） | 用户确定最重要的创作流程 | — |
