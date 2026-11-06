@@ -21,6 +21,15 @@
 3. **在途媒体任务**：`media_jobs` 中非终态数量为 0，或已有明确处置计划。
 4. **备份**：P1 部署后至少一份新备份已同步到 R2，并通过一次恢复演练。
 
+### 预检结果（2026-11-06，只读）
+
+| 项 | 结果 |
+|---|---|
+| 迁移校验和 | 生产 16 行，001–016 与候选逐个相同，无多余版本 |
+| 媒体配置 | `/etc/easel-central/media.json`（0600，属主 easel-central）；候选与生产代码对去掉密钥后的同一配置算出的两款图片模型 `binding_hash` 完全一致（flare `599e27e6…`、sunburst `da985099…`），已发布的模型定义不受影响；未写 `maintenance`，即本地模式；`storage_root` 存在、是目录、非符号链接 |
+| 在途媒体任务 | 共 3 笔：2 笔 settled；1 笔 `81a6155d…` 为 `pending_reconciliation / unknown / processing`，`upstream_uncertain`，预留 1,000,000 点未结。即 10-27 媒体目录只读事故那笔（[交付记录](../../../docs/validation/2026-10-27-newapi-image-workbench-delivery.md) 第 50–54 行）：上游已生成，但写盘失败、用户未收到。升级不碰它，但需要你在控制台核算页做运营决定（释放预留或按证据结算） |
+| 备份 | P1 已上线；11-06 最新备份已在 R2 并通过恢复演练（账本核对通过） |
+
 ## 正式升级（需要你逐步确认）
 
 按手册第 8 节：关闭新准入 → 停 API 写入 → 新备份收据 → owner 执行 `migrate`（只会追加 017–020）→ `grant-runtime` → 新 release 目录安装并切换 unit → 启动 → `/health` 与 `/v2/capabilities` → 本人登录，先用已上线的两款图片模型做一次真实扣点回归，再逐个开放新模型。
