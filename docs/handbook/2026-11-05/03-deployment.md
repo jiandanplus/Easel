@@ -26,7 +26,8 @@
 | 维护者 `127.0.0.1:18886` | Logto 管理入口 | 本机 SSH 隧道 |
 | 154 上 `127.0.0.1:19443` | Nginx 到本机 New API 的 TLS 入口，见 [网关说明](../../../services/platform/deploy/newapi/README.md) | 中央服务 |
 | 154 上 `127.0.0.1:19880` | New API | Nginx／SSH 私有转发 |
-| 维护者 `127.0.0.1:18887` | New API 管理入口 | 本机 SSH 隧道 |
+| `https://api.drawbookai.cn/console` | New API 管理入口 | 公网 443，Nginx 访问密码在前，密码在 Mac 的 `~/Easel-build/newapi-console-access.txt` |
+| 维护者 `127.0.0.1:18887` | New API 管理入口（备用） | 本机 SSH 隧道 |
 | 用户 `127.0.0.1:17868` | 已有原工作台 | 用户本机；端口不是服务版本标识 |
 
 1Panel 原专用入口曾通过本机 18880 访问；具体目标端口和安全路径沿用私有维护记录，不在公开手册存凭据。容器内部 IP 如 `172.29.24.20` 是历史分配值，重建后要核对。

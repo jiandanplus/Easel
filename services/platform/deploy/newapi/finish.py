@@ -5,11 +5,15 @@
           the central service already holds, so its model bindings stay unchanged
   switch  issue the api.drawbookai.cn certificate, put nginx on 127.0.0.1:19443
           and retire the old tunnel
+  console open the admin page on public 443 behind an nginx password; the password
+          is generated here and left in ACCESS for the administrator to collect
 
 Run as root on the server. Token values are read and written here and never printed.
 """
 import json
+import os
 import pathlib
+import secrets
 import shutil
 import ssl
 import subprocess
@@ -22,6 +26,10 @@ URL = f"https://{HOST}:19443"
 LOCAL = "http://127.0.0.1:19880"
 CERT = pathlib.Path("/etc/letsencrypt/live/easel-gateway/fullchain.pem")
 SITE = pathlib.Path("/etc/nginx/sites-enabled/easel-gateway")
+CONSOLE_SITE = pathlib.Path("/etc/nginx/sites-enabled/easel-gateway-console")
+HTPASSWD = pathlib.Path("/etc/nginx/easel-gateway-console.htpasswd")
+ACCESS = pathlib.Path("/root/newapi-console-access.txt")
+CONSOLE_USER = "owner"
 OPTIONS = {"RetryTimes": "0", "RegisterEnabled": "false", "PasswordRegisterEnabled": "false",
            "SelfUseModeEnabled": "true"}
 # Customer charging lives in the central ledger, so the gateway account must never run dry.
@@ -96,5 +104,25 @@ def switch():
     print(json.dumps({"version": status(URL + "/api/status")["data"]["version"]}))
 
 
+def console():
+    if not HTPASSWD.exists():
+        password = secrets.token_urlsafe(24)
+        hashed = subprocess.run(["openssl", "passwd", "-6", "-stdin"], input=password, capture_output=True,
+                                text=True, check=True).stdout.strip()
+        descriptor = os.open(ACCESS, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(descriptor, "w") as access:
+            access.write(f"地址: https://{HOST}/console\n用户名: {CONSOLE_USER}\n密码: {password}\n")
+        HTPASSWD.write_text(f"{CONSOLE_USER}:{hashed}\n")
+        shutil.chown(HTPASSWD, "root", "www-data")
+        HTPASSWD.chmod(0o640)
+    shutil.copyfile(pathlib.Path(__file__).with_name("nginx-console.conf"), CONSOLE_SITE)
+    try:
+        subprocess.run(["nginx", "-t"], check=True, capture_output=True)
+    except subprocess.CalledProcessError:
+        CONSOLE_SITE.unlink()
+        raise SystemExit("nginx rejected the console site; it was removed")
+    subprocess.run(["systemctl", "reload", "nginx"], check=True)
+
+
 if __name__ == "__main__":
-    {"seed": seed, "switch": switch}[sys.argv[1]]()
+    {"seed": seed, "switch": switch, "console": console}[sys.argv[1]]()
