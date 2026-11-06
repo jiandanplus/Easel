@@ -56,7 +56,14 @@ final class Shell: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigati
         let root = app.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let current = root.appendingPathComponent("current/Easel/Easel.app")
         guard FileManager.default.fileExists(atPath: current.path), current.resolvingSymlinksInPath() != app else { return false }
+        let target = current.resolvingSymlinksInPath()
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+        if let open = running.first(where: { $0.bundleURL?.resolvingSymlinksInPath() == target }) {
+            open.activate()
+            exit(0)
+        }
         let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true  // Same bundle id as this process.
         configuration.environment = environment
         NSWorkspace.shared.openApplication(at: current, configuration: configuration) { _, _ in exit(0) }
         return true
