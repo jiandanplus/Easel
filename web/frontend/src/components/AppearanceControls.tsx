@@ -23,7 +23,7 @@ export function AppearanceToggle() {
 
 const MODES = [
   { id: 'system', label: '跟随系统', detail: '自动切换日间与夜间' },
-  { id: 'light', label: '日间模式', detail: 'A · 纸感编辑室' },
+  { id: 'light', label: '日间模式', detail: 'B · 极简效率台' },
   { id: 'dark', label: '夜间模式', detail: 'C · 深色创作舱' },
 ] as const;
 
@@ -41,9 +41,9 @@ export function AppearanceModeSettings() {
       </button>)}
     </div>
     <p className="appearance-mode-description" role="status">
-      {mode === 'system' ? `正在跟随系统，当前为${theme === 'forest' ? '夜间模式 · 主题 C' : '日间模式 · 主题 A'}`
+      {mode === 'system' ? `正在跟随系统，当前为${theme === 'forest' ? '夜间模式 · 主题 C' : '日间模式 · 主题 B'}`
         : mode === 'custom' ? '当前使用自选主题'
-          : `已固定为${mode === 'dark' ? '夜间模式 · 主题 C' : '日间模式 · 主题 A'}`}
+          : `已固定为${mode === 'dark' ? '夜间模式 · 主题 C' : '日间模式 · 主题 B'}`}
     </p>
   </div>;
 }

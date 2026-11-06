@@ -10,12 +10,13 @@ export const THEMES: readonly { id: ThemeId; name: string; description: string; 
   { id: 'pastel', name: 'D · 柔和彩色工作室', description: '奶油白 · 鼠尾草绿 · 柔彩插画', available: true },
   { id: 'swiss', name: 'E · 瑞士网格系统', description: '黑白 · 信号橙 · 几何网格', available: true },
 ];
-let currentTheme: ThemeId = 'paper';
-let preference: AppearancePreference = { mode: 'system', theme: 'paper' };
+export const DAY_THEME: ThemeId = 'minimal';
+let currentTheme: ThemeId = DAY_THEME;
+let preference: AppearancePreference = { mode: 'system', theme: DAY_THEME };
 let systemDark = false;
 const subscribers = new Set<() => void>();
 export function normalizeTheme(value: unknown): ThemeId {
-  return THEMES.find(theme => theme.available && theme.id === value)?.id ?? 'paper';
+  return THEMES.find(theme => theme.available && theme.id === value)?.id ?? DAY_THEME;
 }
 function storage(): Storage | undefined {
   try { return window.localStorage; } catch { return undefined; }
@@ -28,11 +29,11 @@ function parsePreference(raw: string | null): AppearancePreference {
       return { mode: value.mode as AppearanceMode, theme: normalizeTheme('theme' in value ? value.theme : undefined) };
     }
   } catch { /* Invalid preferences use the system default. */ }
-  return { mode: 'system', theme: 'paper' };
+  return { mode: 'system', theme: DAY_THEME };
 }
 function resolvedTheme(): ThemeId {
   if (preference.mode === 'custom') return preference.theme;
-  return preference.mode === 'dark' || (preference.mode === 'system' && systemDark) ? 'forest' : 'paper';
+  return preference.mode === 'dark' || (preference.mode === 'system' && systemDark) ? 'forest' : DAY_THEME;
 }
 function applyTheme(theme: ThemeId) {
   currentTheme = theme;

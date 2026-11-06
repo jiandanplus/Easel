@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import paperHero from '../assets/paper-hero.png';
 import forestHero from '../assets/forest-hero.png';
 import pastelHero from '../assets/pastel-hero.png';
-import { getTheme, subscribeTheme } from '../lib/theme';
+import { DAY_THEME, getTheme, subscribeTheme } from '../lib/theme';
 import type { ThemeId } from '../lib/theme';
 import {
   fetchTrends, fetchSchedule, fetchOutputs, fetchAccounts, fetchIdeas,
@@ -51,7 +51,7 @@ const STATUS_LABEL: Record<string, string> = { idea: '选题', draft: '草稿', 
 const HERO_IMAGES: Partial<Record<ThemeId, string>> = { paper: paperHero, forest: forestHero, pastel: pastelHero };
 
 export default function DashboardPage({ persona, onNavigate, onUseTopic, onStartCreate, composer }: DashboardProps) {
-  const theme = useSyncExternalStore<ThemeId>(subscribeTheme, getTheme, () => 'paper');
+  const theme = useSyncExternalStore<ThemeId>(subscribeTheme, getTheme, () => DAY_THEME);
   const [brief, setBrief] = useState('');
   const [trends, setTrends] = useState<TrendGroup[]>([]);
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);

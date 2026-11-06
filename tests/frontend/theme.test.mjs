@@ -49,11 +49,11 @@ function setup({ saved, legacy, dark = false, blocked = false, noMedia = false, 
 }
 for (const dark of [false, true]) {
   for (const legacy of [undefined, ...themes, 'light', 'dark', 'broken']) {
-    test(`first run defaults to system ${dark ? 'night/C' : 'day/A'} despite legacy ${legacy}`, () => {
+    test(`first run defaults to system ${dark ? 'night/C' : 'day/B'} despite legacy ${legacy}`, () => {
       const view = setup({ dark, legacy }); view.api.initializeTheme();
       assert.equal(view.api.getAppearanceMode(), 'system');
-      assert.equal(view.api.getTheme(), dark ? 'forest' : 'paper');
-      assert.equal(view.root.dataset.theme, dark ? 'forest' : 'paper');
+      assert.equal(view.api.getTheme(), dark ? 'forest' : 'minimal');
+      assert.equal(view.root.dataset.theme, dark ? 'forest' : 'minimal');
       assert.equal(view.root.style.colorScheme, dark ? 'dark' : 'light');
       assert.equal(JSON.parse(view.entries.get(KEY)).mode, 'system');
     });
@@ -77,7 +77,7 @@ test('all five approved themes remain available with exact names', () => {
   assert.equal(configured.filter(theme => theme.available).length, 5);
   assert.equal(configured.map(theme => theme.name).join('|'), 'A · 纸感编辑室|B · 极简效率台|C · 深色创作舱|D · 柔和彩色工作室|E · 瑞士网格系统');
 });
-for (const [mode, expected] of [['light', 'paper'], ['dark', 'forest']]) {
+for (const [mode, expected] of [['light', 'minimal'], ['dark', 'forest']]) {
   test(`explicit ${mode} selects ${expected}, ignores system and survives reload`, () => {
     const view = setup({ dark: mode === 'light' }); view.api.initializeTheme();
     assert.equal(view.api.setAppearanceMode(mode), true); assert.equal(view.api.getTheme(), expected);
@@ -89,10 +89,10 @@ for (const [mode, expected] of [['light', 'paper'], ['dark', 'forest']]) {
 test('system changes live; custom mode stays put; returning to system uses latest OS state', () => {
   const view = setup(); view.api.initializeTheme();
   view.systemChange(true); assert.equal(view.api.getTheme(), 'forest');
-  view.systemChange(false); assert.equal(view.api.getTheme(), 'paper');
+  view.systemChange(false); assert.equal(view.api.getTheme(), 'minimal');
   view.api.setTheme('pastel'); view.systemChange(true); assert.equal(view.api.getTheme(), 'pastel');
   view.api.setAppearanceMode('system'); assert.equal(view.api.getTheme(), 'forest');
-  view.systemChange(false); assert.equal(view.api.getTheme(), 'paper');
+  view.systemChange(false); assert.equal(view.api.getTheme(), 'minimal');
 });
 test('cross-tab appearance is atomic and legacy mirror events cannot override it', () => {
   const view = setup({ dark: true }); view.api.initializeTheme();
@@ -100,7 +100,7 @@ test('cross-tab appearance is atomic and legacy mirror events cannot override it
     view.receive({ mode: 'custom', theme }); assert.equal(view.api.getTheme(), theme);
     view.receive('paper', 'easel_theme'); assert.equal(view.api.getTheme(), theme);
   }
-  view.receive({ mode: 'light', theme: 'forest' }); assert.equal(view.api.getTheme(), 'paper');
+  view.receive({ mode: 'light', theme: 'forest' }); assert.equal(view.api.getTheme(), 'minimal');
   view.receive({ mode: 'system', theme: 'pastel' }); assert.equal(view.api.getTheme(), 'forest');
   view.receive(null); assert.equal(view.api.getAppearanceMode(), 'system');
   view.receive(null, null); assert.equal(view.api.getTheme(), 'forest');
@@ -130,12 +130,12 @@ test('queued stale storage and clear events cannot undo a newer saved local choi
 test('blocked storage keeps live OS following and manual selection usable', () => {
   const view = setup({ blocked: true, dark: true });
   assert.doesNotThrow(() => view.api.initializeTheme()); assert.equal(view.api.getTheme(), 'forest');
-  view.systemChange(false); assert.equal(view.api.getTheme(), 'paper');
+  view.systemChange(false); assert.equal(view.api.getTheme(), 'minimal');
   view.api.setTheme('minimal'); assert.equal(view.api.getTheme(), 'minimal');
 });
 test('missing media API falls back to day but explicit night still works', () => {
   const view = setup({ noMedia: true }); const cleanup = view.api.initializeTheme();
-  assert.equal(view.api.getTheme(), 'paper'); view.api.setAppearanceMode('dark'); assert.equal(view.api.getTheme(), 'forest'); cleanup();
+  assert.equal(view.api.getTheme(), 'minimal'); view.api.setAppearanceMode('dark'); assert.equal(view.api.getTheme(), 'forest'); cleanup();
 });
 test('older MediaQueryList listeners are supported and cleaned up', () => {
   const view = setup({ oldMedia: true }); const cleanup = view.api.initializeTheme();
@@ -149,7 +149,7 @@ test('invalid preferences normalize safely and invalid actions leave state uncha
   const view = setup(); view.api.initializeTheme();
   for (const value of ['unknown', '__proto__', null, {}, 2]) {
     assert.equal(view.api.setAppearanceMode(value), false); assert.equal(view.api.setTheme(value), false);
-    assert.equal(view.api.getTheme(), 'paper');
+    assert.equal(view.api.getTheme(), 'minimal');
   }
 });
 test('before-paint bootstrap matches runtime for all modes, malformed data, and OS appearances', () => {
