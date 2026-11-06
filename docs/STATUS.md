@@ -8,9 +8,9 @@
 
 | 能力 | 状态 | 说明 |
 | --- | --- | --- |
-| 桌面工作台（三栏 UI、五套主题、内置 Pi） | 已部署 | 用户本机 v44，日间默认主题 B，对外名称“优创”（[决策 0009](decisions/0009-product-name-youchuang.md)），独立 Mac 窗口（[决策 0008](decisions/0008-native-mac-window.md)），服务在 `http://127.0.0.1:17868` |
+| 桌面工作台（三栏 UI、五套主题、内置 Pi） | 已部署 | 用户本机 v45，日间默认主题 B，对外名称“优创”（[决策 0009](decisions/0009-product-name-youchuang.md)），独立 Mac 窗口（[决策 0008](decisions/0008-native-mac-window.md)），服务在 `http://127.0.0.1:17868` |
 | 应用内更新 | 已部署 | 设置 → 版本更新；签名清单 + 哈希 + 库存校验，失败自动回滚；公开更新源目前是 GitHub Release `desktop-v40`；11-06 本机 v38→v40 实际更新成功 |
-| 桌面 v44（独立窗口 + 优创品牌 + 日间主题 B + 蓝色图标） | 本机已部署，未公开发布 | 提交 `1a0bd3b` 构建（`~/Easel-build/releases/pi-portable-20261106-v44`，安装包 `2c14ad2c…`），已手动装到本机；清单未签名，发布前要跑 `publish_update.py`。v41 的隔离演练含 v40→v41 应用内更新 8 秒完成，文件选择、确认框、下载、复制、外部链接、登录弹窗实测正常。公开 Release 被权限系统拦下，最新公开版仍是 v40 |
+| 桌面 v45（独立窗口 + 优创品牌 + 日间主题 B + 蓝色图标） | 本机已部署，未公开发布 | 提交 `aaea2c7` 构建（`~/Easel-build/releases/pi-portable-20261106-v45`，安装包 `9c8d195c…`），已手动装到本机；清单未签名，发布前要跑 `publish_update.py`。v41 的隔离演练含 v40→v41 应用内更新 8 秒完成，文件选择、确认框、下载、复制、外部链接、登录弹窗实测正常。公开 Release 被权限系统拦下，最新公开版仍是 v40 |
 | 登录注册页品牌 | 已部署（2026-11-06） | 生产 Logto 已换成优创标识、主题 B 的冷白蓝配色、中文标题，语言固定简体中文（`services/platform/deploy/login-branding/`）；改前备份在 `/root/easel-login-branding-20261106/before.sql`；底部 “Powered by Logto” 受开源版规则保护，保留 |
 | 中央账号、会员、共享点数钱包、私有 Console | 已部署（2026-11-06 升级后巡检正常） | 生产 154；当前发布 `20261106-media-021-v1`，迁移到 021；回滚：删除两个 unit 的 `91-p3-media.conf` 后重启即回到 `20261027-images-m1-1-size-v2` |
 | 订阅文本模型、两款图片模型 | 已部署（据交接手册） | 有真实调用与扣点记录；新模型需逐个验收 |
@@ -26,7 +26,7 @@
 
 | 对象 | 位置 |
 | --- | --- |
-| 用户工作台程序 | `~/Applications/Easel/current -> v44`（v36–v43 保留用于回滚；v36–v40 的 `Contents/MacOS` 已换成窗口外壳，从旧路径或系统搜索打开都会转到当前版本，原脚本备份在 `~/Easel-build/old-launcher-v*`）；`Start Easel.command` 现在只是打开 App |
+| 用户工作台程序 | `~/Applications/Easel/current -> v45`（v36–v44 保留用于回滚；v36–v40 的 `Contents/MacOS` 已换成窗口外壳，从旧路径或系统搜索打开都会转到当前版本，原脚本备份在 `~/Easel-build/old-launcher-v*`）；`Start Easel.command` 现在只是打开 App |
 | 用户工作区 | `~/Library/Application Support/Easel/workspaces/main`（2026-10-30 备份恢复；原 `/private/tmp` 工作区已被系统清理） |
 | 工作台日志 | `~/Library/Logs/Easel/workbench-17868.log` |
 | 桌面构建输入与产物 | `~/Easel-build/python-inputs`、`~/Easel-build/pi-runtime-v37`、`~/Easel-build/releases/` |
@@ -50,7 +50,7 @@
 | --- | --- | --- |
 | P1 收尾 | 服务器旧私钥暂留 | 已另存到 Mac；需要时由你手动删除 `/root/easel-migration-20261024/transfer-private.pem` |
 | 桌面签名公证 | Apple 开发者身份 | — |
-| 订阅媒体开放（P3） | 升级与核销已完成（11-06）；中央账号 11-06 已在 App 内登录成功，等你生成一张图做真实扣点回归 | 回归通过后，视频、音乐、语音逐个真实验收（产生供应商费用，逐个确认）；明细见 [P3 上线清单](../services/platform/deploy/P3-MEDIA-RELEASE.md) |
+| 订阅媒体开放（P3） | 升级与核销已完成（11-06）；中央账号 11-06 已在 App 内登录成功，但内部体验权益 10-30 已到期（余额 0、无功能），模型列表为空，图片回归做不了；`internal-grant` 每个账号只能发一次且只含文本，需要新增审计过的权益发放 | 回归通过后，视频、音乐、语音逐个真实验收（产生供应商费用，逐个确认）；明细见 [P3 上线清单](../services/platform/deploy/P3-MEDIA-RELEASE.md) |
 | 优创改名收尾 | 不急 | 私有 Console、技能元数据、命令行工具和开发文档仍写 Easel |
 | 创作者价值（P4） | 用户确定最重要的创作流程 | — |
 | 合并策略 | 用户决定 | 开 PR 让 CI 真正运行，再决定合入哪里 |
