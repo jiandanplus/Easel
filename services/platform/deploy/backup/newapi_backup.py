@@ -17,7 +17,9 @@ import uuid
 import sealed_backup
 
 DIRECTORY = Path("/var/backups/easel-newapi")
-DUMP = ["docker", "exec", "easel-newapi-pg", "pg_dump", "-U", "newapi", "-d", "newapi", "--format=custom"]
+# Request logs can outgrow the 32 MiB sealing limit and are not needed to rebuild the gateway.
+DUMP = ["docker", "exec", "easel-newapi-pg", "pg_dump", "-U", "newapi", "-d", "newapi", "--format=custom",
+        "--exclude-table-data=logs"]
 
 
 def dump(run=subprocess.run):
@@ -47,7 +49,8 @@ def main():
     public = backup.read_fixed(sealed_backup.PUBLIC_KEY, 32768, private=False)
     payload = dump()
     backup_id = str(uuid.uuid4())
-    metadata = {"transfer_id": backup_id, "kind": "newapi", "target": backup.TARGET,
+    # The frozen sealing helper only knows "central" and "logto"; the R2 prefix keeps this apart.
+    metadata = {"transfer_id": backup_id, "kind": "central", "target": backup.TARGET,
                 "expected_sha256": hashlib.sha256(payload).hexdigest(), "expected_length": len(payload)}
     envelope = backup.crypto().seal(public, payload, metadata)
     path = save(DIRECTORY, envelope, backup_id, dt.datetime.now(dt.timezone.utc))
