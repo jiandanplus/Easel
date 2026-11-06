@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 桌面工作台（三栏 UI、五套主题、内置 Pi） | 已部署 | 用户本机 `http://127.0.0.1:17868`，v38 |
 | 应用内更新 | 已部署 | 设置 → 版本更新；签名清单 + 哈希 + 库存校验，失败自动回滚；更新源为 GitHub Release `desktop-v38`（最新） |
-| 桌面 v39（路由拆分后首个包） | 隔离验证 | 已构建并签好清单（`~/Easel-build/releases/pi-portable-20261106-v39`、`publish-v39`）；独立实例 11 个接口正常，受管布局 v38→v39 应用内更新 7 秒完成；待发布 Release `desktop-v39` |
+| 桌面 v40（路由拆分 + 媒体 `waived` 显示） | 隔离验证 | 提交 `7bf865e` 构建并签好清单（`~/Easel-build/releases/pi-portable-20261106-v40`、`publish-v40`，安装包 `4e4990d1…`）；受管布局 v38→v40 应用内更新 7 秒完成，首页与接口正常；待发布 Release `desktop-v40`。v39 被 v40 取代，不再发布 |
 | 中央账号、会员、共享点数钱包、私有 Console | 已部署（2026-11-06 升级后巡检正常） | 生产 154；当前发布 `20261106-media-021-v1`，迁移到 021；回滚：删除两个 unit 的 `91-p3-media.conf` 后重启即回到 `20261027-images-m1-1-size-v2` |
 | 订阅文本模型、两款图片模型 | 已部署（据交接手册） | 有真实调用与扣点记录；新模型需逐个验收 |
 | 自定义接口渠道 | 已部署 | 用户自配供应商，不经中央钱包 |
@@ -34,7 +34,7 @@
 | 恢复演练与 R2 监视 | `~/Easel-build/backup-drill`（`rclone.conf` 为只读令牌；launchd 任务已加载，日志在 `~/Library/Logs/Easel/backup-{watch,drill}.log`） |
 | 中央服务、Console、Logto、两个 PostgreSQL | 154.217.245.179（`ssh easel-zhiyin`），详见 [部署手册](handbook/2026-11-05/03-deployment.md) |
 | New API 网关 | 火山引擎 115.190.211.112 |
-| 生产备份 | 154 每日封装备份 + R2 异地副本，已恢复演练；服务器上旧私钥 `transfer-private.pem` 仍在，旧的 23 份备份只能用它打开，删除前先决定是否另存 |
+| 生产备份 | 154 每日封装备份 + R2 异地副本，已恢复演练；旧的 23 份备份只能用旧私钥打开，已另存到 `~/Easel-build/backup-keys/transfer-private-legacy.pem`（仅本机，哈希与服务器一致），服务器上的 `transfer-private.pem` 暂留 |
 
 ## 3. 代码与质量
 
@@ -47,11 +47,11 @@
 
 | 事项 | 卡在 | 下一步 |
 | --- | --- | --- |
-| P1 收尾 | 决定服务器旧私钥去留 | 另存到 Mac（旧的 23 份备份仍可打开）或直接删除 `/root/easel-migration-20261024/transfer-private.pem` |
+| P1 收尾 | 服务器旧私钥暂留 | 已另存到 Mac；需要时由你手动删除 `/root/easel-migration-20261024/transfer-private.pem` |
 | 桌面签名公证 | Apple 开发者身份 | — |
 | 订阅媒体开放（P3） | 升级与核销已完成（11-06）；等你在桌面端做一次图片真实扣点回归 | 回归通过后，视频、音乐、语音逐个真实验收（产生供应商费用，逐个确认）；明细见 [P3 上线清单](../services/platform/deploy/P3-MEDIA-RELEASE.md) |
-| 另一笔待核算文本任务 | 你决定是否释放 | 生产还有 1 笔文本执行任务停在 `pending_reconciliation`（升级前已存在，与 P3 无关）；如需释放，用现有 `execution-writeoff-*`，流程与媒体相同 |
-| 桌面 v40 | 发布前需重建 | v39 不认识媒体任务的 `waived` 状态（修复在 v39 之后提交），应重建 v40 再发布 Release，并更新 17868 |
+| 另一笔待核算文本任务 | 执行被权限系统拦下，待放行 | `bdbc4509…`（10-28 上游报错，9728）的计划已在服务器 `/root/easel-p3-release-20261106/text-writeoff-plan.json`，哈希 `28a91c1a…2cb0`，用户已授权决定；放行后执行 `execution-writeoff-apply` |
+| 桌面 v40 发布 | 公开发布被权限系统拦下，待放行 | 上传 Release `desktop-v40`（ZIP + 签名清单），再用应用内更新把 17868 升到 v40 |
 | 创作者价值（P4） | 用户确定最重要的创作流程 | — |
 | 合并策略 | 用户决定 | 开 PR 让 CI 真正运行，再决定合入哪里 |
 | 商业付款、第二产品 | 商户信息、产品定位 | — |
