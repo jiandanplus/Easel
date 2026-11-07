@@ -6,7 +6,9 @@ import subprocess
 import os
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from easel.paths import workspace_root, resource_root
+
+PROJECT_ROOT = workspace_root()
 GATEWAY_SCRIPT = PROJECT_ROOT / "scripts" / ("gateway.ps1" if os.name == "nt" else "gateway.sh")
 
 

@@ -1,0 +1,21 @@
+{
+  "variant": "B",
+  "page": "18",
+  "title": "音乐",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-39095f05-1522-4fc1-a6a4-e088aad3571f.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/18.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "音乐",
+    "音乐生成服务",
+    "供应商",
+    "主通道",
+    "保存配置"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "3404cfdec390d5d878ad1dff1a12219b0fcd3d5381a6c7a61015040185a0bfd0"
+}

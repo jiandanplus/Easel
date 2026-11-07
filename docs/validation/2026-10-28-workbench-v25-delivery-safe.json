@@ -1,0 +1,397 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-28",
+  "status": "v25_activated_local_17868_with_authentication_reconnect_pending",
+  "author_scope": "Consolidate existing safe evidence only; this documentation task did not rerun tests, read raw auth/backups, modify code or perform activation.",
+  "artifact": {
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v25/Easel/Easel.app",
+    "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v25/Easel-Pi-macOS15-arm64.zip",
+    "sha256": "7c017d0efb35b19928bc8cbf3b6e7e4e48826773dcf40315fedaca9a28f5effb",
+    "archive_bytes": 129829143,
+    "inventory_files": 15401,
+    "schema_version": 1,
+    "engine": "pi",
+    "git_commit": "e972af07444e181e3eb737441ecac306bca778b3",
+    "source_manifest_sha256": "25343b52564546b363d6018f31428e35ca63a47fddab4b1b6562219527c86c44",
+    "pi_manifest_sha256": "8448f44712ed33164b3e04fd2dc198be2b03ba2bd0f62f237aec3c0d4f7d9783",
+    "frontend_receipt_sha256": "362ff4d74736e11fbaa495f397778ae13f0e3197388d6bc80a3c22b075a0661b",
+    "python_archive_verified": false,
+    "python_runtime_inventory_verified": true,
+    "python_version": "3.12.13",
+    "wheel_count": 26,
+    "minimum_macos": "15.0",
+    "unsigned": true,
+    "notarized": false,
+    "ui": "loopback web browser"
+  },
+  "package_verification": {
+    "frontend_fresh_passed": 454,
+    "frontend_failed": 0,
+    "typescript_and_vite_build": true,
+    "zip_inventory": {
+      "ok": true,
+      "zip_sha256": "7c017d0efb35b19928bc8cbf3b6e7e4e48826773dcf40315fedaca9a28f5effb",
+      "bytes": 129829143,
+      "crc_ok": true,
+      "entries": 36116,
+      "app_inventory_files_verified": 15401,
+      "public_source_files": 903,
+      "build_inputs": 58,
+      "source_manifest_sha256": "25343b52564546b363d6018f31428e35ca63a47fddab4b1b6562219527c86c44",
+      "pi_manifest_sha256": "8448f44712ed33164b3e04fd2dc198be2b03ba2bd0f62f237aec3c0d4f7d9783",
+      "pi_dependency_delta": [
+        "worker.mjs"
+      ],
+      "licenses_present": true,
+      "no_user_state_paths_in_zip": true,
+      "signed": false,
+      "notarized": false,
+      "python_archive_verified": false,
+      "python_runtime_inventory_verified": true
+    },
+    "fresh_install": {
+      "ok": true,
+      "new_explicit_workspace": true,
+      "home_unchanged": true,
+      "bundled_pi": true,
+      "host_path": "system_only",
+      "default_subscription": true,
+      "public_login_entry_configured": true,
+      "prior_credentials_required": false,
+      "supplier_key_required": false,
+      "external_model_posts": 0,
+      "auth_posts": 0,
+      "same_machine_test": true,
+      "clean_device_or_gatekeeper_verified": false,
+      "isolated_port": 54516,
+      "owned_instance_stopped": true,
+      "existing_17868_http200_after": true
+    },
+    "embedded_node": {
+      "ok": true,
+      "node": "24.22.1",
+      "pi": "1.4.0",
+      "core_agent": "function",
+      "ai_createModels": "function"
+    },
+    "embedded_image_decode": {
+      "ok": true,
+      "pillow": "12.3.0",
+      "embedded_python": true,
+      "embedded_media_module": true,
+      "decoded_real_protocol_images": 2,
+      "bundled_pi_manifest_verified": true,
+      "supplier_keys": 0,
+      "provider_posts": 0
+    },
+    "embedded_synthetic_auth": {
+      "ok": true,
+      "embedded_auth_module": true,
+      "successful_rotation_saved": true,
+      "durable_unknown_fence": true,
+      "restart_refresh_replays": 0,
+      "synthetic_auth_only": true,
+      "external_http": 0,
+      "supplier_posts": 0
+    },
+    "credential_pattern_unresolved": 0,
+    "post_launch_inventory_exact": true,
+    "v24_archive_sha_unchanged": true
+  },
+  "source_scope": {
+    "public_before": 901,
+    "public_after": 903,
+    "changed_paths": [
+      "easel/harnesses/pi.py",
+      "easel/platform/media.py",
+      "easel/platform/media_contracts.py",
+      "easel/platform/media_files.py",
+      "easel/platform/media_records.py",
+      "web/frontend/src/components/CentralAccountSettings.tsx"
+    ],
+    "build_inputs": 58,
+    "build_input_count_note": "58 current build inputs vs v24 59 because default authority excludes its own source-manifest.json; all real build input paths retained; only worker content changed.",
+    "central_M3_source_bundled": false
+  },
+  "activation": {
+    "ok": true,
+    "pid": 27506,
+    "port": 17868,
+    "same_workspace": true,
+    "home_override": false,
+    "old_apps_and_zips_unchanged": true,
+    "html_matches_new_package": true,
+    "old_launchers_forward_to_v25": [
+      {
+        "version": 19,
+        "name": "启动现有工作台.command",
+        "sha256": "3144d7f264f0953279e54fb5aa7ecf691f885a51860e5b1ea3edc87d89ee49e9"
+      },
+      {
+        "version": 19,
+        "name": "停止现有工作台.command",
+        "sha256": "646d9dcd8046e9803b58ecea23b0f4eebc489123146588df010a740fcc5b9406"
+      },
+      {
+        "version": 20,
+        "name": "启动现有工作台.command",
+        "sha256": "3144d7f264f0953279e54fb5aa7ecf691f885a51860e5b1ea3edc87d89ee49e9"
+      },
+      {
+        "version": 20,
+        "name": "停止现有工作台.command",
+        "sha256": "646d9dcd8046e9803b58ecea23b0f4eebc489123146588df010a740fcc5b9406"
+      },
+      {
+        "version": 21,
+        "name": "启动现有工作台.command",
+        "sha256": "3144d7f264f0953279e54fb5aa7ecf691f885a51860e5b1ea3edc87d89ee49e9"
+      },
+      {
+        "version": 21,
+        "name": "停止现有工作台.command",
+        "sha256": "646d9dcd8046e9803b58ecea23b0f4eebc489123146588df010a740fcc5b9406"
+      },
+      {
+        "version": 22,
+        "name": "启动现有工作台.command",
+        "sha256": "3144d7f264f0953279e54fb5aa7ecf691f885a51860e5b1ea3edc87d89ee49e9"
+      },
+      {
+        "version": 22,
+        "name": "停止现有工作台.command",
+        "sha256": "646d9dcd8046e9803b58ecea23b0f4eebc489123146588df010a740fcc5b9406"
+      },
+      {
+        "version": 23,
+        "name": "启动现有工作台.command",
+        "sha256": "3144d7f264f0953279e54fb5aa7ecf691f885a51860e5b1ea3edc87d89ee49e9"
+      },
+      {
+        "version": 23,
+        "name": "停止现有工作台.command",
+        "sha256": "646d9dcd8046e9803b58ecea23b0f4eebc489123146588df010a740fcc5b9406"
+      },
+      {
+        "version": 24,
+        "name": "启动现有工作台.command",
+        "sha256": "3144d7f264f0953279e54fb5aa7ecf691f885a51860e5b1ea3edc87d89ee49e9"
+      },
+      {
+        "version": 24,
+        "name": "停止现有工作台.command",
+        "sha256": "646d9dcd8046e9803b58ecea23b0f4eebc489123146588df010a740fcc5b9406"
+      }
+    ],
+    "provider_posts": 0
+  },
+  "preservation": {
+    "ok": true,
+    "protected_files": 138,
+    "new_private_runtime_files": [],
+    "history_and_custom_config_preserved": true,
+    "same_account_scope": true,
+    "same_wallet": null,
+    "wallet_observed": false,
+    "changes": [],
+    "model_calls": 0
+  },
+  "account_status": {
+    "before_upgrade_authenticated": false,
+    "before_upgrade_error_code": "refresh_uncertain",
+    "before_upgrade_status_source": "trusted root handoff in this task; not raw user state",
+    "after_upgrade_action": "user re-login pending",
+    "protected_files_this_upgrade": 138,
+    "protected_file_changes": [],
+    "account_scope_preserved": true,
+    "continuous_logged_in_proven": false,
+    "wallet_observed_by_v25_preservation": false,
+    "same_wallet_in_preservation": null,
+    "old_v24_155_count_reused": false
+  },
+  "server_read_only_snapshot": {
+    "source": "/private/tmp/easel-mixed-drift-diagnostic-20261028-safe.json",
+    "available_microcredits": 6952153,
+    "held_microcredits": 1000000,
+    "spent_microcredits": 2047847,
+    "wallet_unchanged": true,
+    "provider_posts": 0,
+    "database_writes": 0,
+    "evidence_boundary": "Separate server read-only observation; not client wallet readability, authenticated session continuity or a v25 model execution."
+  },
+  "browser_observation": {
+    "source": "trusted root handoff: actual v25 reload at 17868",
+    "settings_loading_false_subscription_closed_flash_observed": false,
+    "account_tab_opened": true,
+    "user_relogin_pending": true,
+    "settings_screenshot": "outputs/_run/pi-portable-20261028-v25/settings-loaded.png",
+    "formal_account_screenshot": "pending",
+    "excluded_misnamed_screenshot": "outputs/_run/pi-portable-20261028-v25/skills-ui-review.png",
+    "excluded_reason": "loading settings screenshot, not a skills-page observation"
+  },
+  "test_evidence_separate_no_sum": {
+    "frontend_v25": {
+      "passed": 454,
+      "failed": 0,
+      "fresh_packaging_run": true
+    },
+    "M4_regression": {
+      "passed": 259,
+      "scope": "controlled local protocol fixtures; prior reviewed source run, not rerun by this documentation task",
+      "actual_SDK_scenarios": 12,
+      "SDK_scenarios_are_subset_not_extra_total": true
+    },
+    "M4_independent_review_r1": {
+      "passed": 4,
+      "scope": "separate targeted independent review; not added to regression total"
+    },
+    "central_PG_ASGI": {
+      "passed": 10,
+      "scope": "controlled local integration; root handoff, not production acceptance",
+      "dedicated_receipt": "awaiting root path"
+    },
+    "central_full_previous": {
+      "status": "failed",
+      "result": {
+        "passed": 1697,
+        "failed": 90,
+        "errors": 7,
+        "skipped": 7,
+        "seconds": 317.33
+      },
+      "source_input_count": 423,
+      "source_inputs_unchanged": true
+    },
+    "central_full_awake_rerun": {
+      "status": "running_or_pending_at_report",
+      "passed_claimed": false,
+      "source": "trusted root handoff; separate workstream"
+    }
+  },
+  "production_boundary": {
+    "candidate_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+    "schema_through": "016",
+    "live_scope": "existing text and two image models",
+    "nine_new_capabilities_live_accepted": false,
+    "v25_provider_posts": 0,
+    "prior_two_images_and_one_point_per_image_report": "docs/validation/2026-10-27-newapi-image-workbench-delivery.md",
+    "old_pending_one_point_resolved": false
+  },
+  "remaining_limits": {
+    "signed": false,
+    "notarized": false,
+    "gatekeeper_verified": false,
+    "independent_clean_device_verified": false,
+    "python_archive_sha_verified": false,
+    "python_runtime_inventory_verified": true,
+    "real_chinese_IME_verified": false,
+    "VoiceOver_verified": false,
+    "native_clipboard_paste_e2e_verified": false
+  },
+  "documentation_task_boundaries": {
+    "source_tests_scripts_modified": false,
+    "only_two_requested_docs_written": true,
+    "private_auth_or_backup_read": false,
+    "tests_rerun": false,
+    "provider_posts": 0,
+    "server_actions": false,
+    "commit_push_merge": false
+  },
+  "evidence_files": [
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/v25-delivery-safe.json",
+      "bytes": 4408,
+      "sha256": "f868f9fc004393ec451e8ad9ff805f28d6414474b47879ad9a95ab67690c823a"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/input-diff-safe.json",
+      "bytes": 1778,
+      "sha256": "8b6f18211fb860c9acc40de92867d903de41c18d5328206d427b8a8cd2eb4876"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/package-safe.json",
+      "bytes": 679,
+      "sha256": "b877b3c5e092caee1996b9320c4d2c593e120c7daf62f93f9b7d3bbd2b6d3401"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/fresh-install-safe.json",
+      "bytes": 500,
+      "sha256": "72e6ffb965691d0243baa790229b7cad94200bdc242fc95f2370c375b8338e07"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/embedded-node-safe.json",
+      "bytes": 116,
+      "sha256": "8946671598b464070b00c8b9b5fd0e993a7bf7ffd4223b81de25d106285670ca"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/embedded-decoder-safe.json",
+      "bytes": 221,
+      "sha256": "848053315be23a295fe19b2c7c6aa472fb846e04de029ec98746c2f9dc2bdef2"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/embedded-auth-safe.json",
+      "bytes": 227,
+      "sha256": "39ab9048cc3286f26133fa2e3a618eb91b1333a4a56ea4e7edf2ad9aa8d52896"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/credential-pattern-safe.json",
+      "bytes": 695,
+      "sha256": "b689cc8096a9230c6d41ef8304d12bc43ccf46bb5d989aec686bf6718b824873"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/frontend-tests.log",
+      "bytes": 41616,
+      "sha256": "1b9e9d46677c829b52b04f09c24f39975a9a7debc11320bdeaaf9ad1c48b7aab"
+    },
+    {
+      "path": "/private/tmp/easel-v25-package-20261028/frontend-build.log",
+      "bytes": 2092,
+      "sha256": "eb92320be1ce3efa357b1735a9f6244f073aab019dca21fcd49722241e03f3e3"
+    },
+    {
+      "path": "/private/tmp/easel-v25-activation-20261028/preparation-safe.json",
+      "bytes": 523,
+      "sha256": "b4a083ffa399d459df798b8fbe251548d27dd2d1cb5dbd2e0d61a222468a3aa6"
+    },
+    {
+      "path": "/private/tmp/easel-v25-activation-20261028/activation-safe.json",
+      "bytes": 2207,
+      "sha256": "0bc3cd0d170839291a2f143df1c1d4e2b33d169b57f66cced190df27e597346b"
+    },
+    {
+      "path": "/private/tmp/easel-v25-activation-20261028/preservation-safe.json",
+      "bytes": 242,
+      "sha256": "baa7a031dfa2ac2decc75d330911ef11d82907ac580bad93c55d66bcc3ac7feb"
+    },
+    {
+      "path": "/private/tmp/easel-mixed-post-restore-preflight-20261028-safe.json",
+      "bytes": 6462,
+      "sha256": "ed25955592517c5013b758234df3a04df4fdb8fb6559e986c842e6fd7d3a2fee"
+    },
+    {
+      "path": "/private/tmp/easel-mixed-drift-diagnostic-20261028-safe.json",
+      "bytes": 1001,
+      "sha256": "d7fd8f488d8a45c8c0f01ca9482864948daf1c17adbb039ee2c02f921430c6b2"
+    },
+    {
+      "path": "/Users/jiandan/Code/GitCode/Easel/docs/validation/2026-10-27-subscription-media-m4-expansion-safe.json",
+      "bytes": 2711,
+      "sha256": "0fbe859c942b914e2e70159d9e5e7bbafc1cbb9895bf141189ea1f23d75ac7e7"
+    },
+    {
+      "path": "/Users/jiandan/Code/GitCode/Easel/docs/validation/2026-10-27-subscription-media-m4-expansion-independent-review-r1.safe.json",
+      "bytes": 4965,
+      "sha256": "6dafb0d81df77bb34ed2399565d25d306e74ca25b0fea014ed2d620490e1c85a"
+    },
+    {
+      "path": "/Users/jiandan/Code/GitCode/Easel/docs/validation/2026-10-28-m3-r2-central-full.safe.json",
+      "bytes": 31678,
+      "sha256": "283cc4156be79a742cbb4179cabee3e1df4beb898cdb72c79994c6e66e9bd24e"
+    },
+    {
+      "path": "/Users/jiandan/Code/GitCode/Easel/docs/validation/2026-10-27-newapi-image-workbench-delivery.md",
+      "bytes": 8298,
+      "sha256": "7bf7fe09c78325b9afedb66efc0b88db42f63af1b0cdcd89102760f8a3cd4441"
+    }
+  ]
+}

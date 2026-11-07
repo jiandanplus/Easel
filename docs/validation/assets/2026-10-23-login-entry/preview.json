@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "url": "http://127.0.0.1:17868/",
+  "port": 17868,
+  "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v4/Easel/Easel.app",
+  "launcher_pid": 38074,
+  "same_workspace": "/private/tmp/easel-pi-20261023/user-preview/workspace",
+  "same_home": "/private/tmp/easel-pi-20261023/user-preview/home",
+  "minimal_path": "/usr/bin:/bin:/usr/sbin:/sbin",
+  "owned_old_instance_authenticated_stop": true,
+  "new_instance_identity_verified": true,
+  "profile_and_harness_config_files_unchanged": 1,
+  "other_previews_untouched": true,
+  "supplier_credentials_or_models_changed": false
+}

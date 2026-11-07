@@ -1,0 +1,571 @@
+{
+  "status": "isolated_linux_preparation_passed_not_deployed",
+  "target": "154.217.245.179",
+  "alias": "easel-zhiyin",
+  "strict_hostkey_checking": true,
+  "directory": "/root/easel-central-linux-preparation-20261028",
+  "directory_mode": "0o700",
+  "finished_utc": "2026-10-28T04:05:22.420523+00:00",
+  "python": "/usr/bin/python3.12",
+  "wheel_sha256": "e7af8e66cc9a34deb92b47b5bc6f22f6d7406e0e510d3199b9a768efae3f8487",
+  "linux_marker_closure_matches_original_26_pins_and_extras": true,
+  "marker_environment": {
+    "implementation_name": "cpython",
+    "implementation_version": "3.12.3",
+    "os_name": "posix",
+    "platform_machine": "x86_64",
+    "platform_release": "6.8.0-48-generic",
+    "platform_system": "Linux",
+    "platform_version": "#48-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 27 14:04:52 UTC 2024",
+    "python_full_version": "3.12.3",
+    "platform_python_implementation": "CPython",
+    "python_version": "3.12",
+    "sys_platform": "linux"
+  },
+  "packages": [
+    {
+      "filename": "annotated_doc-0.0.5-py3-none-any.whl",
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101",
+      "bytes": 5302,
+      "url": "https://files.pythonhosted.org/packages/3e/30/e900b21425a860e195f32e37657aa1f7c7f2b1bfb26f03ca209b90933c06/annotated_doc-0.0.5-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "annotated_types-0.8.0-py3-none-any.whl",
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+      "bytes": 13427,
+      "url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "anyio-4.15.1-py3-none-any.whl",
+      "name": "anyio",
+      "version": "4.15.1",
+      "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+      "bytes": 132079,
+      "url": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "certifi-2026.10.19-py3-none-any.whl",
+      "name": "certifi",
+      "version": "2026.10.19",
+      "sha256": "42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b",
+      "bytes": 136464,
+      "url": "https://files.pythonhosted.org/packages/c4/51/29046e48f693c54e5b7412216d447a1d8362c9653148d98c02cdf65fa733/certifi-2026.10.19-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "name": "cffi",
+      "version": "2.1.1",
+      "sha256": "c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf",
+      "bytes": 221822,
+      "url": "https://files.pythonhosted.org/packages/b1/db/dceb9dd5b231e1da801793f8acc9f3c52a7e1afe40bb1aae37e02b0faad5/cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "tags": [
+        "cp312-cp312-manylinux2014_x86_64",
+        "cp312-cp312-manylinux_2_17_x86_64"
+      ]
+    },
+    {
+      "filename": "click-8.5.0-py3-none-any.whl",
+      "name": "click",
+      "version": "8.5.0",
+      "sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+      "bytes": 125251,
+      "url": "https://files.pythonhosted.org/packages/58/50/6c0d534c5f134586a8e1ba4e330569e32f057e33372ae556463212fb4cd3/click-8.5.0-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl",
+      "name": "cryptography",
+      "version": "50.0.2",
+      "sha256": "9dab55f57c74c3cad24c323bacbbd04be4705ba6eb0d92e920b1fc4837ed5079",
+      "bytes": 4752576,
+      "url": "https://files.pythonhosted.org/packages/d3/69/2c833a049475e0a3444e94c7d0aca0aa51d166374a449b09e92ac98138de/cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl",
+      "tags": [
+        "cp311-abi3-manylinux_2_34_x86_64"
+      ]
+    },
+    {
+      "filename": "fastapi-0.159.1-py3-none-any.whl",
+      "name": "fastapi",
+      "version": "0.159.1",
+      "sha256": "49b94c29afec2fca1390e9c39be202c59755d5cda8e4f1148a133761e4313e7e",
+      "bytes": 149604,
+      "url": "https://files.pythonhosted.org/packages/8d/35/b03b5df04a1a8ee400c9df4b1795af84370b2bb6f1cc4be57c0b79688d00/fastapi-0.159.1-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "h11-0.16.0-py3-none-any.whl",
+      "name": "h11",
+      "version": "0.16.0",
+      "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+      "bytes": 37515,
+      "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "httpcore-1.0.9-py3-none-any.whl",
+      "name": "httpcore",
+      "version": "1.0.9",
+      "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+      "bytes": 78784,
+      "url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "httpx-0.28.1-py3-none-any.whl",
+      "name": "httpx",
+      "version": "0.28.1",
+      "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+      "bytes": 73517,
+      "url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "idna-3.20-py3-none-any.whl",
+      "name": "idna",
+      "version": "3.20",
+      "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+      "bytes": 69583,
+      "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "opentelemetry_api-1.45.1-py3-none-any.whl",
+      "name": "opentelemetry-api",
+      "version": "1.45.1",
+      "sha256": "b31553efa588ae44bc306f863c785c5333a9ecc091248c6ee68b4b6c87fdedfb",
+      "bytes": 60256,
+      "url": "https://files.pythonhosted.org/packages/1e/41/f7dcf80b81ee8e71c1a2b59f14208bc723edbd89ed027a73b175abf6348e/opentelemetry_api-1.45.1-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "name": "pillow",
+      "version": "12.3.0",
+      "sha256": "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91",
+      "bytes": 6940830,
+      "url": "https://files.pythonhosted.org/packages/84/21/a35af28dcc61f37ed850a2d64c65c701321dfbf25085e469d5559360cbbf/pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "tags": [
+        "cp312-cp312-manylinux_2_27_x86_64",
+        "cp312-cp312-manylinux_2_28_x86_64"
+      ]
+    },
+    {
+      "filename": "psycopg-3.3.6-py3-none-any.whl",
+      "name": "psycopg",
+      "version": "3.3.6",
+      "sha256": "a1db9f7148b06a28606767efaca51fa6f9398c5c0a3810519be69d7000bdb631",
+      "bytes": 215490,
+      "url": "https://files.pythonhosted.org/packages/4e/de/748bd7609c71cae5d737f0ba9192f19329f70180ecda8fff3cac02c5abe3/psycopg-3.3.6-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "psycopg_binary-3.3.6-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "name": "psycopg-binary",
+      "version": "3.3.6",
+      "sha256": "1679a1cb93fbe5a6d1fd58d82cbddcc6fcb8c61446ba7cae6eb2a7b19bc585de",
+      "bytes": 5235723,
+      "url": "https://files.pythonhosted.org/packages/0a/42/948bb3d2617795093512613fd96ba380e922992c7908fbc073858147d196/psycopg_binary-3.3.6-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "tags": [
+        "cp312-cp312-manylinux2014_x86_64",
+        "cp312-cp312-manylinux_2_17_x86_64"
+      ]
+    },
+    {
+      "filename": "psycopg_pool-3.3.3-py3-none-any.whl",
+      "name": "psycopg-pool",
+      "version": "3.3.3",
+      "sha256": "9b9cd6a4fcec47a410f7e82d408540e7f77b478509e91b44c1a5457a13e5ff37",
+      "bytes": 40304,
+      "url": "https://files.pythonhosted.org/packages/5d/b4/452c6607a0f479465cd8a9b0d9956919fcb150050c1f83f9f11e6b8ee8dc/psycopg_pool-3.3.3-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "pycparser-3.11-py3-none-any.whl",
+      "name": "pycparser",
+      "version": "3.11",
+      "sha256": "51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80",
+      "bytes": 51178,
+      "url": "https://files.pythonhosted.org/packages/90/11/0e6f11117525ff0eec40ebac3d313376f102df93ca44ad9e893ee85e4f89/pycparser-3.11-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "pydantic-2.14.1-py3-none-any.whl",
+      "name": "pydantic",
+      "version": "2.14.1",
+      "sha256": "9195d967ec791692a04438115466764fb8b9a27b31f14a760437694f40d6b454",
+      "bytes": 488106,
+      "url": "https://files.pythonhosted.org/packages/35/ea/a56b9fe5066f3537b7882f77e9c5dfb26d8c2eefdaed9b5fc73d57b4dc22/pydantic-2.14.1-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "pydantic_core-2.50.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "name": "pydantic-core",
+      "version": "2.50.1",
+      "sha256": "93ba4e9d8210d941c200431a56b2c0400b131865947903937ed3ec5404307d2e",
+      "bytes": 2160157,
+      "url": "https://files.pythonhosted.org/packages/90/24/48cd98388e4ac2c08d0800af36d15413db15e20387f1038123a2c86cb2f6/pydantic_core-2.50.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "tags": [
+        "cp312-cp312-manylinux2014_x86_64",
+        "cp312-cp312-manylinux_2_17_x86_64"
+      ]
+    },
+    {
+      "filename": "pyjwt-2.15.1-py3-none-any.whl",
+      "name": "pyjwt",
+      "version": "2.15.1",
+      "sha256": "42d59d631f7768a1028a64c7ff581a9bf7519804daf91fc5b6c56e30eec5e193",
+      "bytes": 33860,
+      "url": "https://files.pythonhosted.org/packages/50/ca/44de4e75f8aadc457f0634be3b542815078ded46dca30efb960edeecad6e/pyjwt-2.15.1-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "qrcode-8.2-py3-none-any.whl",
+      "name": "qrcode",
+      "version": "8.2",
+      "sha256": "16e64e0716c14960108e85d853062c9e8bba5ca8252c0b4d0231b9df4060ff4f",
+      "bytes": 45986,
+      "url": "https://files.pythonhosted.org/packages/dd/b8/d2d6d731733f51684bbf76bf34dab3b70a9148e8f2cef2bb544fccec681a/qrcode-8.2-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "starlette-1.9.0-py3-none-any.whl",
+      "name": "starlette",
+      "version": "1.9.0",
+      "sha256": "fd3f159936e882d06c1108f84688f7cda2cf85fc6a592a50edbd175e882c2ddc",
+      "bytes": 80335,
+      "url": "https://files.pythonhosted.org/packages/f3/93/181df62699d9b5aca1d87e5cfda131dac87e3cdaebf668662f7206ca3470/starlette-1.9.0-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "typing_extensions-4.16.0-py3-none-any.whl",
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "bytes": 45571,
+      "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "typing_inspection-0.4.4-py3-none-any.whl",
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+      "bytes": 14750,
+      "url": "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    },
+    {
+      "filename": "uvicorn-0.54.0-py3-none-any.whl",
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "sha256": "505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf",
+      "bytes": 87427,
+      "url": "https://files.pythonhosted.org/packages/38/0c/b54a4fdd7f90a3af8b02ebc9ce6712c2c208b7926a2f7bad95c33ebbe943/uvicorn-0.54.0-py3-none-any.whl",
+      "tags": [
+        "py3-none-any"
+      ]
+    }
+  ],
+  "wheelhouse_bytes": 21295897,
+  "pip_check": "No broken requirements found.",
+  "candidate_preflight": {
+    "status": "passed",
+    "checks": [
+      "installed_100_payload_files",
+      "python_3_12"
+    ],
+    "deployment_performed": false
+  },
+  "smoke": {
+    "status": "passed",
+    "target": "154.217.245.179",
+    "os": "Linux-6.8.0-48-generic-x86_64-with-glibc2.39",
+    "architecture": "x86_64",
+    "python": "3.12.3",
+    "pip": "24.0",
+    "dependencies": 26,
+    "candidate_payload_files": 100,
+    "imports": 8,
+    "png": {
+      "sha256": "4a34dd222d0ba07c25cb01a7d183264871563dad20dbd4ec59dae12643b7efed",
+      "size": 102,
+      "mime": "image/png",
+      "properties": {
+        "width": 32,
+        "height": 32,
+        "format": "PNG"
+      }
+    },
+    "png_sha256": "4a34dd222d0ba07c25cb01a7d183264871563dad20dbd4ec59dae12643b7efed",
+    "database_used": false,
+    "provider_http_used": false,
+    "production_settings_read": false,
+    "systemd_sandbox_tested": false,
+    "av_installed": false
+  },
+  "source_inputs_unchanged": true,
+  "wheelhouse_unchanged_after_install": true,
+  "official_metadata_files": [
+    {
+      "path": "official-metadata/annotated-doc.json",
+      "bytes": 9513,
+      "sha256": "5d353470996c1724932a4b6c5f3a6d95374cc016ebe21c47f1ea424e835c8508"
+    },
+    {
+      "path": "official-metadata/annotated-types.json",
+      "bytes": 18260,
+      "sha256": "810d556212b84f6c6c24094047ae653184a8054e122b5ccd283c526edbf305f0"
+    },
+    {
+      "path": "official-metadata/anyio.json",
+      "bytes": 7906,
+      "sha256": "4147d8dc58295db62ddd185434232b0a6b47eb02d179c173b24ade4ac9fc60bc"
+    },
+    {
+      "path": "official-metadata/certifi.json",
+      "bytes": 5513,
+      "sha256": "43c72ebe8a1623922b3d65b2107364f98d3e5c348e1dbb3a14bdfde5c90401c3"
+    },
+    {
+      "path": "official-metadata/cffi.json",
+      "bytes": 109208,
+      "sha256": "38c1f9fc067e3745f6bbf235fe9ea000068c6a6c91049d39be7ffb51c3e2ab45"
+    },
+    {
+      "path": "official-metadata/click.json",
+      "bytes": 5437,
+      "sha256": "82091740dadb90fce55d1f295029696fc2786549863f4a33bed9d66bff1b5071"
+    },
+    {
+      "path": "official-metadata/cryptography.json",
+      "bytes": 69070,
+      "sha256": "1a97f7649d2fb9fcfec213125f603bd52c73d8c6fef4efd6e1c3b28cbe8a8ace"
+    },
+    {
+      "path": "official-metadata/fastapi.json",
+      "bytes": 30721,
+      "sha256": "f92430163ab86ce672ded75c722408d9121c748f0d2483df26bfe2e701963833"
+    },
+    {
+      "path": "official-metadata/h11.json",
+      "bytes": 11490,
+      "sha256": "b76c62c5258463811888b5a87c4def68d0c9f29e316e28228bde258cb1832f40"
+    },
+    {
+      "path": "official-metadata/httpcore.json",
+      "bytes": 24952,
+      "sha256": "6e9524f2988778ffb28a743962ff30b9f37aa13226680dacb6db9d74dd4ce9da"
+    },
+    {
+      "path": "official-metadata/httpx.json",
+      "bytes": 10092,
+      "sha256": "d13c562d126545fe093b8d029d4b157c7c96e7b3d26e96aea67aa2d3d666ae0a"
+    },
+    {
+      "path": "official-metadata/idna.json",
+      "bytes": 10250,
+      "sha256": "e68450d89f940c33d2edc0864cb1bc0500ef898b9362373475c26478b7d276a6"
+    },
+    {
+      "path": "official-metadata/opentelemetry-api.json",
+      "bytes": 4364,
+      "sha256": "ad3a801d13291985d513b65ae0c846258c989ae32fa054a48db345a70df528fa"
+    },
+    {
+      "path": "official-metadata/pillow.json",
+      "bytes": 521208,
+      "sha256": "9502a9b7c0090cb4cb084d74e7c5ab9004a438358cef16cd5064af8e7f50523f"
+    },
+    {
+      "path": "official-metadata/psycopg-binary.json",
+      "bytes": 74721,
+      "sha256": "26e6f8f885a3ff966fd8b965698cda7b787349ab54594a2a734dca1453375773"
+    },
+    {
+      "path": "official-metadata/psycopg-pool.json",
+      "bytes": 5671,
+      "sha256": "d3e53f401de503923cf0a10946e48e9e2d0c2ea20e64047c74b21442a6698bdb"
+    },
+    {
+      "path": "official-metadata/psycopg.json",
+      "bytes": 7091,
+      "sha256": "8d54653bf0a97cb17c004fbe352cd50b47a16dfe5976dac2ebeb48920366a377"
+    },
+    {
+      "path": "official-metadata/pycparser.json",
+      "bytes": 11315,
+      "sha256": "ac805e600493a29f30838f9b7e6b1684aad30cf0b94475d9ccd74c47e4c182e2"
+    },
+    {
+      "path": "official-metadata/pydantic-core.json",
+      "bytes": 155075,
+      "sha256": "450c98e8c4a254381bdd3474057e9785cdb63de9d47d7239e047b08f6f3d96df"
+    },
+    {
+      "path": "official-metadata/pydantic.json",
+      "bytes": 137402,
+      "sha256": "82284b5fe0151f3fe659685e5c3eb008562c019f7afdf11b0c9e15b2250f9ce1"
+    },
+    {
+      "path": "official-metadata/pyjwt.json",
+      "bytes": 6387,
+      "sha256": "3ec1c422ad379351dbda71ad929ec2328ef275338e8770cfd415545b0bd4e589"
+    },
+    {
+      "path": "official-metadata/qrcode.json",
+      "bytes": 21313,
+      "sha256": "178273956ca38e18b7988b9874dbb17d52cbbd4a55876c7826968de2e0cbaa47"
+    },
+    {
+      "path": "official-metadata/starlette.json",
+      "bytes": 9544,
+      "sha256": "c416fd9012c1f30f408abb91ce9e39c10f24161faba8f3ee36c44405f405edf0"
+    },
+    {
+      "path": "official-metadata/typing-extensions.json",
+      "bytes": 6633,
+      "sha256": "07c541d98ede6d45ea952751fded6b6c1660155feedb49a260c40ff1b0e5815f"
+    },
+    {
+      "path": "official-metadata/typing-inspection.json",
+      "bytes": 5411,
+      "sha256": "830dde85aea3adc99e46474faad33f24011f965a7905af6420e59212ce8c492b"
+    },
+    {
+      "path": "official-metadata/uvicorn.json",
+      "bytes": 9578,
+      "sha256": "2793f6a981744fb9cd0947ca07330f1bbf41db7a05d02c5aa3dec113fa2ce3cd"
+    }
+  ],
+  "evidence_files": [
+    {
+      "path": "input-sha256.json",
+      "bytes": 1311,
+      "sha256": "46cf81734a86d651dee25be6a8f7b0252ae81cdcd23bc01e84f5ff569521ee30"
+    },
+    {
+      "path": "linux-closure.json",
+      "bytes": 2786,
+      "sha256": "0f0d2589754d63e81ea32adc7a2ba14ef95e8e1f81f522f52febee4d913574b0"
+    },
+    {
+      "path": "approved-assets.json",
+      "bytes": 15097,
+      "sha256": "3513cf99c4cf01ca0ce20ea424f677e525df67c0b7284a1ca28de4faa14e7aa7"
+    },
+    {
+      "path": "requirements-linux.lock",
+      "bytes": 2927,
+      "sha256": "c333782cf5fd86e80a9a962ace74cb57610ebb706bd852650d35edf161e06299"
+    },
+    {
+      "path": "wheelhouse-inventory.json",
+      "bytes": 11295,
+      "sha256": "30c641f24affc70f4f55e5661a88a592fdd54609a9bc79df3fda48e283c4d3ac"
+    },
+    {
+      "path": "offline-install-report.json",
+      "bytes": 344007,
+      "sha256": "7208e55aae42c6acc4055c8c601802e06f9e0c0ad1f6e16c5b5759d15183690f"
+    },
+    {
+      "path": "candidate-install-report.json",
+      "bytes": 1536,
+      "sha256": "c9dfa2eb9d5fa0b418771161fe14b7c177c5aff11a62519a005965f0eaca5248"
+    },
+    {
+      "path": "pip-check.log",
+      "bytes": 30,
+      "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09"
+    },
+    {
+      "path": "linux-smoke.safe.json",
+      "bytes": 716,
+      "sha256": "5631bca49380183c03d382a0b556430d4d0739d4449f2ec8b664fbc8334081ce"
+    },
+    {
+      "path": "av-readonly.safe.json",
+      "bytes": 4137,
+      "sha256": "cdce16daf257e980deae57dfbc67e7856f8fa440a5baabc698b83a215cd37c6c"
+    },
+    {
+      "path": "candidate-preflight.safe.log",
+      "bytes": 110,
+      "sha256": "3391cb99feb91f6b52b27eb0c75fb00882110e021a21cb996ca5ddeab7ac7bca"
+    },
+    {
+      "path": "venv-create.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "download.log",
+      "bytes": 9984,
+      "sha256": "ee0d078f55bfceaf30d45fe776122cbe44cc6ec7fc763d19bf0cdecbd1b146bb"
+    },
+    {
+      "path": "offline-install.log",
+      "bytes": 4942,
+      "sha256": "f717112ddfdfe8014e4945d19087c618728ae8cd312e22cf771c42b1ee5a92e4"
+    },
+    {
+      "path": "candidate-install.log",
+      "bytes": 165,
+      "sha256": "407610a92c59b01a95d6db1b7c97c7c7778f7f3c6bfba5137aa61ce9ea5359e3"
+    }
+  ],
+  "root_free_bytes_after": 42380840960,
+  "av_installed": false,
+  "production_changed": false,
+  "database_used": false,
+  "private_auth_or_env_read": false,
+  "systemd_sandbox_verified": false
+}

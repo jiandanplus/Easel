@@ -1,0 +1,24 @@
+:root, body, .logto_page-container {
+  --color-bg-body: #f4f7fb;
+  --color-bg-body-base: #f4f7fb;
+  --color-bg-float: #ffffff;
+  --color-bg-float-base: #ffffff;
+  --color-bg-layer-1: #ffffff;
+  --color-type-primary: #101827;
+  --color-type-secondary: #516078;
+  --color-line-border: #e0e6ef;
+  --color-line-divider: #e0e6ef;
+}
+body, .logto_page-container { background: #f4f7fb !important; }
+.logto_main-content {
+  background: #ffffff !important;
+  border: 1px solid #e0e6ef;
+  border-radius: 18px !important;
+  box-shadow: 0 18px 50px rgba(24, 48, 96, .10) !important;
+}
+.logto_branding-header img { height: 60px !important; max-width: 200px; }
+.logto_branding-header [class*="headline"] {
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+input { background: #ffffff !important; }

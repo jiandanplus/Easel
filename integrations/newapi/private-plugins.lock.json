@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "hostTag": "v1.0.0-rc.45",
+  "plugins": [
+    {
+      "key": "easel-dashscope-music",
+      "version": "1.0.0",
+      "sourcePath": "plugins/easel-dashscope-music/1.0.0/plugin.js",
+      "sha256": "65b2d8434d171837c8d4bb1f63d4583d4f155c1c8d175894c7593bf3344ac241",
+      "fixturePath": "plugins/easel-dashscope-music/1.0.0/fixtures/golden.json"
+    },
+    {
+      "key": "easel-dashscope-voice",
+      "version": "1.0.0",
+      "sourcePath": "plugins/easel-dashscope-voice/1.0.0/plugin.js",
+      "sha256": "0a33cc6da2590fb7b5fa4318ac5d09970f7230694d46e5badf9576ac7135b3a7",
+      "fixturePath": "plugins/easel-dashscope-voice/1.0.0/fixtures/golden.json"
+    },
+    {
+      "key": "easel-fish-tts",
+      "version": "1.0.0",
+      "sourcePath": "plugins/easel-fish-tts/1.0.0/plugin.js",
+      "sha256": "c8b188927dea5ca94e8baa2578f922be924d69f48e245e6d1bff3e7700f62acc",
+      "fixturePath": "plugins/easel-fish-tts/1.0.0/fixtures.json"
+    },
+    {
+      "key": "easel-image-variations",
+      "version": "1.0.0",
+      "sourcePath": "plugins/easel-image-variations/1.0.0/plugin.js",
+      "sha256": "4c262d62bc9d41547f24efa215b97aafbbb6ccbfc1974ef05d4cf4ff94220bd5",
+      "fixturePath": "plugins/easel-image-variations/1.0.0/fixtures/golden.json"
+    },
+    {
+      "key": "easel-minimax-voice",
+      "version": "1.0.0",
+      "sourcePath": "plugins/easel-minimax-voice/1.0.0/plugin.js",
+      "sha256": "dfb3f1a7d6f1d48106a491c38b22b673d3e27971a14a0d86e47c4cb384e7ba85",
+      "fixturePath": "plugins/easel-minimax-voice/1.0.0/fixtures.json"
+    }
+  ]
+}

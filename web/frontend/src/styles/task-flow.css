@@ -1,0 +1,24 @@
+.composer-top { flex-wrap: wrap; }
+.composer-label { flex: 0 0 100%; margin: 0 0 5px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.composer-bar { flex-wrap: wrap; row-gap: 8px; }
+.composer-bar [role='status'] { min-width: 0; }
+.composer .attach-x { min-width: 24px; min-height: 24px; }
+.dash-page > .dash-create { grid-column: 1 / -1; grid-row: auto; }
+.dash-page > .dash-quick { grid-column: 1 / -1; margin: 14px 0; }
+.dash-page > .dash-stats { grid-column: 1 / -1; grid-row: auto; }
+.dash-page .dash-hero { min-height: 128px; padding-top: 20px; padding-bottom: 20px; }
+.dash-create > .composer { margin: 0; width: 100%; max-width: none; }
+.dash-create .composer-top .chat-input { min-height: 64px; }
+.dash-trend-title:is(button) { padding: 3px 0; text-align: left; background: transparent; border: 0; color: inherit; font: inherit; cursor: pointer; }
+.message-document { margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.message-document > strong { overflow-wrap: anywhere; font-size: 13px; }
+.message-task-state { display: inline-flex; margin: 8px 0; font-size: 12px; color: var(--text-secondary); }
+.dash-page button:focus-visible, .composer button:focus-visible, .deliverable-actions a:focus-visible,
+.deliverable-actions button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+@media (max-width: 520px) {
+  .composer-bar { gap: 7px; }
+  .composer-bar .composer-model-trigger { max-width: min(220px, 58vw); }
+  .composer-bar .composer-hint { flex-basis: calc(100% - 100px); }
+  .dash-page .dash-hero { min-height: 110px; }
+  .dash-create .composer { padding: 12px; }
+}

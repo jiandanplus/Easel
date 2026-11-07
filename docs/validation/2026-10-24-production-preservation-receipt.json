@@ -1,0 +1,15 @@
+{
+  "verified_at": "2026-10-23T17:19:06.108843+00:00",
+  "safe_projection_equal": {
+    "row_counts": true,
+    "migrations": true,
+    "execution_status_counts": true,
+    "admin_state_counts": true,
+    "financial_balanced": true,
+    "journals_balanced": true
+  },
+  "original_source_issuer_preserved": true,
+  "three_production_sites_still_absent": true,
+  "supplier_config_read": false,
+  "credentials_exported": false
+}

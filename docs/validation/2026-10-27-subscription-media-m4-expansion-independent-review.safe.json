@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-27",
+  "result": "changes_requested",
+  "scope": "M4 desktop/Pi multimedia expansion frozen 11-file candidate only",
+  "finding_count": 1,
+  "findings": [
+    {
+      "id": "M4-R1",
+      "priority": "P1",
+      "file": "easel/platform/media_contracts.py",
+      "line": 118,
+      "title": "Unknown nested rate fields cross public catalog and Pi JSON boundary",
+      "reproduced": true,
+      "production_leak_observed": false
+    }
+  ],
+  "files": {
+    "docs/superpowers/plans/2026-10-27-subscription-media-m4-expansion.md": {
+      "expected": "013d60880e13c01fbb41ad198b7d1675e881aa7985a6c60dc0e1161b9f983cf7",
+      "pre": "013d60880e13c01fbb41ad198b7d1675e881aa7985a6c60dc0e1161b9f983cf7",
+      "post": "013d60880e13c01fbb41ad198b7d1675e881aa7985a6c60dc0e1161b9f983cf7"
+    },
+    "easel/harnesses/pi.py": {
+      "expected": "f55c482ce8b407adb3e5468af8af099e47cbbe7a9d5b814491b829f35b4ce2c0",
+      "pre": "f55c482ce8b407adb3e5468af8af099e47cbbe7a9d5b814491b829f35b4ce2c0",
+      "post": "f55c482ce8b407adb3e5468af8af099e47cbbe7a9d5b814491b829f35b4ce2c0"
+    },
+    "easel/platform/media.py": {
+      "expected": "23b8c40b189a03fdcb0571a21cc224ed53783f2074b5e9b547242a5b1fe4ec34",
+      "pre": "23b8c40b189a03fdcb0571a21cc224ed53783f2074b5e9b547242a5b1fe4ec34",
+      "post": "23b8c40b189a03fdcb0571a21cc224ed53783f2074b5e9b547242a5b1fe4ec34"
+    },
+    "easel/platform/media_contracts.py": {
+      "expected": "3026b633b4785a702fdec015587efe244ef9a17267c6730149afdeb6b9409f4d",
+      "pre": "3026b633b4785a702fdec015587efe244ef9a17267c6730149afdeb6b9409f4d",
+      "post": "3026b633b4785a702fdec015587efe244ef9a17267c6730149afdeb6b9409f4d"
+    },
+    "easel/platform/media_files.py": {
+      "expected": "31985a835c5d81e8790c7bdffb02623e36aadf4a7b74166a6b3519a012c35ea2",
+      "pre": "31985a835c5d81e8790c7bdffb02623e36aadf4a7b74166a6b3519a012c35ea2",
+      "post": "31985a835c5d81e8790c7bdffb02623e36aadf4a7b74166a6b3519a012c35ea2"
+    },
+    "easel/platform/media_records.py": {
+      "expected": "cb99d70268f0c6dc7e0739aee344efeff5c5ca9c967bcb7bd13fa8d9137e60cf",
+      "pre": "cb99d70268f0c6dc7e0739aee344efeff5c5ca9c967bcb7bd13fa8d9137e60cf",
+      "post": "cb99d70268f0c6dc7e0739aee344efeff5c5ca9c967bcb7bd13fa8d9137e60cf"
+    },
+    "packaging/pi/source-manifest.json": {
+      "expected": "9b8121260b6aa38d3f911b4126de6db8138559073dca0854c0c338c175948dcf",
+      "pre": "9b8121260b6aa38d3f911b4126de6db8138559073dca0854c0c338c175948dcf",
+      "post": "9b8121260b6aa38d3f911b4126de6db8138559073dca0854c0c338c175948dcf"
+    },
+    "runtime/pi/worker.mjs": {
+      "expected": "8ec881590206c0c487f95469860f04852b9c1c80b4a198a9fd254fcf00768682",
+      "pre": "8ec881590206c0c487f95469860f04852b9c1c80b4a198a9fd254fcf00768682",
+      "post": "8ec881590206c0c487f95469860f04852b9c1c80b4a198a9fd254fcf00768682"
+    },
+    "tests/pi_media_worker_fixture.mjs": {
+      "expected": "f1159f9780decd8246d2b1ceebe6bbbd6bce8f216657eae6ecc4dfdee0ba75ef",
+      "pre": "f1159f9780decd8246d2b1ceebe6bbbd6bce8f216657eae6ecc4dfdee0ba75ef",
+      "post": "f1159f9780decd8246d2b1ceebe6bbbd6bce8f216657eae6ecc4dfdee0ba75ef"
+    },
+    "tests/test_media_expansion.py": {
+      "expected": "ba7c96c7f3bfe2a4d561c91d5c1d70dd106ed00a2631f719ed8598ac1d198cf2",
+      "pre": "ba7c96c7f3bfe2a4d561c91d5c1d70dd106ed00a2631f719ed8598ac1d198cf2",
+      "post": "ba7c96c7f3bfe2a4d561c91d5c1d70dd106ed00a2631f719ed8598ac1d198cf2"
+    },
+    "tests/test_pi_media_host.py": {
+      "expected": "15a58053adf3111b896fc1f3bbc98ab5440cf3157e24c44cd000a698467fdb29",
+      "pre": "15a58053adf3111b896fc1f3bbc98ab5440cf3157e24c44cd000a698467fdb29",
+      "post": "15a58053adf3111b896fc1f3bbc98ab5440cf3157e24c44cd000a698467fdb29"
+    }
+  },
+  "all_frozen_files_unchanged": true,
+  "snapshot_patch": {
+    "path": "/private/tmp/easel-m4-expansion-freeze-20261027.patch",
+    "sha256": "78389de962eceb5b111d35edb367373d380ffd216350487847fd7364f3f205ba",
+    "meaning": "full candidate untracked-source snapshot; not v23 incremental diff"
+  },
+  "independent_reproduction": {
+    "path": "/private/tmp/test_easel_m4_independent_review.py",
+    "sha256": "791c080e963f2e5a45ca8d659b35f754d39bebd7c0d03e6d93db2d80163e0e5b",
+    "command": "rtk proxy .venv/bin/python -m pytest -q /private/tmp/test_easel_m4_independent_review.py",
+    "passed": 2,
+    "seconds": 0.15,
+    "meaning": "two assertions reproduce unsafe field retention and actual PiAdapter JSON stdin transfer; not safety acceptance",
+    "network": "httpx.MockTransport only; subprocess reads stdin; no socket connection",
+    "actual_pi_sdk_rerun": false
+  },
+  "boundaries": {
+    "reviewed_source_changed": false,
+    "central_service_changed": false,
+    "real_credentials_read": false,
+    "real_pg_used": false,
+    "commercial_requests": false,
+    "ssh": false,
+    "deployed": false,
+    "built_or_packaged": false,
+    "committed": false,
+    "central_new_host_roundtrip": "pending; separate workstream",
+    "provider_acceptance": "pending"
+  }
+}

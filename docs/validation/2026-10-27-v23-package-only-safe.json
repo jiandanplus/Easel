@@ -1,0 +1,133 @@
+{
+  "package": {
+    "zip": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v23/Easel-Pi-macOS15-arm64.zip",
+    "sha256": "48ea4652435178847d825399680c62a818c5431d1877cd31a7d1a779b1850ccd",
+    "bytes": 129825454,
+    "entries": 36112,
+    "crc_ok": true,
+    "source_manifest_sha256": "b59e1120f857e7ae454f17d771d682952ecb0c21b29e92ba885b684a6a13316e",
+    "pi_manifest_sha256": "fffc3b0ab4e0025b9698ff25eccb1c89bde4db855cdca06060596ed1095c8ff4",
+    "wheel_count": 26,
+    "signed": false,
+    "notarized": false
+  },
+  "source_diff": {
+    "changed_public_sources": [
+      "easel/harnesses/pi.py",
+      "easel/platform/auth_refresh.py",
+      "easel/platform/central.py",
+      "easel/platform/media.py"
+    ],
+    "added_public_sources": [
+      "easel/platform/auth_refresh.py"
+    ],
+    "new_public_source_count": 901,
+    "old_public_source_count": 900,
+    "public_manifest_sha256": "b59e1120f857e7ae454f17d771d682952ecb0c21b29e92ba885b684a6a13316e",
+    "build_inputs_identical_to_v22": true,
+    "frontend_sources_identical_to_v22": true,
+    "m2_m3_central_wip_excluded": true
+  },
+  "fresh_install": {
+    "ok": true,
+    "clean_home_workspace": true,
+    "bundled_pi": true,
+    "host_path": "system_only",
+    "default_subscription": true,
+    "public_login_entry_configured": true,
+    "prior_credentials_required": false,
+    "supplier_key_required": false,
+    "external_model_posts": 0,
+    "auth_posts": 0,
+    "same_machine_test": true,
+    "clean_device_or_gatekeeper_verified": false,
+    "owned_instance_stopped": true
+  },
+  "embedded_decoder": {
+    "ok": true,
+    "pillow": "12.3.0",
+    "embedded_python": true,
+    "embedded_media_module": true,
+    "decoded_real_protocol_images": 2,
+    "bundled_pi_manifest_verified": true,
+    "supplier_keys": 0,
+    "provider_posts": 0
+  },
+  "embedded_auth": {
+    "ok": true,
+    "embedded_auth_module": true,
+    "successful_rotation_saved": true,
+    "durable_unknown_fence": true,
+    "restart_refresh_replays": 0,
+    "synthetic_auth_only": true,
+    "external_http": 0,
+    "supplier_posts": 0
+  },
+  "secret_scan": {
+    "scope": "frozen public desktop sources and built frontend plus archive userdata path exclusion; unchanged vendor payload verified separately",
+    "public_payload_files_scanned": 815,
+    "patterns": [
+      "private_key_pem",
+      "provider_key_literal",
+      "auth_token_literal"
+    ],
+    "findings": [],
+    "forbidden_user_state_paths": [],
+    "real_user_credentials_read": false,
+    "server_keys_read": false,
+    "new_vendor_payload": false
+  },
+  "installer_record_delta": [
+    {
+      "file": "python/lib/python3.12/site-packages/charset_normalizer-3.5.2.dist-info/RECORD",
+      "only_changed_rows": [
+        "bin/normalizer"
+      ],
+      "generated_bin_not_shipped": true
+    },
+    {
+      "file": "python/lib/python3.12/site-packages/fastapi-0.143.1.dist-info/RECORD",
+      "only_changed_rows": [
+        "bin/fastapi"
+      ],
+      "generated_bin_not_shipped": true
+    },
+    {
+      "file": "python/lib/python3.12/site-packages/httpx-0.28.1.dist-info/RECORD",
+      "only_changed_rows": [
+        "bin/httpx"
+      ],
+      "generated_bin_not_shipped": true
+    },
+    {
+      "file": "python/lib/python3.12/site-packages/idna-3.20.dist-info/RECORD",
+      "only_changed_rows": [
+        "bin/idna"
+      ],
+      "generated_bin_not_shipped": true
+    },
+    {
+      "file": "python/lib/python3.12/site-packages/markdown-3.11.1.dist-info/RECORD",
+      "only_changed_rows": [
+        "bin/markdown_py"
+      ],
+      "generated_bin_not_shipped": true
+    },
+    {
+      "file": "python/lib/python3.12/site-packages/uvicorn-0.54.0.dist-info/RECORD",
+      "only_changed_rows": [
+        "bin/uvicorn"
+      ],
+      "generated_bin_not_shipped": true
+    }
+  ],
+  "activated": false,
+  "running_17868_stopped_or_changed": false,
+  "real_user_auth_read_or_changed": false,
+  "v22_zip_preserved": true,
+  "resource_inventory_files_verified": 15399,
+  "resource_inventory_complete": true,
+  "frozen_auth_and_pi_current_sources_match": true,
+  "services_m2_m3_wip_included": false,
+  "new_real_supplier_calls": 0
+}

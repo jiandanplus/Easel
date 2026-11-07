@@ -22,12 +22,14 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 from easel.commands import skill as cli_skill  # noqa: E402
 from easel import persona  # noqa: E402
 import app as web  # noqa: E402
+from easel.routes import outputs as output_routes  # noqa: E402
 import paper_ingest  # noqa: E402
 import render_slides  # noqa: E402
 from model_registry import (configured_providers, env_aliases, provider_ids,
                             provider_required_env)  # noqa: E402
 from persona_gate import classify as classify_persona_score  # noqa: E402
 import gemini_maas_adapter as gemini_adapter  # noqa: E402
+from easel.routes import chat as chat_routes  # noqa: E402
 
 
 # ---- 媒体模型注册表：脚本与 Web 共用同一真相源 ----
@@ -263,7 +265,7 @@ def test_find_skill_missing():
     ("h.bin", "binary"), ("i.zip", "binary"),
 ])
 def test_file_kind(name, kind):
-    assert web._file_kind(name) == kind
+    assert output_routes._file_kind(name) == kind
 
 
 def test_upload_keeps_multiple_files_with_same_name(tmp_path, monkeypatch):
@@ -275,7 +277,7 @@ def test_upload_keeps_multiple_files_with_same_name(tmp_path, monkeypatch):
         UploadFile(filename="image.png", file=io.BytesIO(b"second")),
     ]
 
-    result = asyncio.run(web.api_upload(files, sessionId="session-a"))
+    result = asyncio.run(output_routes.api_upload(files, sessionId="session-a"))
 
     assert [item["name"] for item in result["files"]] == ["image.png", "image (2).png"]
     saved = [tmp_path / item["path"] for item in result["files"]]
@@ -286,11 +288,11 @@ def test_uploads_are_scoped_to_the_owning_session(tmp_path, monkeypatch):
     from fastapi import HTTPException, UploadFile
 
     monkeypatch.setattr(web, "OUTPUTS_DIR", tmp_path)
-    first = asyncio.run(web.api_upload(
+    first = asyncio.run(output_routes.api_upload(
         [UploadFile(filename="shared.png", file=io.BytesIO(b"session-a"))],
         sessionId="session-a",
     ))["files"][0]
-    second = asyncio.run(web.api_upload(
+    second = asyncio.run(output_routes.api_upload(
         [UploadFile(filename="shared.png", file=io.BytesIO(b"session-b"))],
         sessionId="session-b",
     ))["files"][0]
@@ -304,12 +306,12 @@ def test_uploads_are_scoped_to_the_owning_session(tmp_path, monkeypatch):
         sessionId="session-a",
         attachments=[first],
     )
-    context = web._attachment_context(owned)
+    context = chat_routes._attachment_context(owned)
     assert f'outputs/{first["path"]}' in context
     assert second["path"] not in context
 
     with pytest.raises(HTTPException) as exc:
-        web._attachment_context(web.ChatRequest(
+        chat_routes._attachment_context(web.ChatRequest(
             message="处理这张图",
             sessionId="session-b",
             attachments=[first],
@@ -321,14 +323,14 @@ def test_attachment_context_rejects_tampered_reference(tmp_path, monkeypatch):
     from fastapi import HTTPException, UploadFile
 
     monkeypatch.setattr(web, "OUTPUTS_DIR", tmp_path)
-    attachment = asyncio.run(web.api_upload(
+    attachment = asyncio.run(output_routes.api_upload(
         [UploadFile(filename="image.png", file=io.BytesIO(b"image"))],
         sessionId="session-a",
     ))["files"][0]
     attachment["id"] = "tampered"
 
     with pytest.raises(HTTPException) as exc:
-        web._attachment_context(web.ChatRequest(
+        chat_routes._attachment_context(web.ChatRequest(
             message="处理",
             sessionId="session-a",
             attachments=[attachment],
@@ -338,7 +340,11 @@ def test_attachment_context_rejects_tampered_reference(tmp_path, monkeypatch):
 
 # ---- 跨平台：文本落盘必须显式 encoding（否则 Windows cp1252/gbk 写中文报错、读回丢内容）----
 
-@pytest.mark.parametrize("rel", ["web/app.py", "easel/persona.py", "easel/commands/skill.py"])
+@pytest.mark.parametrize("rel", ["web/app.py", "easel/persona.py", "easel/commands/skill.py",
+                                 "easel/routes/accounts.py", "easel/routes/outputs.py",
+                                 "easel/routes/planning.py", "easel/routes/updates.py",
+                                 "easel/routes/settings.py", "easel/routes/chat.py",
+                                 "easel/routes/schemas.py"])
 def test_text_io_always_pins_utf8_encoding(rel):
     """read_text/write_text 若不显式指定 encoding，Windows 默认非 UTF-8：
     写中文抛 UnicodeEncodeError（落不了盘），读回抛 UnicodeDecodeError（像丢了数据）。
@@ -366,13 +372,13 @@ def test_text_io_always_pins_utf8_encoding(rel):
 def test_safe_output_path_blocks_traversal():
     from fastapi import HTTPException
     with pytest.raises(HTTPException):
-        web._safe_output_path("../../etc/passwd")
+        output_routes._safe_output_path("../../etc/passwd")
 
 
 def test_safe_output_path_blocks_absolute_escape():
     from fastapi import HTTPException
     with pytest.raises(HTTPException):
-        web._safe_output_path("/etc/passwd")
+        output_routes._safe_output_path("/etc/passwd")
 
 
 # ---- Web: find_skill 与 CLI 一致 ----
@@ -407,12 +413,19 @@ def test_web_skill_detail_reads_builtin_directory(monkeypatch):
     ).read_text(encoding="utf-8")
 
 
+def _all_routes(routes):
+    # FastAPI keeps an included router as one entry; its routes stay on original_router.
+    for route in routes:
+        included = getattr(route, "original_router", None)
+        yield from _all_routes(included.routes) if included is not None else (route,)
+
+
 def test_chat_route_is_registered_to_handler_not_request_model():
     route = next(
-        route for route in web.app.routes
+        route for route in _all_routes(web.app.routes)
         if getattr(route, "path", None) == "/api/chat" and "POST" in getattr(route, "methods", set())
     )
-    assert route.endpoint is web.api_chat
+    assert route.endpoint is chat_routes.api_chat
 
 
 # ---- Web: 基线画像生成 ----
@@ -436,8 +449,8 @@ def test_write_baseline_profile(tmp_path, monkeypatch):
 # ---- Web: _persona_prefix ----
 
 def test_persona_prefix_generic_empty():
-    assert web._persona_prefix(None) == ""
-    assert web._persona_prefix("不存在的画像-xyz") == ""
+    assert chat_routes._persona_prefix(None) == ""
+    assert chat_routes._persona_prefix("不存在的画像-xyz") == ""
 
 
 def test_persona_prefix_scopes_memory_to_selected_profile(tmp_path, monkeypatch):
@@ -473,7 +486,7 @@ def test_output_tree_relative_paths(tmp_path, monkeypatch):
     sub.mkdir()
     (sub / "note.md").write_text("x", encoding="utf-8")
     (sub / "card.png").write_bytes(b"\x89PNG")
-    tree = web.get_output_tree()
+    tree = output_routes.get_output_tree()
     grp = next(g for g in tree if g["name"] == "主题A")
     # 目录节点带递归 children（file 节点含 name/path/kind）
     paths = {f["path"] for f in grp["children"]}
@@ -488,18 +501,18 @@ def test_last_turn_rejects_stale_turn(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "SESSIONS_DIR", tmp_path)
     web._save_turn("web:session-a", "done", "上一轮回答", {"turn_id": "old-turn"})
 
-    stale = asyncio.run(web.api_chat_last("session-a", "new-turn"))
+    stale = asyncio.run(chat_routes.api_chat_last("session-a", "new-turn"))
     assert stale["status"] == "stale"
     assert stale["text"] == ""
 
-    current = asyncio.run(web.api_chat_last("session-a", "old-turn"))
+    current = asyncio.run(chat_routes.api_chat_last("session-a", "old-turn"))
     assert current["status"] == "done"
     assert current["text"] == "上一轮回答"
 
 
 def test_job_events_resume_after_event_id(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "SESSIONS_DIR", tmp_path)
-    path = web._job_event_file("turn-a")
+    path = chat_routes._job_event_file("turn-a")
     path.parent.mkdir(parents=True)
     events = [
         {"id": 1, "event": "token", "data": "前"},
@@ -509,7 +522,7 @@ def test_job_events_resume_after_event_id(tmp_path, monkeypatch):
     ]
     path.write_text("\n".join(json.dumps(e, ensure_ascii=False) for e in events) + "\n", encoding="utf-8")
 
-    resumed = web._read_job_events("turn-a", after=2)
+    resumed = chat_routes._read_job_events("turn-a", after=2)
     assert [event["id"] for event in resumed] == [3, 4]
     assert resumed[0]["data"] == "后"
 
@@ -519,7 +532,7 @@ def test_missing_job_stream_fails_promptly(tmp_path, monkeypatch):
 
     monkeypatch.setattr(web, "SESSIONS_DIR", tmp_path)
     with pytest.raises(HTTPException) as exc:
-        asyncio.run(web.api_chat_job_stream("missing-turn"))
+        asyncio.run(chat_routes.api_chat_job_stream("missing-turn"))
     assert exc.value.status_code == 404
 
 
@@ -550,13 +563,13 @@ def test_chat_stop_waits_for_process_and_supervisor_cleanup():
             web._RUNNING_CHAT.pop(session_id, None)
 
         cleanup = asyncio.create_task(finish_supervisor())
-        result = await web.api_chat_stop(web.StopRequest(sessionId=session_id))
+        result = await chat_routes.api_chat_stop(chat_routes.StopRequest(sessionId=session_id))
         await cleanup
         web._STOPPED_CHAT.discard(session_id)
         return result, proc
 
     result, proc = asyncio.run(scenario())
-    assert result == {"stopped": True}
+    assert result == {"stopped": True, "state": "stopped"}
     assert proc.terminated and proc.poll() == -15
 
 
@@ -571,8 +584,8 @@ def test_raw_stream_events_are_isolated_by_run_id():
         "runId": "run-b", "delta": "其他会话的思考",
     })
 
-    assert web._raw_event_for_run(own, "run-a")["delta"] == "自己的回答"
-    assert web._raw_event_for_run(foreign, "run-a") is None
+    assert chat_routes._raw_event_for_run(own, "run-a")["delta"] == "自己的回答"
+    assert chat_routes._raw_event_for_run(foreign, "run-a") is None
 
 
 def test_raw_stream_parser_accepts_events_before_run_is_latched():
@@ -581,7 +594,7 @@ def test_raw_stream_parser_accepts_events_before_run_is_latched():
         "event": "assistant_text_stream", "evtType": "text_delta",
         "runId": "run-a", "delta": "首个事件",
     })
-    assert web._raw_event_for_run(ev, None)["delta"] == "首个事件"
+    assert chat_routes._raw_event_for_run(ev, None)["delta"] == "首个事件"
 
 
 # ---- Gemini 适配器：流式端点改写 + finishReason 归一 ----

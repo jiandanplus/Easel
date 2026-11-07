@@ -1,0 +1,355 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-25T09:12:05.504312+00:00",
+  "status": "passed_for_current_stage",
+  "branch": "codex/ui-redesign",
+  "merged_to_main": false,
+  "deployment": {
+    "ok": true,
+    "release": "/srv/easel/releases/20261025-pending-concurrency-v1",
+    "maintenance_admission_gate": true,
+    "mint_dispatch_and_cancel_paused_verified": true,
+    "old_nginx_workers_drained": true,
+    "drained_before_restart": true,
+    "api_and_console_assets_health": true,
+    "financial_scope": "original_product_wallet",
+    "original_wallet_financial_projection_unchanged": true,
+    "execution_result_payloads_compared_by_digest": true,
+    "financial_sha256": "d25b007841abd95eef89badc36dd962e39633d761d0268e39de6cd28784a3f58",
+    "old_pending_amount": 9728,
+    "old_pending_actual": null,
+    "pending_job_unchanged": true,
+    "provider_configuration_unchanged_during_reopen": true,
+    "nginx_original_restored": true,
+    "admission_restored_verified": true,
+    "waited_for_async_nginx_reload": true,
+    "database_migrations": false,
+    "model_calls": 0
+  },
+  "live_financial": {
+    "actual_microcredits": 1428,
+    "after_financial_sha256": "15d5f24fe9eee71dd9c91ad2f5b061004ea0f6dd0f36e158132f568b8b8ad0eb",
+    "all_settled_rates_verified": 14,
+    "before_financial_sha256": "905dea7d3e38aaa8c0d6e7a58155827b9ec611b7b14f92978e389e88935aa17f",
+    "distinct_operations_and_attempts": 2,
+    "financial_balanced": true,
+    "journals_balanced": true,
+    "new_entries": 10,
+    "new_grants": 0,
+    "new_invocations": 1,
+    "new_jobs": [
+      {
+        "actual": 437,
+        "attempt_id": "254ddb88-a1c3-4d27-aec6-dbd5316b28bc",
+        "created_at": "2026-10-25T09:04:18.147144+00:00",
+        "id": "68d192ce-99e4-457a-ac7c-8698185b755f",
+        "input_tokens": 727,
+        "invocation_id": "f300f114-39be-4d04-b38c-6d79408072e6",
+        "operation_key": "35a7beef-5e66-4872-8c4a-ee0c92ab8d79",
+        "output_tokens": 49,
+        "status": "settled",
+        "terminal_status": "completed",
+        "updated_at": "2026-10-25T09:04:24.363555+00:00"
+      },
+      {
+        "actual": 991,
+        "attempt_id": "55b792c8-427a-46fd-a9cb-247b073a6f10",
+        "created_at": "2026-10-25T09:04:06.188075+00:00",
+        "id": "05fff069-e35e-433d-b169-a662cdd017ec",
+        "input_tokens": 667,
+        "invocation_id": "f300f114-39be-4d04-b38c-6d79408072e6",
+        "operation_key": "7ae08d15-cab8-4a5e-9bb4-90292d57471e",
+        "output_tokens": 438,
+        "status": "settled",
+        "terminal_status": "completed",
+        "updated_at": "2026-10-25T09:04:17.566009+00:00"
+      }
+    ],
+    "new_jobs_settled": 2,
+    "new_journals": 4,
+    "new_receipts": 2,
+    "ok": true,
+    "old_pending_actual": null,
+    "old_pending_amount": 9728,
+    "old_pending_unchanged": true,
+    "old_rows_unchanged_except_lot_balances": true,
+    "real_payments": 0,
+    "wallet_totals": {
+      "available": 9980757,
+      "expired": 0,
+      "held": 9728,
+      "issued": 10000000,
+      "refunded": 0,
+      "spent": 9515
+    }
+  },
+  "client_live_acceptance": {
+    "ok": true,
+    "session": "mvnlnsnc0ltqn5",
+    "turn_id": "1792919039646-i24yznjy9lo",
+    "clean_end": true,
+    "stop_reason": "completed",
+    "route": {
+      "runtime": "pi",
+      "service_source": "subscription",
+      "subscription_backend": "central",
+      "execution_target": "local",
+      "model": "easel-glm53-internal-v1"
+    },
+    "reply_matches_unprompted_random_fixture": true,
+    "response_sha256": "ce139a8527bdb15eb19b077e549a5b0d5d7f492de2bbaecf232284240f0c1e68",
+    "fixture_unchanged": true,
+    "all_tool_activities": [
+      "read_file"
+    ],
+    "sse_replay_done": true,
+    "read_only_recovery_lookups": 2,
+    "new_operations_same_settled": true,
+    "old_pending_returned_by_lookup": [
+      true,
+      true
+    ],
+    "global_history_truncated": [
+      false,
+      false
+    ],
+    "lookup_chat_posts": 0,
+    "scope_unchanged": true,
+    "operations": [
+      {
+        "invocation_id": "f300f114-39be-4d04-b38c-6d79408072e6",
+        "operation_key": "35a7beef-5e66-4872-8c4a-ee0c92ab8d79",
+        "model": "easel-glm53-internal-v1",
+        "local_status": "delivered",
+        "lookup_status": "found",
+        "execution": {
+          "id": "68d192ce-99e4-457a-ac7c-8698185b755f",
+          "model": "easel-glm53-internal-v1",
+          "status": "settled",
+          "amount": "9728",
+          "actual": "437",
+          "funding_mode": "live",
+          "input_tokens": 727,
+          "output_tokens": 49,
+          "rate_version": "internal-glm53-20261023-v1",
+          "created_at": "2026-10-25T09:04:18.147144+00:00",
+          "updated_at": "2026-10-25T09:04:24.363555+00:00",
+          "result_state": "available"
+        }
+      },
+      {
+        "invocation_id": "f300f114-39be-4d04-b38c-6d79408072e6",
+        "operation_key": "7ae08d15-cab8-4a5e-9bb4-90292d57471e",
+        "model": "easel-glm53-internal-v1",
+        "local_status": "delivered",
+        "lookup_status": "found",
+        "execution": {
+          "id": "05fff069-e35e-433d-b169-a662cdd017ec",
+          "model": "easel-glm53-internal-v1",
+          "status": "settled",
+          "amount": "9728",
+          "actual": "991",
+          "funding_mode": "live",
+          "input_tokens": 667,
+          "output_tokens": 438,
+          "rate_version": "internal-glm53-20261023-v1",
+          "created_at": "2026-10-25T09:04:06.188075+00:00",
+          "updated_at": "2026-10-25T09:04:17.566009+00:00",
+          "result_state": "available"
+        }
+      }
+    ]
+  },
+  "recovery_financial_unchanged": {
+    "verified": true,
+    "after_financial_sha256": "15d5f24fe9eee71dd9c91ad2f5b061004ea0f6dd0f36e158132f568b8b8ad0eb",
+    "table_counts": {
+      "credit_entries": 74,
+      "credit_holds": 15,
+      "credit_journals": 30,
+      "credit_lots": 1,
+      "credit_reservations": 15,
+      "execution_invocations": 9,
+      "execution_jobs": 15,
+      "execution_receipts": 14,
+      "execution_results": 14
+    },
+    "totals": {
+      "available": 9980757,
+      "expired": 0,
+      "held": 9728,
+      "issued": 10000000,
+      "refunded": 0,
+      "spent": 9515
+    }
+  },
+  "package": {
+    "archive_sha256": "337af54acb527da5360f45638e7e3cbc70a6326663359e90adf15f67da954cf4",
+    "offline_clean_home_smoke": {
+      "scope": "offline_isolated_v10_clean_home_smoke",
+      "status": "passed",
+      "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261025-v10/Easel/Easel.app",
+      "workspace": "/private/tmp/easel-zhiyin-migration-20261024/v10-clean-smoke/workspace",
+      "home": "/private/tmp/easel-zhiyin-migration-20261024/v10-clean-smoke/home",
+      "initial_path": "/usr/bin:/bin:/usr/sbin:/sbin",
+      "platform_url_unset": true,
+      "external_network_denied": true,
+      "model_posts": 0,
+      "browser_opened": false,
+      "agent_install_attempted": false,
+      "original_preview_touched": false,
+      "initial_inventory": {
+        "files": 15251,
+        "manifest_sha256": "6b8fa085a1c235c33fb2f8305e51c690c5bf6acac5f78c16486b76005b92df13"
+      },
+      "frontend_binding": {
+        "source_inputs": 81,
+        "artifacts": 13,
+        "receipt_sha256": "9370207c43e8dcd447022354ef25778b722edc5af9dfa82c19b922570415c861",
+        "source_manifest_sha256": "b9cd798bae2792c4f4cfea7a00c87de1fec11f0889051a0e861b514a11364a18",
+        "source_and_artifacts_bound": true
+      },
+      "identity_verified": true,
+      "port": 65411,
+      "html_200": true,
+      "static_assets_200": 2,
+      "icon_200": true,
+      "default_runtime": "pi",
+      "bundled_pi_installed": true,
+      "runtime_detail": "内置 Pi 供应商未配置",
+      "central_configured": false,
+      "updated_timeout_sources_present": true,
+      "admission_error_and_retry_guard_sources_present": true,
+      "wallet_activity_and_pending_limit_sources_present": true,
+      "owned_stop_exit_0": true,
+      "owned_port_closed": true,
+      "final_inventory_matches": true
+    },
+    "preview_upgrade": {
+      "ok": true,
+      "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261025-v10/Easel/Easel.app",
+      "url": "http://127.0.0.1:17868/",
+      "previous_pid": 3187,
+      "current_pid": 15099,
+      "authenticated_before_after": true,
+      "same_scope": true,
+      "same_workspace": true,
+      "same_home": true,
+      "protected_file_count": 4,
+      "protected_files_unchanged": true,
+      "wallet_unchanged": true,
+      "model_calls": 0,
+      "login_started": false,
+      "package_sha256": "337af54acb527da5360f45638e7e3cbc70a6326663359e90adf15f67da954cf4"
+    }
+  },
+  "tests": {
+    "central_actual_postgresql": {
+      "passed": 953,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 103.29,
+      "stdout_sha256": "5ced99670edc3ed346a463787280d8b551dfdcb5e9eb648028561e41530727f6"
+    },
+    "frontend": {
+      "exit_code": 0,
+      "counts": {
+        "tests": 251,
+        "suites": 0,
+        "pass": 251,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "test_files": 28,
+      "stdout_path": "/private/tmp/easel-zhiyin-migration-20261024/v10-clean-smoke/frontend-final-test.stdout.txt",
+      "stdout_sha256": "074f52fa26705c5efaa536a891150297d4da94386cd10425f0b5d1d0060dfd64",
+      "stderr_path": "/private/tmp/easel-zhiyin-migration-20261024/v10-clean-smoke/frontend-final-test.stderr.txt",
+      "stderr_bytes": 0,
+      "v10_smoke_and_supplemental_actual_fields_checked": true,
+      "v10_resource_files": 15251,
+      "v10_frontend_source_inputs": 81,
+      "v10_frontend_artifacts": 13,
+      "v10_smoke_sha256": "58c6e72613313f38f23356bd16a7e1a5d1dcde463e8b4b2e559f5943dcc44e75",
+      "v10_supplemental_sha256": "2a3b86b20f3a87c995647a679fe6a77be9e816f077ed204377a02ba5d1bf58bb",
+      "source_changes": false,
+      "build_performed": false,
+      "remote_actions": false,
+      "model_calls": 0
+    }
+  },
+  "admin_browser_acceptance": {
+    "same_authenticated_session_after_release": true,
+    "users": 3,
+    "products": 1,
+    "orders": 0,
+    "execution_jobs": 15,
+    "pending_jobs": 1,
+    "wallet_totals_match": true,
+    "public_console_http": 404,
+    "private_console_url": "http://127.0.0.1:18885/"
+  },
+  "encrypted_backup": {
+    "ok": true,
+    "scope": "after_pending_concurrency_and_live_acceptance",
+    "backup": {
+      "backup_id": "59975318-f7f7-4268-913a-23ffeccbf322",
+      "ciphertext_bytes": 809802,
+      "ciphertext_sha256": "6679e11d3b5f7df84965909562c5cceccaf51a3be34fd11cf6982ed238f983a4",
+      "file_count": 13,
+      "fresh_restore": false,
+      "manifest_sha256": "e4afbbd98ddef7d676902421556bc79c442dd915171a2b226d6c227e282b8a98",
+      "path": "/var/backups/easel-encrypted/20261025T091036Z-59975318-f7f7-4268-913a-23ffeccbf322.sealed",
+      "payload_bytes": 808960,
+      "payload_sha256": "fe0424c826ce815ddafb7d5ed2e11e4df516039340d2259b157defc70980950e",
+      "status": "selfverified"
+    },
+    "journal_invocation_id": "dd7b2cb2a51846dcb0a7f4f7dfc79afd",
+    "systemd_completion_job_result": "done",
+    "fresh_artifact_hash_and_permissions_verified": true,
+    "offsite": false,
+    "fresh_restore": false
+  },
+  "observations": [
+    "One nonterminal platform_unavailable status validation failed; local session was retained and subsequently verified without a new login.",
+    "An earlier GET recovery hit the existing ten-second history budget; the final two complete GETs returned truncated=false and identical settled operations.",
+    "Production log excerpts were denied by automatic review and were not fetched; the accepted alternative exported only fixed-label integer error counts, all zero."
+  ],
+  "remaining": [
+    "Original 9728-microcredit pending hold remains unknown; no estimate-based or manual settlement.",
+    "Merchant payment activation and commercial rates are not enabled.",
+    "Media subscriptions and cloud task execution are not complete.",
+    "Unsigned macOS 15+ arm64 preview only; no other OS or second-device acceptance.",
+    "No long-running load test, HA, offsite backup, fresh restore or PITR claim."
+  ],
+  "screenshots": [
+    "assets/execution-stability-20261025/live-v10-success.jpg",
+    "assets/execution-stability-20261025/wallet-v10-after.jpg",
+    "assets/execution-stability-20261025/admin-after-live.jpg"
+  ],
+  "custom_configuration_preservation": {
+    "verified": true,
+    "unchanged_sha256": {
+      "config.json": "2f62f99a2b24df0c7d4a89793333a8c873e12d25c777d6fbd786e6a3a5f36d08",
+      "bundled-provider.json": "bc36a4ad692e1fd3289926f827d7ea251e026232c0110450681fb36b19b875d0"
+    }
+  },
+  "test_database_cleanup": {
+    "only_owned_synthetic_test_container_stopped": true,
+    "container_retained": true,
+    "production_and_user_containers_untouched": true
+  },
+  "final_health_probe": {
+    "workbench_http": 200,
+    "authenticated": true,
+    "wallet_http": 200,
+    "active_requests": 0,
+    "pending_reconciliation": 1,
+    "pending_reconciliation_limit": 3,
+    "login_oidc_issuer_matches": true,
+    "central_api_http": 200,
+    "public_console_http": 404,
+    "private_console_http": 200
+  }
+}

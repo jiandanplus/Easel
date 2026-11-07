@@ -1,0 +1,442 @@
+{
+  "schema_version": 1,
+  "report_date": "2026-10-27",
+  "milestone": "M5 two-model real workbench delivery and shared-credit settlement",
+  "scope": "root current evidence collection; this writer only read existing safe receipts and wrote documentation",
+  "collector": "root",
+  "report_writer": "delivery_backend",
+  "new_tests_or_provider_calls_by_report_writer": 0,
+  "live_delivery_passed": true,
+  "models": [
+    {
+      "model": "gpt-image-2.5-sunburst",
+      "job_id": "9ccc8430-3c29-46cc-9d5d-961be08f6acc",
+      "operation_key": "5867aaba-0b4d-5588-b129-31297405c89b",
+      "local_status": "downloaded",
+      "lookup_status": "found",
+      "execution_state": "completed",
+      "financial_state": "settled",
+      "delivery_state": "available",
+      "funding_mode": "live",
+      "rate_version": "internal-one-point-per-image-20261027-v1",
+      "image_microcredits": "1000000",
+      "image_quantity": 1,
+      "provider_response_id": null,
+      "http_status": 200,
+      "counts": {
+        "media_artifacts": 1,
+        "media_http_response_references": 1,
+        "media_provider_attempts": 1,
+        "media_receipts": 1,
+        "media_terminal_evidence": 1
+      },
+      "blob_state": "attached",
+      "blob_file_sha_matches_root_checked": true,
+      "budget_released": true,
+      "artifact": {
+        "id": "c1ae3b09-87f3-4abe-a1ba-b5ef0aad3311",
+        "sha256": "f74b0051159ae66c9a6f53612a5fe039a31df8e3fafdd413aa69b0d1b81e8abb",
+        "size": 434956,
+        "mime": "image/png",
+        "properties": {
+          "width": 1024,
+          "format": "PNG",
+          "height": 1024
+        },
+        "expires_at": "2026-10-28T10:39:58.639108+00:00"
+      },
+      "local_png": "outputs/_run/newapi-image-sync-20261027/evidence/live-sunburst-01.png",
+      "full_decode_and_visual_review": {
+        "collector": "root",
+        "decoder": "Pillow full decode",
+        "width": 1024,
+        "height": 1024,
+        "repeated_by_report_writer": false
+      },
+      "text_execution_count": 3,
+      "text_microcredits": "5385",
+      "text_executions": [
+        {
+          "id": "96588f8b-b789-4b38-82fe-af78d2f2f9c3",
+          "model": "easel-deepseek-v4-pro-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-27T10:40:08.737233+00:00",
+          "updated_at": "2026-10-27T10:40:13.191385+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "2136",
+          "input_tokens": 3732,
+          "output_tokens": 180,
+          "result_state": "available"
+        },
+        {
+          "id": "0b5501be-63f5-40a4-8f91-5db4bef49385",
+          "model": "easel-deepseek-v4-pro-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-27T10:39:59.513091+00:00",
+          "updated_at": "2026-10-27T10:40:03.356945+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "1822",
+          "input_tokens": 2957,
+          "output_tokens": 229,
+          "result_state": "available"
+        },
+        {
+          "id": "40f81037-6b9f-4989-8569-76270a5f009e",
+          "model": "easel-deepseek-v4-pro-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-27T10:39:19.987151+00:00",
+          "updated_at": "2026-10-27T10:39:26.055207+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "1427",
+          "input_tokens": 1887,
+          "output_tokens": 322,
+          "result_state": "available"
+        }
+      ],
+      "successful_turn_microcredits": "1005385",
+      "source_receipt": "live-sunburst-01-turn-safe.json"
+    },
+    {
+      "model": "gpt-image-2.5-flare",
+      "job_id": "a934ccdf-d78d-446c-95ec-7b8fd028a2fa",
+      "operation_key": "909472f7-3191-5846-a42d-7734270931da",
+      "local_status": "downloaded",
+      "lookup_status": "found",
+      "execution_state": "completed",
+      "financial_state": "settled",
+      "delivery_state": "available",
+      "funding_mode": "live",
+      "rate_version": "internal-one-point-per-image-20261027-v1",
+      "image_microcredits": "1000000",
+      "image_quantity": 1,
+      "provider_response_id": null,
+      "http_status": 200,
+      "counts": {
+        "media_artifacts": 1,
+        "media_http_response_references": 1,
+        "media_provider_attempts": 1,
+        "media_receipts": 1,
+        "media_terminal_evidence": 1
+      },
+      "blob_state": "attached",
+      "blob_file_sha_matches_root_checked": true,
+      "budget_released": true,
+      "artifact": {
+        "id": "8dd91c85-8879-44fb-82e7-cdd1cbb0dd7c",
+        "sha256": "ef39cbfca2410fb4bcdda196f010aeaa20b0f74817681e8373ec887269a16207",
+        "size": 463165,
+        "mime": "image/png",
+        "properties": {
+          "width": 1024,
+          "format": "PNG",
+          "height": 1024
+        },
+        "expires_at": "2026-10-28T10:43:13.995420+00:00"
+      },
+      "local_png": "outputs/_run/newapi-image-sync-20261027/evidence/live-flare-afterfix-02.png",
+      "full_decode_and_visual_review": {
+        "collector": "root",
+        "decoder": "Pillow full decode",
+        "width": 1024,
+        "height": 1024,
+        "repeated_by_report_writer": false
+      },
+      "text_execution_count": 3,
+      "text_microcredits": "5618",
+      "text_executions": [
+        {
+          "id": "2db5e51c-602e-4a28-a540-cf09bf96c602",
+          "model": "easel-deepseek-v4-pro-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-27T10:43:24.565594+00:00",
+          "updated_at": "2026-10-27T10:43:28.136572+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "2178",
+          "input_tokens": 3801,
+          "output_tokens": 185,
+          "result_state": "available"
+        },
+        {
+          "id": "250ac35e-ac3b-4855-b76c-a21e37bd5710",
+          "model": "easel-deepseek-v4-pro-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-27T10:43:15.371429+00:00",
+          "updated_at": "2026-10-27T10:43:19.162463+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "1880",
+          "input_tokens": 3027,
+          "output_tokens": 244,
+          "result_state": "available"
+        },
+        {
+          "id": "b7862e63-f2a4-4445-a47c-7ffc6ef114eb",
+          "model": "easel-deepseek-v4-pro-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-27T10:42:30.847028+00:00",
+          "updated_at": "2026-10-27T10:42:38.535211+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "1560",
+          "input_tokens": 1892,
+          "output_tokens": 409,
+          "result_state": "available"
+        }
+      ],
+      "successful_turn_microcredits": "1005618",
+      "source_receipt": "live-flare-afterfix-02-turn-safe.json"
+    }
+  ],
+  "successful_two_turn_cost": {
+    "unit": "microcredit",
+    "microcredits_per_point": "1000000",
+    "image": "2000000",
+    "text": "11003",
+    "total": "2011003",
+    "points": "2.011003",
+    "wallet_available_delta": "2011003",
+    "wallet_spent_delta": "2011003",
+    "scope_note": "only these two successful workbench turns; excludes earlier text charges and the unresolved failed Flare reservation"
+  },
+  "wallet_before_successful_turns": {
+    "unit": "microcredit",
+    "microcredits_per_point": "1000000",
+    "available": "8963156",
+    "reserved": "1000000",
+    "spent": "36844",
+    "expired": "0",
+    "issued": "10000000",
+    "frozen": "0",
+    "refunded": "0",
+    "test_available": "0",
+    "live_available": "8963156",
+    "experience_available": "8963156",
+    "experience_issued": "10000000",
+    "experience_expires_at": "2026-10-30T11:23:47.552184+00:00",
+    "pending_reconciliation": 1,
+    "active_requests": 0,
+    "pending_reconciliation_limit": 3,
+    "test_only": false,
+    "funding_mode": "live"
+  },
+  "wallet_final_snapshot": {
+    "unit": "microcredit",
+    "microcredits_per_point": "1000000",
+    "available": "6952153",
+    "reserved": "1000000",
+    "spent": "2047847",
+    "expired": "0",
+    "issued": "10000000",
+    "frozen": "0",
+    "refunded": "0",
+    "test_available": "0",
+    "live_available": "6952153",
+    "experience_available": "6952153",
+    "experience_issued": "10000000",
+    "experience_expires_at": "2026-10-30T11:23:47.552184+00:00",
+    "pending_reconciliation": 1,
+    "active_requests": 0,
+    "pending_reconciliation_limit": 3,
+    "test_only": false,
+    "funding_mode": "live"
+  },
+  "wallet_conservation": {
+    "available_plus_reserved_plus_spent": "10000000",
+    "issued": "10000000",
+    "matches": true
+  },
+  "ledger_receipt_sha256": "c0d383ba8cf7fb900b8f1467217f92806c8a7070c3f5f86a6f398e1e7ed9c187",
+  "ledger_probe": {
+    "read_only": true,
+    "provider_posts_by_ledger_probe": 0,
+    "note": "this zero belongs to the later read-only accounting query; each successful generation has one persisted provider attempt"
+  },
+  "runtime": {
+    "desktop_version": "v23",
+    "port": 17868,
+    "activation_pid_snapshot": 40459,
+    "same_home_workspace": true,
+    "old_application_untouched": true,
+    "protected_files": 133,
+    "protected_files_changes": [],
+    "history_and_custom_config_preserved": true,
+    "same_account_scope_on_activation": true,
+    "same_wallet_on_activation": true,
+    "helper_forwarding": "root reports v18-v22 helpers forwarded; individual legacy safe receipt lists v18-v21, 8 helpers",
+    "old_apps_and_zip_untouched": true
+  },
+  "release": {
+    "desktop_zip_sha256": "48ea4652435178847d825399680c62a818c5431d1877cd31a7d1a779b1850ccd",
+    "central_f50_wheel_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+    "central_schema_through": 16,
+    "central_binary_not_rebuilt_for_storage_fix": true
+  },
+  "unresolved_old_flare": {
+    "job_id": "81a6155d-c7dd-4b98-bd3f-5e909a4d3ba9",
+    "operation_key": "b16d8e24-c7b9-5dda-966d-07f987fc33e0",
+    "status": "pending_reconciliation",
+    "actual": null,
+    "reserved_microcredits": "1000000",
+    "supplier_post_count": 1,
+    "generation_retried": false,
+    "wallet_or_audit_edited": false,
+    "root_cause": "systemd ProtectSystem=strict with no writable exception for media root caused EROFS",
+    "not_successful_delivery": true
+  },
+  "storage_repair": {
+    "collector": "root",
+    "receipt": "storage-writable-apply-safe.json",
+    "success": true,
+    "database_writes": 0,
+    "provider_posts": 0,
+    "verification": {
+      "api_process_sha256": "dfbae0e7ec5308aa1fa836566cb129887a4b560ca6b60907367c1656d71313b8",
+      "probes": {
+        "etc": {
+          "readonly": true,
+          "removed": true,
+          "writable": false
+        },
+        "media": {
+          "readonly": false,
+          "removed": true,
+          "writable": true
+        },
+        "release": {
+          "readonly": true,
+          "removed": true,
+          "writable": false
+        }
+      },
+      "success": true
+    },
+    "pending_reconciliation_preserved": true
+  },
+  "remaining": {
+    "old_one_point_reservation_unresolved": true,
+    "old_dr_does_not_cover_current_90_dropin": true,
+    "nonempty_dr_admission_not_satisfied_with_pending_old_job": true,
+    "signed_and_notarized_desktop_release_not_complete": true,
+    "formal_payment_merchant_acceptance_not_complete": true,
+    "custom_api_mode_preserved": true,
+    "merged_to_main": false,
+    "new_commit_created": false,
+    "video_music_voice_cloud_agent_product_completion_not_claimed": true
+  },
+  "sources": [
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/live-sunburst-01-turn-safe.json",
+      "sha256": "2bbaa7882434b1c1a599d7680937a3d2a30a0849b71ffea433b88c03b808bfad"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/live-sunburst-01-wallet-before-safe.json",
+      "sha256": "f94d5ff39d0f2f969828c38f49d8e22c63243b0a2ed88677c708689dbb7a07d9"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/live-sunburst-01-wallet-after-safe.json",
+      "sha256": "beff7e495245cf523000fe6e827408c31a992587125404e2fa96eb70b094c65b"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/live-flare-afterfix-02-turn-safe.json",
+      "sha256": "f59df5cdd68d1db857cccb156dcfd29ab1c59c79574d5e10268f8f2f1abf1b0b"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/live-wallet-final-safe.json",
+      "sha256": "fff434aaf84b039725cf67471fa4e46cf6e194fd09ac128cd13ebe171106ac73"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/two-models-live-ledger-safe.json",
+      "sha256": "c0d383ba8cf7fb900b8f1467217f92806c8a7070c3f5f86a6f398e1e7ed9c187"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/live-flare-01-failure-safe.json",
+      "sha256": "de171dc8ef023d34d73ea98581297bd824cc17974b70719f97c6351a3f4edbbd"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/storage-writable-apply-safe.json",
+      "sha256": "10741f27109325d7906b17f8e1c1a76ff8c865f21998783af0ebf5f39c88362f"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/v23-activation-safe.json",
+      "sha256": "03e1d10d81ee0ec144849e47e169790c97a917031536a9ccf093c83b26fed12b"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/v23-preservation-safe.json",
+      "sha256": "be3a95ca24956cad89ec0325d7f2306ea6e7d34705ee4f3826fb57d876a56a1c"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/v23-legacy-launchers-safe.json",
+      "sha256": "9dc52ac132951c8fb86e177199e96f366ec40a940b6c4ba64e56bfa1aeb4b746"
+    },
+    {
+      "path": "outputs/_run/newapi-image-sync-20261027/evidence/final-readiness-safe.json",
+      "sha256": "35b13234e3319747e353acf9cfca106ba36f5b8876df09d17629f7772aaa6260"
+    }
+  ],
+  "evidence_manifest": {
+    "path": "outputs/_run/newapi-image-sync-20261027/evidence/manifest.json",
+    "sha256": "407cdd03315386f2bbf6e42c3b8682851bb6ceb8cdc8729d92df45c21b2dc995",
+    "stage": "two_models_live_workbench_delivery_and_billing_verified",
+    "recorded_inputs": 36,
+    "previous_manifest_preserved": "manifest-pre-live.json"
+  },
+  "browser_acceptance": {
+    "collector": "root",
+    "checked_in_real_workbench": true,
+    "model_directory": "settings / account and subscription / refresh image models",
+    "models": [
+      "gpt-image-2.5-sunburst",
+      "gpt-image-2.5-flare"
+    ],
+    "price_points_per_verified_image": "1",
+    "flare_ui_text_and_image_charges_match_ledger": true,
+    "screenshots": [
+      {
+        "path": "outputs/_run/newapi-image-sync-20261027/evidence/workbench-image-models.png",
+        "source": "root captured browser screenshot",
+        "sha256": "9c50010cc2b6e58bdbc922cd6dd63a89947f0591c78ac9bf341dba1990259f56",
+        "bytes": 68047
+      },
+      {
+        "path": "outputs/_run/newapi-image-sync-20261027/evidence/workbench-live-flare.png",
+        "source": "root captured browser screenshot",
+        "sha256": "1022838779c1dd4b00fe0ebc71d3a29ae185b247205a2e5a0d20944c1b7aae3a",
+        "bytes": 48885
+      },
+      {
+        "path": "outputs/_run/newapi-image-sync-20261027/evidence/workbench-live-flare-ledger.png",
+        "source": "root captured browser screenshot",
+        "sha256": "102bc8bbc3de03b31367f43eb30f9a79a00d4ba94df7163babb4858e3ad1dcad",
+        "bytes": 66123
+      }
+    ]
+  },
+  "final_readiness": {
+    "authenticated": true,
+    "original_experience_account_match": true,
+    "workbench_idle": true,
+    "available_microcredits": "6952153",
+    "reserved_old_flare_microcredits": "1000000",
+    "pending_reconciliation": 1,
+    "models": [
+      "gpt-image-2.5-flare",
+      "gpt-image-2.5-sunburst"
+    ],
+    "workbench_version": "v23",
+    "custom_api_config_and_history_preserved": true,
+    "new_points_issued": 0,
+    "formal_payments_enabled": false,
+    "supplier_posts_this_readiness_check": 0
+  },
+  "successful_flare_test_authorization": "another independent test within the existing real-acceptance authorization; no new per-call authorization implied"
+}

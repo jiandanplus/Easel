@@ -1,0 +1,15 @@
+{
+  "version": "v24.22.1",
+  "release_date": "2026-10-20",
+  "lts": "Krypton",
+  "security": true,
+  "archive_name": "node-v24.22.1-darwin-arm64.tar.gz",
+  "archive_url": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-darwin-arm64.tar.gz",
+  "archive_sha256": "89c682593d76cd44233fa53b1563264e7de9cbb189cad169135c5b4fadfbc0a7",
+  "shasums_url": "https://nodejs.org/dist/v24.22.1/SHASUMS256.txt",
+  "index_url": "https://nodejs.org/dist/index.json",
+  "index_sha256": "6c56f52ff7be0efb8199281e5dcc774709166cf8b55be1b08dc1dba14f1060a0",
+  "shasums_sha256": "fdfbffc969c0f604beff0124d409b33a43b53f5c681d6220f80023e0d6df9dc4",
+  "archive_downloaded": false,
+  "signature_verified": false
+}

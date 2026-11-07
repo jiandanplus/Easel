@@ -1,0 +1,65 @@
+{
+  "status": "source_fixed_binary_capacity_blocked",
+  "branch": "codex/ui-redesign",
+  "recorded_utc": "2026-10-28T03:55:24.556832+00:00",
+  "source_files_sha256": {
+    "runtime/pi/worker.mjs": "7fc068daae8e9cc9dc201252dbb412de9adb935569e0cb20e641ad6e2b193f6d",
+    "scripts/packaging/build_pi_macos.py": "59608d2b620c6e3de543a7ad9c091685eceaa84c1f92d3b8531b55e48150155d",
+    "tests/test_pi_cow_copy.py": "36c206407594fd2427e32a4c94f42a601f45f371d8fa6c9773569d9f33da40ad",
+    "packaging/macos/python-source-provenance.json": "3aab5044d4bdaf99da45fc795045e36b1833565c79ddb019a3578096eda8d8eb",
+    "packaging/macos/python-runtime-files.json": "25b1bb10c833bd8afca6106867d53cefd789ce88ed6de1dca2c0c761038a1ce0"
+  },
+  "active_workbench": "v27",
+  "v28_app_zip_created": false,
+  "new_live_model_test_executed": false,
+  "old_paid_request_retried": false,
+  "frontend": {
+    "passed": 485,
+    "failed": 0,
+    "skipped": 0
+  },
+  "worker_author_related": {
+    "passed": 168,
+    "failed": 0,
+    "skipped": 0
+  },
+  "worker_independent_sdk_runs": 8,
+  "python_source_independent_tamper_tests": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0
+  },
+  "cow_author_tests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "cow_independent_tests": {
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "decision": "APPROVE_CODE_ONLY"
+  },
+  "counts_from_separate_runs_not_added": true,
+  "space_reserve_bytes": 209715200,
+  "space_action_requested": "release_at_least_2GB_or_supply_other_writable_volume",
+  "last_readonly_workbench_check": {
+    "observed_utc": "2026-10-28T03:54:25.223113+00:00",
+    "authenticated": true,
+    "login_pending": false,
+    "task_locked": false,
+    "wallet": {
+      "available": "6942425",
+      "reserved": "1009728",
+      "spent": "2047847",
+      "issued": "10000000",
+      "pending_reconciliation": 2,
+      "active_requests": 0,
+      "pending_reconciliation_limit": 3
+    },
+    "model_requests": 0
+  },
+  "committed": false,
+  "pushed": false,
+  "merged": false,
+  "central_production_deployed": false
+}

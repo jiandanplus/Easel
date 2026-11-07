@@ -8,7 +8,7 @@ from pathlib import Path
 from easel.harnesses import store
 
 
-def initialize_runtime(root: Path, default: str = "api") -> str:
+def initialize_runtime(root: Path, default: str = "api", *, subscription_default: bool = False) -> str:
     if default not in store.IDS:
         raise ValueError("未知默认执行引擎")
     config_path = root / "outputs" / "_harness" / "config.json"
@@ -25,8 +25,17 @@ def initialize_runtime(root: Path, default: str = "api") -> str:
     environment.update(os.environ)
     if "EASEL_AGENT_RUNTIME" in environment:
         return store.settings(root / "outputs", environment)["runtime"]
+    if default == "pi":
+        # The new embedded default must not replace an implicit legacy setup.
+        # settings() owns the transport/OpenClaw-state compatibility rules.
+        existing = store.settings(root / "outputs", environment)["runtime"]
+        if existing != "pi":
+            return existing
     store.settings(root / "outputs", {"EASEL_AGENT_RUNTIME": default})
-    store.write_json(config_path, {**config, "runtime": default})
+    initial = {**config, "runtime": default}
+    if subscription_default and default == "pi" and not config:
+        initial.update(service_source="subscription", subscription_backend="central", execution_target="local")
+    store.write_json(config_path, initial)
     return default
 
 

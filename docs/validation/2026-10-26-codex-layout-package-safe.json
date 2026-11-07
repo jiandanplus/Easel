@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "status": "passed_for_v11_ui_package_and_17868_preservation_scope",
+  "recorded_at_utc": "2026-10-26T04:01:24.561718+00:00",
+  "branch": "codex/ui-redesign",
+  "merged_to_main": false,
+  "package": {
+    "status": "passed",
+    "scope": "independent_v11_package_and_v10_resource_comparison",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v11/Easel/Easel.app",
+    "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v11/Easel-Pi-macOS15-arm64.zip",
+    "archive_sha256": "707443f83e788b92f04587d3ee340822c18605ec0253b4c52d0fe599eb5bafc9",
+    "archive_bytes": 124873946,
+    "zip_crc_entries": 35798,
+    "archive_all_resources_match_inventory": true,
+    "source_files": 880,
+    "build_inputs": 58,
+    "source_manifest_sha256": "ffabcfd404cc67311a638cf8db67466f3ec8a83a6386b6e91825131043665395",
+    "inventory_files": 15251,
+    "inventory_manifest_sha256": "fe7c2ddb470a85a2c1725e3ad16d543401bd34bd4d741d6891709ac81a8f23dc",
+    "frontend_inputs": 83,
+    "frontend_outputs": 13,
+    "frontend_receipt_sha256": "49d847a5ccb7c4eb6bb7f2a174fcf3b397aced406d6af0f318778989af38fdc3",
+    "frontend_source_and_output_exact": true,
+    "pi_manifest_verified_without_execution": true,
+    "source_delta": {
+      "added": [
+        "web/frontend/src/components/ConversationSidebar.tsx",
+        "web/frontend/src/styles/workspace-layout.css"
+      ],
+      "removed": [],
+      "changed": [
+        "web/frontend/src/App.tsx",
+        "web/frontend/src/components/Sidebar.tsx",
+        "web/frontend/src/index.css"
+      ]
+    },
+    "resource_delta": {
+      "added": [
+        "web/frontend/dist/assets/index-CgJTkwLB.js",
+        "web/frontend/dist/assets/index-CyH-Q9QD.css"
+      ],
+      "removed": [
+        "web/frontend/dist/assets/index-CNLwcuGG.css",
+        "web/frontend/dist/assets/index-CPogWlBX.js"
+      ],
+      "changed": [
+        "build-provenance.json",
+        "python/lib/python3.12/site-packages/charset_normalizer-3.5.2.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/fastapi-0.143.1.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/httpx-0.28.1.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/idna-3.20.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/markdown-3.11.1.dist-info/RECORD",
+        "python/lib/python3.12/site-packages/uvicorn-0.54.0.dist-info/RECORD",
+        "source-manifest.json",
+        "web/frontend/dist/index.html"
+      ]
+    },
+    "python_metadata_only_record_differences": [
+      {
+        "path": "python/lib/python3.12/site-packages/charset_normalizer-3.5.2.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/normalizer"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/fastapi-0.143.1.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/fastapi"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/httpx-0.28.1.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/httpx"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/idna-3.20.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/idna"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/markdown-3.11.1.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/markdown_py"
+        ]
+      },
+      {
+        "path": "python/lib/python3.12/site-packages/uvicorn-0.54.0.dist-info/RECORD",
+        "removed_bin_hash_entries": [
+          "bin/uvicorn"
+        ]
+      }
+    ],
+    "python_execution_bytes_identical": true,
+    "easel_execution_bytes_identical": true,
+    "web_backend_bytes_identical": true,
+    "pi_agent_and_sdk_bytes_identical": true,
+    "launcher_plist_and_delivery_controls_identical": true,
+    "no_external_symlinks": true,
+    "original_v10_resources_unchanged": true,
+    "new_v11_resources_unchanged": true,
+    "services_started": 0,
+    "real_model_calls": 0,
+    "user_configuration_read": false
+  },
+  "offline_clean_smoke": {
+    "scope": "offline_isolated_v11_clean_home_smoke",
+    "status": "passed",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v11/Easel/Easel.app",
+    "workspace": "/private/tmp/easel-v11-20261026/clean-smoke/workspace",
+    "home": "/private/tmp/easel-v11-20261026/clean-smoke/home",
+    "initial_path": "/usr/bin:/bin:/usr/sbin:/sbin",
+    "platform_url_unset": true,
+    "external_network_denied": true,
+    "model_posts": 0,
+    "browser_opened": false,
+    "agent_install_attempted": false,
+    "original_preview_touched": false,
+    "three_column_sources_and_compiled_artifacts_bound": true,
+    "rendered_ui_verified": false,
+    "initial_inventory": {
+      "files": 15251,
+      "manifest_sha256": "fe7c2ddb470a85a2c1725e3ad16d543401bd34bd4d741d6891709ac81a8f23dc"
+    },
+    "frontend_binding": {
+      "source_inputs": 83,
+      "artifacts": 13,
+      "receipt_sha256": "49d847a5ccb7c4eb6bb7f2a174fcf3b397aced406d6af0f318778989af38fdc3",
+      "source_manifest_sha256": "ffabcfd404cc67311a638cf8db67466f3ec8a83a6386b6e91825131043665395",
+      "source_and_artifacts_bound": true
+    },
+    "identity_verified": true,
+    "port": 56741,
+    "html_200": true,
+    "static_assets_200": 2,
+    "icon_200": true,
+    "default_runtime": "pi",
+    "bundled_pi_installed": true,
+    "runtime_detail": "内置 Pi 供应商未配置",
+    "central_configured": false,
+    "updated_timeout_sources_present": true,
+    "admission_error_and_retry_guard_sources_present": true,
+    "wallet_activity_and_pending_limit_sources_present": true,
+    "owned_stop_exit_0": true,
+    "owned_port_closed": true,
+    "final_inventory_matches": true
+  },
+  "regression": {
+    "frontend": {
+      "passed": 260,
+      "failed": 0,
+      "skipped": 0,
+      "stdout_sha256": "dc75685e88826b2fe1e576f4296b0d82c8bc57a450f1c4fb3883f4661078a718"
+    },
+    "python_related": {
+      "passed": 154,
+      "failed": 0,
+      "skipped": 8,
+      "stdout_sha256": "ec728fc64a26940defa5873be02d6eb329e4ee5aa08cd674d6358cc65d922040"
+    },
+    "actual_v11_runtime_supplement": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "6 actual bundled Pi SDK offline fixtures and 2 actual packaged Python sandbox cases",
+      "stdout_sha256": "9f42c56330aa9d85586fa358d632e57b1dd646ad8277562b26d1a6978b3cd70c"
+    },
+    "note": "Separate runs. The 8 initial skips required actual-payload environment variables; the targeted supplement ran those cases against the v11 bundle. Do not report a fabricated single 162-pass run."
+  },
+  "preflight": {
+    "ok": true,
+    "phase": "preflight",
+    "original_pid": 15099,
+    "authenticated": true,
+    "login_pending": false,
+    "runtime": "pi",
+    "locked": false,
+    "protected_file_count": 45,
+    "backup_hashes_verified": true,
+    "backup_location": "/private/tmp/easel-v11-20261026/user-state-backup",
+    "scope_sha256": "99e9605f43be6ca090a76677c438d9caa6deb44a0b6ed4eca94c2a18c0dbb96d",
+    "original_application": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261025-v10/Easel/Easel.app",
+    "workspace_unchanged": true,
+    "model_calls": 0
+  },
+  "upgrade": {
+    "ok": true,
+    "url": "http://127.0.0.1:17868/",
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v11/Easel/Easel.app",
+    "previous_pid": 15099,
+    "current_pid": 47661,
+    "launcher_pid": 47661,
+    "authenticated_before_after": true,
+    "same_scope": true,
+    "same_workspace": true,
+    "same_home": true,
+    "protected_file_count": 45,
+    "protected_files_unchanged": true,
+    "wallet_unchanged": true,
+    "served_assets_match_new_package": true,
+    "served_asset_count": 2,
+    "original_v10_retained": true,
+    "package_sha256": "707443f83e788b92f04587d3ee340822c18605ec0253b4c52d0fe599eb5bafc9",
+    "model_calls": 0,
+    "new_login_started": false,
+    "browser_history_verification": "separate original-tab DOM check required; not inferred from workspace files"
+  },
+  "browser": {
+    "before": {
+      "origin": "http://127.0.0.1:17868",
+      "evidence": "rendered list and active conversation DOM only; browser storage APIs unavailable",
+      "theme": "forest",
+      "listSha256": "65ab6397ea04860a2654c634f9e2cc95e32d26a01ac3680a6cd5e07bf4f54f70",
+      "messagesSha256": "74f567653941fcfb464e2b61ae6ba3b9caf778f4f6cc8dcced894e886611c001",
+      "visibleSessions": 1,
+      "visibleMessages": 4,
+      "activeEntries": 1,
+      "archivedExpanded": null
+    },
+    "after": {
+      "origin": "http://127.0.0.1:17868",
+      "evidence": "rendered list and active conversation DOM only; browser storage APIs unavailable",
+      "theme": "forest",
+      "listSha256": "65ab6397ea04860a2654c634f9e2cc95e32d26a01ac3680a6cd5e07bf4f54f70",
+      "messagesSha256": "74f567653941fcfb464e2b61ae6ba3b9caf778f4f6cc8dcced894e886611c001",
+      "visibleSessions": 1,
+      "visibleMessages": 4,
+      "activeEntries": 1,
+      "archivedExpanded": null
+    },
+    "historyViewUnchanged": true,
+    "columns": [
+      {
+        "className": "sidebar workspace-toolrail",
+        "height": 868.7499389648438,
+        "parent": "app-layout",
+        "width": 79.99674224853516,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "className": "conversation-sidebar",
+        "height": 868.7499389648438,
+        "parent": "app-layout",
+        "width": 263.99737548828125,
+        "x": 79.99674224853516,
+        "y": 0
+      },
+      {
+        "className": "main-content",
+        "height": 868.7499389648438,
+        "parent": "app-layout",
+        "width": 1161.214111328125,
+        "x": 343.994140625,
+        "y": 0
+      }
+    ],
+    "runtimeText": "本地运行pi",
+    "accountLabel": "账号与订阅",
+    "modelRequests": 0
+  },
+  "post_browser_preservation": {
+    "ok": true,
+    "current_pid": 47661,
+    "protected_files_unchanged_after_browser": true,
+    "protected_file_count": 45,
+    "resource_inventory_unchanged_after_live_start": true,
+    "resource_file_count": 15251
+  },
+  "cleanup": {
+    "owned_5173_preview_stopped": true,
+    "original_17868_retained": true,
+    "private_console_tunnel_untouched": true,
+    "other_services_untouched": true
+  },
+  "initial_nonmutating_gate_failure": {
+    "phase": "initial",
+    "error_type": "KeyError",
+    "cause": "verifier receipt field naming mismatch",
+    "old_listener_pid_verified_unchanged": 15099,
+    "user_files_or_process_modified": false,
+    "corrected_before_actual_switch": true
+  },
+  "preservation": {
+    "same_origin_and_original_browser_tab": true,
+    "original_browser_storage_reset_or_imported": false,
+    "preview_5173_test_history_copied": false,
+    "visible_history_hashes_match": true,
+    "protected_workspace_files_byte_identical": 45,
+    "original_v10_retained": true,
+    "private_local_backup_retained": true
+  },
+  "screenshots": [
+    "assets/codex-layout-package-20261026/original-17868-v11.jpg"
+  ],
+  "limits": [
+    "This is an unsigned, non-notarized macOS 15+ Apple Silicon local preview, not a signed release or clean-device validation.",
+    "Browser preservation directly compared the visible session list and active four-message conversation DOM. Full localStorage hashing was unavailable through supported browser APIs; no raw chat export or storage reset was performed.",
+    "No new real supplier/model call, payment, grant or credit deduction was performed in this UI packaging phase.",
+    "The original conversation includes pre-existing configuration/source mismatch error messages; they were retained as history and are not new upgrade failures.",
+    "Original upstream Python archive/signature verification is not newly claimed; the prepared exact runtime inventory and pinned wheels were verified."
+  ],
+  "local_existing_workspace_launchers": {
+    "start": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v11/启动现有工作台.command",
+    "stop": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v11/停止现有工作台.command",
+    "mode": "0700",
+    "outside_distributable_archive": true,
+    "contains_credentials": false,
+    "same_home_workspace_and_port": true,
+    "shell_syntax_passed": true,
+    "start_existing_instance_exit_code": 0,
+    "existing_listener_pid_unchanged": 47661,
+    "stop_current_main_instance_executed": false,
+    "sha256": {
+      "启动现有工作台.command": "31db1c576ddd51595dfff2b22333b9d3e95a76ec18c8ce53e4954e2a16c7d5b9",
+      "停止现有工作台.command": "7c3328f133fdbf3cfdb78223edaa0a022f9f5754f9d1d3762ba5ccd636ff9554"
+    }
+  },
+  "final_health_probe": {
+    "workbench_17868_http_status": 200,
+    "private_console_health_http_status": 200
+  }
+}

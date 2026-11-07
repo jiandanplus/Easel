@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "mode": "cancel",
+  "noncommercial_fixture": true,
+  "success": true,
+  "terminal_success": false,
+  "events": [
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 36.894846,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 39.324342,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 41.845241,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 44.438409,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 47.073649,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 49.693787,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 52.353678,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 55.085117,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 57.831773,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 60.644041,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 63.483113,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 66.393508,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 69.305544,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 72.286346,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 75.29803,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 78.362032,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 81.447403,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 84.605864,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 87.78888,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 89.247121,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 90.896797,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 92.03728,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 93.291184,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 94.588275,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 95.872775,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 97.293127,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 98.600695,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 99.988754,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 101.425914,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 102.863297,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 104.380918,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 106.328476,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 107.423152,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 108.994035,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 110.596679,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 112.253552,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 114.369817,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 115.663412,
+      "marker": null
+    },
+    {
+      "kind": "token",
+      "monotonic_seconds": 115.688985,
+      "marker": null
+    }
+  ],
+  "tools": [],
+  "invocation_key": "8c3be87b-9b6d-43e3-98f9-f7b1c6b800bf",
+  "runtime": {
+    "python": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel/Easel.app/Contents/Resources/python/bin/python3.12",
+    "node": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel/Easel.app/Contents/Resources/runtime/pi/node/bin/node",
+    "worker": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel/Easel.app/Contents/Resources/runtime/pi/worker.mjs",
+    "pi_version": "1.4.0"
+  },
+  "scope_sha256": "99a733f74810961b43bb822f5b6deec4712eb9ddcb3eea7868ffcf7f38592929",
+  "session_bound": true,
+  "first_token_observed": true,
+  "cancel_requested": true,
+  "cancellation_observed": true,
+  "recovery_checks": [
+    {
+      "success": true,
+      "recoveries": [
+        {
+          "operation_key": "04010059-bcf0-4c61-97b1-2dd3f8594b97",
+          "invocation_id": "2505ce4a-7638-4a36-bd53-235f5f499cfd",
+          "status": "unknown",
+          "lookup_status": "found",
+          "execution": {
+            "status": "pending_reconciliation",
+            "funding_mode": "live",
+            "result_state": "not_available",
+            "amount": "8960",
+            "actual": null,
+            "input_tokens": null,
+            "output_tokens": null
+          }
+        }
+      ],
+      "truncated": false
+    },
+    {
+      "success": true,
+      "recoveries": [
+        {
+          "operation_key": "04010059-bcf0-4c61-97b1-2dd3f8594b97",
+          "invocation_id": "2505ce4a-7638-4a36-bd53-235f5f499cfd",
+          "status": "unknown",
+          "lookup_status": "found",
+          "execution": {
+            "status": "pending_reconciliation",
+            "funding_mode": "live",
+            "result_state": "not_available",
+            "amount": "8960",
+            "actual": null,
+            "input_tokens": null,
+            "output_tokens": null
+          }
+        }
+      ],
+      "truncated": false
+    }
+  ],
+  "settlement_claim": "requires_authoritative_reconciliation",
+  "duration_seconds": 116.178593,
+  "token_bytes": 1
+}

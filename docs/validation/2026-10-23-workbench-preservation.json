@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "all_required_checks_pass": true,
+  "observed_at": "2026-10-23T11:35:03.498772+00:00",
+  "checks": {
+    "git_preserved": true,
+    "root_env_preserved": true,
+    "migrations_001_006_preserved": true,
+    "custom_provider_preserved": true,
+    "server_source_matches_current_reviewed_source": true,
+    "provision_script_preserved": true,
+    "production_newapi_not_restarted_since_baseline": true,
+    "old_validation_database_still_stopped": true,
+    "new_owned_pg_accepting_connections": true,
+    "central_owned_and_healthy": true
+  },
+  "baseline_sha256": "5e5f5b07fd4cd54aeec2933a6d071d1e0ea5e09ec4b983c92029984e52135235",
+  "local": {
+    "git": {
+      "branch": {
+        "expected": "codex/ui-redesign",
+        "actual": "codex/ui-redesign",
+        "unchanged": true
+      },
+      "head": {
+        "expected": "e972af07444e181e3eb737441ecac306bca778b3",
+        "actual": "e972af07444e181e3eb737441ecac306bca778b3",
+        "unchanged": true
+      },
+      "main": {
+        "expected": "bb3c8ff0463f36c202454d74171682ba6e470cb1",
+        "actual": "bb3c8ff0463f36c202454d74171682ba6e470cb1",
+        "unchanged": true
+      }
+    },
+    "root_env": {
+      "expected_sha256": "935b54d55014b9a482bed0902025e60a05d048c7e63f2984084743b3febe315e",
+      "actual_sha256": "935b54d55014b9a482bed0902025e60a05d048c7e63f2984084743b3febe315e",
+      "unchanged": true
+    },
+    "migrations_001_006": {
+      "services/platform/src/platform_service/migrations/006_execution.sql": {
+        "expected_sha256": "7052415cf6aa837f43e9fecc53987d8c1db99e405ff312055f921c148b7e1bfa",
+        "actual_sha256": "7052415cf6aa837f43e9fecc53987d8c1db99e405ff312055f921c148b7e1bfa",
+        "unchanged": true
+      },
+      "services/platform/src/platform_service/migrations/001_foundation.sql": {
+        "expected_sha256": "fe094e0e4614e66f4047a5e8068d41e05a7d9d2b95a2cc01d81e1250654a09d4",
+        "actual_sha256": "fe094e0e4614e66f4047a5e8068d41e05a7d9d2b95a2cc01d81e1250654a09d4",
+        "unchanged": true
+      },
+      "services/platform/src/platform_service/migrations/004_integrity.sql": {
+        "expected_sha256": "8a99679b37aca448330749ca6945484d47a80fa8f5b0c0c9c6f6d3d5e3377c61",
+        "actual_sha256": "8a99679b37aca448330749ca6945484d47a80fa8f5b0c0c9c6f6d3d5e3377c61",
+        "unchanged": true
+      },
+      "services/platform/src/platform_service/migrations/002_credits.sql": {
+        "expected_sha256": "2484109d40ed6dafa15ccddd2e8b8ba5757f0694eda1d67eb9c8a5cc92e28111",
+        "actual_sha256": "2484109d40ed6dafa15ccddd2e8b8ba5757f0694eda1d67eb9c8a5cc92e28111",
+        "unchanged": true
+      },
+      "services/platform/src/platform_service/migrations/003_identity.sql": {
+        "expected_sha256": "094145faa90d553d11463619d0904de6559363246a6bcb78dd8c588a9502ee0b",
+        "actual_sha256": "094145faa90d553d11463619d0904de6559363246a6bcb78dd8c588a9502ee0b",
+        "unchanged": true
+      },
+      "services/platform/src/platform_service/migrations/005_payments.sql": {
+        "expected_sha256": "5c1ff5d0f24293f75bed6d513d69ff30ee0acc85cf27d0ba258445ea56e2684e",
+        "actual_sha256": "5c1ff5d0f24293f75bed6d513d69ff30ee0acc85cf27d0ba258445ea56e2684e",
+        "unchanged": true
+      }
+    },
+    "custom_provider": {
+      "expected_sha256": "bc36a4ad692e1fd3289926f827d7ea251e026232c0110450681fb36b19b875d0",
+      "actual_sha256": "bc36a4ad692e1fd3289926f827d7ea251e026232c0110450681fb36b19b875d0",
+      "unchanged": true
+    }
+  },
+  "server": {
+    "success": true,
+    "provision_script_sha256": "393cde8ec29367de8fa3c0d632bd72d6fa074dbe140fb76123e4a92e5159ea8d",
+    "containers": {
+      "1panel-new-api": {
+        "id": "211fa9a30b5e79c4df2a9cb477019aeb1a2eeeb75f82e48cf7f4df69c2675d27",
+        "running": true,
+        "status": "running",
+        "started_at": "2026-10-20T08:50:11.290881107Z",
+        "restart_count": 0
+      },
+      "1panel-new-api-db": {
+        "id": "5aef4f53ebd439f2a5e6e0f31ce8bc9e5b27701341548b37c6aa55b8dac3454c",
+        "running": true,
+        "status": "running",
+        "started_at": "2026-10-18T16:54:47.526048889Z",
+        "restart_count": 0
+      },
+      "easel-s3b-live-c9sq0wm4-db": {
+        "id": "ec0f6c11fd07b6ee6d95956d95d8dff0760262efbb6885311adf44355bb2f7f0",
+        "running": false,
+        "status": "exited",
+        "started_at": "2026-10-23T08:28:07.641315796Z",
+        "restart_count": 0
+      },
+      "easel-workbench-e6467e17dc33-db": {
+        "id": "40568b497f9f58ce8c36bf3475ef7f4b01c4880ac37bc19b4b3486a3c1bc7317",
+        "running": true,
+        "status": "running",
+        "started_at": "2026-10-23T10:02:48.512191424Z",
+        "restart_count": 0
+      }
+    },
+    "owned_postgres_metadata_verified": true,
+    "owned_postgres_pg_isready": true,
+    "central_owned_instance": true,
+    "central_health_ok": true,
+    "private_config_or_credentials_read": false,
+    "old_wallet_or_session_reads": false,
+    "mutations": 0,
+    "model_requests": 0,
+    "deployed_source_matches_current_local": true,
+    "public_server_source_files": 38,
+    "reviewed_source_delta_since_initial_upload": [
+      "src/platform_service/app.py"
+    ],
+    "provision_script_matches_current_local": true
+  },
+  "production_restart_checks": {
+    "1panel-new-api": {
+      "running": true,
+      "started_at": "2026-10-20T08:50:11.290881107Z",
+      "baseline_observed_at": "2026-10-23T09:50:44.571816+00:00",
+      "no_restart_since_baseline_observation": true,
+      "basis": "current_started_at_predates_original_readonly_preflight",
+      "container_id_unchanged": "unknown: baseline did not record container ID"
+    },
+    "1panel-new-api-db": {
+      "running": true,
+      "started_at": "2026-10-18T16:54:47.526048889Z",
+      "baseline_observed_at": "2026-10-23T09:50:44.571816+00:00",
+      "no_restart_since_baseline_observation": true,
+      "basis": "current_started_at_predates_original_readonly_preflight",
+      "container_id_unchanged": "unknown: baseline did not record container ID"
+    }
+  },
+  "unknowns": [
+    "Original production container IDs were not recorded; exact ID continuity is unknown.",
+    "Docker healthcheck status was not projected; new PostgreSQL health is verified by owned pg_isready and central SELECT-1 /health."
+  ],
+  "read_only": true,
+  "server_restart_or_mutations": false,
+  "old_wallet_or_other_user_session_reads": false,
+  "model_requests": 0,
+  "private_content_emitted": false
+}

@@ -1,0 +1,38 @@
+{
+  "observed_utc": "2026-10-28T03:13:01+00:00",
+  "authorization": "user explicitly approved bounded server-only error-log diagnosis",
+  "approved_scope": {
+    "server": "115.190.211.112",
+    "timezone": "Asia/Shanghai",
+    "from": "2026-10-28 10:43:14",
+    "through": "2026-10-28 10:43:44",
+    "model": "deepseek-flash",
+    "error_logs_only": true
+  },
+  "matching_error_logs": 1,
+  "newapi_request_id": "202610280243254260939228268d9d6xWFs45uv",
+  "central_request_id": "bf36dd83-9777-45b2-b81d-b85c077ee5bb",
+  "execution_id": "bdbc4509-7b03-42ac-9b68-3c1381e977c5",
+  "http_status": 400,
+  "error_categories": [
+    "invalid_request_error",
+    "tool_schema_root_object_required",
+    "tool_schema_root_type_missing"
+  ],
+  "parameter_names": [
+    "create_media",
+    "type"
+  ],
+  "root_source": "runtime/pi/worker.mjs create_media: Type.Union(variants)",
+  "exported_payload": "fixed error categories, public tool/parameter names and correlation IDs only",
+  "raw_response_prompt_account_key_exported": false,
+  "model_retried": false,
+  "new_provider_posts": 0,
+  "database_writes": 0,
+  "original_finance": {
+    "state": "pending_reconciliation",
+    "reserved_microcredits": "9728",
+    "actual": null
+  },
+  "fix_status": "in_development_no_live_retest"
+}

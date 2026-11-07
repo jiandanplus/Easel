@@ -22,6 +22,9 @@
 """
 from __future__ import annotations
 
+from media_gateway import require_media_available
+require_media_available()
+
 import argparse
 import json
 import os

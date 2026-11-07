@@ -1,0 +1,62 @@
+{
+  "boundaries": {
+    "activated": false,
+    "build_or_package": false,
+    "central_pg_new_host_roundtrip": "pending",
+    "commercial_requests": false,
+    "independent_review": "pending",
+    "new_capabilities_live_verified": false,
+    "production_changed": false,
+    "real_auth_read": false
+  },
+  "branch": "codex/ui-redesign",
+  "date": "2026-10-27",
+  "files": {
+    "docs/superpowers/plans/2026-10-27-subscription-media-m4-expansion.md": "013d60880e13c01fbb41ad198b7d1675e881aa7985a6c60dc0e1161b9f983cf7",
+    "easel/harnesses/pi.py": "f55c482ce8b407adb3e5468af8af099e47cbbe7a9d5b814491b829f35b4ce2c0",
+    "easel/platform/media.py": "23b8c40b189a03fdcb0571a21cc224ed53783f2074b5e9b547242a5b1fe4ec34",
+    "easel/platform/media_contracts.py": "050d9e3b327a37f3880d5744e3c6678834b09ca2d028dff2358aeeee7220b298",
+    "easel/platform/media_files.py": "31985a835c5d81e8790c7bdffb02623e36aadf4a7b74166a6b3519a012c35ea2",
+    "easel/platform/media_records.py": "cb99d70268f0c6dc7e0739aee344efeff5c5ca9c967bcb7bd13fa8d9137e60cf",
+    "packaging/pi/source-manifest.json": "8cd1b5bc0db80e549e74632517e60bd32828776e329ce150146e8ec3315cc524",
+    "runtime/pi/worker.mjs": "8ec881590206c0c487f95469860f04852b9c1c80b4a198a9fd254fcf00768682",
+    "tests/pi_media_worker_fixture.mjs": "f1159f9780decd8246d2b1ceebe6bbbd6bce8f216657eae6ecc4dfdee0ba75ef",
+    "tests/test_media_expansion.py": "2d90d715db10afbede281e68b8aafe52b36d8a842ab0bd2759acd7cce6a41609",
+    "tests/test_pi_media_host.py": "b4f9ca2aa4fa4035030b535bf1f68c4cfa7dda5c9ac967fb7a3cdd406370e1ba"
+  },
+  "previous_freeze": {
+    "manifest": "docs/validation/2026-10-27-subscription-media-m4-expansion-pre-review-safe.json",
+    "passed": 257,
+    "patch_path": "/private/tmp/easel-m4-expansion-freeze-20261027.patch",
+    "patch_sha256": "78389de962eceb5b111d35edb367373d380ffd216350487847fd7364f3f205ba"
+  },
+  "review_fix": {
+    "finding": "P1 unknown nested rate fields crossed catalog to Pi stdin",
+    "focused_red_then_green": 2,
+    "independent_recheck": "pending",
+    "meter_projection": [
+      "unit",
+      "basis",
+      "numerator",
+      "denominator"
+    ],
+    "projection": [
+      "version",
+      "meters"
+    ]
+  },
+  "revision": "review-r1",
+  "schema_version": 1,
+  "snapshot_patch": {
+    "meaning": "full candidate untracked-source snapshot, not incremental v23 diff",
+    "path": "/private/tmp/easel-m4-expansion-freeze-20261027-review-r1.patch",
+    "sha256": "d3e0c7bd5e8528ca33021fc85a1817329c024172dcf3b26189925bf2699caa0e"
+  },
+  "tests": {
+    "actual_pi_sdk_scenarios": 12,
+    "passed": 259,
+    "seconds": 12.86,
+    "source": "controlled local fixtures, existing Node v24.22.1/Pi 1.4.0",
+    "warnings": 1
+  }
+}

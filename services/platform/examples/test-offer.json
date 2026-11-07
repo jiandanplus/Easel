@@ -1,0 +1,12 @@
+{
+  "id": "easel-test-cny-v1",
+  "plan_id": "easel-test-v1",
+  "version": "1",
+  "amount_minor": "1",
+  "currency": "CNY",
+  "test_only": true,
+  "terms": {
+    "refund_policy": "unused_full_only",
+    "description": "隔离模拟测试：展示价格 0.01 元，不实际收款，仅产生测试权益。整批点数全部未使用、未预留、未过期时允许全额退款。"
+  }
+}

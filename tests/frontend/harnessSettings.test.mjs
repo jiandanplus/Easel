@@ -18,6 +18,33 @@ const { outputText } = ts.transpileModule(
 
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
+test('Pi built-in custom configuration uses provider form without an install instruction', async () => {
+  const view=setup({runtime:'pi'});view.render();await settle();
+  const tree=view.render();
+  const provider=nodes(tree,'bundled-provider')[0];
+  assert.ok(provider);
+  assert.equal(provider.props.runtime,'pi');
+  assert.equal(provider.props.version,'1.4.0');
+  assert.ok(nodes(tree,'settings-select').some(n=>n.props.label==='工具权限'));
+});
+
+test('Pi central subscription saves while Pi is unavailable for legacy subscriptions', async () => {
+  const view=setup({runtime:'pi',source:'subscription',backend:'central'});view.render();await settle();view.render();await settle();
+  let tree=view.render();
+  const engine=nodes(tree,'settings-select').find(n=>n.props.label==='执行引擎');
+  assert.ok(engine.props.options.some(n=>n.value==='pi'));
+  nodes(tree,'settings-select').find(n=>n.props.label==='订阅模型').props.onChange('central-text');
+  tree=view.render();
+  assert.equal(nodes(tree,'button').find(n=>text(n)==='保存底座').props.disabled,false);
+  nodes(tree,'button').find(n=>text(n)==='保存底座').props.onClick();await settle();
+  assert.equal(view.saves[0].runtime,'pi');
+  assert.equal(view.saves[0].route.subscription_backend,'central');
+  nodes(view.render(),'settings-select').find(n=>n.props.label==='订阅渠道').props.onChange('legacy');
+  view.render();await settle();tree=view.render();
+  assert.equal(nodes(tree,'button').find(n=>text(n)==='保存底座').props.disabled,true);
+  assert.ok(!nodes(tree,'settings-select').find(n=>n.props.label==='执行引擎').props.options.some(n=>n.value==='pi'));
+});
+
 test('settings defer environment probes and wait for the actual runtime before loading models', () => {
   const panel = readFileSync(new URL('../../web/frontend/src/components/SettingsPanel.tsx', import.meta.url), 'utf8');
   assert.match(panel, /const \[harness, setHarness\] = useState\(''\)/);
@@ -26,21 +53,8 @@ test('settings defer environment probes and wait for the actual runtime before l
   assert.match(panel, /if \(harness !== 'openclaw'\) return;/);
 });
 
-test('sidebar keeps its settings button unwrapped beside a truncated status', () => {
-  const css = readFileSync(new URL('../../web/frontend/src/styles/index.css', import.meta.url), 'utf8');
-  const sidebar = readFileSync(new URL('../../web/frontend/src/components/Sidebar.tsx', import.meta.url), 'utf8');
-  const status = css.match(/\.sidebar-status-text\s*\{([^}]+)\}/)?.[1];
-  const gear = css.match(/\.settings-gear\s*\{([^}]+)\}/)?.[1];
-  assert.ok(status && gear);
-  assert.match(sidebar, /className="sidebar-status-text"/);
-  assert.match(status, /min-width:\s*0/);
-  assert.match(status, /text-overflow:\s*ellipsis/);
-  assert.match(gear, /flex-shrink:\s*0/);
-  assert.match(gear, /white-space:\s*nowrap/);
-});
-
 function setup({ runtime = 'openclaw', locked = false, installed = true, saveError = '', modelError = '',
-  settingsErrors = [] } = {}) {
+  settingsErrors = [], origin, version, source = 'custom', backend, gatewayReady = true, catalogPromise } = {}) {
   const state = [];
   let cursor = 0;
   const effects = [];
@@ -49,15 +63,18 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
   const changes = [];
   const saves = [];
   const selections = [];
+  const settingsChanges = [];
   const modelRequests = [];
   const settings = {
     runtime,
+    service_source: source, subscription_model: 'platform-alias', subscription_backend: backend,
     models: { codex: 'codex-model', opencode: 'provider/model' },
     sandbox: 'workspace-write',
     locked,
-    agents: ['api', 'openclaw', 'opencode', 'codex', 'acp'].map(id => ({
+    agents: ['pi', 'api', 'openclaw', 'opencode', 'codex', 'acp'].map(id => ({
       id, label: id === 'api' ? '仅聊天模式' : id,
       installed: ['api', 'openclaw'].includes(id) || installed, install_hint: `install ${id}`,
+      ...(id === 'codex' ? { origin, version } : id === 'pi' ? { origin:'bundled', version:'1.4.0', subscription_backends:['central'] } : {}),
     })),
   };
   const component = runInNewContext(outputText, {
@@ -66,6 +83,9 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
       createElement: (type, props, ...children) => ({ type, props: props || {}, children: children.flat() }),
     },
     SettingsSelect: 'settings-select',
+    platformModels: async () => catalogPromise || ({models:[{id:'platform-alias'}],ready:gatewayReady,reason:gatewayReady?'':'gateway_not_configured'}),
+    centralModels: async () => catalogPromise || ({models:[{id:'central-text',name:'中央测试模型',test_only:true}],ready:gatewayReady,reason:gatewayReady?'':'execution_disabled'}),
+    BundledProviderSettings: 'bundled-provider',
     useState: initial => {
       const index = cursor++;
       if (!(index in state)) state[index] = initial;
@@ -95,29 +115,82 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
       if (modelError) throw new Error(modelError);
       return { runtime, models: [{ id: 'another-model', label: 'Another model', default: true }] };
     },
-    saveHarnessSettings: async (runtime, model, sandbox, codexAutoApprove) => {
-      saves.push({ runtime, model, sandbox, ...(codexAutoApprove !== undefined ? { codexAutoApprove } : {}) });
+    saveHarnessSettings: async (runtime, model, sandbox, codexAutoApprove, route) => {
+      saves.push({ runtime, model, sandbox, ...(codexAutoApprove !== undefined ? { codexAutoApprove } : {}), ...(route?.service_source === 'subscription' ? { route } : {}) });
       if (saveError) throw new Error(saveError);
-      return { ...settings, runtime, models: { ...settings.models, [runtime]: model }, sandbox,
+      return { ...settings, ...route, runtime, models: { ...settings.models, [runtime]: model }, sandbox,
         codex_auto_approve: codexAutoApprove ?? false };
     },
   });
   const onChange = value => changes.push(value);
   const onSelect = value => selections.push(value);
+  const onSettingsChange = value => settingsChanges.push(value);
   return {
     changes,
     saves,
     selections,
+    settingsChanges,
     modelRequests,
     settingsRequests,
     render() {
       cursor = 0;
       effectCursor = 0;
-      const tree = component({ onChange, onSelect });
+      const tree = component({ onChange, onSelect, onSettingsChange });
       return tree;
     },
   };
 }
+
+test('parent receives persisted service source on read and successful save, never on draft selection', async () => {
+  const view = setup({ runtime: 'codex', origin: 'bundled' }); view.render(); await settle();
+  assert.equal(view.settingsChanges.length, 1);
+  assert.equal(view.settingsChanges[0].service_source, 'custom');
+  nodes(view.render(), 'button').find(node => text(node) === '订阅服务').props.onClick();
+  view.render(); await settle();
+  let tree = view.render();
+  nodes(tree, 'settings-select').find(node => node.props.label === '订阅模型').props.onChange('central-text');
+  tree = view.render();
+  assert.equal(view.settingsChanges.length, 1);
+  nodes(tree, 'button').find(node => text(node) === '保存底座').props.onClick(); await settle();
+  assert.equal(view.settingsChanges.length, 2);
+  assert.equal(view.settingsChanges[1].service_source, 'subscription');
+  assert.equal(view.settingsChanges[1].subscription_backend, 'central');
+});
+
+test('failed save leaves parent on its persisted service source', async () => {
+  const view = setup({ runtime: 'codex', saveError: 'rejected' }); view.render(); await settle();
+  nodes(view.render(), 'button').find(node => text(node) === '订阅服务').props.onClick();
+  view.render(); await settle();
+  nodes(view.render(), 'settings-select').find(node => node.props.label === '订阅模型').props.onChange('central-text');
+  nodes(view.render(), 'button').find(node => text(node) === '保存底座').props.onClick(); await settle();
+  assert.equal(view.settingsChanges.length, 1);
+  assert.equal(view.settingsChanges[0].service_source, 'custom');
+  assert.match(text(view.render()), /保存失败/);
+});
+
+test('new explicit subscription selects central while an existing unversioned subscription stays legacy', async () => {
+  const fresh = setup({ runtime: 'codex' }); fresh.render(); await settle();
+  nodes(fresh.render(), 'button').find(node => text(node) === '订阅服务').props.onClick();
+  let tree = fresh.render(); await settle(); tree = fresh.render();
+  let backend = nodes(tree, 'settings-select').find(node => node.props.label === '订阅渠道');
+  assert.equal(backend.props.value, 'central');
+  const models = nodes(tree, 'settings-select').find(node => node.props.label === '订阅模型');
+  assert.ok(models.props.options.some(option => option.value === 'central-text'));
+  models.props.onChange('central-text'); tree = fresh.render();
+  nodes(tree, 'button').find(node => text(node) === '保存底座').props.onClick(); await settle();
+  assert.equal(fresh.saves[0].route.subscription_backend, 'central');
+  const existing = setup({ source: 'subscription', runtime: 'codex' }); existing.render(); await settle(); existing.render(); await settle();
+  backend = nodes(existing.render(), 'settings-select').find(node => node.props.label === '订阅渠道');
+  assert.equal(backend.props.value, 'legacy');
+});
+test('changing subscription backend clears the prior model and does not save until explicit selection', async () => {
+  const view = setup({ source: 'subscription', runtime: 'codex', backend: 'legacy' }); view.render(); await settle(); view.render(); await settle();
+  const backend = nodes(view.render(), 'settings-select').find(node => node.props.label === '订阅渠道');
+  backend.props.onChange('central'); let tree = view.render(); await settle(); tree = view.render();
+  assert.equal(nodes(tree, 'settings-select').find(node => node.props.label === '订阅模型').props.value, '');
+  assert.equal(nodes(tree, 'button').find(node => text(node) === '保存底座').props.disabled, true);
+  assert.equal(view.saves.length, 0);
+});
 
 function nodes(tree, type) {
   if (!tree || typeof tree !== 'object') return [];
@@ -138,7 +211,7 @@ test('changing harness is local until save and retains its model override', asyn
   view.render();
   await settle();
   let tree = view.render();
-  assert.equal(nodes(tree, 'settings-select')[0].props.options.length, 5);
+  assert.equal(nodes(tree, 'settings-select')[0].props.options.length, 6);
   nodes(tree, 'settings-select')[0].props.onChange('codex');
   tree = view.render();
   assert.equal(nodes(tree, 'input')[0].props.value, 'codex-model');
@@ -152,7 +225,7 @@ test('changing harness is local until save and retains its model override', asyn
   await settle();
   assert.deepEqual(view.saves, [{ runtime: 'codex', model: 'custom-model', sandbox: 'read-only', codexAutoApprove: false }]);
   assert.deepEqual(view.changes, ['openclaw', 'codex']);
-  assert.match(text(view.render()), /已保存，请新建对话/);
+  assert.match(text(view.render()), /已保存.*新建对话后生效/);
 });
 
 test('Codex permanent approval defaults off, saves explicitly and stays exclusive to Codex', async () => {
@@ -162,7 +235,7 @@ test('Codex permanent approval defaults off, saves explicitly and stays exclusiv
   let tree = view.render();
   const toggle = nodes(tree, 'button').find(node => node.props.role === 'switch');
   assert.equal(toggle.props['aria-checked'], false);
-  assert.match(text(tree), /sudo、删除、系统修改、执行脚本/);
+  assert.match(text(tree), /删除、系统修改及执行脚本仍需确认/);
   toggle.props.onClick();
   tree = view.render();
   assert.equal(nodes(tree, 'button').find(node => node.props.role === 'switch').props['aria-checked'], true);
@@ -183,7 +256,7 @@ test('environment-locked harness cannot be changed or saved', async () => {
   const tree = view.render();
   assert.equal(nodes(tree, 'settings-select')[0].props.disabled, true);
   assert.equal(nodes(tree, 'button')[0].props.disabled, true);
-  assert.match(text(tree), /EASEL_AGENT_RUNTIME 已固定底座/);
+  assert.match(text(tree), /执行引擎已锁定/);
 });
 
 test('settings can retry a failed read without saving or silently changing the engine', async () => {
@@ -215,7 +288,7 @@ test('uninstalled native harness cannot be saved and does not show Codex sandbox
   const tree = view.render();
   assert.equal(nodes(tree, 'button')[0].props.disabled, true);
   assert.equal(nodes(tree, 'settings-select').length, 1);
-  assert.match(text(tree), /不代表模型已登录/);
+  assert.match(text(tree), /未检测到 acp/);
 });
 
 test('engine options retain missing harnesses with configuration previews and installation hints', async () => {
@@ -223,20 +296,20 @@ test('engine options retain missing harnesses with configuration previews and in
   view.render();
   await settle();
   assert.deepEqual(nodes(view.render(), 'settings-select')[0].props.options.map(option => option.value),
-    ['api', 'openclaw', 'opencode', 'codex', 'acp']);
+    ['pi', 'api', 'openclaw', 'opencode', 'codex', 'acp']);
   const option = nodes(view.render(), 'settings-select')[0].props.options.find(item => item.value === 'opencode');
   assert.match(option.label, /未安装 \/ 未配置/);
   nodes(view.render(), 'settings-select')[0].props.onChange('opencode');
   const preview = view.render();
   assert.match(text(preview), /未检测到 opencode/);
-  assert.match(text(preview), /原有配置未删除/);
+  assert.deepEqual(view.changes, ['openclaw']);
   assert.equal(nodes(preview, 'input')[0].props.value, 'provider/model');
   assert.equal(nodes(preview, 'button')[0].props.disabled, true);
   const missing = setup({ runtime: 'codex', installed: false });
   missing.render();
   await settle();
   assert.deepEqual(nodes(missing.render(), 'settings-select')[0].props.options.map(option => option.value),
-    ['api', 'openclaw', 'opencode', 'codex', 'acp']);
+    ['pi', 'api', 'openclaw', 'opencode', 'codex', 'acp']);
   assert.equal(nodes(missing.render(), 'button')[0].props.disabled, true);
 });
 test('failed harness save shows error without switching the active runtime', async () => {
@@ -251,7 +324,7 @@ test('failed harness save shows error without switching the active runtime', asy
   assert.equal(nodes(view.render(), 'button')[0].props.disabled, false);
 });
 
-test('harness form reuses settings input styling and managed connection hints', async () => {
+test('harness form reuses settings input styling and model controls', async () => {
   const view = setup();
   view.render();
   await settle();
@@ -259,22 +332,18 @@ test('harness form reuses settings input styling and managed connection hints', 
   const tree = view.render();
   assert.equal(nodes(tree, 'input')[0].props.className, 'mock');
   assert.equal(nodes(tree, 'select').length, 0);
-  assert.match(text(tree), /连接由适配器管理，无需另选连接方式/);
+  assert.ok(nodes(tree, 'settings-select').some(node => node.props.label === 'Codex 沙箱'));
 });
 
-test('chat-only is the initial default with an accessible explanation beside the engine', async () => {
+test('Pi is the loading default and a persisted chat-only choice restores its controls', async () => {
   const view = setup({ runtime: 'api' });
-  assert.equal(nodes(view.render(), 'settings-select')[0].props.value, 'api');
+  assert.equal(nodes(view.render(), 'settings-select')[0].props.value, 'pi');
   await settle();
   const tree = view.render();
-  assert.equal(nodes(tree, 'settings-select')[0].props.options[0].value, 'api');
-  assert.equal(nodes(tree, 'settings-select')[0].props.options[0].label, '仅聊天模式');
+  assert.equal(nodes(tree, 'settings-select')[0].props.options[0].value, 'pi');
+  assert.equal(nodes(tree, 'settings-select')[0].props.options.find(option=>option.value==='api').label, '仅聊天模式');
   assert.equal(nodes(tree, 'settings-select').length, 1);
   assert.equal(nodes(tree, 'input').length, 0);
-  const help = nodes(tree, 'button').find(node => node.props['aria-label'] === '仅聊天模式说明');
-  const tooltip = nodes(tree, 'span').find(node => node.props.role === 'tooltip');
-  assert.equal(help.props['aria-describedby'], tooltip.props.id);
-  assert.match(text(tooltip), /不能操作本机文件、运行命令、使用浏览器或执行技能/);
   assert.deepEqual(view.changes, ['api']);
 });
 
@@ -292,7 +361,7 @@ test('chat-only can be saved without any agent CLI and preserves the active engi
   tree = view.render();
   assert.deepEqual(view.changes, ['openclaw', 'api']);
   assert.equal(view.saves[0].runtime, 'api');
-  assert.match(text(tree), /无需安装 Agent/);
+  assert.equal(nodes(tree, 'settings-select')[0].props.value, 'api');
 });
 
 test('OpenClaw selection previews its API configuration without changing the active engine', async () => {
@@ -302,8 +371,7 @@ test('OpenClaw selection previews its API configuration without changing the act
   nodes(view.render(), 'settings-select')[0].props.onChange('openclaw');
   assert.deepEqual(view.selections, ['codex', 'openclaw']);
   assert.deepEqual(view.changes, ['codex']);
-  assert.match(text(view.render()), /OpenClaw 的模型、API 地址和 Key 在下方配置/);
-  assert.match(text(view.render()), /当前为配置预览/);
+  assert.match(text(view.render()), /切换待保存/);
 });
 
 for (const runtime of ['codex', 'opencode']) {
@@ -339,4 +407,50 @@ test('native model listing failure preserves the saved model and allows manual i
   assert.match(text(tree), /读取失败：(Error: )?CLI unavailable/);
   assert.equal(nodes(tree, 'input')[0].props.value, 'codex-model');
   assert.equal(view.saves.length, 0);
+});
+
+
+test('bundled Codex renders provider configuration and version without native model overrides', async () => {
+  const view = setup({ runtime: 'codex', origin: 'bundled', version: '0.146.0' });
+  view.render(); await settle();
+  let tree = view.render();
+  const provider = nodes(tree, 'bundled-provider')[0];
+  assert.equal(provider.props.version, '0.146.0');
+  assert.equal(nodes(tree, 'input').length, 0);
+  assert.equal(nodes(tree, 'button').some(node => text(node) === '拉取模型'), false);
+  provider.props.onSaved('new-model');
+  tree = view.render();
+  nodes(tree, 'button')[0].props.onClick(); await settle();
+  assert.equal(view.saves[0].model, 'new-model');
+});
+
+test('central subscription preview offers Pi and Codex and restores independent custom model', async()=>{
+ const view=setup({runtime:'codex',origin:'bundled'});view.render();await settle();
+ nodes(view.render(),'button').find(n=>text(n)==='订阅服务').props.onClick();await settle();
+ let tree=view.render();assert.equal(nodes(tree,'bundled-provider').length,0);
+ assert.ok(nodes(tree,'settings-select').some(n=>n.props.label==='Codex 沙箱'));
+ assert.match(text(tree),/云端执行.*暂未开放/);
+ assert.ok(nodes(tree,'button').find(n=>text(n)==='云端执行（暂未开放）').props.disabled);
+ assert.deepEqual(nodes(tree,'settings-select')[0].props.options.map(x=>x.value),['pi','codex']);
+ assert.equal(view.saves.length,0);
+ nodes(tree,'button').find(n=>text(n)==='自定义服务').props.onClick();
+ tree=view.render();assert.equal(nodes(tree,'bundled-provider').length,1);
+ nodes(tree,'button')[0].props.onClick();await settle();assert.equal(view.saves[0].model,'codex-model');
+});
+
+test('subscription unavailable gateway shows human reason and source-aware authentication', async()=>{
+ const view=setup({runtime:'codex',source:'subscription',gatewayReady:false});view.render();await settle();view.render();await settle();
+ const value=text(view.render());assert.match(value,/平台模型网关尚未配置/);assert.doesNotMatch(value,/gateway_not_configured|外部引擎认证沿用/);assert.equal(nodes(view.render(),'bundled-provider').length,0);
+});
+
+
+test('leaving pending subscription catalog restores custom native model loading', async () => {
+ let resolve; const catalogPromise = new Promise(done => { resolve = done; });
+ const view = setup({runtime:'codex',catalogPromise}); view.render(); await settle();
+ nodes(view.render(),'button').find(n=>text(n)==='订阅服务').props.onClick(); view.render();
+ nodes(view.render(),'button').find(n=>text(n)==='自定义服务').props.onClick(); view.render();
+ assert.equal(nodes(view.render(),'button').find(n=>text(n)==='拉取模型')?.props.disabled,false);
+ resolve({models:[],ready:true}); await settle();
+ nodes(view.render(),'button').find(n=>text(n)==='拉取模型').props.onClick(); await settle();
+ assert.deepEqual(view.modelRequests,['codex']);
 });

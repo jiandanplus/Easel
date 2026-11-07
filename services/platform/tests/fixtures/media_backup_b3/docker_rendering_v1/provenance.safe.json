@@ -1,0 +1,18 @@
+{
+  "actual_target_created": false,
+  "private_keys_or_passwords_exported": false,
+  "records": {
+    "created": {
+      "not_a_restore_target": true,
+      "sha256": "9c84563bc28ea658c584adc89138a8493edeb3d1e1b53f60876ee3f484100eb9",
+      "source": "previous Root-owned no-network parser full Docker metadata, no PG secret environment"
+    },
+    "running": {
+      "not_a_restore_target": true,
+      "sha256": "20b86ccb010585c4622c63f993b2ac658f011dba8b2342ede585afc6d832fe45",
+      "source": "previous Root-owned no-network parser full Docker metadata, no PG secret environment"
+    }
+  },
+  "scope": "Reference rendering only; no new target/freshness/authority/SQL proof",
+  "volume_reference": "current known local synthetic source metadata only, NOT reusable volume"
+}

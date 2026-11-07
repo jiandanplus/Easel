@@ -14,6 +14,19 @@ Easel 将执行底座与模型供应商分开。Web **设置 → 模型配置 �
 适合问答、写作和内容分析，但不能运行本机工具或技能。API 地址、模型与 Key 在下方配置。
 媒体通道配置独立，不随对话底座迁移。这里保留原有配置键和会话历史，避免删入口造成回归。
 
+## 订阅与执行位置的第一阶段契约
+
+引擎之外，配置增加独立的 `service_source`（custom／subscription）与
+`execution_target`（local／cloud）。缺少新字段的旧配置按 custom/local 读取，
+读取不写盘。第一阶段仅 custom/local 可实际执行；未接通的组合返回明确错误，
+不自动使用本机或用户凭证兜底。设置接口的 `availability` 返回四种组合及可用性。
+
+本阶段主要交付后端与 CLI 边界，没有开通注册、付费订阅、云端执行或内置发行包。
+任务记录保存不含凭证的路由快照，历史会话保留原归属。
+详见 [第一阶段交付与验证](validation/2026-10-15-phase-one-delivery.md)；
+真实引擎与模拟模型网关的可复现探针见
+[`scripts/validation/verify_codex_gateway.py`](../scripts/validation/verify_codex_gateway.py)。
+
 ## 设计与 PR #40
 
 PR #40 的运行时适配层思路值得保留，但其基于较早的主分支，直接覆盖会丢失后续的

@@ -120,6 +120,51 @@ def test_documented_command_scripts_resolve_relative_to_skill_root(tmp_path, mon
     assert validate_skill_commands.resolve_script(document, "$ROOT/scripts/run.py") is None
 
 
+def test_planned_create_entries_are_not_missing_paths(tmp_path):
+    document = write_file(
+        tmp_path, "docs/plans/plan.md",
+        "- Create: `docs/validation/later.md`\n"
+        "  * Create: `scripts/validation/later.py`\n"
+        "- Modify: `docs/validation/missing.md`\n",
+    )
+    issues, checked = validate_document(document, tmp_path)
+    assert checked == 1
+    assert issues[0].line == 3
+
+
+def test_local_outputs_line_suffixes_and_document_assets(tmp_path):
+    write_file(tmp_path, "services/run.py")
+    write_file(tmp_path, "docs/notes/assets/fix.patch")
+    document = write_file(
+        tmp_path, "docs/notes/record.md",
+        "[evidence](../../outputs/_run/report.md)\n"
+        "`../../services/run.py:68`\n"
+        "`assets/fix.patch` `assets/missing.patch`\n",
+    )
+    issues, checked = validate_document(document, tmp_path)
+    assert checked == 3
+    assert [issue.reference for issue in issues] == ["assets/missing.patch"]
+
+
+def test_historical_records_are_not_audited(tmp_path):
+    for relative in ("docs/superpowers/plans/old.md", "docs/validation/old.md", "docs/live.md"):
+        write_file(tmp_path, relative, "`skills/shared/missing.py`")
+    issues, checked, sources = audit(tmp_path)
+    assert len(issues) == checked == sources == 1
+
+
+def test_documented_commands_skip_external_scripts_and_fall_back_to_root(tmp_path, monkeypatch):
+    from scripts import validate_skill_commands
+
+    monkeypatch.setattr(validate_skill_commands, "ROOT", tmp_path)
+    script = write_file(tmp_path, "services/platform/scripts/build.py")
+    document = write_file(tmp_path, "docs/handbook/guide.md")
+    assert validate_skill_commands.resolve_script(document, "/private/tmp/once.py") is None
+    assert validate_skill_commands.resolve_script(
+        document, "services/platform/scripts/build.py",
+    ) == script
+
+
 def test_windows_repository_paths_are_checked_on_any_host(tmp_path):
     write_file(tmp_path, "agents/workspace/AGENTS.md")
     document = write_file(

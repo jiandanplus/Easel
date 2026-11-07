@@ -1,0 +1,47 @@
+{
+  "verified": true,
+  "phase": "canonical_acl_regression",
+  "test_database_scope": "new_owned_synthetic_postgresql_only",
+  "real_databases_used_for_writes": false,
+  "collector_sha256": "11d2e78c2025c439121e1bfb548dee17f69fa238a757a3e710356f2b60cfabcf",
+  "tests_sha256": "ceab1223b5d2ea5598b601a30d139bfdbb1693083c2b7a3a563fe128bd9fbbf7",
+  "new_wheel_sha256": "9314071632c4f8f9f370f15ebcb6f7dc69c7b2218562a54d5a0c94cff5e985f5",
+  "identity_suite": {
+    "passed": 74,
+    "seconds": 10.0,
+    "skipped": 0
+  },
+  "full_suite": {
+    "passed": 900,
+    "seconds": 90.81,
+    "skipped": 0,
+    "filtered": false
+  },
+  "old_collector_red": {
+    "failed": 11,
+    "passed": 3,
+    "deselected": 60,
+    "seconds": 1.67,
+    "note": "10 expected old-collector failures plus one empty-ACL fixture assertion, corrected using non-NULL and aclexplode count zero"
+  },
+  "first_full_suite": {
+    "failed": 2,
+    "passed": 498,
+    "errors": 400,
+    "seconds": 28.21,
+    "cause": "synthetic 256MiB tmpfs capacity exceeded; reran complete suite in fresh 1GiB tmpfs"
+  },
+  "semantic_acl_fields_preserved": [
+    "owner",
+    "grantor",
+    "grantee type and name",
+    "privilege",
+    "is_grantable"
+  ],
+  "null_default_and_empty_acl_distinct": true,
+  "source_or_restored_database_permissions_modified": false,
+  "historical_packages_overwritten": false,
+  "original_local_logto_database_running": true,
+  "owned_synthetic_tests_stopped": true,
+  "production_ready": false
+}

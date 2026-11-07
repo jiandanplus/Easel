@@ -1,0 +1,14 @@
+{
+  "pages": 22,
+  "variants": 5,
+  "images": 110,
+  "nativeDimensions": {
+    "1586x992": 109,
+    "1585x992": 1
+  },
+  "allPNGsReadable": true,
+  "workspaceMatchesCanonical": true,
+  "generatedOriginalsPreserved": true,
+  "requiredLabelReviewFlags": [],
+  "reviewScope": "Required headings and action labels reviewed visually with OCR assistance. Secondary demo copy is not certified character by character."
+}

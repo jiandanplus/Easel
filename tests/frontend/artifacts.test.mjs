@@ -82,6 +82,9 @@ test('responsive fit preserves proportions, fits both bounds and never enlarges 
   }
 });
 
+const deliverables = {};
+runInNewContext(ts.transpileModule(readFileSync(new URL('../../web/frontend/src/lib/deliverables.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, { exports: deliverables, Error });
+
 function gallery() {
   const input = readFileSync(new URL('../../web/frontend/src/components/ArtifactGallery.tsx', import.meta.url), 'utf8');
   const { outputText: compiled } = ts.transpileModule(input, {
@@ -97,7 +100,7 @@ function gallery() {
       useState: initial => typeof initial === 'number' ? [selected, value => { selected = value; }] : [[], () => {}],
       useEffect: () => {},
     } : id === 'react/jsx-runtime' ? { jsx, jsxs: jsx }
-      : id.endsWith('/artifacts') ? exports : { IconChevron: 'chevron', IconOutputs: 'outputs' },
+      : id.endsWith('/artifacts') ? exports : id.endsWith('/deliverables') ? deliverables : { IconChevron: 'chevron', IconOutputs: 'outputs' },
   });
   const artifacts = ['first', 'second', 'third'].map(name => ({
     url: `/api/media/project/${name}.png`, name: `${name}.png`, kind: 'image',

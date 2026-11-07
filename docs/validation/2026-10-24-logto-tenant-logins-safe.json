@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "read_only": true,
+  "server_only": true,
+  "tenant_login_count": 2,
+  "results": [
+    {
+      "slot": 1,
+      "login_and_select1": true,
+      "session_current_role_bound": true,
+      "dangerous_role_attributes_absent": true,
+      "owner_membership_denied": true,
+      "schema_and_database_create_denied": true,
+      "read_only": true
+    },
+    {
+      "slot": 2,
+      "login_and_select1": true,
+      "session_current_role_bound": true,
+      "dangerous_role_attributes_absent": true,
+      "owner_membership_denied": true,
+      "schema_and_database_create_denied": true,
+      "read_only": true
+    }
+  ],
+  "credentials_exported": false,
+  "data_rows_exported": false,
+  "logto_started": false,
+  "logto_login_tested": false,
+  "cross_tenant_data_denial_tested": false,
+  "new_database_name_runtime_accepted": false,
+  "source_database_accessed": false,
+  "database_modified": false,
+  "private_config_modified": false,
+  "owned_internal_endpoint_used_in_memory": true,
+  "target_id_image_network_volume_guarded": true
+}

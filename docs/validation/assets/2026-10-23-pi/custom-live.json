@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "mode": "custom",
+  "scenario": "custom_plain_text",
+  "server_output_cap": 512,
+  "noncommercial_fixture": true,
+  "success": true,
+  "terminal_success": true,
+  "events": [
+    {
+      "kind": "token",
+      "monotonic_seconds": 6.142655,
+      "marker": "EASEL_PI_CUSTOM_OK"
+    }
+  ],
+  "tools": [],
+  "invocation_key": "b6635bea-f135-4369-9410-2b6b7f7102d5",
+  "runtime": {
+    "python": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel/Easel.app/Contents/Resources/python/bin/python3.12",
+    "node": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel/Easel.app/Contents/Resources/runtime/pi/node/bin/node",
+    "worker": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel/Easel.app/Contents/Resources/runtime/pi/worker.mjs",
+    "pi_version": "1.4.0"
+  },
+  "scope_sha256": "99a733f74810961b43bb822f5b6deec4712eb9ddcb3eea7868ffcf7f38592929",
+  "session_bound": true,
+  "reply_sha256": "0018fee93f4518099d95df57cb9723fc7e3068d28c4b2769017af4bcb76456b4",
+  "reply_matches_marker": true,
+  "observations": {
+    "marker_write": false,
+    "marker_read": false,
+    "python_tool": false
+  },
+  "duration_seconds": 6.194433,
+  "token_bytes": 18
+}

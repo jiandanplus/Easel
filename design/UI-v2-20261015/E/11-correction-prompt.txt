@@ -1,0 +1,1 @@
+Preserve this Swiss orange/black publishing design and all existing exact Chinese labels. Add the missing outlined action button 发布前预检 in the bottom action bar, immediately before 存草稿并排期 and 一键发布. Make room by shortening the warning bar. The bottom action buttons must be three: 发布前预检, 存草稿并排期, 一键发布. All text crisp accurate Chinese; all three buttons fully visible.

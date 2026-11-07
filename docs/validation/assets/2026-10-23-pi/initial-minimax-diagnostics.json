@@ -1,0 +1,65 @@
+{
+  "central_terminal_shapes": [
+    {
+      "job_id": "7d7fd31a-3fa3-487b-93f0-30c00bd78c3f",
+      "terminal_status": "completed",
+      "function_calls": [
+        {
+          "name": "list_files",
+          "path_category": "other",
+          "content_exact_marker": false,
+          "argument_keys": []
+        }
+      ]
+    },
+    {
+      "job_id": "e686ff79-728e-4a0c-943f-2f2f89b44d86",
+      "terminal_status": "completed",
+      "function_calls": [
+        {
+          "name": "write_file",
+          "path_category": "verification.txt",
+          "content_exact_marker": true,
+          "argument_keys": [
+            "content",
+            "path"
+          ]
+        }
+      ]
+    },
+    {
+      "job_id": "06409578-1394-4c16-9daf-8a1f833f27f8",
+      "terminal_status": "completed",
+      "function_calls": [
+        {
+          "name": "read_file",
+          "path_category": "verification.txt",
+          "content_exact_marker": false,
+          "argument_keys": [
+            "path"
+          ]
+        }
+      ]
+    },
+    {
+      "job_id": "28c70901-165c-4736-b405-806bd4d13693",
+      "terminal_status": "completed",
+      "function_calls": [
+        {
+          "name": "write_file",
+          "path_category": "verification.txt",
+          "content_exact_marker": true,
+          "argument_keys": [
+            "content",
+            "path"
+          ]
+        }
+      ]
+    }
+  ],
+  "last_failure_categories": [
+    "rate",
+    "500",
+    "limit"
+  ]
+}

@@ -1,0 +1,40 @@
+Use case: ui-mockup. Re-render one single full-size Easel Chinese desktop web application page using the supplied previous board only as a VISUAL STYLE REFERENCE. IMPORTANT: do not copy its collage or its inaccurate tiny text. EXACTLY ONE PAGE, full canvas, LANDSCAPE 16:10, target 2560x1600 or highest native resolution. No surrounding presentation title/banner, no browser chrome, no device, no perspective, no contact sheet. Readability and correct Simplified Chinese spelling are the first priority.
+Design a usable polished app screenshot. A single desktop page with practical screen density. Main heading about 36px, body/labels about 20px, sidebar 18px at output size. Keep all letters crisp, normal glyphs, generous line height and no text below 16px. Use fewer short rows rather than cram tiny writing.
+Use SAME sidebar navigation in all pages: brand 'Easel'; group '创作': '工作台', '对话', '热点雷达', '选题库', '爆款拆解', '技能库'; group '内容运营': '内容库', '内容日历', '发布中心'; group '管理': '账号', '画像', '设置'. Footer only '本地运行'. Active page highlighted correctly. Simple top bar with search placeholder '搜索内容' and fictitious avatar '示例创作者'. No TEAM/COLLABORATION/PRO PLAN/BILLING/UPSELL menus; do not invent extra destinations.
+Chinese typography: legible standard printed Simplified Chinese glyphs, akin PingFang SC / Noto Sans CJK. Body labels must be copied EXACTLY from the whitelist below, no paraphrasing, no generated gibberish, no English translations beside Chinese, no microtext or extra decorative paragraphs. English technical provider names and numeric demo counts are allowed only as specified. If uncertain about a long text, omit the nonessential text rather than spell it incorrectly. All important labels and headings MUST appear verbatim. Render typography carefully with correct strokes. Never use the corrupted labels from the reference board.
+Retain existing Easel functionality only. Reference palette, spacing character, edges and overall aesthetic, but redraw all text at native readable size. Use realistic fictional demo content; no real credentials. All keys masked with bullets. No claims of actual external posting.
+VISUAL DIRECTION B: 极简效率台
+Exceptionally precise minimalist productivity software: pure white #FFFFFF and cool off-white #F5F7FA, graphite #20242D, cobalt blue #315EF7. Compact 208px grouped navigation, command/search bar at top, 8px subtle rounded rectangular controls, hairline borders, clean sans typography. Linear-like engineering precision without copying any branded product. Spacious usable data tables and modular panels, excellent hierarchy, no gradients or illustrations.
+PAGE: 内容日历
+LAYOUT: One precise month grid October2026. Monday to Sunday with dates1-31 accurately aligned, 1October Thursday. Four chips on dates15/16/19/22. Selected day right side. Must not invent 8-day weeks.
+EXACT TEXT WHITELIST:
+"内容日历"
+"2026年10月"
+"今天"
+"月"
+"周"
+"新建排期"
+"周一"
+"周二"
+"周三"
+"周四"
+"周五"
+"周六"
+"周日"
+"AI 学习笔记"
+"旅行攻略"
+"读书清单"
+"选题"
+"草稿"
+"待发"
+"已发"
+"10月15日"
+"今日安排"
+"20:00"
+"小红书"
+"查看内容"
+"编辑排期"
+MANDATORY CLEAR LABELS:
+"内容日历", "2026年10月", "新建排期", "周一", "周日"
+Single full desktop page, style reference only. No unspecified dates, no extra paragraphs. ALL Chinese type must be large and correctly written.
+Calendar rows EXACT: [blank,blank,blank,1,2,3,4]; [5,6,7,8,9,10,11]; [12,13,14,15,16,17,18]; [19,20,21,22,23,24,25]; [26,27,28,29,30,31,blank]. Seven columns only. Date1 is Thursday, selected15 Thursday.

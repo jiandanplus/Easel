@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "server": {
+    "success": true,
+    "container_running": {
+      "1panel-new-api": true,
+      "1panel-new-api-db": true,
+      "easel-s3b-live-c9sq0wm4-db": false
+    },
+    "production_gateway_public_http": 200,
+    "owned_http_ports_closed": [
+      18872,
+      18873
+    ],
+    "archive_mode": "0700",
+    "database_dump_mode": "0600",
+    "database_dump_sha256_verified": "569228a40851fa470639757202c9dddbca0d4f1166ce301a2c886a23b2f7ec3c",
+    "exact_ephemeral_private_paths_absent": [
+      "easel-pi-live-m9cu7v3q/server-private.json",
+      "easel-pi-live-m9cu7v3q/product-auth-private.json",
+      "easel-pi-live-m9cu7v3q/first-operation-private.json",
+      "easel-pi-glm-live-38kd5p6m/server-private.json",
+      "easel-pi-glm-live-38kd5p6m/product-auth-private.json",
+      "easel-pi-glm-live-38kd5p6m/first-operation-private.json"
+    ],
+    "gateway_model_calls": 0
+  },
+  "local_preview": {
+    "url": "http://127.0.0.1:17868/",
+    "html_status": 200,
+    "runtime": "pi",
+    "detail": "\u5185\u7f6e Pi \u4f9b\u5e94\u5546\u672a\u914d\u7f6e"
+  },
+  "observed_existing_local_ports": {
+    "7860": true,
+    "18761": true,
+    "18762": true,
+    "18763": true,
+    "18764": true,
+    "17868": true
+  },
+  "check_is_read_only": true
+}

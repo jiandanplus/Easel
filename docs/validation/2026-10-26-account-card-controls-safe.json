@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-26",
+  "branch": "codex/ui-redesign",
+  "merged_main": false,
+  "frontend_tests": {
+    "total": 301,
+    "pass": 301,
+    "fail": 0,
+    "skip": 0
+  },
+  "build_passed": true,
+  "lint_exit": 0,
+  "existing_lint_warning": "linkifyOutputs.ts:27 no-useless-escape",
+  "zip_integrity_passed": true,
+  "artifact": {
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v16/Easel/Easel.app",
+    "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261026-v16/Easel-Pi-macOS15-arm64.zip",
+    "sha256": "de755e507c5485d72a3191f43dbb8e055a85738919b8cc8ab57f69ca2e418451",
+    "archive_bytes": 124888232,
+    "inventory_files": 15252,
+    "schema_version": 1,
+    "engine": "pi",
+    "git_commit": "e972af07444e181e3eb737441ecac306bca778b3",
+    "source_manifest_sha256": "62754e00f2c25419196684b9628dc0ef3794c48494a02ac308ff3bd481d1ec04",
+    "pi_manifest_sha256": "30d8851d27fefc85698e69571fb90c0c73f88436ed38478bfa73fa356527c9d2",
+    "frontend_receipt_sha256": "eb731e2a7e80910bd24ac3e12f1ffd073c91844ec3c2093de53df4b52717bd12",
+    "python_archive_verified": false,
+    "python_runtime_inventory_verified": true,
+    "python_version": "3.12.13",
+    "wheel_count": 25,
+    "minimum_macos": "15.0",
+    "unsigned": true,
+    "notarized": false,
+    "ui": "loopback web browser"
+  },
+  "activation": {
+    "ok": true,
+    "pid": 5012,
+    "port": 17868,
+    "same_home_workspace": true,
+    "source_files_changed": [
+      "web/frontend/src/components/Sidebar.tsx",
+      "web/frontend/src/components/SidebarAccount.css",
+      "web/frontend/src/components/SidebarAccount.tsx"
+    ],
+    "old_application_untouched": true,
+    "old_launcher_backups_private": true,
+    "old_launchers_forward_to_v16": true,
+    "html_matches_new_package": true,
+    "model_calls": 0
+  },
+  "preservation": {
+    "ok": true,
+    "protected_files": 95,
+    "history_and_custom_config_preserved": true,
+    "same_account_scope": true,
+    "same_wallet": true,
+    "changes": [
+      "outputs/_harness/central-platform-session.json"
+    ],
+    "model_calls": 0
+  },
+  "browser_before": {
+    "history_sha256": "a48dbaf182979bbb008ab39a6039cb9e0696f8506d60a719deae8d3c50054166",
+    "messages_sha256": "a3abb8fa3887c6cadde4905aedb04740f53d580d8cb9ca5aeed9480545b83839",
+    "draft_empty": true,
+    "theme": "forest",
+    "mode": "dark"
+  },
+  "browser_after": {
+    "history_sha256": "a48dbaf182979bbb008ab39a6039cb9e0696f8506d60a719deae8d3c50054166",
+    "messages_sha256": "a3abb8fa3887c6cadde4905aedb04740f53d580d8cb9ca5aeed9480545b83839",
+    "draft_empty": true,
+    "theme": "forest",
+    "mode": "dark"
+  },
+  "browser_layout": {
+    "appearance_text_visible": true,
+    "card_appearance_buttons": 1,
+    "card_inside_viewport": true,
+    "card_open": true,
+    "mode": "dark",
+    "rail_appearance_buttons": 0,
+    "rail_runtime_nodes": 0,
+    "runtime_name": "pi",
+    "theme": "forest",
+    "day_A_night_C_roundtrip_verified": true,
+    "escape_focus_restored": true,
+    "settings_navigation_verified": true,
+    "no_chat_submitted": true
+  },
+  "new_model_calls": 0,
+  "settings_contents_changed": false,
+  "central_services_changed": false,
+  "actual_narrow_viewport_browser_tested": false
+}

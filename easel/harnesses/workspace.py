@@ -10,12 +10,13 @@ from .base import HarnessError, RunRequest
 def workspace_documents(root: Path) -> list[Path]:
     source = root / "agents" / "workspace"
     if not source.is_dir():
-        source = Path(__file__).resolve().parents[2] / "agents" / "workspace"
+        from easel.paths import resource_root
+        source = resource_root() / "agents" / "workspace"
     documents = sorted(source.glob("*.md"),
                        key=lambda document: (document.name != "SOUL.md",
                                              document.name != "AGENTS.md", document.name))
     if not documents or not (source / "AGENTS.md").is_file():
-        raise HarnessError("缺少 agents/workspace/AGENTS.md，请检查 Easel 安装")
+        raise HarnessError("缺少 agents/workspace/AGENTS.md，请检查优创安装")
     return documents
 
 

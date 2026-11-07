@@ -1,0 +1,27 @@
+{
+  "wheel_sha256": "f602aa14ea7276cd24a25fd77fe878bc780045f36fe42ba99954156d6655ebd9",
+  "wheel_bytes": 212343,
+  "source_file_count": 56,
+  "python_files": 42,
+  "sql_files": 10,
+  "static_files": 4,
+  "source_matches_wheel": true,
+  "offline_preparation": "offline_only",
+  "production_ready": false,
+  "dependency_lock_sha256": "eb00eae7b6966760595376c65da0571d40406dc2d2a3019c1247f575dfa44f2a",
+  "clean_install": {
+    "python": "3.12.7",
+    "platform_version": "0.1.0",
+    "installed_distributions": 26,
+    "api_constructed": true,
+    "console_constructed": true,
+    "migration_count": 10,
+    "migration_010_sha256": "b71dcfa0861e4b8324bcf9ece66119efdb695d70d9094e590c2f6312e95da6e3",
+    "identity_commands_imported": true,
+    "console_static_index": true,
+    "private_configuration_loaded": false,
+    "lifespan_started": false,
+    "network_or_database_started": false,
+    "socket_connections_forbidden": true
+  }
+}

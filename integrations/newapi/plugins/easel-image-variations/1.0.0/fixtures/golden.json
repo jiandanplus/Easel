@@ -1,0 +1,459 @@
+{
+  "cases": [
+    {
+      "name": "native multipart defaults",
+      "hook": "native",
+      "member": "create",
+      "args": [
+        {
+          "body": {
+            "kind": "multipart",
+            "fields": {
+              "model": [
+                "easel-image-variations"
+              ]
+            },
+            "files": [
+              {
+                "ref": "request_file:image",
+                "field": "image",
+                "filename": "i.png",
+                "mimeType": "image/png",
+                "size": 100
+              }
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "kind": "submit",
+        "model": "easel-image-variations",
+        "action": "variations",
+        "requestBody": {
+          "n": 1,
+          "size": "1024x1024",
+          "response_format": "url"
+        }
+      }
+    },
+    {
+      "name": "reject JSON",
+      "hook": "native",
+      "member": "create",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {}
+          }
+        }
+      ],
+      "expectedError": "multipart"
+    },
+    {
+      "name": "use file ref and channel credentials",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://provider.example/v1",
+          "authHeader": "Bearer fixture-only",
+          "upstreamModel": "mapped",
+          "publicTaskId": "task_public",
+          "files": [
+            {
+              "ref": "request_file:image",
+              "field": "image",
+              "filename": "i.png",
+              "mimeType": "image/png",
+              "size": 100
+            }
+          ],
+          "requestBody": {
+            "n": 2
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://provider.example/v1/images/variations",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-only"
+        },
+        "bodyType": "multipart",
+        "parts": [
+          {
+            "name": "image",
+            "fileRef": "request_file:image"
+          },
+          {
+            "name": "model",
+            "value": "mapped"
+          },
+          {
+            "name": "n",
+            "value": "2"
+          },
+          {
+            "name": "size",
+            "value": "1024x1024"
+          },
+          {
+            "name": "response_format",
+            "value": "url"
+          }
+        ]
+      }
+    },
+    {
+      "name": "immediate successful result",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://provider.example/v1",
+          "authHeader": "Bearer fixture-only",
+          "upstreamModel": "mapped",
+          "publicTaskId": "task_public",
+          "files": [
+            {
+              "ref": "request_file:image",
+              "field": "image",
+              "filename": "i.png",
+              "mimeType": "image/png",
+              "size": 100
+            }
+          ],
+          "requestBody": {
+            "n": 2
+          }
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "created": 1,
+            "data": [
+              {
+                "url": "https://cdn.example/a.png"
+              }
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "task_public",
+        "taskData": {
+          "created": 1,
+          "data": [
+            {
+              "url": "https://cdn.example/a.png"
+            }
+          ]
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%"
+        }
+      }
+    },
+    {
+      "name": "actual image count",
+      "hook": "extractUsageOnSubmit",
+      "args": [
+        {
+          "baseUrl": "https://provider.example/v1",
+          "authHeader": "Bearer fixture-only",
+          "upstreamModel": "mapped",
+          "publicTaskId": "task_public",
+          "files": [
+            {
+              "ref": "request_file:image",
+              "field": "image",
+              "filename": "i.png",
+              "mimeType": "image/png",
+              "size": 100
+            }
+          ],
+          "requestBody": {
+            "n": 2
+          }
+        },
+        {
+          "created": 1,
+          "data": [
+            {
+              "url": "https://cdn.example/a.png"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "images": 1
+      }
+    },
+    {
+      "name": "pre-reservation count",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "baseUrl": "https://provider.example/v1",
+          "authHeader": "Bearer fixture-only",
+          "upstreamModel": "mapped",
+          "publicTaskId": "task_public",
+          "files": [
+            {
+              "ref": "request_file:image",
+              "field": "image",
+              "filename": "i.png",
+              "mimeType": "image/png",
+              "size": 100
+            }
+          ],
+          "requestBody": {
+            "n": 2
+          }
+        }
+      ],
+      "expected": {
+        "images": 2
+      }
+    },
+    {
+      "name": "successful native presentation",
+      "hook": "native",
+      "member": "result",
+      "args": [
+        {},
+        {
+          "status": "SUCCESS",
+          "data": {
+            "created": 1,
+            "data": [
+              {
+                "url": "https://cdn.example/a.png"
+              }
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "created": 1,
+        "data": [
+          {
+            "url": "https://cdn.example/a.png"
+          }
+        ]
+      }
+    },
+    {
+      "name": "query does not perform another charged request",
+      "hook": "buildQueryRequest",
+      "args": [
+        {}
+      ],
+      "expectedError": "immediate"
+    },
+    {
+      "name": "unknown state",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {}
+      ],
+      "expected": {
+        "status": "UNKNOWN"
+      }
+    },
+    {
+      "name": "upstream failure",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://provider.example/v1",
+          "authHeader": "Bearer fixture-only",
+          "upstreamModel": "mapped",
+          "publicTaskId": "task_public",
+          "files": [
+            {
+              "ref": "request_file:image",
+              "field": "image",
+              "filename": "i.png",
+              "mimeType": "image/png",
+              "size": 100
+            }
+          ],
+          "requestBody": {
+            "n": 2
+          }
+        },
+        {
+          "statusCode": 429,
+          "body": {
+            "secret": "never printed"
+          }
+        }
+      ],
+      "expectedError": "upstream request failed"
+    },
+    {
+      "name": "success without image rejected",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://provider.example/v1",
+          "authHeader": "Bearer fixture-only",
+          "upstreamModel": "mapped",
+          "publicTaskId": "task_public",
+          "files": [
+            {
+              "ref": "request_file:image",
+              "field": "image",
+              "filename": "i.png",
+              "mimeType": "image/png",
+              "size": 100
+            }
+          ],
+          "requestBody": {
+            "n": 2
+          }
+        },
+        {
+          "statusCode": 200,
+          "body": {}
+        }
+      ],
+      "expectedError": "no usable images"
+    },
+    {
+      "name": "pending presenter rejected",
+      "hook": "native",
+      "member": "result",
+      "args": [
+        {},
+        {
+          "status": "IN_PROGRESS",
+          "data": {}
+        }
+      ],
+      "expectedError": "not successful"
+    },
+    {
+      "name": "reject n=0",
+      "hook": "native",
+      "member": "create",
+      "args": [
+        {
+          "body": {
+            "kind": "multipart",
+            "fields": {
+              "model": [
+                "easel-image-variations"
+              ],
+              "n": [
+                "0"
+              ]
+            },
+            "files": [
+              {
+                "ref": "request_file:image",
+                "field": "image",
+                "filename": "i.png",
+                "mimeType": "image/png",
+                "size": 100
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "n must"
+    },
+    {
+      "name": "reject n=11",
+      "hook": "native",
+      "member": "create",
+      "args": [
+        {
+          "body": {
+            "kind": "multipart",
+            "fields": {
+              "model": [
+                "easel-image-variations"
+              ],
+              "n": [
+                "11"
+              ]
+            },
+            "files": [
+              {
+                "ref": "request_file:image",
+                "field": "image",
+                "filename": "i.png",
+                "mimeType": "image/png",
+                "size": 100
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "n must"
+    },
+    {
+      "name": "reject n=1.5",
+      "hook": "native",
+      "member": "create",
+      "args": [
+        {
+          "body": {
+            "kind": "multipart",
+            "fields": {
+              "model": [
+                "easel-image-variations"
+              ],
+              "n": [
+                "1.5"
+              ]
+            },
+            "files": [
+              {
+                "ref": "request_file:image",
+                "field": "image",
+                "filename": "i.png",
+                "mimeType": "image/png",
+                "size": 100
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "n must"
+    },
+    {
+      "name": "reject n=not-a-number",
+      "hook": "native",
+      "member": "create",
+      "args": [
+        {
+          "body": {
+            "kind": "multipart",
+            "fields": {
+              "model": [
+                "easel-image-variations"
+              ],
+              "n": [
+                "not-a-number"
+              ]
+            },
+            "files": [
+              {
+                "ref": "request_file:image",
+                "field": "image",
+                "filename": "i.png",
+                "mimeType": "image/png",
+                "size": 100
+              }
+            ]
+          }
+        }
+      ],
+      "expectedError": "n must"
+    }
+  ]
+}

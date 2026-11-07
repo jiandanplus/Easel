@@ -16,7 +16,9 @@ from easel.openclaw_cmd import openclaw_base_cmd
 from easel.direct_api import DirectAPIError, api_config, read_settings
 
 # 项目根目录（Easel/）
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from easel.paths import workspace_root, resource_root
+
+PROJECT_ROOT = workspace_root()
 
 # OpenClaw 已验证的稳定下限（= 我们实测跑通过的最老版本）。低于它会命中 anthropic provider 必须
 # 原子写入、models.providers.*.timeoutSeconds 被判 Unrecognized key 等破坏性变更（见 issue #9/#11）。

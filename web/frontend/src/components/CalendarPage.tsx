@@ -129,7 +129,6 @@ export default function CalendarPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title"><IconCalendar size={21} /> 内容日历</h1>
-          <p className="page-subtitle">每天各平台发什么一目了然——发布自动落库，可记录排期与平台活动。</p>
         </div>
         <div className="cal-nav">
           <button className="btn btn-sm" onClick={() => shift(-1)}><span style={{ transform: 'rotate(180deg)', display: 'inline-flex' }}><IconChevron size={14} /></span></button>

@@ -10,9 +10,11 @@ from urllib.parse import urlsplit
 
 import httpx
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from easel.paths import workspace_root, resource_root
+
+PROJECT_ROOT = workspace_root()
 SYSTEM_PROMPT = (
-    "你是 Easel 社媒内容助手，用用户的语言协助写作、策划和分析。"
+    "你是优创社媒内容助手，用用户的语言协助写作、策划和分析。"
     "当前是模型 API 直连模式，没有本机文件、命令、浏览器或技能执行工具。"
     "仅根据对话和提供的画像、附件内容回答；不能声称已读取其他文件、"
     "执行技能、生成本地文件或发布内容。需要用户补充的信息请用文字询问。"
@@ -80,9 +82,12 @@ async def _sse_payloads(response: httpx.Response):
 
 async def stream_chat(settings: dict[str, str], content: str | list, *,
                       system: str = SYSTEM_PROMPT, history_file: Path | None = None,
-                      timeout: float = 300):
+                      timeout: float = 300, reasoning_effort: str = "", reasoning_efforts: tuple[str, ...] = ()):
     """Yield (token/thinking/finish, text); persist only complete exchanges."""
     base, model, key = api_config(settings)
+    from easel.chat_models import EFFORTS
+    if reasoning_effort and (reasoning_effort not in EFFORTS or reasoning_effort not in reasoning_efforts):
+        raise DirectAPIError("当前模型接口不支持所选推理强度")
     history = []
     if history_file is not None and history_file.is_file():
         try:
@@ -94,6 +99,8 @@ async def stream_chat(settings: dict[str, str], content: str | list, *,
     user = {"role": "user", "content": content}
     body = {"model": model, "stream": True,
             "messages": [{"role": "system", "content": system}, *history, user]}
+    if reasoning_effort:
+        body["reasoning_effort"] = reasoning_effort
     headers = {"Authorization": f"Bearer {key}"} if key else {}
     text = []
     finish_reason = None

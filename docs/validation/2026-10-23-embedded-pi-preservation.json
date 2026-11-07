@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "baseline_paths": 269,
+  "authorized_changed_existing_paths": [
+    "easel/harnesses/__init__.py",
+    "easel/harnesses/models.py",
+    "easel/harnesses/store.py",
+    "easel/service_contracts.py",
+    "tests/frontend/harnessSettings.test.mjs",
+    "tests/frontend/settingsSubscriptionCopy.test.mjs",
+    "web/app.py",
+    "web/frontend/src/components/HarnessSettings.tsx",
+    "web/frontend/src/components/SettingsPanel.tsx",
+    "web/frontend/src/components/Sidebar.tsx",
+    "web/frontend/src/lib/api.ts"
+  ],
+  "other_baseline_paths_unchanged": 258,
+  "missing_paths": [],
+  "env_unchanged": true,
+  "six_migrations_unchanged": true,
+  "branch": "codex/ui-redesign",
+  "head": "e972af07444e181e3eb737441ecac306bca778b3",
+  "main": "bb3c8ff0463f36c202454d74171682ba6e470cb1",
+  "head_unchanged": true,
+  "main_unchanged": true,
+  "current_public_source_files": 877,
+  "current_public_source_and_build_inputs_match_packaged_authority": true,
+  "archive_sha256_verified": "31ab80a3d876c8e2247b68750c55b31332dc51972ae1cfdbf55e8fd7aff8200a"
+}

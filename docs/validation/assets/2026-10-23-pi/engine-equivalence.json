@@ -1,0 +1,52 @@
+{
+  "v2_resources": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v2/Easel/Easel.app/Contents/Resources",
+  "v3_resources": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel/Easel.app/Contents/Resources",
+  "compared_engine_runtime_files": 14420,
+  "actual_engine_runtime_files_sha256_identical": 14414,
+  "different_install_metadata_record_files": {
+    "python/lib/python3.12/site-packages/charset_normalizer-3.5.2.dist-info/RECORD": {
+      "differing_removed_entrypoint_rows": [
+        "bin/normalizer"
+      ],
+      "reason": "uv records path-specific shebang hashes for build-time entrypoints; those site/bin files were removed from both apps"
+    },
+    "python/lib/python3.12/site-packages/fastapi-0.143.1.dist-info/RECORD": {
+      "differing_removed_entrypoint_rows": [
+        "bin/fastapi"
+      ],
+      "reason": "uv records path-specific shebang hashes for build-time entrypoints; those site/bin files were removed from both apps"
+    },
+    "python/lib/python3.12/site-packages/httpx-0.28.1.dist-info/RECORD": {
+      "differing_removed_entrypoint_rows": [
+        "bin/httpx"
+      ],
+      "reason": "uv records path-specific shebang hashes for build-time entrypoints; those site/bin files were removed from both apps"
+    },
+    "python/lib/python3.12/site-packages/idna-3.20.dist-info/RECORD": {
+      "differing_removed_entrypoint_rows": [
+        "bin/idna"
+      ],
+      "reason": "uv records path-specific shebang hashes for build-time entrypoints; those site/bin files were removed from both apps"
+    },
+    "python/lib/python3.12/site-packages/markdown-3.11.1.dist-info/RECORD": {
+      "differing_removed_entrypoint_rows": [
+        "bin/markdown_py"
+      ],
+      "reason": "uv records path-specific shebang hashes for build-time entrypoints; those site/bin files were removed from both apps"
+    },
+    "python/lib/python3.12/site-packages/uvicorn-0.54.0.dist-info/RECORD": {
+      "differing_removed_entrypoint_rows": [
+        "bin/uvicorn"
+      ],
+      "reason": "uv records path-specific shebang hashes for build-time entrypoints; those site/bin files were removed from both apps"
+    }
+  },
+  "engine_modules_worker_node_python_executable_sdk_code_identical": true,
+  "web_app_changed_top_level_symbols": [
+    "api_status"
+  ],
+  "zip_crc_verified": true,
+  "zip_entries": 35798,
+  "zip_sha256": "31ab80a3d876c8e2247b68750c55b31332dc51972ae1cfdbf55e8fd7aff8200a",
+  "zip_bytes": 124868303
+}

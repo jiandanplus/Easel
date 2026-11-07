@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from easel.paths import workspace_root, resource_root
+
+PROJECT_ROOT = workspace_root()
 PROFILES_DIR = PROJECT_ROOT / "profiles"
 
 # 六维画像文件的固定顺序（identity/style/... 先，其余 .md 追加在后）

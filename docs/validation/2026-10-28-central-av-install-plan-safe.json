@@ -1,0 +1,1917 @@
+{
+  "schema_version": 1,
+  "status": "solver_additions_only_passed_actual_installation_blocked_pending_side_effect_approval",
+  "target_alias": "easel-zhiyin",
+  "target_host": "ser362540173134",
+  "strict_hostkey": true,
+  "private_server_directory": "/root/easel-av-installed-plan-20261028",
+  "private_directory_mode": "0700",
+  "installed_status_copied_not_mutated": true,
+  "installed_count": 649,
+  "held_count": 0,
+  "half_configured_packages": [],
+  "fixed_ffmpeg": "7:6.1.1-3ubuntu5",
+  "official_signatures_verified": 3,
+  "official_Packages_indexes_verified": 12,
+  "official_existing_input_debs_sha_verified": 233,
+  "solver": {
+    "name": "one",
+    "exit": 0,
+    "command": [
+      "/usr/bin/apt-get",
+      "--simulate",
+      "--no-install-recommends",
+      "--no-remove",
+      "install",
+      "ffmpeg=7:6.1.1-3ubuntu5"
+    ],
+    "config_sha256": "a4e4e4517389b82fd8fdd8361e97818c216f156c7916abc6f7c2f6dc817b3c44",
+    "preferences_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "Inst_count": 150,
+    "Conf_count": 150,
+    "Remv_count": 0,
+    "installed_changes": [],
+    "added_only_solution": true,
+    "log_sha256": "c07f4d2b4f56e3a2c4baea2c469c170fddc0bbb3c1e9a91c43cc620482e913e0"
+  },
+  "second_pinned_simulation_run": false,
+  "second_not_needed_reason": "first solution changes no installed package; no removals/holds/configuration actions on existing packages",
+  "added_packages": [
+    {
+      "name": "ffmpeg",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "1a23baace5f2688a47e28119aedae6993cd638e6279a7227dfc52d9a337a1c17",
+      "size": 1878920,
+      "official_pool_path": "pool/universe/f/ffmpeg/ffmpeg_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/ffmpeg_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 2468
+    },
+    {
+      "name": "fontconfig",
+      "version": "2.15.0-1.1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "ddf0aace42b13a5bc38904e848b145b787ea254cddf5213d150254bd654db6e5",
+      "size": 180204,
+      "official_pool_path": "pool/main/f/fontconfig/fontconfig_2.15.0-1.1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/fontconfig_2.15.0-1.1ubuntu2_amd64.deb",
+      "installed_size_KiB": 468
+    },
+    {
+      "name": "libasound2-data",
+      "version": "1.2.11-1ubuntu0.3",
+      "architecture": "all",
+      "sha256": "0c26896193480d9dbb055e85e8ddfb9c9f34cf19afee340987cd6311e2886fc1",
+      "size": 21350,
+      "official_pool_path": "pool/main/a/alsa-lib/libasound2-data_1.2.11-1ubuntu0.3_all.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libasound2-data_1.2.11-1ubuntu0.3_all.deb",
+      "installed_size_KiB": 197
+    },
+    {
+      "name": "libasound2t64",
+      "version": "1.2.11-1ubuntu0.3",
+      "architecture": "amd64",
+      "sha256": "5d17bfb5683eb99f1be951fe48e1be5bf3c52391913b6b74a8aecf9b4f5e779f",
+      "size": 397772,
+      "official_pool_path": "pool/main/a/alsa-lib/libasound2t64_1.2.11-1ubuntu0.3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libasound2t64_1.2.11-1ubuntu0.3_amd64.deb",
+      "installed_size_KiB": 1171
+    },
+    {
+      "name": "libass9",
+      "version": "1:0.17.1-2build1",
+      "architecture": "amd64",
+      "sha256": "a3dd7b4e6fa05d0d6607739b3c1f60a305f2fb78d9f6e8b8e38d10d0b4fc4052",
+      "size": 103874,
+      "official_pool_path": "pool/universe/liba/libass/libass9_0.17.1-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libass9_1%3a0.17.1-2build1_amd64.deb",
+      "installed_size_KiB": 241
+    },
+    {
+      "name": "libasyncns0",
+      "version": "0.8-6build4",
+      "architecture": "amd64",
+      "sha256": "f8483917fd216e248143eba1c80dfc9384b94fb4dac402194a98c11505674269",
+      "size": 11276,
+      "official_pool_path": "pool/main/liba/libasyncns/libasyncns0_0.8-6build4_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libasyncns0_0.8-6build4_amd64.deb",
+      "installed_size_KiB": 42
+    },
+    {
+      "name": "libavc1394-0",
+      "version": "0.5.4-5build3",
+      "architecture": "amd64",
+      "sha256": "28141f0e1a2011deef364a931b4a0fb9ab053416320ed7fd0b8747f251e6e5d7",
+      "size": 15442,
+      "official_pool_path": "pool/main/liba/libavc1394/libavc1394-0_0.5.4-5build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libavc1394-0_0.5.4-5build3_amd64.deb",
+      "installed_size_KiB": 61
+    },
+    {
+      "name": "libavcodec60",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "970d92c1697f762235af439d72df8c6cb492be45050a1a00bbe0d0842a137f93",
+      "size": 5851220,
+      "official_pool_path": "pool/universe/f/ffmpeg/libavcodec60_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libavcodec60_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 16237
+    },
+    {
+      "name": "libavdevice60",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "62c55a1209332142eb01488894b3443060e59b44940189469ac7f8fbe03406ca",
+      "size": 82320,
+      "official_pool_path": "pool/universe/f/ffmpeg/libavdevice60_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libavdevice60_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 270
+    },
+    {
+      "name": "libavfilter9",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "083b800aaf4fd1de817fb8dc12995e6a277c3500159c4a0fa21d36a76b6208ea",
+      "size": 4235172,
+      "official_pool_path": "pool/universe/f/ffmpeg/libavfilter9_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libavfilter9_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 13300
+    },
+    {
+      "name": "libavformat60",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "3a855488d50b4ebe04425e5f690e00ebd65d70e60f85c9765d5823a2f82b4969",
+      "size": 1153444,
+      "official_pool_path": "pool/universe/f/ffmpeg/libavformat60_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libavformat60_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 2848
+    },
+    {
+      "name": "libavutil58",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "e57f8cc358f4b1b2af721ca6242723dc12290df543a142811ce7747e2d5b30cc",
+      "size": 401184,
+      "official_pool_path": "pool/universe/f/ffmpeg/libavutil58_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libavutil58_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 1152
+    },
+    {
+      "name": "libblas3",
+      "version": "3.12.0-3build1.1",
+      "architecture": "amd64",
+      "sha256": "1b0ef0ad0893ff77bf7d5ab75723771788e16137ea1efde557dbac7b7b83a758",
+      "size": 237978,
+      "official_pool_path": "pool/main/l/lapack/libblas3_3.12.0-3build1.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libblas3_3.12.0-3build1.1_amd64.deb",
+      "installed_size_KiB": 689
+    },
+    {
+      "name": "libbluray2",
+      "version": "1:1.3.4-1build1",
+      "architecture": "amd64",
+      "sha256": "2cfb2a7e4b6170efcfb96e0dbe3e9321b648acc43883ab4e7c248216de18ea6f",
+      "size": 159390,
+      "official_pool_path": "pool/universe/libb/libbluray/libbluray2_1.3.4-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libbluray2_1%3a1.3.4-1build1_amd64.deb",
+      "installed_size_KiB": 387
+    },
+    {
+      "name": "libbs2b0",
+      "version": "3.1.0+dfsg-7build1",
+      "architecture": "amd64",
+      "sha256": "67d8af009d520e0b6f63e39d6d04d8c02e681f89858fb301b808a6c356068e2c",
+      "size": 10556,
+      "official_pool_path": "pool/universe/libb/libbs2b/libbs2b0_3.1.0+dfsg-7build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libbs2b0_3.1.0+dfsg-7build1_amd64.deb",
+      "installed_size_KiB": 40
+    },
+    {
+      "name": "libcaca0",
+      "version": "0.99.beta20-4ubuntu0.2",
+      "architecture": "amd64",
+      "sha256": "f8ba81982beda87da75bef9a1035a2ff34479d613dfea757440442ae9d58c7af",
+      "size": 208666,
+      "official_pool_path": "pool/main/libc/libcaca/libcaca0_0.99.beta20-4ubuntu0.2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libcaca0_0.99.beta20-4ubuntu0.2_amd64.deb",
+      "installed_size_KiB": 885
+    },
+    {
+      "name": "libcairo-gobject2",
+      "version": "1.18.0-3build1",
+      "architecture": "amd64",
+      "sha256": "f5483cbe43455fc9e9cba7f0e166bd0a731c02db2902ba562719848f72e8c403",
+      "size": 126788,
+      "official_pool_path": "pool/main/c/cairo/libcairo-gobject2_1.18.0-3build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libcairo-gobject2_1.18.0-3build1_amd64.deb",
+      "installed_size_KiB": 195
+    },
+    {
+      "name": "libcairo2",
+      "version": "1.18.0-3build1",
+      "architecture": "amd64",
+      "sha256": "96950b306889ff6e4248bb937b0a3b56e72dacf643fe732214ce375f0f6bbb36",
+      "size": 566292,
+      "official_pool_path": "pool/main/c/cairo/libcairo2_1.18.0-3build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libcairo2_1.18.0-3build1_amd64.deb",
+      "installed_size_KiB": 1350
+    },
+    {
+      "name": "libcdio-cdda2t64",
+      "version": "10.2+2.0.1-1.1build2",
+      "architecture": "amd64",
+      "sha256": "9651b439c9f8134052602cf5c03c5216e826bc6782a07baf1745d4dac411b109",
+      "size": 16486,
+      "official_pool_path": "pool/main/libc/libcdio-paranoia/libcdio-cdda2t64_10.2+2.0.1-1.1build2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libcdio-cdda2t64_10.2+2.0.1-1.1build2_amd64.deb",
+      "installed_size_KiB": 55
+    },
+    {
+      "name": "libcdio-paranoia2t64",
+      "version": "10.2+2.0.1-1.1build2",
+      "architecture": "amd64",
+      "sha256": "4ca9df983c50971bf42a60ffb9072faa4b6af785bd0e3592d3511f37cc540503",
+      "size": 16570,
+      "official_pool_path": "pool/main/libc/libcdio-paranoia/libcdio-paranoia2t64_10.2+2.0.1-1.1build2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libcdio-paranoia2t64_10.2+2.0.1-1.1build2_amd64.deb",
+      "installed_size_KiB": 54
+    },
+    {
+      "name": "libcdio19t64",
+      "version": "2.1.0-4.1ubuntu1.2",
+      "architecture": "amd64",
+      "sha256": "afe010f4b8fd43751e774889347d9f271bb327f3ba4a402443e679e0a6ebe50d",
+      "size": 62360,
+      "official_pool_path": "pool/main/libc/libcdio/libcdio19t64_2.1.0-4.1ubuntu1.2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libcdio19t64_2.1.0-4.1ubuntu1.2_amd64.deb",
+      "installed_size_KiB": 181
+    },
+    {
+      "name": "libchromaprint1",
+      "version": "1.5.1-5",
+      "architecture": "amd64",
+      "sha256": "ff766f8382fff4e5d3b267e4cb93f31e1805ebbb9a619cc8c805b9a2355baeea",
+      "size": 30524,
+      "official_pool_path": "pool/universe/c/chromaprint/libchromaprint1_1.5.1-5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libchromaprint1_1.5.1-5_amd64.deb",
+      "installed_size_KiB": 80
+    },
+    {
+      "name": "libcjson1",
+      "version": "1.7.17-1",
+      "architecture": "amd64",
+      "sha256": "43d758e214612877ec9029f2384bdbb0a6eeba6e74bb2cd3e7a60f4108947c41",
+      "size": 24762,
+      "official_pool_path": "pool/universe/c/cjson/libcjson1_1.7.17-1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libcjson1_1.7.17-1_amd64.deb",
+      "installed_size_KiB": 82
+    },
+    {
+      "name": "libcodec2-1.2",
+      "version": "1.2.0-2build1",
+      "architecture": "amd64",
+      "sha256": "675a16e7260cc6773a325b9688c29f29fb7089f5780bc5360154ed6136d6331b",
+      "size": 8998330,
+      "official_pool_path": "pool/universe/c/codec2/libcodec2-1.2_1.2.0-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libcodec2-1.2_1.2.0-2build1_amd64.deb",
+      "installed_size_KiB": 16462
+    },
+    {
+      "name": "libdatrie1",
+      "version": "0.2.13-3build1",
+      "architecture": "amd64",
+      "sha256": "1ae164e40e413eac4fbd38ce1c6ef9591f7a03278ad9076d71fa29258727f447",
+      "size": 18992,
+      "official_pool_path": "pool/main/libd/libdatrie/libdatrie1_0.2.13-3build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libdatrie1_0.2.13-3build1_amd64.deb",
+      "installed_size_KiB": 54
+    },
+    {
+      "name": "libdav1d7",
+      "version": "1.4.1-1build1",
+      "architecture": "amd64",
+      "sha256": "7246303bd3ed4b99a2fb98e6199950ceb2520e7572265aefa0a6e44352adb3f0",
+      "size": 604018,
+      "official_pool_path": "pool/universe/d/dav1d/libdav1d7_1.4.1-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libdav1d7_1.4.1-1build1_amd64.deb",
+      "installed_size_KiB": 1702
+    },
+    {
+      "name": "libdc1394-25",
+      "version": "2.2.6-4build1",
+      "architecture": "amd64",
+      "sha256": "0f4a0768152636f2f941d3a29d24925be77f869b3d90a13f1694fef792a89810",
+      "size": 90084,
+      "official_pool_path": "pool/universe/libd/libdc1394/libdc1394-25_2.2.6-4build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libdc1394-25_2.2.6-4build1_amd64.deb",
+      "installed_size_KiB": 251
+    },
+    {
+      "name": "libdecor-0-0",
+      "version": "0.2.2-1build2",
+      "architecture": "amd64",
+      "sha256": "64bf085d16e504e9ed39b91d2a46748fb8881ad7f3603fbacef6c11c04aa7064",
+      "size": 16508,
+      "official_pool_path": "pool/main/libd/libdecor-0/libdecor-0-0_0.2.2-1build2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libdecor-0-0_0.2.2-1build2_amd64.deb",
+      "installed_size_KiB": 58
+    },
+    {
+      "name": "libdrm-amdgpu1",
+      "version": "2.4.125-1ubuntu0.1~24.04.2",
+      "architecture": "amd64",
+      "sha256": "aa29b7898bae596bf07e55ba178cf8d5ea698fe83688e1b34520d86010251a7a",
+      "size": 21374,
+      "official_pool_path": "pool/main/libd/libdrm/libdrm-amdgpu1_2.4.125-1ubuntu0.1~24.04.2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libdrm-amdgpu1_2.4.125-1ubuntu0.1~24.04.2_amd64.deb",
+      "installed_size_KiB": 81
+    },
+    {
+      "name": "libdrm-intel1",
+      "version": "2.4.125-1ubuntu0.1~24.04.2",
+      "architecture": "amd64",
+      "sha256": "847195765b9ef7e7886677aeae9987aa54e496758b4e6e5a4ed2cb580b252244",
+      "size": 63868,
+      "official_pool_path": "pool/main/libd/libdrm/libdrm-intel1_2.4.125-1ubuntu0.1~24.04.2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libdrm-intel1_2.4.125-1ubuntu0.1~24.04.2_amd64.deb",
+      "installed_size_KiB": 174
+    },
+    {
+      "name": "libfftw3-double3",
+      "version": "3.3.10-1ubuntu3",
+      "architecture": "amd64",
+      "sha256": "ff9396076103b305efe741e9acff11d52a040c6d95527c0f2dbd11e82a11bab8",
+      "size": 838254,
+      "official_pool_path": "pool/main/f/fftw3/libfftw3-double3_3.3.10-1ubuntu3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libfftw3-double3_3.3.10-1ubuntu3_amd64.deb",
+      "installed_size_KiB": 2282
+    },
+    {
+      "name": "libflac12t64",
+      "version": "1.4.3+ds-2.1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "f2396692573407b2fbc92cd83148342d4aec717d42d5e24ac64c471204a0b7a9",
+      "size": 197320,
+      "official_pool_path": "pool/main/f/flac/libflac12t64_1.4.3+ds-2.1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libflac12t64_1.4.3+ds-2.1ubuntu2_amd64.deb",
+      "installed_size_KiB": 440
+    },
+    {
+      "name": "libflite1",
+      "version": "2.2-6build3",
+      "architecture": "amd64",
+      "sha256": "367f1d0da5cd38759a0515eafc27aa133b2d7bf99308cac34831df0212e96b75",
+      "size": 13601102,
+      "official_pool_path": "pool/universe/f/flite/libflite1_2.2-6build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libflite1_2.2-6build3_amd64.deb",
+      "installed_size_KiB": 27522
+    },
+    {
+      "name": "libgbm1",
+      "version": "25.2.8-0ubuntu0.24.04.4",
+      "architecture": "amd64",
+      "sha256": "4bfe348b456db5b445a80e0a3ffb9e9a01b91499bb86e0e568ca3634b134da7e",
+      "size": 34172,
+      "official_pool_path": "pool/main/m/mesa/libgbm1_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgbm1_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "installed_size_KiB": 135
+    },
+    {
+      "name": "libgdk-pixbuf-2.0-0",
+      "version": "2.42.10+dfsg-3ubuntu3.3",
+      "architecture": "amd64",
+      "sha256": "de84e0d777d9c9e39148d8491338e6b8c62bc2d066867266b1643a7a725a86ba",
+      "size": 147442,
+      "official_pool_path": "pool/main/g/gdk-pixbuf/libgdk-pixbuf-2.0-0_2.42.10+dfsg-3ubuntu3.3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgdk-pixbuf-2.0-0_2.42.10+dfsg-3ubuntu3.3_amd64.deb",
+      "installed_size_KiB": 490
+    },
+    {
+      "name": "libgdk-pixbuf2.0-common",
+      "version": "2.42.10+dfsg-3ubuntu3.3",
+      "architecture": "all",
+      "sha256": "57f24caf1fe608d009933591bdbbf70851a4dbee8b75e9c097f68f57a9a72e07",
+      "size": 8302,
+      "official_pool_path": "pool/main/g/gdk-pixbuf/libgdk-pixbuf2.0-common_2.42.10+dfsg-3ubuntu3.3_all.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgdk-pixbuf2.0-common_2.42.10+dfsg-3ubuntu3.3_all.deb",
+      "installed_size_KiB": 48
+    },
+    {
+      "name": "libgfortran5",
+      "version": "14.2.0-4ubuntu2~24.04.1",
+      "architecture": "amd64",
+      "sha256": "2b05896c477275ad3473bb63a5ac5a5b8a7e4a6ad6ed7cb23c442ccd1abc28f5",
+      "size": 916316,
+      "official_pool_path": "pool/main/g/gcc-14/libgfortran5_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgfortran5_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+      "installed_size_KiB": 3256
+    },
+    {
+      "name": "libgl1",
+      "version": "1.7.0-1build1",
+      "architecture": "amd64",
+      "sha256": "e2b2fadeb883f073b566ad1d7874f6702397514d258473e96152a89d4d502a09",
+      "size": 101990,
+      "official_pool_path": "pool/main/libg/libglvnd/libgl1_1.7.0-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgl1_1.7.0-1build1_amd64.deb",
+      "installed_size_KiB": 656
+    },
+    {
+      "name": "libgl1-mesa-dri",
+      "version": "25.2.8-0ubuntu0.24.04.4",
+      "architecture": "amd64",
+      "sha256": "2dabbe4292b201ca07b38c0672352f68dbfc55b5850f96f89ef54d3b4b6c8a59",
+      "size": 37950,
+      "official_pool_path": "pool/main/m/mesa/libgl1-mesa-dri_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgl1-mesa-dri_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "installed_size_KiB": 286
+    },
+    {
+      "name": "libglvnd0",
+      "version": "1.7.0-1build1",
+      "architecture": "amd64",
+      "sha256": "33f5e07c74f73c2bfb44086ae0f9e6da52acd6c104d30ffe8fd768d8253d5e82",
+      "size": 69594,
+      "official_pool_path": "pool/main/libg/libglvnd/libglvnd0_1.7.0-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libglvnd0_1.7.0-1build1_amd64.deb",
+      "installed_size_KiB": 728
+    },
+    {
+      "name": "libglx-mesa0",
+      "version": "25.2.8-0ubuntu0.24.04.4",
+      "architecture": "amd64",
+      "sha256": "5aa6164059989d476b15caa8ade892b1dec37593934dc4f617ece7ea0d639bc0",
+      "size": 110128,
+      "official_pool_path": "pool/main/m/mesa/libglx-mesa0_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libglx-mesa0_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "installed_size_KiB": 352
+    },
+    {
+      "name": "libglx0",
+      "version": "1.7.0-1build1",
+      "architecture": "amd64",
+      "sha256": "aa4953182f30abde90cb5b072e83d7286b557b325769b8686196a7bd396d8795",
+      "size": 38558,
+      "official_pool_path": "pool/main/libg/libglvnd/libglx0_1.7.0-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libglx0_1.7.0-1build1_amd64.deb",
+      "installed_size_KiB": 158
+    },
+    {
+      "name": "libgme0",
+      "version": "0.6.3-7build1",
+      "architecture": "amd64",
+      "sha256": "a54fa608501f87f9e5064b60c75fc1bb62735c9f9ba9f7680cb804bb5eae2027",
+      "size": 134050,
+      "official_pool_path": "pool/universe/g/game-music-emu/libgme0_0.6.3-7build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgme0_0.6.3-7build1_amd64.deb",
+      "installed_size_KiB": 317
+    },
+    {
+      "name": "libgomp1",
+      "version": "14.2.0-4ubuntu2~24.04.1",
+      "architecture": "amd64",
+      "sha256": "e8a95ec58125b4933597f30ff56c2ae10edf90f287262e366d4b6edea3019144",
+      "size": 148062,
+      "official_pool_path": "pool/main/g/gcc-14/libgomp1_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgomp1_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+      "installed_size_KiB": 373
+    },
+    {
+      "name": "libgraphite2-3",
+      "version": "1.3.14-2ubuntu0.24.04.1",
+      "architecture": "amd64",
+      "sha256": "2413ea0f6670d6610ee7c2f550551d69fa341f4b9c78e20eb397f0d1bbe914cb",
+      "size": 73352,
+      "official_pool_path": "pool/main/g/graphite2/libgraphite2-3_1.3.14-2ubuntu0.24.04.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgraphite2-3_1.3.14-2ubuntu0.24.04.1_amd64.deb",
+      "installed_size_KiB": 171
+    },
+    {
+      "name": "libgsm1",
+      "version": "1.0.22-1build1",
+      "architecture": "amd64",
+      "sha256": "8cc765587a3275e861f166a98b4b79dd8d5c673f97e17967945ab4d1eb89c89a",
+      "size": 27810,
+      "official_pool_path": "pool/universe/libg/libgsm/libgsm1_1.0.22-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libgsm1_1.0.22-1build1_amd64.deb",
+      "installed_size_KiB": 82
+    },
+    {
+      "name": "libharfbuzz0b",
+      "version": "8.3.0-2build2",
+      "architecture": "amd64",
+      "sha256": "d6f7eea2244f98aa0463a056680d4629476bf624767ede301560e24add686b5c",
+      "size": 468874,
+      "official_pool_path": "pool/main/h/harfbuzz/libharfbuzz0b_8.3.0-2build2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libharfbuzz0b_8.3.0-2build2_amd64.deb",
+      "installed_size_KiB": 1140
+    },
+    {
+      "name": "libhwy1t64",
+      "version": "1.0.7-8.1build1",
+      "architecture": "amd64",
+      "sha256": "c092b1ea155d81a5985073f867e1479c48c5c6efe4adc1bfcdde27e5d2b8b89d",
+      "size": 584050,
+      "official_pool_path": "pool/universe/h/highway/libhwy1t64_1.0.7-8.1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libhwy1t64_1.0.7-8.1build1_amd64.deb",
+      "installed_size_KiB": 3343
+    },
+    {
+      "name": "libiec61883-0",
+      "version": "1.2.0-6build1",
+      "architecture": "amd64",
+      "sha256": "a47c6ec10068f1fc37a334949f6174f7ecbf0889bfde9d36baea8d403d76a727",
+      "size": 24546,
+      "official_pool_path": "pool/main/libi/libiec61883/libiec61883-0_1.2.0-6build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libiec61883-0_1.2.0-6build1_amd64.deb",
+      "installed_size_KiB": 78
+    },
+    {
+      "name": "libjack-jackd2-0",
+      "version": "1.9.21~dfsg-3ubuntu3",
+      "architecture": "amd64",
+      "sha256": "4fc5f4d0fbf2602df59bbed3ea504742bdcc7f899d7b32f6b2fd446ceb1fdf7d",
+      "size": 288676,
+      "official_pool_path": "pool/main/j/jackd2/libjack-jackd2-0_1.9.21~dfsg-3ubuntu3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libjack-jackd2-0_1.9.21~dfsg-3ubuntu3_amd64.deb",
+      "installed_size_KiB": 1131
+    },
+    {
+      "name": "libjxl0.7",
+      "version": "0.7.0-10.2ubuntu6.1",
+      "architecture": "amd64",
+      "sha256": "dc4a6436f7ab5e887c157d70a2784494be0db43b55fbb3a00d87d6385057f51d",
+      "size": 1001370,
+      "official_pool_path": "pool/universe/j/jpeg-xl/libjxl0.7_0.7.0-10.2ubuntu6.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libjxl0.7_0.7.0-10.2ubuntu6.1_amd64.deb",
+      "installed_size_KiB": 3596
+    },
+    {
+      "name": "liblapack3",
+      "version": "3.12.0-3build1.1",
+      "architecture": "amd64",
+      "sha256": "05ced5049d4fd393e0ae6dc71211e7c07ed0c85e8099649d679cf4b5a1aed59b",
+      "size": 2646422,
+      "official_pool_path": "pool/main/l/lapack/liblapack3_3.12.0-3build1.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/liblapack3_3.12.0-3build1.1_amd64.deb",
+      "installed_size_KiB": 7126
+    },
+    {
+      "name": "liblcms2-2",
+      "version": "2.14-2ubuntu0.1",
+      "architecture": "amd64",
+      "sha256": "f48368ce55ac35c4723a158c74f2c48f4398570d6f3207874e3a14e1cdada71d",
+      "size": 160898,
+      "official_pool_path": "pool/main/l/lcms2/liblcms2-2_2.14-2ubuntu0.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/liblcms2-2_2.14-2ubuntu0.1_amd64.deb",
+      "installed_size_KiB": 420
+    },
+    {
+      "name": "liblilv-0-0",
+      "version": "0.24.22-1build1",
+      "architecture": "amd64",
+      "sha256": "5fd6b6861a021e8148c9086d36b70eea28a503dd4c2f2b922f56789d2967d0ad",
+      "size": 40976,
+      "official_pool_path": "pool/universe/l/lilv/liblilv-0-0_0.24.22-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/liblilv-0-0_0.24.22-1build1_amd64.deb",
+      "installed_size_KiB": 121
+    },
+    {
+      "name": "libllvm20",
+      "version": "1:20.1.2-0ubuntu1~24.04.3",
+      "architecture": "amd64",
+      "sha256": "f018e71c72c7a4742fb1aff9dc98b45586f42e6ea464d4918af7e3772b7f0658",
+      "size": 30574382,
+      "official_pool_path": "pool/main/l/llvm-toolchain-20/libllvm20_20.1.2-0ubuntu1~24.04.3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libllvm20_1%3a20.1.2-0ubuntu1~24.04.3_amd64.deb",
+      "installed_size_KiB": 140245
+    },
+    {
+      "name": "libmbedcrypto7t64",
+      "version": "2.28.8-1",
+      "architecture": "amd64",
+      "sha256": "1f0b795a2274f68edddaf2567d738fcee43383c2c4ba802d54ba3b710bbb3228",
+      "size": 209262,
+      "official_pool_path": "pool/universe/m/mbedtls/libmbedcrypto7t64_2.28.8-1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libmbedcrypto7t64_2.28.8-1_amd64.deb",
+      "installed_size_KiB": 528
+    },
+    {
+      "name": "libmp3lame0",
+      "version": "3.100-6build1",
+      "architecture": "amd64",
+      "sha256": "d739e9a3565f98b8b72a9e203a9a537bd1090af6cafb94c98adf8e27f9d3fb94",
+      "size": 142342,
+      "official_pool_path": "pool/main/l/lame/libmp3lame0_3.100-6build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libmp3lame0_3.100-6build1_amd64.deb",
+      "installed_size_KiB": 318
+    },
+    {
+      "name": "libmpg123-0t64",
+      "version": "1.32.5-1ubuntu1.1",
+      "architecture": "amd64",
+      "sha256": "bbe32128e3358f141f9f58ef6e76a7bef3e07d09165203665d30fdc27372b418",
+      "size": 169494,
+      "official_pool_path": "pool/main/m/mpg123/libmpg123-0t64_1.32.5-1ubuntu1.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libmpg123-0t64_1.32.5-1ubuntu1.1_amd64.deb",
+      "installed_size_KiB": 391
+    },
+    {
+      "name": "libmysofa1",
+      "version": "1.3.2+dfsg-2ubuntu2",
+      "architecture": "amd64",
+      "sha256": "a3b5bb4bcc6ce996700f0120722b1c10af08e9dd1e0d497782edcea90079d4af",
+      "size": 1157872,
+      "official_pool_path": "pool/universe/libm/libmysofa/libmysofa1_1.3.2+dfsg-2ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libmysofa1_1.3.2+dfsg-2ubuntu2_amd64.deb",
+      "installed_size_KiB": 1267
+    },
+    {
+      "name": "libnorm1t64",
+      "version": "1.5.9+dfsg-3.1build1",
+      "architecture": "amd64",
+      "sha256": "0ff2047ae4ccf2d1b5f338922f98a8652344ee1c0f18dc80a419753d06582cc6",
+      "size": 153694,
+      "official_pool_path": "pool/universe/n/norm/libnorm1t64_1.5.9+dfsg-3.1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libnorm1t64_1.5.9+dfsg-3.1build1_amd64.deb",
+      "installed_size_KiB": 388
+    },
+    {
+      "name": "libogg0",
+      "version": "1.3.5-3build1",
+      "architecture": "amd64",
+      "sha256": "fbdb2fedbafb02c3f07f2c2ddeb4018b5e94e13462f93fbececdcefc06fe2ac1",
+      "size": 22686,
+      "official_pool_path": "pool/main/libo/libogg/libogg0_1.3.5-3build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libogg0_1.3.5-3build1_amd64.deb",
+      "installed_size_KiB": 55
+    },
+    {
+      "name": "libopenal-data",
+      "version": "1:1.23.1-4build1",
+      "architecture": "all",
+      "sha256": "0de2f2b7a29fa337432fa044ce6c238bc511b83dac14d68a32673d9803cbab83",
+      "size": 160710,
+      "official_pool_path": "pool/universe/o/openal-soft/libopenal-data_1.23.1-4build1_all.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libopenal-data_1%3a1.23.1-4build1_all.deb",
+      "installed_size_KiB": 256
+    },
+    {
+      "name": "libopenal1",
+      "version": "1:1.23.1-4build1",
+      "architecture": "amd64",
+      "sha256": "1781774a540ab7c9baccc41b49592e3b427c5820c64e390af4868d6a861ef8c7",
+      "size": 540202,
+      "official_pool_path": "pool/universe/o/openal-soft/libopenal1_1.23.1-4build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libopenal1_1%3a1.23.1-4build1_amd64.deb",
+      "installed_size_KiB": 1196
+    },
+    {
+      "name": "libopenjp2-7",
+      "version": "2.5.0-2ubuntu0.5",
+      "architecture": "amd64",
+      "sha256": "24b92ce9c4b306f5370e768024d35ec565792001678b510f0d40b6395b43524f",
+      "size": 173572,
+      "official_pool_path": "pool/main/o/openjpeg2/libopenjp2-7_2.5.0-2ubuntu0.5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libopenjp2-7_2.5.0-2ubuntu0.5_amd64.deb",
+      "installed_size_KiB": 441
+    },
+    {
+      "name": "libopenmpt0t64",
+      "version": "0.7.3-1.1build3",
+      "architecture": "amd64",
+      "sha256": "512814f1ebdf8fe31b8185826ba08f7933998b7a7ac1599fac39717dbaaae6ff",
+      "size": 647356,
+      "official_pool_path": "pool/universe/libo/libopenmpt/libopenmpt0t64_0.7.3-1.1build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libopenmpt0t64_0.7.3-1.1build3_amd64.deb",
+      "installed_size_KiB": 1596
+    },
+    {
+      "name": "libopus0",
+      "version": "1.4-1build1",
+      "architecture": "amd64",
+      "sha256": "6d8da32a832e655c9603543b47a0bc90c6f60bdee0c00fe7499bd50acad566cf",
+      "size": 208122,
+      "official_pool_path": "pool/main/o/opus/libopus0_1.4-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libopus0_1.4-1build1_amd64.deb",
+      "installed_size_KiB": 405
+    },
+    {
+      "name": "libpango-1.0-0",
+      "version": "1.52.1+ds-1build1",
+      "architecture": "amd64",
+      "sha256": "09dfa5c881ab273ec6bc1830adcefdc407fcd619316e68fb26ca3a23d0fc9f54",
+      "size": 230606,
+      "official_pool_path": "pool/main/p/pango1.0/libpango-1.0-0_1.52.1+ds-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpango-1.0-0_1.52.1+ds-1build1_amd64.deb",
+      "installed_size_KiB": 530
+    },
+    {
+      "name": "libpangocairo-1.0-0",
+      "version": "1.52.1+ds-1build1",
+      "architecture": "amd64",
+      "sha256": "98cf5fc9076c2911fe20dfc1e41cd8f686a2bb5d539b1105fab18105b0db1376",
+      "size": 28828,
+      "official_pool_path": "pool/main/p/pango1.0/libpangocairo-1.0-0_1.52.1+ds-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpangocairo-1.0-0_1.52.1+ds-1build1_amd64.deb",
+      "installed_size_KiB": 108
+    },
+    {
+      "name": "libpangoft2-1.0-0",
+      "version": "1.52.1+ds-1build1",
+      "architecture": "amd64",
+      "sha256": "cc6bc9d86ef5f329edacaa4895232d8a9b8f95c5cbc77c3c460a3f64cecc213d",
+      "size": 42532,
+      "official_pool_path": "pool/main/p/pango1.0/libpangoft2-1.0-0_1.52.1+ds-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpangoft2-1.0-0_1.52.1+ds-1build1_amd64.deb",
+      "installed_size_KiB": 150
+    },
+    {
+      "name": "libpciaccess0",
+      "version": "0.17-3ubuntu0.24.04.3",
+      "architecture": "amd64",
+      "sha256": "87a3b1c2a09f54d229e5e1f5424adc806e8f99bbb8aa8c8dea114b727f7a5a96",
+      "size": 19220,
+      "official_pool_path": "pool/main/libp/libpciaccess/libpciaccess0_0.17-3ubuntu0.24.04.3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpciaccess0_0.17-3ubuntu0.24.04.3_amd64.deb",
+      "installed_size_KiB": 61
+    },
+    {
+      "name": "libpgm-5.3-0t64",
+      "version": "5.3.128~dfsg-2.1build1",
+      "architecture": "amd64",
+      "sha256": "9382625866a207b3da34f541799d10203a5693e5928c8d08f6d10be1c545d0a5",
+      "size": 166620,
+      "official_pool_path": "pool/universe/libp/libpgm/libpgm-5.3-0t64_5.3.128~dfsg-2.1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpgm-5.3-0t64_5.3.128~dfsg-2.1build1_amd64.deb",
+      "installed_size_KiB": 303
+    },
+    {
+      "name": "libpixman-1-0",
+      "version": "0.42.2-1build1",
+      "architecture": "amd64",
+      "sha256": "d9c2931c4c424615eeab9dd5ae08bfc608b84e803c1d3ccddf319270db213421",
+      "size": 279306,
+      "official_pool_path": "pool/main/p/pixman/libpixman-1-0_0.42.2-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpixman-1-0_0.42.2-1build1_amd64.deb",
+      "installed_size_KiB": 719
+    },
+    {
+      "name": "libplacebo338",
+      "version": "6.338.2-2build1",
+      "architecture": "amd64",
+      "sha256": "9c173df229673887df3cce7d4a26de15f7477a62cd1391f9a88c346018ecad1f",
+      "size": 2654026,
+      "official_pool_path": "pool/universe/libp/libplacebo/libplacebo338_6.338.2-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libplacebo338_6.338.2-2build1_amd64.deb",
+      "installed_size_KiB": 8660
+    },
+    {
+      "name": "libpocketsphinx3",
+      "version": "0.8.0+real5prealpha+1-15ubuntu5",
+      "architecture": "amd64",
+      "sha256": "26987384225666ec8d065fa05e484be9cd5967e28ac3bda20d1f818617e2b930",
+      "size": 132898,
+      "official_pool_path": "pool/universe/p/pocketsphinx/libpocketsphinx3_0.8.0+real5prealpha+1-15ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpocketsphinx3_0.8.0+real5prealpha+1-15ubuntu5_amd64.deb",
+      "installed_size_KiB": 306
+    },
+    {
+      "name": "libpostproc57",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "f0984bf6bff85dc29a44f650841b01a0594775f628b7a4bf5dd45d85d82cb2a7",
+      "size": 49884,
+      "official_pool_path": "pool/universe/f/ffmpeg/libpostproc57_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpostproc57_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 149
+    },
+    {
+      "name": "libpulse0",
+      "version": "1:16.1+dfsg1-2ubuntu10.1",
+      "architecture": "amd64",
+      "sha256": "b8d52aa6c2f74ae99e749c9f98d6ad2dbf924fd422371ac469725245cdd919fc",
+      "size": 292098,
+      "official_pool_path": "pool/main/p/pulseaudio/libpulse0_16.1+dfsg1-2ubuntu10.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libpulse0_1%3a16.1+dfsg1-2ubuntu10.1_amd64.deb",
+      "installed_size_KiB": 923
+    },
+    {
+      "name": "librabbitmq4",
+      "version": "0.11.0-1ubuntu0.2",
+      "architecture": "amd64",
+      "sha256": "37a300e68d3de6e60c98969d561adf718e3eddc388a0b4d922ce15f391fe3a22",
+      "size": 38306,
+      "official_pool_path": "pool/main/libr/librabbitmq/librabbitmq4_0.11.0-1ubuntu0.2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/librabbitmq4_0.11.0-1ubuntu0.2_amd64.deb",
+      "installed_size_KiB": 111
+    },
+    {
+      "name": "librav1e0",
+      "version": "0.7.1-2",
+      "architecture": "amd64",
+      "sha256": "be10d7e2dc028d9d7791997a8710b7a9a3147151613750f0f08963fbe9ac993c",
+      "size": 1021698,
+      "official_pool_path": "pool/universe/r/rust-rav1e/librav1e0_0.7.1-2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/librav1e0_0.7.1-2_amd64.deb",
+      "installed_size_KiB": 3237
+    },
+    {
+      "name": "libraw1394-11",
+      "version": "2.1.2-2build3",
+      "architecture": "amd64",
+      "sha256": "0a6c9d979bd0301175340546a832c6dd4e94164eff9c4bcabcae97fb0dcf215b",
+      "size": 26192,
+      "official_pool_path": "pool/main/libr/libraw1394/libraw1394-11_2.1.2-2build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libraw1394-11_2.1.2-2build3_amd64.deb",
+      "installed_size_KiB": 83
+    },
+    {
+      "name": "librist4",
+      "version": "0.2.10+dfsg-2",
+      "architecture": "amd64",
+      "sha256": "c8050889949e75064db8c9c25c7e41d4d2a79be7a60e6537f9d9ab54774495dd",
+      "size": 74894,
+      "official_pool_path": "pool/universe/libr/librist/librist4_0.2.10+dfsg-2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/librist4_0.2.10+dfsg-2_amd64.deb",
+      "installed_size_KiB": 187
+    },
+    {
+      "name": "librsvg2-2",
+      "version": "2.58.0+dfsg-1ubuntu0.1",
+      "architecture": "amd64",
+      "sha256": "47aa51a12ecc102b6dc867fe34319fcf6fa590c44bd8a3e22a2c473f3b8dd875",
+      "size": 2140940,
+      "official_pool_path": "pool/main/libr/librsvg/librsvg2-2_2.58.0+dfsg-1ubuntu0.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/librsvg2-2_2.58.0+dfsg-1ubuntu0.1_amd64.deb",
+      "installed_size_KiB": 6631
+    },
+    {
+      "name": "librubberband2",
+      "version": "3.3.0+dfsg-2build1",
+      "architecture": "amd64",
+      "sha256": "96ebaf773ad933a5269859cb3b09488b7b0b58387ebfbd7b7c469dd2b32d5d8b",
+      "size": 129894,
+      "official_pool_path": "pool/universe/r/rubberband/librubberband2_3.3.0+dfsg-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/librubberband2_3.3.0+dfsg-2build1_amd64.deb",
+      "installed_size_KiB": 335
+    },
+    {
+      "name": "libsamplerate0",
+      "version": "0.2.2-4build1",
+      "architecture": "amd64",
+      "sha256": "8a389d1cae81860c9fb7cd9641c3f9d38815e80c0379b3181b4317489126f738",
+      "size": 1343954,
+      "official_pool_path": "pool/main/libs/libsamplerate/libsamplerate0_0.2.2-4build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsamplerate0_0.2.2-4build1_amd64.deb",
+      "installed_size_KiB": 1483
+    },
+    {
+      "name": "libsdl2-2.0-0",
+      "version": "2.30.0+dfsg-1ubuntu3.1",
+      "architecture": "amd64",
+      "sha256": "a2e733f1339272f22cf7777d454b5d4f71e27335d89d4c99cf41e1ce1bb5c462",
+      "size": 685580,
+      "official_pool_path": "pool/main/libs/libsdl2/libsdl2-2.0-0_2.30.0+dfsg-1ubuntu3.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsdl2-2.0-0_2.30.0+dfsg-1ubuntu3.1_amd64.deb",
+      "installed_size_KiB": 1983
+    },
+    {
+      "name": "libserd-0-0",
+      "version": "0.32.2-1",
+      "architecture": "amd64",
+      "sha256": "5ede35e66656c136b6a803aebeac92b2c061ec4d147820a730dd9c2a1315f57a",
+      "size": 43568,
+      "official_pool_path": "pool/universe/s/serd/libserd-0-0_0.32.2-1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libserd-0-0_0.32.2-1_amd64.deb",
+      "installed_size_KiB": 115
+    },
+    {
+      "name": "libshine3",
+      "version": "3.1.1-2build1",
+      "architecture": "amd64",
+      "sha256": "88a6e24ebb4be1c085acadb7778076de6980fa7e63b82570e29cc0f8a17a516b",
+      "size": 23170,
+      "official_pool_path": "pool/universe/s/shine/libshine3_3.1.1-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libshine3_3.1.1-2build1_amd64.deb",
+      "installed_size_KiB": 59
+    },
+    {
+      "name": "libsnappy1v5",
+      "version": "1.1.10-1build1",
+      "architecture": "amd64",
+      "sha256": "c44dfa3b8be7c2873efb770890cb282a36a7e59b3b1900cb50d99f92e6be2da5",
+      "size": 28634,
+      "official_pool_path": "pool/main/s/snappy/libsnappy1v5_1.1.10-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsnappy1v5_1.1.10-1build1_amd64.deb",
+      "installed_size_KiB": 89
+    },
+    {
+      "name": "libsndfile1",
+      "version": "1.2.2-1ubuntu5.24.04.1",
+      "architecture": "amd64",
+      "sha256": "fe2461b27e747fa88ede157ea39c6379e2101c280a730cda9c825f566a3808e5",
+      "size": 208508,
+      "official_pool_path": "pool/main/libs/libsndfile/libsndfile1_1.2.2-1ubuntu5.24.04.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsndfile1_1.2.2-1ubuntu5.24.04.1_amd64.deb",
+      "installed_size_KiB": 566
+    },
+    {
+      "name": "libsndio7.0",
+      "version": "1.9.0-0.3build3",
+      "architecture": "amd64",
+      "sha256": "b3944745ee48ea2c7a851fb78a617d34bb731a2f956a2c213cc9dffcaba35382",
+      "size": 29562,
+      "official_pool_path": "pool/universe/s/sndio/libsndio7.0_1.9.0-0.3build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsndio7.0_1.9.0-0.3build3_amd64.deb",
+      "installed_size_KiB": 88
+    },
+    {
+      "name": "libsord-0-0",
+      "version": "0.16.16-2build1",
+      "architecture": "amd64",
+      "sha256": "a330fa014ee2eb48053395fb91fa39d95ca910e582d515254f50ef944240303c",
+      "size": 15820,
+      "official_pool_path": "pool/universe/s/sord/libsord-0-0_0.16.16-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsord-0-0_0.16.16-2build1_amd64.deb",
+      "installed_size_KiB": 54
+    },
+    {
+      "name": "libsoxr0",
+      "version": "0.1.3-4build3",
+      "architecture": "amd64",
+      "sha256": "2ddb6d21ad8ae0c850d380b551f109fc6b50c9a9b62c64ce37607c115bd3382a",
+      "size": 80038,
+      "official_pool_path": "pool/universe/libs/libsoxr/libsoxr0_0.1.3-4build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsoxr0_0.1.3-4build3_amd64.deb",
+      "installed_size_KiB": 209
+    },
+    {
+      "name": "libspeex1",
+      "version": "1.2.1-2ubuntu2.24.04.1",
+      "architecture": "amd64",
+      "sha256": "12d57caab1e3fa847cd385a21c1044f7d38209e97b0f87372fe41e346c2c17f7",
+      "size": 59578,
+      "official_pool_path": "pool/main/s/speex/libspeex1_1.2.1-2ubuntu2.24.04.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libspeex1_1.2.1-2ubuntu2.24.04.1_amd64.deb",
+      "installed_size_KiB": 134
+    },
+    {
+      "name": "libsphinxbase3t64",
+      "version": "0.8+5prealpha+1-17build2",
+      "architecture": "amd64",
+      "sha256": "80c184d04290cd1a55d6abac7c4b9f15bbf736e43a410857f992eba16b005a4c",
+      "size": 125618,
+      "official_pool_path": "pool/universe/s/sphinxbase/libsphinxbase3t64_0.8+5prealpha+1-17build2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsphinxbase3t64_0.8+5prealpha+1-17build2_amd64.deb",
+      "installed_size_KiB": 318
+    },
+    {
+      "name": "libsratom-0-0",
+      "version": "0.6.16-1build1",
+      "architecture": "amd64",
+      "sha256": "a103c98906a7587718dabd52dfcd0af2dff6ff567781100bc8cf07de05bfc30d",
+      "size": 17312,
+      "official_pool_path": "pool/universe/s/sratom/libsratom-0-0_0.6.16-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsratom-0-0_0.6.16-1build1_amd64.deb",
+      "installed_size_KiB": 60
+    },
+    {
+      "name": "libsrt1.5-gnutls",
+      "version": "1.5.3-1build2",
+      "architecture": "amd64",
+      "sha256": "77bf75aaa74be9552d5a3b05349d15dc6e00f3a854a12ad0dfffea0df3bd6523",
+      "size": 316428,
+      "official_pool_path": "pool/universe/s/srt/libsrt1.5-gnutls_1.5.3-1build2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsrt1.5-gnutls_1.5.3-1build2_amd64.deb",
+      "installed_size_KiB": 820
+    },
+    {
+      "name": "libssh-gcrypt-4",
+      "version": "0.10.6-2ubuntu0.5",
+      "architecture": "amd64",
+      "sha256": "ae5179eb5b44c5e258d5bec75dca8578064c0a0956dd0402762e65c8a7b9e208",
+      "size": 225808,
+      "official_pool_path": "pool/main/libs/libssh/libssh-gcrypt-4_0.10.6-2ubuntu0.5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libssh-gcrypt-4_0.10.6-2ubuntu0.5_amd64.deb",
+      "installed_size_KiB": 613
+    },
+    {
+      "name": "libsvtav1enc1d1",
+      "version": "1.7.0+dfsg-2build1",
+      "architecture": "amd64",
+      "sha256": "bac5f768bff928e85cecb39da8e37276a579639ef884692b089ed2de6c1cd2ad",
+      "size": 2424900,
+      "official_pool_path": "pool/universe/s/svt-av1/libsvtav1enc1d1_1.7.0+dfsg-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libsvtav1enc1d1_1.7.0+dfsg-2build1_amd64.deb",
+      "installed_size_KiB": 7049
+    },
+    {
+      "name": "libswresample4",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "d55afe23e07b02b2def1647181a727dfad996001f72b5172da8a99691c3fa208",
+      "size": 63782,
+      "official_pool_path": "pool/universe/f/ffmpeg/libswresample4_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libswresample4_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 197
+    },
+    {
+      "name": "libswscale7",
+      "version": "7:6.1.1-3ubuntu5",
+      "architecture": "amd64",
+      "sha256": "2c17ae58b35112aace5179d7deea51faa20e82e04847b257f339376b11744e22",
+      "size": 192938,
+      "official_pool_path": "pool/universe/f/ffmpeg/libswscale7_6.1.1-3ubuntu5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libswscale7_7%3a6.1.1-3ubuntu5_amd64.deb",
+      "installed_size_KiB": 689
+    },
+    {
+      "name": "libthai-data",
+      "version": "0.1.29-2build1",
+      "architecture": "all",
+      "sha256": "6035d4a714290b97816bed7f3bf64921c6358ddb84d1dacdddccdc1cf39bffb7",
+      "size": 158016,
+      "official_pool_path": "pool/main/libt/libthai/libthai-data_0.1.29-2build1_all.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libthai-data_0.1.29-2build1_all.deb",
+      "installed_size_KiB": 587
+    },
+    {
+      "name": "libthai0",
+      "version": "0.1.29-2build1",
+      "architecture": "amd64",
+      "sha256": "5ada7045c5f84a4b774e6449151800aa6470e8d01dc9d6124ef4a44ae6af5508",
+      "size": 18914,
+      "official_pool_path": "pool/main/libt/libthai/libthai0_0.1.29-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libthai0_0.1.29-2build1_amd64.deb",
+      "installed_size_KiB": 91
+    },
+    {
+      "name": "libtheora0",
+      "version": "1.1.1+dfsg.1-16.1build3",
+      "architecture": "amd64",
+      "sha256": "8514bf3bb1496516b3bd0b2a5fc3ac9ea061e36360dcdfde52d51fa01c437b05",
+      "size": 211470,
+      "official_pool_path": "pool/main/libt/libtheora/libtheora0_1.1.1+dfsg.1-16.1build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libtheora0_1.1.1+dfsg.1-16.1build3_amd64.deb",
+      "installed_size_KiB": 656
+    },
+    {
+      "name": "libtwolame0",
+      "version": "0.4.0-2build3",
+      "architecture": "amd64",
+      "sha256": "0dc3f4ae19623d92eb2c7a131737355cc385047fb8891a6ae380e4884e3442c0",
+      "size": 52338,
+      "official_pool_path": "pool/main/t/twolame/libtwolame0_0.4.0-2build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libtwolame0_0.4.0-2build3_amd64.deb",
+      "installed_size_KiB": 151
+    },
+    {
+      "name": "libudfread0",
+      "version": "1.1.2-1build1",
+      "architecture": "amd64",
+      "sha256": "9340c4bdb5954ed98a81eb7979c25187d0c4d95b633cac29eefe1f5b31c05162",
+      "size": 18980,
+      "official_pool_path": "pool/universe/libu/libudfread/libudfread0_1.1.2-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libudfread0_1.1.2-1build1_amd64.deb",
+      "installed_size_KiB": 59
+    },
+    {
+      "name": "libunibreak5",
+      "version": "5.1-2build1",
+      "architecture": "amd64",
+      "sha256": "62576c95652b6c0a02e3d0fe9e2da6d0666c375d71c43da9d884c77417956ae4",
+      "size": 25012,
+      "official_pool_path": "pool/universe/libu/libunibreak/libunibreak5_5.1-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libunibreak5_5.1-2build1_amd64.deb",
+      "installed_size_KiB": 150
+    },
+    {
+      "name": "libva-drm2",
+      "version": "2.20.0-2ubuntu0.2",
+      "architecture": "amd64",
+      "sha256": "7919c889e0bc8221dcfb595bc0707959354a5404cc1d9b818f85fc43914ca0d4",
+      "size": 7124,
+      "official_pool_path": "pool/universe/libv/libva/libva-drm2_2.20.0-2ubuntu0.2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libva-drm2_2.20.0-2ubuntu0.2_amd64.deb",
+      "installed_size_KiB": 45
+    },
+    {
+      "name": "libva-x11-2",
+      "version": "2.20.0-2ubuntu0.2",
+      "architecture": "amd64",
+      "sha256": "9b13aaf035c6b607885ffaa6688866cf3cb720637909c7c0c9d3bedcd1d723cf",
+      "size": 12028,
+      "official_pool_path": "pool/universe/libv/libva/libva-x11-2_2.20.0-2ubuntu0.2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libva-x11-2_2.20.0-2ubuntu0.2_amd64.deb",
+      "installed_size_KiB": 57
+    },
+    {
+      "name": "libva2",
+      "version": "2.20.0-2ubuntu0.2",
+      "architecture": "amd64",
+      "sha256": "a8ff8d3d16dba715cd24d67c0f8787016194fcee0dee20344a92d057577c0b40",
+      "size": 66362,
+      "official_pool_path": "pool/universe/libv/libva/libva2_2.20.0-2ubuntu0.2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libva2_2.20.0-2ubuntu0.2_amd64.deb",
+      "installed_size_KiB": 219
+    },
+    {
+      "name": "libvdpau1",
+      "version": "1.5-2build1",
+      "architecture": "amd64",
+      "sha256": "a071370329f6dfb954e0cd2ed28cadc17fbf1bdf30f6d1db1e178ad350844fb9",
+      "size": 27836,
+      "official_pool_path": "pool/main/libv/libvdpau/libvdpau1_1.5-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libvdpau1_1.5-2build1_amd64.deb",
+      "installed_size_KiB": 107
+    },
+    {
+      "name": "libvidstab1.1",
+      "version": "1.1.0-2build1",
+      "architecture": "amd64",
+      "sha256": "345caabe592ee7733c2142bdfb3fe18a97da4ee7372f57d574b698d58e3fd431",
+      "size": 38550,
+      "official_pool_path": "pool/universe/libv/libvidstab/libvidstab1.1_1.1.0-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libvidstab1.1_1.1.0-2build1_amd64.deb",
+      "installed_size_KiB": 92
+    },
+    {
+      "name": "libvorbis0a",
+      "version": "1.3.7-1build3",
+      "architecture": "amd64",
+      "sha256": "d704ac0a5dd7a9797a2f2dc86fc8333c9973023b98b3510dcd2f1cc00da3624d",
+      "size": 97554,
+      "official_pool_path": "pool/main/libv/libvorbis/libvorbis0a_1.3.7-1build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libvorbis0a_1.3.7-1build3_amd64.deb",
+      "installed_size_KiB": 204
+    },
+    {
+      "name": "libvorbisenc2",
+      "version": "1.3.7-1build3",
+      "architecture": "amd64",
+      "sha256": "866c561fe81d4430a48c820f4e62f3cd138f4c8c7664f9203f02c1ced2eb55d4",
+      "size": 80818,
+      "official_pool_path": "pool/main/libv/libvorbis/libvorbisenc2_1.3.7-1build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libvorbisenc2_1.3.7-1build3_amd64.deb",
+      "installed_size_KiB": 698
+    },
+    {
+      "name": "libvorbisfile3",
+      "version": "1.3.7-1build3",
+      "architecture": "amd64",
+      "sha256": "fa12c52814bbfddff78186e7300b535bed30db02e4532fafae969aa9e5a79316",
+      "size": 17092,
+      "official_pool_path": "pool/main/libv/libvorbis/libvorbisfile3_1.3.7-1build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libvorbisfile3_1.3.7-1build3_amd64.deb",
+      "installed_size_KiB": 53
+    },
+    {
+      "name": "libvpl2",
+      "version": "2023.3.0-1build1",
+      "architecture": "amd64",
+      "sha256": "4f5d05ce3abb95a45d7b0d1e78e137f2849548dd461feb12d9066d550da0ca70",
+      "size": 99802,
+      "official_pool_path": "pool/universe/o/onevpl/libvpl2_2023.3.0-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libvpl2_2023.3.0-1build1_amd64.deb",
+      "installed_size_KiB": 288
+    },
+    {
+      "name": "libvpx9",
+      "version": "1.14.0-1ubuntu2.3",
+      "architecture": "amd64",
+      "sha256": "a8555944c01f7308f3436b6f109328ebe680969e72066eab0a1f4c82a95e1740",
+      "size": 1143252,
+      "official_pool_path": "pool/main/libv/libvpx/libvpx9_1.14.0-1ubuntu2.3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libvpx9_1.14.0-1ubuntu2.3_amd64.deb",
+      "installed_size_KiB": 3349
+    },
+    {
+      "name": "libvulkan1",
+      "version": "1.3.275.0-1build1",
+      "architecture": "amd64",
+      "sha256": "ccf4fe8f4461442f27ea2494c7ae650b60bd396fec2688b0c44a27d66a222f74",
+      "size": 142010,
+      "official_pool_path": "pool/main/v/vulkan-loader/libvulkan1_1.3.275.0-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libvulkan1_1.3.275.0-1build1_amd64.deb",
+      "installed_size_KiB": 530
+    },
+    {
+      "name": "libwayland-client0",
+      "version": "1.22.0-2.1build1",
+      "architecture": "amd64",
+      "sha256": "6af0aed41d75149bea22fa468f01eb058ffe3e35ef07ff2f13fb88a90387881d",
+      "size": 26406,
+      "official_pool_path": "pool/main/w/wayland/libwayland-client0_1.22.0-2.1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libwayland-client0_1.22.0-2.1build1_amd64.deb",
+      "installed_size_KiB": 82
+    },
+    {
+      "name": "libwayland-cursor0",
+      "version": "1.22.0-2.1build1",
+      "architecture": "amd64",
+      "sha256": "29c20da27e8e37c984cf0518635c11cd0441f4cb6a2919a9f6eee1809171d327",
+      "size": 10406,
+      "official_pool_path": "pool/main/w/wayland/libwayland-cursor0_1.22.0-2.1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libwayland-cursor0_1.22.0-2.1build1_amd64.deb",
+      "installed_size_KiB": 51
+    },
+    {
+      "name": "libwayland-egl1",
+      "version": "1.22.0-2.1build1",
+      "architecture": "amd64",
+      "sha256": "76cd17d2776428e0a0551b8f8fd954eeb3d39ca8ed2f88a38a5e4ce3ce3b2f16",
+      "size": 5628,
+      "official_pool_path": "pool/main/w/wayland/libwayland-egl1_1.22.0-2.1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libwayland-egl1_1.22.0-2.1build1_amd64.deb",
+      "installed_size_KiB": 31
+    },
+    {
+      "name": "libwebpmux3",
+      "version": "1.3.2-0.4build3",
+      "architecture": "amd64",
+      "sha256": "0dd0f2de0fbbda7239209332ddfe512f4383d0489dd3f9fb25398f58c1621724",
+      "size": 25674,
+      "official_pool_path": "pool/main/libw/libwebp/libwebpmux3_1.3.2-0.4build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libwebpmux3_1.3.2-0.4build3_amd64.deb",
+      "installed_size_KiB": 72
+    },
+    {
+      "name": "libx11-xcb1",
+      "version": "2:1.8.7-1ubuntu0.1",
+      "architecture": "amd64",
+      "sha256": "5ce7093e58aaaf753ed0904351a4e07f209e0c282ee8ef4f5f7988d0b40dccc1",
+      "size": 7796,
+      "official_pool_path": "pool/main/libx/libx11/libx11-xcb1_1.8.7-1ubuntu0.1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libx11-xcb1_2%3a1.8.7-1ubuntu0.1_amd64.deb",
+      "installed_size_KiB": 74
+    },
+    {
+      "name": "libx264-164",
+      "version": "2:0.164.3108+git31e19f9-1",
+      "architecture": "amd64",
+      "sha256": "7a410be6797c32357a2b7f0cc68ee14ae0e3b652bb17d16cdc941e4d830c7842",
+      "size": 603814,
+      "official_pool_path": "pool/universe/x/x264/libx264-164_0.164.3108+git31e19f9-1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libx264-164_2%3a0.164.3108+git31e19f9-1_amd64.deb",
+      "installed_size_KiB": 1860
+    },
+    {
+      "name": "libx265-199",
+      "version": "3.5-2build1",
+      "architecture": "amd64",
+      "sha256": "795a6ca9287cd521882178d6503703ee8f0cde955f0ffc03e5ceee9f6d084de7",
+      "size": 1226422,
+      "official_pool_path": "pool/universe/x/x265/libx265-199_3.5-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libx265-199_3.5-2build1_amd64.deb",
+      "installed_size_KiB": 16098
+    },
+    {
+      "name": "libxcb-dri3-0",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "3d3d0e95e56ae16010a84883196b8153cba62d6831f9aaee2a68c46f20c7c004",
+      "size": 7142,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-dri3-0_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-dri3-0_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 40
+    },
+    {
+      "name": "libxcb-glx0",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "d07cde26c70fe92df7c327928371e495cc4570fed2d6518758a5db5715cb34c1",
+      "size": 24774,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-glx0_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-glx0_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 148
+    },
+    {
+      "name": "libxcb-present0",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "2e36e6557e87dbfd64df3143cbf81a4f75c3447501a545b4730511d228b0dd17",
+      "size": 5676,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-present0_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-present0_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 30
+    },
+    {
+      "name": "libxcb-randr0",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "b5cb519823a05a617b543dc9b6a9289b7648b20048244abe021caa706309835a",
+      "size": 17862,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-randr0_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-randr0_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 96
+    },
+    {
+      "name": "libxcb-render0",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "7d83a0668b1a693b5ea2e496206e8371fb6beda4c54a2b4b3902005915c272c5",
+      "size": 16230,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-render0_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-render0_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 80
+    },
+    {
+      "name": "libxcb-shape0",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "ad57fed687ec9c2a4808b8e30ab1753d57daeddc9ad7fb883bfa0701f6da57c8",
+      "size": 6100,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-shape0_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-shape0_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 31
+    },
+    {
+      "name": "libxcb-shm0",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "229d1280d459f1ba44c22939d3f9b61d9d20932d9a646b3fe4ce50be4cdf2325",
+      "size": 5756,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-shm0_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-shm0_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 30
+    },
+    {
+      "name": "libxcb-sync1",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "14286795a258593259923619073e50c15345673befae2733f7b0577b07359aa8",
+      "size": 9312,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-sync1_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-sync1_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 53
+    },
+    {
+      "name": "libxcb-xfixes0",
+      "version": "1.15-1ubuntu2",
+      "architecture": "amd64",
+      "sha256": "0b2ab64af92a71e3d1a35e3c819880ee28d04bfac81360df68ae8d8e9663ebd2",
+      "size": 10190,
+      "official_pool_path": "pool/main/libx/libxcb/libxcb-xfixes0_1.15-1ubuntu2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcb-xfixes0_1.15-1ubuntu2_amd64.deb",
+      "installed_size_KiB": 55
+    },
+    {
+      "name": "libxcursor1",
+      "version": "1:1.2.1-1build1",
+      "architecture": "amd64",
+      "sha256": "1a4beee621454e42fe0d2f4e1633611126e43d891f0aec28e4a06744f6e9f04d",
+      "size": 20748,
+      "official_pool_path": "pool/main/libx/libxcursor/libxcursor1_1.2.1-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxcursor1_1%3a1.2.1-1build1_amd64.deb",
+      "installed_size_KiB": 58
+    },
+    {
+      "name": "libxfixes3",
+      "version": "1:6.0.0-2build1",
+      "architecture": "amd64",
+      "sha256": "0ee1015cccd063249e01c0cd0bf45f513c8ac9a1e5e485070c12e69192455e4a",
+      "size": 10764,
+      "official_pool_path": "pool/main/libx/libxfixes/libxfixes3_6.0.0-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxfixes3_1%3a6.0.0-2build1_amd64.deb",
+      "installed_size_KiB": 44
+    },
+    {
+      "name": "libxi6",
+      "version": "2:1.8.1-1build1",
+      "architecture": "amd64",
+      "sha256": "0ea7acb5e8a8ce4d6653b30e03a319bfe136db7bfb5ee7cad34c2aa1272ea8d9",
+      "size": 32404,
+      "official_pool_path": "pool/main/libx/libxi/libxi6_1.8.1-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxi6_2%3a1.8.1-1build1_amd64.deb",
+      "installed_size_KiB": 95
+    },
+    {
+      "name": "libxrandr2",
+      "version": "2:1.5.2-2build1",
+      "architecture": "amd64",
+      "sha256": "f2955a5e594f5724b58ad241d9231ea191cb36574a0d5e5ca6b661cd41d6256d",
+      "size": 19670,
+      "official_pool_path": "pool/main/libx/libxrandr/libxrandr2_1.5.2-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxrandr2_2%3a1.5.2-2build1_amd64.deb",
+      "installed_size_KiB": 66
+    },
+    {
+      "name": "libxrender1",
+      "version": "1:0.9.10-1.1build1",
+      "architecture": "amd64",
+      "sha256": "d70bd831aebe8d4834b5dd2ed98df26dd6bd27f1042c47543bd7f66df1ae22ea",
+      "size": 19016,
+      "official_pool_path": "pool/main/libx/libxrender/libxrender1_0.9.10-1.1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxrender1_1%3a0.9.10-1.1build1_amd64.deb",
+      "installed_size_KiB": 58
+    },
+    {
+      "name": "libxshmfence1",
+      "version": "1.3-1build5",
+      "architecture": "amd64",
+      "sha256": "bc6de4bfaf9050a8ba83d4bcfb114131b081084a7972c03417f8523d52b5c742",
+      "size": 4764,
+      "official_pool_path": "pool/main/libx/libxshmfence/libxshmfence1_1.3-1build5_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxshmfence1_1.3-1build5_amd64.deb",
+      "installed_size_KiB": 30
+    },
+    {
+      "name": "libxss1",
+      "version": "1:1.2.3-1build3",
+      "architecture": "amd64",
+      "sha256": "0ac60a2cc034ccc4bf4e2f846f38110469d7ae43b47e808d67aafc538bc3695e",
+      "size": 7204,
+      "official_pool_path": "pool/main/libx/libxss/libxss1_1.2.3-1build3_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxss1_1%3a1.2.3-1build3_amd64.deb",
+      "installed_size_KiB": 31
+    },
+    {
+      "name": "libxv1",
+      "version": "2:1.0.11-1.1build1",
+      "architecture": "amd64",
+      "sha256": "ddf5c60268d58fe0c57e80f241d6fa5e73ae2096a137c4d2de42f97cb379ece6",
+      "size": 10672,
+      "official_pool_path": "pool/main/libx/libxv/libxv1_1.0.11-1.1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxv1_2%3a1.0.11-1.1build1_amd64.deb",
+      "installed_size_KiB": 38
+    },
+    {
+      "name": "libxvidcore4",
+      "version": "2:1.3.7-1build1",
+      "architecture": "amd64",
+      "sha256": "4f70e6d3db3d3069797d84bccb082dbf6b14d6e837cbef6197519d8be8779cdd",
+      "size": 219400,
+      "official_pool_path": "pool/universe/x/xvidcore/libxvidcore4_1.3.7-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxvidcore4_2%3a1.3.7-1build1_amd64.deb",
+      "installed_size_KiB": 673
+    },
+    {
+      "name": "libxxf86vm1",
+      "version": "1:1.1.4-1build4",
+      "architecture": "amd64",
+      "sha256": "48b2799f52b86505d2bc91dcb1bfa6536545635b9849cb693d274d934116a8da",
+      "size": 9282,
+      "official_pool_path": "pool/main/libx/libxxf86vm/libxxf86vm1_1.1.4-1build4_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libxxf86vm1_1%3a1.1.4-1build4_amd64.deb",
+      "installed_size_KiB": 37
+    },
+    {
+      "name": "libzimg2",
+      "version": "3.0.5+ds1-1build1",
+      "architecture": "amd64",
+      "sha256": "6c3d3e87277ff906011da1ceac5e44057df3710a53df3eab59675b02eea1ff12",
+      "size": 254226,
+      "official_pool_path": "pool/universe/z/zimg/libzimg2_3.0.5+ds1-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libzimg2_3.0.5+ds1-1build1_amd64.deb",
+      "installed_size_KiB": 827
+    },
+    {
+      "name": "libzix-0-0",
+      "version": "0.4.2-2build1",
+      "architecture": "amd64",
+      "sha256": "3bd3271411e9f25d03e16ca430da9551200b28e854ba9b606f819c23a4dc4992",
+      "size": 23570,
+      "official_pool_path": "pool/universe/z/zix/libzix-0-0_0.4.2-2build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libzix-0-0_0.4.2-2build1_amd64.deb",
+      "installed_size_KiB": 71
+    },
+    {
+      "name": "libzmq5",
+      "version": "4.3.5-1build2",
+      "architecture": "amd64",
+      "sha256": "fff197d2a164e3ec83fef23afd55bad93971b3327d7353db9a305a199d55d402",
+      "size": 260300,
+      "official_pool_path": "pool/universe/z/zeromq3/libzmq5_4.3.5-1build2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libzmq5_4.3.5-1build2_amd64.deb",
+      "installed_size_KiB": 698
+    },
+    {
+      "name": "libzvbi-common",
+      "version": "0.2.42-2",
+      "architecture": "all",
+      "sha256": "c099fcdaaa1f0ccfb0551470faae76f43798150809e07ff8a08f4743fc1a8074",
+      "size": 42360,
+      "official_pool_path": "pool/universe/z/zvbi/libzvbi-common_0.2.42-2_all.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libzvbi-common_0.2.42-2_all.deb",
+      "installed_size_KiB": 161
+    },
+    {
+      "name": "libzvbi0t64",
+      "version": "0.2.42-2",
+      "architecture": "amd64",
+      "sha256": "0a596a628331e837b5756dec8bedf69ea699a9ef5d8a050c0c9b471f833039e1",
+      "size": 260558,
+      "official_pool_path": "pool/universe/z/zvbi/libzvbi0t64_0.2.42-2_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_universe_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/libzvbi0t64_0.2.42-2_amd64.deb",
+      "installed_size_KiB": 689
+    },
+    {
+      "name": "mesa-libgallium",
+      "version": "25.2.8-0ubuntu0.24.04.4",
+      "architecture": "amd64",
+      "sha256": "0c50c3c18c1b3f3ac4243bbf1533c9202f9d7b4f646807e9ef0df4c801414256",
+      "size": 10783312,
+      "official_pool_path": "pool/main/m/mesa/mesa-libgallium_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/mesa-libgallium_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "installed_size_KiB": 42454
+    },
+    {
+      "name": "ocl-icd-libopencl1",
+      "version": "2.3.2-1build1",
+      "architecture": "amd64",
+      "sha256": "6d98029b06335bc23166834719ac5e697bcb4a136b40eebc263dfe481e05839b",
+      "size": 38530,
+      "official_pool_path": "pool/main/o/ocl-icd/ocl-icd-libopencl1_2.3.2-1build1_amd64.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble-updates_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/ocl-icd-libopencl1_2.3.2-1build1_amd64.deb",
+      "installed_size_KiB": 140
+    },
+    {
+      "name": "x11-common",
+      "version": "1:7.7+23ubuntu3",
+      "architecture": "all",
+      "sha256": "b545fa5196dd7467ba3770d6ce575abcd7941071961ea9f7535a319d9d20fd46",
+      "size": 21748,
+      "official_pool_path": "pool/main/x/xorg/x11-common_7.7+23ubuntu3_all.deb",
+      "verified_packages_index": "archive.ubuntu.com_ubuntu_dists_noble_main_binary-amd64_Packages",
+      "deb_path": "/root/easel-central-av-preparation-20261028/cache/archives/x11-common_1%3a7.7+23ubuntu3_all.deb",
+      "installed_size_KiB": 277
+    }
+  ],
+  "added_package_count": 150,
+  "added_deb_total_bytes": 110943646,
+  "added_installed_size_KiB": 372205,
+  "dependency_proof": {
+    "all150_reachable_Depends_PreDepends": true,
+    "selected_edges": 572,
+    "explicit_alternatives_Provides_and_version_comparisons": true,
+    "receipt_path": "/root/easel-av-installed-plan-20261028/receipts/dependency-safe.json",
+    "sha256": "ff830e675516c6677bd741e499539ad0714877efa9da2e6770aebc1b491873db"
+  },
+  "side_effect_review": {
+    "x11_common_dependency_path": [
+      "ffmpeg",
+      "libsdl2-2.0-0",
+      "libxss1",
+      "x11-common"
+    ],
+    "manual_script_proof": [
+      {
+        "package": "x11-common",
+        "file": "/root/easel-av-installed-plan-20261028/control/x11-common/postinst",
+        "sha256": "d33419f7db8c331224545692dbb0fa112087ff949dc4ef8c7537f47fa6565fb5",
+        "reviewed_actions": [
+          "update-rc.d x11-common defaults",
+          "new configure: invoke-rc.d --skip-systemd-native x11-common start",
+          "upgrade configure: invoke-rc.d --skip-systemd-native x11-common restart"
+        ]
+      },
+      {
+        "package": "fontconfig",
+        "file": "/root/easel-av-installed-plan-20261028/control/fontconfig/postinst",
+        "sha256": "1b68e5108dd99bb1f05c9f2eb6060315124b4c595a5b7fc5b17239d1919c6cc6",
+        "reviewed_actions": [
+          "mkdir -p /var/cache/fontconfig",
+          "fc-cache -s -f -v writes font cache and /var/log/fontconfig.log"
+        ]
+      },
+      {
+        "package": "libgdk-pixbuf-2.0-0",
+        "file": "/root/easel-av-installed-plan-20261028/control/libgdk-pixbuf-2.0-0/postinst",
+        "sha256": "3fcf1465fb9acc0bd2e04ad5ada30ef21fd30647401125b8110f00065daa399c",
+        "reviewed_actions": [
+          "gdk-pixbuf-query-loaders writes loaders.cache on initial configure and triggers"
+        ]
+      }
+    ],
+    "ldconfig_activator_package_count": 141,
+    "existing_interest_handlers": [
+      {
+        "trigger_file": "/var/lib/dpkg/info/libc-bin.triggers",
+        "sha256": "c3d6b5df131336e54c31dc5687929467de7abea5c5798e3d6a6b2a64ef971fd4",
+        "declarations": [
+          "interest-await ldconfig"
+        ],
+        "postinst": "/var/lib/dpkg/info/libc-bin.postinst",
+        "postinst_sha256": "11993c6ae210c6fa149dcaf55bb46db7f9c301bb986d70115ce817f4db962caf",
+        "potential_actions": [
+          "ldconfig"
+        ]
+      },
+      {
+        "trigger_file": "/var/lib/dpkg/info/shared-mime-info.triggers",
+        "sha256": "6cbc2ec6b6317793e2c661a18d454f198b12797ef116dbefe08a5d79242452d4",
+        "declarations": [
+          "interest-noawait /usr/share/mime/packages"
+        ],
+        "postinst": "/var/lib/dpkg/info/shared-mime-info.postinst",
+        "postinst_sha256": "11b79cea265df417fa802a95c035444403e41d622effc1f89039b313f598499e",
+        "potential_actions": []
+      },
+      {
+        "trigger_file": "/var/lib/dpkg/info/appstream.triggers",
+        "sha256": "3fc6f233bf0a16b3990f7d2cd8c6625493866966591a7ec29398ea3bcdc2ec9a",
+        "declarations": [
+          "interest-noawait /usr/share/app-info/icons"
+        ],
+        "postinst": "/var/lib/dpkg/info/appstream.postinst",
+        "postinst_sha256": "6b09a215cf28f1ce96e6749d64c21febe1f976ca4f2147ce93b023da5d4903c5",
+        "potential_actions": []
+      }
+    ],
+    "host_hooks_not_loaded_in_simulation": [
+      {
+        "file": "/etc/apt/apt.conf.d/70debconf",
+        "sha256": "db749e19baf3b72ca2c157c70c52522cae23d94bc8b2dc5793fd43d427445367",
+        "hook_keys": [
+          "DPkg::Pre-Install-Pkgs"
+        ],
+        "potential_actions": []
+      },
+      {
+        "file": "/etc/apt/apt.conf.d/20packagekit",
+        "sha256": "549185db9256e57eaa25406d25ff52c339155cba1e5318148f1893bf728463c3",
+        "hook_keys": [
+          "APT::Update::Post-Invoke-Success",
+          "DPkg::Post-Invoke"
+        ],
+        "potential_actions": [
+          "dbus",
+          "service_control"
+        ]
+      },
+      {
+        "file": "/etc/apt/apt.conf.d/50appstream",
+        "sha256": "8e89df0e4cfa24c7db4a165e776f40af7e0477f0d290bea4334edf6655db72bd",
+        "hook_keys": [
+          "APT::Update::Post-Invoke-Success"
+        ],
+        "potential_actions": []
+      },
+      {
+        "file": "/etc/apt/apt.conf.d/15update-stamp",
+        "sha256": "174cdb519fd06372847e23c20db869b2ff4b593252c0d2a6274d770eae2d92c9",
+        "hook_keys": [
+          "APT::Update::Post-Invoke-Success"
+        ],
+        "potential_actions": []
+      },
+      {
+        "file": "/etc/apt/apt.conf.d/99update-notifier",
+        "sha256": "c01bac21ce3df26d6a5ef0bcd6fae53c924d6915121f20f1d412824367bfe930",
+        "hook_keys": [
+          "APT::Update::Post-Invoke-Success",
+          "DPkg::Post-Invoke"
+        ],
+        "potential_actions": []
+      },
+      {
+        "file": "/etc/apt/apt.conf.d/50command-not-found",
+        "sha256": "3a6f9f5244e49bee66ce65101fb73e16ba90f7a6cbd19befeefdf2c63209e2f1",
+        "hook_keys": [
+          "APT::Update::Post-Invoke-Success"
+        ],
+        "potential_actions": []
+      },
+      {
+        "file": "/etc/apt/apt.conf.d/20apt-esm-hook.conf",
+        "sha256": "f7ab45bab1355711fcd031d78299cc3c7767654e7bf3f66a716ee3f2eae93733",
+        "hook_keys": [
+          "APT::Update::Pre-Invoke"
+        ],
+        "potential_actions": [
+          "service_control"
+        ]
+      },
+      {
+        "file": "/etc/apt/apt.conf.d/99needrestart",
+        "sha256": "d453d945957bf2fb33a26cb74eacd38244291919715a1bb1d6179d0290c95c52",
+        "hook_keys": [
+          "DPkg::Post-Invoke"
+        ],
+        "potential_actions": [
+          "needrestart",
+          "service_control"
+        ]
+      }
+    ],
+    "needrestart_readonly": [
+      {
+        "file": "/usr/lib/needrestart/apt-pinvoke",
+        "sha256": "ee34cc66a524a871515f2aaf23e558f1f29382c499fd3918136f2371820df0ca",
+        "restart_mode_assignments": [],
+        "potential_actions": [
+          "dbus",
+          "needrestart"
+        ]
+      },
+      {
+        "file": "/etc/needrestart/needrestart.conf",
+        "sha256": "baacdd683222532d35770efbf7cd83360fc33a4c49ef010787628f0da778f7ee",
+        "restart_mode_assignments": [],
+        "potential_actions": [
+          "dbus",
+          "needrestart",
+          "service_control"
+        ]
+      }
+    ],
+    "control_archive_review": "all150 control.tar.zst inspected by bounded in-memory decompression; 0600 script text only; never executed",
+    "no_restart_claim": false,
+    "blocking_actions": [
+      "x11-common postinst contains actual update-rc.d and invoke-rc.d start/restart branches",
+      "ldconfig/fontconfig/gdk-pixbuf cache writes are real installation side effects",
+      "future host APT needrestart/PackageKit hooks must remain excluded or separately bounded",
+      "path-trigger dispatch and installed-trigger execution not rehearsed"
+    ]
+  },
+  "host_state_sha256_before_after": {
+    "/var/lib/dpkg/status": "8d5d512b61c141b44eb065186d50e1df09c697dd973ff07e1f3b8e3599b35240",
+    "/var/lib/dpkg/status-old": "6a5be7f4a605e1d9e30539011228e91dde468ca4999f7b79301eb3dbd6e556c9",
+    "/var/lib/dpkg/diversions": "300a3568ff049b8b26140a2372c2e3cdaa0115d5209bb7a23c57ef17fa280c44",
+    "/var/lib/dpkg/statoverride": "8bef0b18e4fed7cafcfdb14ecf9a714854c94c2a60cfe849d10b1896b105ac62",
+    "/var/lib/apt/extended_states": "83cd02f6c81cc600c48b1280e9fe1850e7c51974c943493dae89af75a404cd76"
+  },
+  "host_state_unchanged": true,
+  "status_copy_sha256": "8d5d512b61c141b44eb065186d50e1df09c697dd973ff07e1f3b8e3599b35240",
+  "status_copy_unchanged": true,
+  "dpkg_path": "/bin/false",
+  "host_hooks_disabled_and_all_Dir_paths_private_verified": true,
+  "simulated_only": true,
+  "apt_update_download_install_performed": false,
+  "maintainer_scripts_executed": false,
+  "dpkg_transaction_performed": false,
+  "services_stopped_restarted": false,
+  "system_selection_hold_locks_changed": false,
+  "business_config_env_auth_PG_wallet_model_access": false,
+  "large_debs_transferred_to_local": false,
+  "remaining_gates": [
+    "root must review service/cache side effects and separately approve exact install policy",
+    "actual transaction status and trigger behavior require separate acceptance",
+    "actual API UID/systemd namespace/direct cleanenv decoder still unverified"
+  ],
+  "server_receipts": {
+    "solver-safe.json": "6c37aace83f3967122c679c68038d9e7a2059d46fd45b53dbc92b74d991ececc",
+    "dependency-safe.json": "ff830e675516c6677bd741e499539ad0714877efa9da2e6770aebc1b491873db",
+    "package-and-side-effects-safe.json": "b5e7a167ce6a2e7191fe8051975fd7b6640de886b7ab4699e581191010dca08e"
+  },
+  "free_bytes_after": 41236160512,
+  "upstream_server_safe": {
+    "path": "/root/easel-av-installed-plan-20261028/receipts/final-install-plan-safe.json",
+    "sha256": "fee1735be2e6341fe8c267d16d4535417ceacdbf07d2d2980105bf29d988237c",
+    "bytes": 95013,
+    "local_verified_copy": "/private/tmp/easel-av-installed-status-independent-20261028/server-install-plan-safe.json"
+  },
+  "scope": "installed-status simulation and read-only side-effect plan only; no installation authorization",
+  "parser_attempts_note": "Two private Deb822 parsing issues and libapt version system initialization were corrected; final native parse_depends/version_compare used only the private APT_CONFIG. Failed parser attempts made no system changes and are not solver failures."
+}

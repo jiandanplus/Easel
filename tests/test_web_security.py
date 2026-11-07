@@ -20,8 +20,11 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "web"))
 sys.path.insert(0, str(PROJECT_ROOT / "skills" / "shared" / "scripts"))
 
+
+from easel.routes import settings as settings_routes  # noqa: E402
 import app as web  # noqa: E402
 import install_tool  # noqa: E402
+from easel.routes import chat as chat_routes  # noqa: E402
 
 ORIGINAL_ENV = (
     "OPENAI_BASE_URL=https://api.openai.com/v1\n"
@@ -37,7 +40,7 @@ def client(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
     env_file.write_text(ORIGINAL_ENV, encoding="utf-8")
     monkeypatch.setattr(web, "ENV_FILE", env_file)
-    monkeypatch.setattr(web, "_openclaw_provider_creds",
+    monkeypatch.setattr(settings_routes, "_openclaw_provider_creds",
                         lambda: {"myproxy": ("https://good.example.com/v1", "sk-fake-custom")})
     # openclaw.json 也必须隔离：_sync_openclaw_chat 直连 Path.home()/'.openclaw-easel'/openclaw.json，
     # 不隔离就会把夹具值写进用户真配置（models[0].id / baseUrl / apiKey），跑完 pytest 主模型与
@@ -95,7 +98,7 @@ def test_env_newline_injection_rejected(client, row):
 ])
 def test_guard_env_values_rejects(updates):
     with pytest.raises(Exception):
-        web._guard_env_values(updates)
+        settings_routes._guard_env_values(updates)
 
 
 # ---- 不换行也能执行命令：bash 在赋值右侧照做命令替换 ----
@@ -114,7 +117,7 @@ def test_guard_env_values_rejects(updates):
 ])
 def test_guard_env_values_rejects_shell_metachars(value):
     with pytest.raises(Exception):
-        web._guard_env_values({"OPENAI_API_KEY": value})
+        settings_routes._guard_env_values({"OPENAI_API_KEY": value})
 
 
 def test_env_shell_substitution_rejected_via_api(client):
@@ -124,7 +127,7 @@ def test_env_shell_substitution_rejected_via_api(client):
 
 
 def test_guard_env_values_allows_normal():
-    web._guard_env_values({"OPENAI_API_KEY": "sk-normal", "OPENAI_BASE_URL": "https://a.com/v1"})
+    settings_routes._guard_env_values({"OPENAI_API_KEY": "sk-normal", "OPENAI_BASE_URL": "https://a.com/v1"})
 
 
 @pytest.mark.parametrize("value", [
@@ -137,13 +140,13 @@ def test_guard_env_values_allows_normal():
 ])
 def test_guard_env_values_allows_real_values(value):
     """收紧字符集不能把正常值一起误杀 —— 这几类是面板真会写进去的。"""
-    web._guard_env_values({"OPENAI_API_KEY": value})
+    settings_routes._guard_env_values({"OPENAI_API_KEY": value})
 
 
 def test_both_env_writers_are_guarded():
     """两个写入口都得挂闸——漏一个等于没修。"""
     import inspect
-    for fn in (web._write_env, web._write_env_direct):
+    for fn in (settings_routes._write_env, settings_routes._write_env_direct):
         assert "_guard_env_values" in inspect.getsource(fn), fn.__name__
 
 
@@ -167,7 +170,7 @@ def test_local_gateway_user_is_not_locked_out(client, monkeypatch):
     面板显示/回传的却是上游地址 —— 两者天生不等，闸按「换址」判就会让网关用户连改个模型都
     保存不了。而且 _sync_openclaw_chat 那边本来就不改网关的 baseUrl，不存在拿旧 Key 打新地址。
     """
-    monkeypatch.setattr(web, "_openclaw_provider_creds",
+    monkeypatch.setattr(settings_routes, "_openclaw_provider_creds",
                         lambda: {"myproxy": ("http://127.0.0.1:8890/v1", "sk-fake-gw")})
     resp = _save(client, {"channel": "chat",
                           "rows": [{"slot": "custom", "name": "myproxy", "model": "gpt-5.5",
@@ -176,10 +179,10 @@ def test_local_gateway_user_is_not_locked_out(client, monkeypatch):
 
 
 def test_local_gateway_helper():
-    assert web._is_local_gateway_base("http://127.0.0.1:8890/v1")
-    assert not web._is_local_gateway_base("https://api.openai.com/v1")
-    assert not web._is_local_gateway_base("")
-    assert not web._is_local_gateway_base(None)
+    assert settings_routes._is_local_gateway_base("http://127.0.0.1:8890/v1")
+    assert not settings_routes._is_local_gateway_base("https://api.openai.com/v1")
+    assert not settings_routes._is_local_gateway_base("")
+    assert not settings_routes._is_local_gateway_base(None)
 
 
 # ---- Base URL 必须整串校验（只看开头挡不住内嵌凭据/控制字符）----
@@ -204,7 +207,7 @@ def test_base_url_validated_whole_string(client, bad):
     ("not-a-url", False),
 ])
 def test_valid_base_url(url, ok):
-    assert web._valid_base_url(url) is ok
+    assert settings_routes._valid_base_url(url) is ok
 
 
 # ---- 自测探针会把真 Key 当 Bearer 发出去：不许指向本机/内网/云元数据 ----
@@ -219,14 +222,14 @@ def test_valid_base_url(url, ok):
     "http://no-such-host-zzz.invalid/v1",  # 解析不了就当不安全
 ])
 def test_ssrf_guard_rejects_internal(url):
-    assert web._ssrf_safe(url) is False
+    assert settings_routes._ssrf_safe(url) is False
 
 
 def test_selftest_probe_has_guards():
     import inspect
-    src = inspect.getsource(web.api_models_selftest)
+    src = inspect.getsource(settings_routes.api_models_selftest)
     assert "_valid_base_url" in src and "_model_target_allowed" in src, "探针前必须先过两道闸"
-    assert "_ssrf_safe" in inspect.getsource(web._model_target_allowed)
+    assert "_ssrf_safe" in inspect.getsource(settings_routes._model_target_allowed)
     assert "redirect_request" in src, "不能跟跳转——跟了等于绕过前面的判断"
 
 
@@ -238,7 +241,7 @@ def test_install_id_must_be_known(client, bad_id):
 
 
 def test_install_ids_come_from_engine():
-    ids = web._install_tool_ids()
+    ids = settings_routes._install_tool_ids()
     assert ids and "node" in ids, f"配方表读不出来：{ids}"
 
 
@@ -303,7 +306,7 @@ def test_http_path_falls_back_without_httpx(monkeypatch):
         return real_import(name, *a, **k)
 
     monkeypatch.setattr(builtins, "__import__", _no_httpx)
-    assert web._gateway_http_ready(force=True) is False
+    assert chat_routes._gateway_http_ready(force=True) is False
 
 
 def test_ready_probe_hits_chat_completions_not_models():
@@ -315,7 +318,7 @@ def test_ready_probe_hits_chat_completions_not_models():
     所以 URL 一律走 easel/gateway_endpoint 解析。"""
     import inspect
     # 去掉 docstring 再比 —— 注释里本来就要写清为什么不能探 /v1/models
-    body = inspect.getsource(web._gateway_http_ready).split('"""')[-1]
+    body = inspect.getsource(chat_routes._gateway_http_ready).split('"""')[-1]
     assert "chat_completions_url()" in body
     assert "127.0.0.1" not in body
     assert "/v1/models" not in body
@@ -331,7 +334,7 @@ def test_ready_probe_reads_status_code(monkeypatch, code, expected):
         raise web.urllib.error.HTTPError("u", code, "x", None, None)
 
     monkeypatch.setattr(web.urllib.request, "urlopen", _raise)
-    assert web._gateway_http_ready(force=True) is expected
+    assert chat_routes._gateway_http_ready(force=True) is expected
 
 
 @pytest.fixture()
@@ -341,7 +344,7 @@ def _tp(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "OPENCLAW_SESSIONS_DIR", tmp_path / "oc")
     (tmp_path / "oc").mkdir()
     monkeypatch.setattr(web, "CHAT_TRANSPORT", "http")
-    monkeypatch.setattr(web, "_gateway_http_ready", lambda *a, **k: True)
+    monkeypatch.setattr(chat_routes, "_gateway_http_ready", lambda *a, **k: True)
     return tmp_path
 
 
@@ -354,42 +357,42 @@ def test_existing_cli_session_never_switches_to_http(_tp):
     """
     sk = "web-existing"
     (_tp / "oc" / f"{web._openclaw_session_id(sk)}.jsonl").write_text("{}", encoding="utf-8")
-    assert web._resolve_transport(sk) == "cli"
+    assert chat_routes._resolve_transport(sk) == "cli"
 
 
 def test_pinned_http_session_stays_http(_tp, monkeypatch):
     """钉过 http 的会话即使探针此刻说不可用也不能改判 cli —— 网关那份 transcript 我们按
     名字找不回来，改判就是静默丢历史。"""
     sk = "web-pinned"
-    web._pin_transport(sk, "http")
-    monkeypatch.setattr(web, "_gateway_http_ready", lambda *a, **k: False)
-    assert web._resolve_transport(sk) == "http"
+    chat_routes._pin_transport(sk, "http")
+    monkeypatch.setattr(chat_routes, "_gateway_http_ready", lambda *a, **k: False)
+    assert chat_routes._resolve_transport(sk) == "http"
 
 
 def test_new_session_uses_http_when_endpoint_live(_tp):
-    assert web._resolve_transport("web-brand-new") == "http"
+    assert chat_routes._resolve_transport("web-brand-new") == "http"
 
 
 def test_new_session_falls_back_when_endpoint_dead(_tp, monkeypatch):
-    monkeypatch.setattr(web, "_gateway_http_ready", lambda *a, **k: False)
-    assert web._resolve_transport("web-brand-new") == "cli"
+    monkeypatch.setattr(chat_routes, "_gateway_http_ready", lambda *a, **k: False)
+    assert chat_routes._resolve_transport("web-brand-new") == "cli"
 
 
 def test_transport_env_switch_forces_cli(_tp, monkeypatch):
     monkeypatch.setattr(web, "CHAT_TRANSPORT", "cli")
-    assert web._resolve_transport("web-brand-new") == "cli"
+    assert chat_routes._resolve_transport("web-brand-new") == "cli"
 
 
 def test_pin_transport_never_pins_cli(_tp):
     """cli 侧由 uuid5 transcript 文件自证，不该再落一份可能跟现实打架的状态。"""
-    web._pin_transport("web-x", "cli")
+    chat_routes._pin_transport("web-x", "cli")
     assert not web._transport_pin_file("web-x").exists()
 
 
 def test_http_mode_drops_raw_text_delta():
     """HTTP 模式正文以 SSE 为准；raw 流里的 text_delta 必须丢弃，否则每个字进两次队列。"""
     import inspect
-    src = inspect.getsource(web.api_chat_stream)
+    src = inspect.getsource(chat_routes.api_chat_stream)
     seg = src.split('et == "text_delta"')[1][:220]
     assert "is_http" in seg, "HTTP 模式没有屏蔽 raw 流的正文，前端会看到重复内容"
 
@@ -398,6 +401,6 @@ def test_http_mode_still_tails_raw_stream_for_thinking():
     """openclaw 的 chat/completions 不回传任何 reasoning 增量（实测该实现里 thinking/reasoning
     出现 0 次），思考只在共享 raw 流里。HTTP 模式不 tail 它，思考面板就永远是空的。"""
     import inspect
-    src = inspect.getsource(web.api_chat_stream)
+    src = inspect.getsource(chat_routes.api_chat_stream)
     seg = src.split("stdout_fut = None")[1][:600]
     assert seg.count("_tail") >= 2, "HTTP 分支没有启动 raw 流 tail，思考流会整个丢失"

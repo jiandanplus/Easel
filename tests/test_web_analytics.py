@@ -12,11 +12,12 @@ from fastapi import HTTPException
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "web"))
 import app as web
+from easel.routes import accounts  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
 def isolated_inflight(monkeypatch):
-    monkeypatch.setattr(web, "_analytics_inflight", {})
+    monkeypatch.setattr(accounts, "_analytics_inflight", {})
 
 
 def test_concurrent_refreshes_share_one_fetch(monkeypatch):
@@ -29,17 +30,17 @@ def test_concurrent_refreshes_share_one_fetch(monkeypatch):
             await finish.wait()
             return {"platform": platform}
 
-        monkeypatch.setattr(web, "_fetch_analytics", fetch)
-        first = asyncio.create_task(web.api_analytics("xiaohongshu"))
+        monkeypatch.setattr(accounts, "_fetch_analytics", fetch)
+        first = asyncio.create_task(accounts.api_analytics("xiaohongshu"))
         await started.wait()
-        second = asyncio.create_task(web.api_analytics("xiaohongshu"))
+        second = asyncio.create_task(accounts.api_analytics("xiaohongshu"))
         await asyncio.sleep(0)
         finish.set()
         assert await first == await second == {"platform": "xiaohongshu"}
         assert calls == ["xiaohongshu"]
         await asyncio.sleep(0)
-        assert web._analytics_inflight == {}
-        assert await web.api_analytics("xiaohongshu") == {"platform": "xiaohongshu"}
+        assert accounts._analytics_inflight == {}
+        assert await accounts.api_analytics("xiaohongshu") == {"platform": "xiaohongshu"}
         assert calls == ["xiaohongshu", "xiaohongshu"]
 
     asyncio.run(scenario())
@@ -52,14 +53,14 @@ def test_cancelled_client_does_not_cancel_shared_fetch(monkeypatch):
             await finish.wait()
             return {"platform": platform}
 
-        monkeypatch.setattr(web, "_fetch_analytics", fetch)
-        client = asyncio.create_task(web.api_analytics("xiaohongshu"))
+        monkeypatch.setattr(accounts, "_fetch_analytics", fetch)
+        client = asyncio.create_task(accounts.api_analytics("xiaohongshu"))
         await asyncio.sleep(0)
         client.cancel()
         with pytest.raises(asyncio.CancelledError):
             await client
-        assert not web._analytics_inflight["xiaohongshu"].cancelled()
-        other = asyncio.create_task(web.api_analytics("xiaohongshu"))
+        assert not accounts._analytics_inflight["xiaohongshu"].cancelled()
+        other = asyncio.create_task(accounts.api_analytics("xiaohongshu"))
         finish.set()
         assert await other == {"platform": "xiaohongshu"}
 
@@ -71,12 +72,12 @@ def test_failed_refresh_can_be_retried(monkeypatch):
         async def fetch(platform):
             raise HTTPException(502, "Unavailable")
 
-        monkeypatch.setattr(web, "_fetch_analytics", fetch)
+        monkeypatch.setattr(accounts, "_fetch_analytics", fetch)
         for attempt in range(2):
             with pytest.raises(HTTPException):
-                await web.api_analytics("xiaohongshu")
+                await accounts.api_analytics("xiaohongshu")
             await asyncio.sleep(0)
-            assert web._analytics_inflight == {}
+            assert accounts._analytics_inflight == {}
 
     asyncio.run(scenario())
 
@@ -89,28 +90,28 @@ def test_failed_refresh_can_be_retried(monkeypatch):
     (0, {"loggedIn": False}, None),
 ])
 def test_failed_or_empty_payload_is_not_success(monkeypatch, code, payload, status):
-    monkeypatch.setattr(web, "_run_analytics_command", lambda *args: subprocess.CompletedProcess(
+    monkeypatch.setattr(accounts, "_run_analytics_command", lambda *args: subprocess.CompletedProcess(
         [], code, json.dumps(payload), ""))
     if status:
         with pytest.raises(HTTPException) as error:
-            asyncio.run(web._fetch_analytics("xiaohongshu"))
+            asyncio.run(accounts._fetch_analytics("xiaohongshu"))
         assert error.value.status_code == status
     else:
-        assert asyncio.run(web._fetch_analytics("xiaohongshu")) == payload
+        assert asyncio.run(accounts._fetch_analytics("xiaohongshu")) == payload
 
 
 def test_fetch_propagates_actionable_script_error(monkeypatch):
-    monkeypatch.setattr(web, "_run_analytics_command", lambda *args: subprocess.CompletedProcess(
+    monkeypatch.setattr(accounts, "_run_analytics_command", lambda *args: subprocess.CompletedProcess(
         [], 1, "", "ERROR: 小红书登录目录正被占用"))
     with pytest.raises(HTTPException, match="登录目录正被占用"):
-        asyncio.run(web._fetch_analytics("xiaohongshu"))
+        asyncio.run(accounts._fetch_analytics("xiaohongshu"))
 
 
 def test_fetch_reports_bounded_timeout(monkeypatch):
     runner = Mock(side_effect=subprocess.TimeoutExpired("fetch", 90))
-    monkeypatch.setattr(web, "_run_analytics_command", runner)
+    monkeypatch.setattr(accounts, "_run_analytics_command", runner)
     with pytest.raises(HTTPException) as error:
-        asyncio.run(web._fetch_analytics("xiaohongshu"))
+        asyncio.run(accounts._fetch_analytics("xiaohongshu"))
     assert error.value.status_code == 504
     assert runner.call_args.args[2] == 90
     assert runner.call_args.args[1]["PYTHONIOENCODING"] == "utf-8"
@@ -129,7 +130,7 @@ def test_subprocess_timeout_stops_browser_tree(monkeypatch):
         killer = Mock()
         monkeypatch.setattr(web.os, "killpg", killer)
     with pytest.raises(subprocess.TimeoutExpired):
-        web._run_analytics_command(["python", "fetch"], {}, 1)
+        accounts._run_analytics_command(["python", "fetch"], {}, 1)
     assert popen.call_args.kwargs["encoding"] == "utf-8"
     assert popen.call_args.kwargs["start_new_session"] is (os.name != "nt")
     if os.name == "nt":

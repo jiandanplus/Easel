@@ -1,0 +1,40 @@
+{
+  "variant": "B",
+  "page": "08",
+  "title": "内容库",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-de8ad6a3-5877-4908-85ac-44112ce06fbe.png",
+  "originalSource": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-a328d3c7-508e-4c87-8bd1-9175440c0695.png",
+  "requiredLabels": [
+    "内容库",
+    "搜索项目或文件",
+    "图文",
+    "视频",
+    "音频"
+  ],
+  "status": "reviewed-required-labels-corrected",
+  "visuallyConfirmedLabels": [
+    "内容库",
+    "搜索项目或文件",
+    "图文",
+    "视频",
+    "音频"
+  ],
+  "qa": "Added missing search field by one targeted imagegen edit, then visually reviewed all required labels. Fine secondary text not exhaustively checked.",
+  "ocr": {
+    "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-de8ad6a3-5877-4908-85ac-44112ce06fbe.ocr.json",
+    "requiredFound": [
+      "内容库",
+      "搜索项目或文件",
+      "图文",
+      "视频",
+      "音频"
+    ],
+    "requiredMissing": []
+  },
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/08.png",
+  "width": 1586,
+  "height": 992,
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "sha256": "2f6af0b9f23ccb16c3abbb539579c129719b476d1445c1ccc2d13a25fe526801"
+}

@@ -1,0 +1,38 @@
+{
+  "exit_code": 0,
+  "elapsed_seconds": 0.27,
+  "inputs": {
+    "services/platform/scripts/capture_media_restore_plan.py": "af1906bf0a0d012f3033407e4a41ac136b3b37c5746dd2891ebf29a6ba43bd2b",
+    "services/platform/tests/test_media_restore_plan_capture.py": "452b373ff7dd3baf83917f351c5e6d0d73357ec65c80536861e3015c0743e91e",
+    "services/platform/scripts/verify_media_restore_drill.py": "68dccf3699a3c9b06d79e5cf87609dcf567b2d6c93c8b3c6186cc40c3474e1d3"
+  },
+  "inputs_stable": true,
+  "ssh_or_docker_or_production_action": false,
+  "log": "/private/tmp/easel-ops-independent-review-20261027/plan-capture-wrapper-tests.log",
+  "reviewer": "delivery_media_review",
+  "passed": 12,
+  "skipped": 0,
+  "pytest_seconds": 0.02,
+  "remaining_known_blocking_code_findings": [],
+  "static_scope": [
+    "fixed root and hostname and original DR hash guard",
+    "nonce-only child command, no apply argument",
+    "full stdout/stderr retained only in server process memory; no raw forwarding",
+    "canonical full plan hash, private0700/0600 exclusive creation and file+parent fsync",
+    "explicit outward metadata allowlist; config/migration details only aggregate hash and count"
+  ],
+  "production_approval_state_reported_by_root_at_review": {
+    "stop_plus_apply_entire_ssh_rejected_by_auto_review": true,
+    "command_executed": false,
+    "specific_human_maintenance_and_migration_approval_pending": true,
+    "original_services": "active R2",
+    "new_media_json_exists": false,
+    "production_mutations": 0
+  },
+  "evidence_limits": [
+    "local static review and synthetic stub tests only",
+    "no SSH or154 server operation by reviewer",
+    "does not authorize or bypass rejected maintenance command",
+    "underlying68dccf DR and frozen M4/desktop source not edited"
+  ]
+}

@@ -14,6 +14,9 @@ from __future__ import annotations
 
 import argparse
 import os
+
+if os.environ.get("EASEL_SUBSCRIPTION_BACKEND") == "central":
+    raise RuntimeError("中央订阅当前仅开放文本与本地工具，图像生成尚未开放")
 import subprocess
 import sys
 from pathlib import Path

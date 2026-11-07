@@ -1,0 +1,75 @@
+{
+  "status": "local_worker_candidate_verified_v28_prepare_pending",
+  "candidate_files": 3,
+  "production_source_files_changed": 1,
+  "worker_sha256": "7fc068daae8e9cc9dc201252dbb412de9adb935569e0cb20e641ad6e2b193f6d",
+  "change": "Type.Union(variants,{type:object})",
+  "variants_or_host_validation_changed": false,
+  "locked_runtime": {
+    "pi": "1.4.0",
+    "typebox": "1.3.27",
+    "node_sha256": "6f32069480ec14d52b6d7b1f3c7124cfbbc46203abf5ddf5c65b127435f3f329"
+  },
+  "context7": {
+    "library_resolved": "/sinclairzx81/typebox",
+    "commands": 2,
+    "outside_sandbox": true,
+    "pinned_dependency_source_and_actual_sdk_verified": true
+  },
+  "red": {
+    "two_model_final_sdk_root_keys": [
+      "anyOf"
+    ],
+    "strict_mock_status": 400,
+    "host_requests": 0,
+    "automatic_retry": false
+  },
+  "green": {
+    "passed": 168,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 11.18,
+    "tool_session_id": 49995,
+    "exit_code": 0
+  },
+  "closure": {
+    "inputs": 148,
+    "changed_inputs": [],
+    "base_pi_payload_files": 11932,
+    "base_payload_unchanged": true
+  },
+  "final_serialized_equivalence": {
+    "model_counts": [
+      0,
+      1,
+      2,
+      10
+    ],
+    "only_create_media_root_type_added": true,
+    "all_anyof_branches_preserved": true,
+    "nonmock_fetches": 0
+  },
+  "boundaries": {
+    "real_provider_posts": 0,
+    "production_writes": 0,
+    "pg_calls": 0,
+    "original_unknown_request_retried": false,
+    "original_hold_released": false,
+    "old_central_full_covers_new_worker": false,
+    "new_runtime_prepared": false,
+    "v28_packaged": false,
+    "real_supplier_revalidation": false,
+    "commit_push_merge": false
+  },
+  "evidence_sha256": {
+    "candidate-manifest.json": "d97febe9d90da9bae44f596a5896f033de0580dfe3f9d305f4c93949fdd90081",
+    "candidate-source.tar.gz": "1c44d29796c140608cf455ce3de2d4a84ac8ed6d81957a460a321c1207dd7860",
+    "worker-only.patch": "923deca353f2488aae0037413abde872411233cd924b08cdce14a395e28712e3",
+    "red.log": "92eb63fb4c3ec0b698c534f5fa1f9b8d76cf746e2dea5d43632ea1e41cd59d20",
+    "closure-r1.log": "fbd13263436c1e540d11927a28cad5be5dfdda934ae92875aad7c3754fe9aab4",
+    "closure-r1.junit.xml": "bbb7646eae1d8b6e6ef5b75fdd219103b439a1dd8e181ecb2454b4ecb2fbe580",
+    "closure-r1-before.json": "9f81ef3a493a71ebe757929156fa2f4084a71833c03b3c8dbd1ccf0dee3bde62",
+    "closure-r1-after.json": "9f81ef3a493a71ebe757929156fa2f4084a71833c03b3c8dbd1ccf0dee3bde62",
+    "serialization-equivalence-r1/equivalence-safe.json": "30b9cf8ab5b09c11519b6d979f334bc6dcb02047e97192db0ffe4f249da09ce7"
+  }
+}

@@ -1,0 +1,287 @@
+{
+  "status": "v29_active_real_text_billing_and_next_draft_verified",
+  "package": {
+    "schema_version": 1,
+    "status": "built_and_isolated_verified_waiting_root_activation",
+    "version": "v29",
+    "artifact": {
+      "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v29/Easel/Easel.app",
+      "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v29/Easel-Pi-macOS15-arm64.zip",
+      "sha256": "f063ee9c203c03531c05c561bd49a2357aec7e2ddcc3f75dd5807621e7eec536",
+      "archive_bytes": 129745521,
+      "inventory_files": 15402,
+      "schema_version": 1,
+      "engine": "pi",
+      "git_commit": "e972af07444e181e3eb737441ecac306bca778b3",
+      "source_manifest_sha256": "2e36b274862d5faaeacfb1012186ca51992bbf835869ef2d81b1a29235156842",
+      "pi_manifest_sha256": "23bd3438ff8864722f359200a313686d3098f97e200310aa2c41af103f052a06",
+      "frontend_receipt_sha256": "1c9eabeb5692d5f968ca0c53c693c6996d1035effe9ecbac2a8bc1ec5ddb9cf5",
+      "python_archive_verified": true,
+      "python_archive_sha256": "55bc1a5edbc8ac4da0081f4f5731ed2d1ed10c57cb37a820b2a0dbc7cad742e9",
+      "python_source_provenance_sha256": "3aab5044d4bdaf99da45fc795045e36b1833565c79ddb019a3578096eda8d8eb",
+      "python_runtime_inventory_sha256": "25b1bb10c833bd8afca6106867d53cefd789ce88ed6de1dca2c0c761038a1ce0",
+      "python_runtime_inventory_verified": true,
+      "copy_strategy": "clonefile",
+      "clonefile_flags": 9,
+      "python_version": "3.12.13",
+      "wheel_count": 26,
+      "minimum_macos": "15.0",
+      "unsigned": true,
+      "notarized": false,
+      "ui": "loopback web browser"
+    },
+    "complete_inventory_sha256": "016aa787f76e1ced934f776fec6e72aece21e9b143e19c71d25f8ca47cb08125",
+    "public_source_count": 904,
+    "public_source_delta_v28": {
+      "web/frontend/src/components/ComposerModelPicker.tsx": {
+        "old": "ec283316f2054c9d121b78c2d948879f450329a82ac068a503a60f1cca4fcdc1",
+        "new": "41ca7b1d22562294b6fadc12d5d6ff46a25ec2285f8678ef690816bec23ae75f"
+      },
+      "web/frontend/src/components/ChatPage.tsx": {
+        "old": "d18d3c6967e536afc4c5050c7fe0e25dd0e3ecd2471de20b6e20e2fc8ae43176",
+        "new": "c1a3fcfc499407b3daa5e3df5d915476c56fb647622b9c3088309700f0c1d227"
+      },
+      "web/frontend/src/App.tsx": {
+        "old": "9dfd89e28762c6e44f6392ce0d83cdd3f0411ded6fdeb129ed7df569dc875204",
+        "new": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615"
+      }
+    },
+    "build_input_count": 59,
+    "build_inputs_identical_v28": true,
+    "receipts": {
+      "preflight-safe.json": {
+        "path": "/private/tmp/easel-v29-package-20261028/preflight-safe.json",
+        "sha256": "eab71b7f465fc9a2378250e5b51ea2b155d48658cb9e7bd2306f1240bd88bc7d"
+      },
+      "freeze-and-frontend-safe.json": {
+        "path": "/private/tmp/easel-v29-package-20261028/freeze-and-frontend-safe.json",
+        "sha256": "18c42b8c0c1828d3c52adb90b33b3a92ce42d0cae406d8002a03faf59ce4e030"
+      },
+      "inventory-privacy-safe.json": {
+        "path": "/private/tmp/easel-v29-package-20261028/inventory-privacy-safe.json",
+        "sha256": "bd633b384452719b4b3c05edeac826fec5aef8d0a4023a21cfa2ab1eebc8da36"
+      },
+      "embedded-runtime-safe.json": {
+        "path": "/private/tmp/easel-v29-package-20261028/embedded-runtime-safe.json",
+        "sha256": "e865732b99848a9cecd00ab21956e0d9a9219d7eb6c27d400ce5bc440358c900"
+      },
+      "fresh-install-safe.json": {
+        "path": "/private/tmp/easel-v29-package-20261028/fresh-install-safe.json",
+        "sha256": "baa36e6567297cb89d0af240ecae40dbe663a875c61e0867d0832caa84abc5e1"
+      }
+    },
+    "frontend_validation": {
+      "root_actual_full_run_passed": 505,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 3.893540292,
+      "log": "/private/tmp/easel-model-readiness-final-r2-20261028/root-full-frontend.log",
+      "sha256": "39de5e8b04e1570cbd8bf8bc1a176d2b2fd68e90b4e2f7246469acc7e7b2c065",
+      "rerun_by_packager": false,
+      "fresh_packager_tsc_exit": 0,
+      "fresh_packager_vite_exit": 0
+    },
+    "independent_review": {
+      "path": "/private/tmp/easel-model-readiness-independent-review-20261028/r2/review.md",
+      "sha256": "3d5e325d353082ff4fda7d51713f872eecc6208c66a110d82a2051cf774e4941",
+      "result": "APPROVE"
+    },
+    "runtime": {
+      "Python": "3.12.13",
+      "Node": "24.22.1",
+      "Pi": "1.4.0",
+      "Pillow": "12.3.0",
+      "wheel_count": 26,
+      "Pi_all_files_identical_v28": 11932,
+      "Pi_manifest_sha256": "23bd3438ff8864722f359200a313686d3098f97e200310aa2c41af103f052a06",
+      "Python_code_resources_identical_v28": true,
+      "authentic_six_installer_RECORD_metadata_files_retained": true,
+      "bytecode_shipped": 0
+    },
+    "reused_v28_actual_SDK_strict_mock_evidence": {
+      "path": "/private/tmp/easel-v28-package-20261028/actual-sdk-safe.json",
+      "sha256": "57f8bc60d9af422378c4b5915ab14e8d310f88555e21f6957d09f454460961f0",
+      "model_counts": [
+        0,
+        1,
+        2,
+        100
+      ],
+      "all_statuses": [
+        200
+      ],
+      "host_calls": 0,
+      "nonmock_fetch_calls": 0,
+      "rerun_v29": false,
+      "reuse_basis": "all11932 embedded Pi files including worker+manifest byteexact to validated v28 payload"
+    },
+    "reused_native_load_graph": {
+      "path": "/private/tmp/easel-python-v28-authority-20261028/new-python-macho-safe.json",
+      "basis": "all Python runtime code/resources byteexact v28, six changed RECORD files describe removed entrypoints only",
+      "native_components": 41,
+      "LOAD_commands_resolved": 99,
+      "LOAD_commands_unresolved": 0,
+      "component_signature_failures": [
+        "charset_normalizer/cd.cpython-312-darwin.so",
+        "charset_normalizer/md.cpython-312-darwin.so"
+      ],
+      "unused_external_Pillow_libjpeg_RPATH": true,
+      "libpython_self_ID_and_sysconfig_compile_prefix_not_runtime_dependency": true
+    },
+    "fresh_isolated_instance": {
+      "ok": true,
+      "new_explicit_workspace": true,
+      "home_unchanged": true,
+      "bundled_pi": true,
+      "host_path": "system_only",
+      "default_subscription": true,
+      "public_login_entry_configured": true,
+      "prior_credentials_required": false,
+      "supplier_key_required": false,
+      "external_model_posts": 0,
+      "auth_posts": 0,
+      "same_machine_test": true,
+      "clean_device_or_gatekeeper_verified": false,
+      "isolated_port": 59047,
+      "owned_instance_stopped": true,
+      "existing_17868_http200_after": true
+    },
+    "original_17868_activated_by_packager": false,
+    "original_workspace_auth_wallet_read": false,
+    "auth_posts": 0,
+    "real_provider_posts": 0,
+    "prior_v28_real_provider_success_not_rerun_here": true,
+    "existing_unknown_holds_not_modified": true,
+    "original_workspace_helpers_prepared_not_executed": true,
+    "old_App_ZIP_inputs_preserved": true,
+    "copy_strategy": "clonefile",
+    "clonefile_flags": 9,
+    "reserve_bytes": 209715200,
+    "free_after_bytes": 3399204864,
+    "limits": {
+      "unsigned": true,
+      "notarized": false,
+      "Gatekeeper_verified": false,
+      "independent_clean_device_verified": false,
+      "v29_model_auto_reuse_browser_acceptance": "pending root activation and new independent turn/draft; not validated by packaging smoke"
+    }
+  },
+  "upgrade_preservation": {
+    "ok": true,
+    "protected_files": 155,
+    "new_private_runtime_files": [],
+    "history_and_custom_config_preserved": true,
+    "same_account_scope": true,
+    "same_wallet": true,
+    "wallet_observed": true,
+    "changes": [],
+    "model_calls": 0
+  },
+  "real_text": {
+    "observed_utc": "2026-10-28T04:35:39.295378+00:00",
+    "ok": true,
+    "session_id": "mvrlf6j53cn0u9",
+    "new_turn_id": "af5c71da-d1c6-444e-a028-2477d5af7de4",
+    "previous_turn_id": "ba8ce3ee-17d5-4e52-8747-d6d7c7565a02",
+    "status": "done",
+    "clean_end": true,
+    "text_exact_match": true,
+    "executions": [
+      {
+        "operation_key": "42232bcc-ba9d-4b2a-8716-f203071ce591",
+        "invocation_id": "68ca0ce7-02b2-44d8-b5cd-43cbddd407a0",
+        "model": "easel-deepseek-flash-internal-v1",
+        "local_status": "delivered",
+        "lookup_status": "found",
+        "execution": {
+          "id": "75a71752-3893-4b23-b2bf-56f9f2357d45",
+          "model": "easel-deepseek-flash-internal-v1",
+          "rate_version": "internal-deepseek-20261026-v1",
+          "created_at": "2026-10-28T04:34:12.371801+00:00",
+          "updated_at": "2026-10-28T04:34:14.409319+00:00",
+          "status": "settled",
+          "funding_mode": "live",
+          "amount": "9728",
+          "actual": "1395",
+          "input_tokens": 2766,
+          "output_tokens": 8,
+          "result_state": "available"
+        }
+      }
+    ],
+    "total_actual_microcredits": "1395",
+    "wallet_delta_matches_actual": true,
+    "wallet_after": {
+      "available": "6938114",
+      "reserved": "1009728",
+      "spent": "2052158",
+      "issued": "10000000",
+      "pending_reconciliation": 2,
+      "active_requests": 0,
+      "pending_reconciliation_limit": 3
+    },
+    "same_account_scope": true,
+    "old_v27_pending_unchanged": true,
+    "v28_tool_file_unchanged": true,
+    "original_turn_replayed": false
+  },
+  "next_draft_browser": {
+    "ok": true,
+    "session_id": "mvrlf6j53cn0u9",
+    "after_turn_id": "af5c71da-d1c6-444e-a028-2477d5af7de4",
+    "nonempty_next_draft": true,
+    "send_enabled": true,
+    "model_remains": "DeepSeek Flash · 内部体验",
+    "model_reselected_after_completion": false,
+    "draft_submitted": false,
+    "source": "actual browser AX after autosave"
+  },
+  "test_draft_cleared_after_evidence": true,
+  "frontend_full": {
+    "passed": 505,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 3893.540292,
+    "inputs_unchanged": 156,
+    "log_sha256": "39de5e8b04e1570cbd8bf8bc1a176d2b2fd68e90b4e2f7246469acc7e7b2c065"
+  },
+  "independent_r2": {
+    "passed": 56,
+    "failed": 0,
+    "skipped": 0,
+    "report_sha256": "3d5e325d353082ff4fda7d51713f872eecc6208c66a110d82a2051cf774e4941",
+    "before_r1_probe_failure_preserved": true
+  },
+  "v28_real_tool_evidence_reused_for_identical_runtime": {
+    "report": "2026-10-28-workbench-v28-delivery.md",
+    "pi_manifest_sha256": "23bd3438ff8864722f359200a313686d3098f97e200310aa2c41af103f052a06",
+    "pi_files_byte_identical": 11932,
+    "tool_and_download_sha256": "01d235ab9209d24a3275d508dbe2eee9b7c9f9db6cc0543675ae77f9a994d951",
+    "actual_microcredits": "2916",
+    "not_replayed": true
+  },
+  "successful_acceptance_total_microcredits": "4311",
+  "assets": {
+    "next-draft-ready.png": "294e3a5a74902d840eeff58e2aeac513abde34c3a6503cb60bf810a6a897b847",
+    "live-text-settled.png": "60ff97cc8e7b2538d7c5200e416d933e11395b0f0fdc3900baee6c2fd74aa2fe"
+  },
+  "original_unknown_holds_unchanged": true,
+  "committed": false,
+  "pushed": false,
+  "merged": false,
+  "full_thread_goal_achieved": false,
+  "durable_private_workspace_backup": {
+    "ok": true,
+    "backup_root": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/private-workbench-backup-20261028",
+    "root_mode": "0700",
+    "entries": 1160,
+    "regular_files": 894,
+    "content_bytes": 15509164,
+    "source_unchanged_during_copy": true,
+    "all_bytes_links_modes_mtimes_verified": true,
+    "external_links_not_followed": true,
+    "git_ignored": true,
+    "active_workspace_not_moved": true,
+    "network_requests": 0
+  }
+}

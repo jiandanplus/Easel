@@ -1,0 +1,43 @@
+{
+  "variant": "D",
+  "page": "07",
+  "title": "技能库",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-ae146ca5-acc2-4e8a-a7a2-01d343c199e0.png",
+  "requiredLabels": [
+    "技能库",
+    "搜索技能",
+    "发现",
+    "制作",
+    "发布",
+    "已配置"
+  ],
+  "status": "reviewed-required-labels",
+  "visuallyConfirmedLabels": [
+    "技能库",
+    "搜索技能",
+    "发现",
+    "制作",
+    "发布",
+    "已配置"
+  ],
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked. Calendar alignment checked where applicable.",
+  "ocr": {
+    "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-ae146ca5-acc2-4e8a-a7a2-01d343c199e0.ocr.json",
+    "requiredFound": [
+      "技能库",
+      "搜索技能",
+      "发布",
+      "已配置"
+    ],
+    "requiredMissing": [
+      "发现",
+      "制作"
+    ]
+  },
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/D/07.png",
+  "width": 1586,
+  "height": 992,
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked. Category tabs 发现 and 制作 are visibly correct; OCR false negatives.",
+  "activeNavMatchesPage": true,
+  "sha256": "03648ec2a50edaf14baf3b3151ab360b80880e202e420b401a8c596d0d819389"
+}

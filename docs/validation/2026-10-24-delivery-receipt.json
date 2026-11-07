@@ -1,0 +1,23 @@
+{
+  "created_exclusively": true,
+  "entry_count": 41,
+  "explicit_public_allowlist_only": true,
+  "linux_v2_receipt_sha256": "dd5923a709bbf86f7f43e5aa56da2135f0cde41ac1f7f4f406419e5b059feb5a",
+  "manifest_sha256": "790882d84e56e505fbfcd58248a83441385475c92662ccf29cb8b2d0bc03ed69",
+  "production_ready": false,
+  "requirements_sha256": "cc4ed5666cf61eb591c99ef7951fda4018e0c96e6d6d87e9ca98978c19958c84",
+  "source_counts": {
+    "python": 42,
+    "sql": 10,
+    "static": 4
+  },
+  "source_file_count": 56,
+  "success": true,
+  "uv_lock_sha256": "eb00eae7b6966760595376c65da0571d40406dc2d2a3019c1247f575dfa44f2a",
+  "verification": "zip_crc_and_manifest",
+  "verified_at": "2026-10-23T17:31:26.853039+00:00",
+  "wheel_sha256": "ec2e5577c79cf39f27f3962e462025c3f37ab27f2979d076e1e723c4c65b4cc9",
+  "zip_bytes": 338859,
+  "zip_path": "outputs/_run/central-production-preflight-20261024.zip",
+  "zip_sha256": "8ba6d94d52bcfe4ae9381ec79f9a09cc5e7b5c9ea641a42d084d2b01b07ffc61"
+}

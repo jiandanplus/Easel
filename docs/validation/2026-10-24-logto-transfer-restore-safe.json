@@ -1,0 +1,52 @@
+{
+  "transfer_completed": true,
+  "restore_completed": true,
+  "current_full_permission_metadata_and_effective_acl_verified": true,
+  "full_data_and_identity_aggregate_hashes_equal": true,
+  "schema_gate_passed": false,
+  "validation_complete": false,
+  "production_ready": false,
+  "target_server": "115.190.211.112",
+  "sensitive_payload_explicitly_authorized": true,
+  "authorization_pending": false,
+  "private_storage_modes": "0700 directory, 0600 regular files",
+  "archive_bytes": 399811,
+  "archive_sha256": "40d20ed3f7181e58272058e23d566a2350ed341df60d1313cbdcfbc8d9a588fc",
+  "manifest_sha256": "6ff020ca6fcb4f4fbd9918375b520564892c97974d002b8510098835d4c82dde",
+  "transfer_intent_sha256": "8c197cf502c5e403026fa73c0986a4002698a2501df922ba11bd47a76f4c123e",
+  "transfer_operation_id": "185581b3ef22427cb24b94e423b95211",
+  "restore_operation_id": "91cab4f664ca4efeaadb2d06061c28f6",
+  "permissions_operation_id": "7de6f24d75484e3d877184e0290c1148",
+  "restored_totals": {
+    "apps_all": 8,
+    "apps_default": 4,
+    "enums": 8,
+    "policies": 153,
+    "server_version_num": "160015",
+    "triggers": 85,
+    "users_all": 6,
+    "users_default": 5
+  },
+  "effective_table_count": 79,
+  "effective_grant_count": 857,
+  "tenant_database_logins_verified": 2,
+  "schema_remaining_difference": {
+    "component": "indexes",
+    "count": 2,
+    "names": [
+      "service_logs__email__tenant_id__created_at__id",
+      "service_logs__email__tenant_id__recipient__created_at__id"
+    ],
+    "detail": "array cast versus element casts in partial-index predicates after dump/reparse; semantic proof not implemented",
+    "unsafe_text_normalization_used": false
+  },
+  "logto_started": false,
+  "logto_ui_login_tested": false,
+  "identity_proof_created": false,
+  "identity_mapping_applied": false,
+  "writers_fenced": false,
+  "model_calls": 0,
+  "payment_calls": 0,
+  "supplier_key_read_or_transferred": false,
+  "private_backups_and_persistent_restore_volume_retained": true
+}

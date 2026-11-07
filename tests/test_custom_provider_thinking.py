@@ -4,6 +4,8 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
+
+from easel.routes import settings as settings_routes  # noqa: E402
 import web.app as web
 
 
@@ -48,7 +50,7 @@ def seed(client, model_entry, **provider_values):
     config.write_text(json.dumps(data), encoding="utf-8")
 
 
-@pytest.mark.parametrize("thinking_format", sorted(web.THINKING_FORMATS))
+@pytest.mark.parametrize("thinking_format", sorted(settings_routes.THINKING_FORMATS))
 def test_enable_and_echo(client, thinking_format):
     provider = save(client, thinking=True, thinkingFormat=thinking_format)
     model = provider["models"][0]

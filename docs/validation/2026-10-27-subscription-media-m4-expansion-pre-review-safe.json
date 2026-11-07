@@ -1,0 +1,40 @@
+{
+  "boundaries": {
+    "activated": false,
+    "build_or_package": false,
+    "central_pg_new_host_roundtrip": "pending",
+    "commercial_requests": false,
+    "independent_review": "pending",
+    "new_capabilities_live_verified": false,
+    "production_changed": false,
+    "real_auth_read": false
+  },
+  "branch": "codex/ui-redesign",
+  "date": "2026-10-27",
+  "files": {
+    "docs/superpowers/plans/2026-10-27-subscription-media-m4-expansion.md": "013d60880e13c01fbb41ad198b7d1675e881aa7985a6c60dc0e1161b9f983cf7",
+    "easel/harnesses/pi.py": "f55c482ce8b407adb3e5468af8af099e47cbbe7a9d5b814491b829f35b4ce2c0",
+    "easel/platform/media.py": "23b8c40b189a03fdcb0571a21cc224ed53783f2074b5e9b547242a5b1fe4ec34",
+    "easel/platform/media_contracts.py": "3026b633b4785a702fdec015587efe244ef9a17267c6730149afdeb6b9409f4d",
+    "easel/platform/media_files.py": "31985a835c5d81e8790c7bdffb02623e36aadf4a7b74166a6b3519a012c35ea2",
+    "easel/platform/media_records.py": "cb99d70268f0c6dc7e0739aee344efeff5c5ca9c967bcb7bd13fa8d9137e60cf",
+    "packaging/pi/source-manifest.json": "9b8121260b6aa38d3f911b4126de6db8138559073dca0854c0c338c175948dcf",
+    "runtime/pi/worker.mjs": "8ec881590206c0c487f95469860f04852b9c1c80b4a198a9fd254fcf00768682",
+    "tests/pi_media_worker_fixture.mjs": "f1159f9780decd8246d2b1ceebe6bbbd6bce8f216657eae6ecc4dfdee0ba75ef",
+    "tests/test_media_expansion.py": "ba7c96c7f3bfe2a4d561c91d5c1d70dd106ed00a2631f719ed8598ac1d198cf2",
+    "tests/test_pi_media_host.py": "15a58053adf3111b896fc1f3bbc98ab5440cf3157e24c44cd000a698467fdb29"
+  },
+  "schema_version": 1,
+  "snapshot_patch": {
+    "meaning": "full candidate untracked-source snapshot, not incremental v23 diff",
+    "path": "/private/tmp/easel-m4-expansion-freeze-20261027.patch",
+    "sha256": "78389de962eceb5b111d35edb367373d380ffd216350487847fd7364f3f205ba"
+  },
+  "tests": {
+    "actual_pi_sdk_scenarios": 12,
+    "passed": 257,
+    "seconds": 12.78,
+    "source": "controlled local fixtures, existing Node v24.22.1/Pi 1.4.0",
+    "warnings": 1
+  }
+}

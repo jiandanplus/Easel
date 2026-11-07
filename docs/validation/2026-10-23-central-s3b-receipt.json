@@ -1,0 +1,109 @@
+{
+  "stage": "S3-B",
+  "date": "2026-10-23",
+  "implemented_source_review": "pass",
+  "fixture_acceptance": "pass",
+  "real_provider_acceptance": "pending_user_New_API_channel_token_model_configuration",
+  "branch": "codex/ui-redesign",
+  "head": "e972af07444e181e3eb737441ecac306bca778b3",
+  "main_ref": "bb3c8ff0463f36c202454d74171682ba6e470cb1",
+  "root_env_sha256": "935b54d55014b9a482bed0902025e60a05d048c7e63f2984084743b3febe315e",
+  "prior_dirty_file_count": 246,
+  "prior_dirty_files_still_present": 246,
+  "existing_sql_migrations_unchanged": 6,
+  "commit_push_merge_performed": false,
+  "test_runs": {
+    "central_postgresql": {
+      "passed": 417,
+      "seconds": 55.13
+    },
+    "native_clients_protocol_cli_portable": {
+      "passed": 461,
+      "seconds": 19.63,
+      "actual_packaged_and_node_codex": true,
+      "skipped": 0
+    },
+    "media_custom": {
+      "passed": 243,
+      "seconds": 11.57
+    },
+    "frontend": {
+      "passed": 212,
+      "skipped": 0
+    },
+    "independent_auth_body_closure": {
+      "passed": 26,
+      "deselected": 19,
+      "seconds": 0.17
+    },
+    "current_postgresql_http_stream_integration": {
+      "passed": 3,
+      "seconds": 1.42
+    }
+  },
+  "test_counts_overlap": true,
+  "frontend_build": "pass",
+  "frontend_lint": "pass_with_existing_warning",
+  "ruff": "pass",
+  "git_diff_check": "pass",
+  "central_wheel": {
+    "python_files": 30,
+    "sql_files": 6,
+    "missing": [],
+    "different": [],
+    "wheel": "easel_central_platform-0.1.0-py3-none-any.whl",
+    "sha256": "605f2d023150676d76b4f44c39d715710e9738177c6643aaa5bd474aecb5dac0"
+  },
+  "browser": {
+    "desktop_css_width": 1200,
+    "mobile_css_width": 390,
+    "mobile_document_scroll_width": 390,
+    "early_text_while_terminal_held": true,
+    "manual_lookup_without_extra_provider_post_or_charge": true,
+    "viewport_restored": true
+  },
+  "fixture_wallet_microcredits": {
+    "available_before": "199972000",
+    "available_after": "199944000",
+    "stage_spent": "28000",
+    "cumulative_spent": "56000",
+    "reserved": "0",
+    "pending_reconciliation": 0,
+    "new_provider_posts": 2,
+    "historical_provider_posts": 4,
+    "funding_mode": "test"
+  },
+  "screenshots": {
+    "recovery-desktop.png": {
+      "sha256": "a666c2b9ef496afdddfb7140ad1df06df0a6b277871c193d70df2abec2193607",
+      "bytes": 146312
+    },
+    "recovery-mobile.png": {
+      "sha256": "93abb6791f6a7a7ab859cf5913a26f9a2ae0ad68ef2a0d10cf24eb622febf475",
+      "bytes": 86897
+    },
+    "stream-before-terminal.png": {
+      "sha256": "fc60355ee476206f482ba4c6013cad89363b4fe3124e2665dd24efe13d2c98d9",
+      "bytes": 74692
+    }
+  },
+  "real_model_calls_performed": 0,
+  "production_service_configuration_changed": false,
+  "reviewed_source_sha256": {
+    "easel/platform/central.py": "186e5205742f19510cf6e5747e6348384a3595250d6ef849541786bed0b18657",
+    "easel/platform/central_web.py": "a153dafe410fc0cd8b048f54650f4c6e933ee6ae2e9ef33bfdf5862f0397f64f",
+    "easel/platform/execution_proxy.py": "1c3101dbedde4ba76e013f3efac6b5f2c5a9ae6813b88ca471746b7b33037df1",
+    "easel/platform/execution_records.py": "254e3a69de329b79a354885f58213db7fb5506709d41d7c95f6a347dbb76f84b",
+    "services/platform/src/platform_service/execution/core.py": "f361559404e79111d68794fcea58973e2f2a3f2357d35003613de684c28e4973",
+    "services/platform/src/platform_service/execution_web.py": "8822e8b1620b621bf99a8fda2f8a92f5ac9c44ceab7e56465b15266583dcfc1c",
+    "services/platform/tests/test_execution_recovery.py": "1ba19e25617aa288755007e579387b9ed495ea1604e2e303be3697a49c308aa9",
+    "services/platform/tests/test_execution_stream_integration.py": "092a24722bbfb588ca2051e6991384ea24d8570cfde24443b5fb953592a905ab",
+    "tests/frontend/centralExecutionRecovery.test.mjs": "ee4027efbf62adbc9ffa0eda544d24eff7fdf71ad3d923775f1a107f999f41a0",
+    "tests/test_central_execution_directory.py": "1f7cfd16ba61f83e9db74e5426aa1595a680ba6cbc363734de746e35ac783a25",
+    "tests/test_central_execution_recovery.py": "4013e4e9bbf79d0a5b5b71166df002509af52fef11e3e3ef132ee3cfd90dba86",
+    "tests/test_central_execution_stream.py": "2ac973d4cb1cd4deaae1a5e65f629290361d0c5d0a4d22d1e8b7a150b79b7ea5",
+    "web/frontend/src/components/CentralExecutionRecovery.tsx": "ef8f4c69cd24c0ea6a1603bbd0aac5f95878e9bbbea05c1b46ffa4fe08f29555",
+    "web/frontend/src/components/CentralExecutionSettings.tsx": "6d9cdbcc98f517eb38e5fa2807e18e9915c54866decb6950d3309701c7602044",
+    "web/frontend/src/lib/api.ts": "8aff91a031c483b00525afd636f13a590397ce43173f1716a3e81033a89e8e82"
+  }
+}

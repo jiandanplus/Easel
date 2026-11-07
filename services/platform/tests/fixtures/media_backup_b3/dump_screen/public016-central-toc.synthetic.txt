@@ -1,0 +1,813 @@
+;
+; Archive created at 2026-11-03 10:35:29 UTC
+;     dbname: fixture_db
+;     TOC Entries: 802
+;     Compression: gzip
+;     Dump Version: 1.15-0
+;     Format: CUSTOM
+;     Integer: 4 bytes
+;     Offset: 8 bytes
+;     Dumped from database version: 16.15 (Debian 16.15-1.pgdg13+2)
+;     Dumped by pg_dump version: 16.15 (Debian 16.15-1.pgdg13+2)
+;
+;
+; Selected TOC Entries:
+;
+5; 2615 2200 SCHEMA - public pg_database_owner
+4871; 0 0 COMMENT - SCHEMA public pg_database_owner
+4872; 0 0 ACL - SCHEMA public pg_database_owner
+307; 1255 24785 FUNCTION public check_balanced_journal() fixture_role
+333; 1255 25184 FUNCTION public check_billing_reconciliation() fixture_role
+344; 1255 25712 FUNCTION public check_console_identity_namespace() fixture_role
+339; 1255 25605 FUNCTION public check_console_operation_audit() fixture_role
+309; 1255 25776 FUNCTION public check_console_review_case() fixture_role
+310; 1255 25779 FUNCTION public check_console_review_operation() fixture_role
+312; 1255 25925 FUNCTION public check_execution_evidence_resolution() fixture_role
+337; 1255 25370 FUNCTION public check_execution_reconciliation() fixture_role
+354; 1255 25845 FUNCTION public check_execution_resolution_audit() fixture_role
+349; 1255 25723 FUNCTION public check_identity_continuity() fixture_role
+366; 1255 26462 FUNCTION public check_internal_feature_extension() fixture_role
+338; 1255 25456 FUNCTION public check_internal_grant() fixture_role
+365; 1255 26417 FUNCTION public check_media_http_reference() fixture_role
+363; 1255 26248 FUNCTION public check_media_reconciliation() fixture_role
+364; 1255 26367 FUNCTION public check_media_storage_integrity() fixture_role
+352; 1255 24908 FUNCTION public check_reservation_reconciliation() fixture_role
+355; 1255 25850 FUNCTION public check_waived_execution_audit() fixture_role
+331; 1255 24790 FUNCTION public check_wallet_reconciliation() fixture_role
+305; 1255 24777 FUNCTION public deny_immutable_change() fixture_role
+311; 1255 25841 FUNCTION public deny_initial_waived_state() fixture_role
+332; 1255 25161 FUNCTION public guard_billing_workflow() fixture_role
+308; 1255 25772 FUNCTION public guard_console_review_revision() fixture_role
+306; 1255 24783 FUNCTION public guard_entry_append() fixture_role
+356; 1255 25915 FUNCTION public guard_execution_evidence_binding() fixture_role
+336; 1255 25368 FUNCTION public guard_execution_invocation() fixture_role
+351; 1255 25364 FUNCTION public guard_execution_job() fixture_role
+335; 1255 25366 FUNCTION public guard_execution_result() fixture_role
+326; 1255 24906 FUNCTION public guard_hold_append() fixture_role
+348; 1255 25721 FUNCTION public guard_identity_alias_insert() fixture_role
+347; 1255 25719 FUNCTION public guard_identity_entry_insert() fixture_role
+328; 1255 24928 FUNCTION public guard_lot_funding() fixture_role
+358; 1255 26245 FUNCTION public guard_media_blob() fixture_role
+313; 1255 26241 FUNCTION public guard_media_invocation() fixture_role
+357; 1255 26243 FUNCTION public guard_media_job() fixture_role
+362; 1255 26365 FUNCTION public guard_media_storage_blob() fixture_role
+361; 1255 26363 FUNCTION public guard_media_storage_budget() fixture_role
+327; 1255 24922 FUNCTION public guard_reservation_funding() fixture_role
+350; 1255 24904 FUNCTION public guard_reservation_mutation() fixture_role
+345; 1255 25715 FUNCTION public guard_restore_candidate_insert() fixture_role
+340; 1255 25708 FUNCTION public identity_lock_stripe(text, text) fixture_role
+342; 1255 25710 FUNCTION public lock_console_identity(text, text) fixture_role
+341; 1255 25709 FUNCTION public lock_identity_stripe(text, integer) fixture_role
+343; 1255 25711 FUNCTION public lock_product_identity(text, text) fixture_role
+346; 1255 25717 FUNCTION public materialize_restore_candidates() fixture_role
+291; 1259 26324 TABLE public media_blobs fixture_role
+4873; 0 0 ACL public TABLE media_blobs fixture_role
+359; 1255 26359 FUNCTION public media_storage_pinned(public.media_blobs) fixture_role
+360; 1255 26360 FUNCTION public media_storage_quota() fixture_role
+334; 1255 25189 FUNCTION public touch_refund_order() fixture_role
+353; 1255 25844 FUNCTION public verify_execution_resolution_operation(text) fixture_role
+221; 1259 24589 TABLE public billing_accounts fixture_role
+4874; 0 0 ACL public TABLE billing_accounts fixture_role
+237; 1259 24948 TABLE public billing_offer_withdrawals fixture_role
+4875; 0 0 ACL public TABLE billing_offer_withdrawals fixture_role
+236; 1259 24933 TABLE public billing_offers fixture_role
+4876; 0 0 ACL public TABLE billing_offers fixture_role
+238; 1259 24961 TABLE public billing_orders fixture_role
+4877; 0 0 ACL public TABLE billing_orders fixture_role
+247; 1259 25132 TABLE public billing_outbox fixture_role
+4878; 0 0 ACL public TABLE billing_outbox fixture_role
+244; 1259 25077 TABLE public billing_refunds fixture_role
+4879; 0 0 ACL public TABLE billing_refunds fixture_role
+261; 1259 25530 TABLE public console_acl_events fixture_role
+4880; 0 0 ACL public TABLE console_acl_events fixture_role
+257; 1259 25463 TABLE public console_admins fixture_role
+4881; 0 0 ACL public TABLE console_admins fixture_role
+264; 1259 25576 TABLE public console_audit_events fixture_role
+4882; 0 0 ACL public TABLE console_audit_events fixture_role
+263; 1259 25575 SEQUENCE public console_audit_events_id_seq fixture_role
+4883; 0 0 ACL public SEQUENCE console_audit_events_id_seq fixture_role
+269; 1259 25686 TABLE public console_identity_aliases fixture_role
+4884; 0 0 ACL public TABLE console_identity_aliases fixture_role
+259; 1259 25496 TABLE public console_login_requests fixture_role
+4885; 0 0 ACL public TABLE console_login_requests fixture_role
+258; 1259 25481 TABLE public console_login_transactions fixture_role
+4886; 0 0 ACL public TABLE console_login_transactions fixture_role
+262; 1259 25552 TABLE public console_operations fixture_role
+4887; 0 0 ACL public TABLE console_operations fixture_role
+270; 1259 25738 TABLE public console_reconciliation_cases fixture_role
+4888; 0 0 ACL public TABLE console_reconciliation_cases fixture_role
+260; 1259 25514 TABLE public console_sessions fixture_role
+4889; 0 0 ACL public TABLE console_sessions fixture_role
+231; 1259 24761 TABLE public credit_entries fixture_role
+4890; 0 0 ACL public TABLE credit_entries fixture_role
+230; 1259 24760 SEQUENCE public credit_entries_id_seq fixture_role
+4891; 0 0 ACL public SEQUENCE credit_entries_id_seq fixture_role
+228; 1259 24723 TABLE public credit_holds fixture_role
+4892; 0 0 ACL public TABLE credit_holds fixture_role
+229; 1259 24741 TABLE public credit_journals fixture_role
+4893; 0 0 ACL public TABLE credit_journals fixture_role
+226; 1259 24661 TABLE public credit_lots fixture_role
+4894; 0 0 ACL public TABLE credit_lots fixture_role
+227; 1259 24692 TABLE public credit_reservations fixture_role
+4895; 0 0 ACL public TABLE credit_reservations fixture_role
+250; 1259 25213 TABLE public execution_blocked_bindings fixture_role
+4896; 0 0 ACL public TABLE execution_blocked_bindings fixture_role
+251; 1259 25221 TABLE public execution_invocations fixture_role
+4897; 0 0 ACL public TABLE execution_invocations fixture_role
+253; 1259 25277 TABLE public execution_jobs fixture_role
+4898; 0 0 ACL public TABLE execution_jobs fixture_role
+249; 1259 25199 TABLE public execution_model_states fixture_role
+4899; 0 0 ACL public TABLE execution_model_states fixture_role
+248; 1259 25191 TABLE public execution_models fixture_role
+4900; 0 0 ACL public TABLE execution_models fixture_role
+274; 1259 25877 TABLE public execution_provider_associations fixture_role
+4901; 0 0 ACL public TABLE execution_provider_associations fixture_role
+273; 1259 25855 TABLE public execution_provider_attempts fixture_role
+4902; 0 0 ACL public TABLE execution_provider_attempts fixture_role
+254; 1259 25327 TABLE public execution_receipts fixture_role
+4903; 0 0 ACL public TABLE execution_receipts fixture_role
+271; 1259 25786 TABLE public execution_resolution_operations fixture_role
+4904; 0 0 ACL public TABLE execution_resolution_operations fixture_role
+272; 1259 25800 TABLE public execution_resolutions fixture_role
+4905; 0 0 ACL public TABLE execution_resolutions fixture_role
+255; 1259 25344 TABLE public execution_results fixture_role
+4906; 0 0 ACL public TABLE execution_results fixture_role
+252; 1259 25264 TABLE public execution_task_tokens fixture_role
+4907; 0 0 ACL public TABLE execution_task_tokens fixture_role
+275; 1259 25895 TABLE public execution_terminal_evidence fixture_role
+4908; 0 0 ACL public TABLE execution_terminal_evidence fixture_role
+218; 1259 24538 TABLE public external_identities fixture_role
+4909; 0 0 ACL public TABLE external_identities fixture_role
+233; 1259 24810 TABLE public identity_handoffs fixture_role
+4910; 0 0 ACL public TABLE identity_handoffs fixture_role
+268; 1259 25667 TABLE public identity_migration_entries fixture_role
+4911; 0 0 ACL public TABLE identity_migration_entries fixture_role
+267; 1259 25643 TABLE public identity_migrations fixture_role
+4912; 0 0 ACL public TABLE identity_migrations fixture_role
+266; 1259 25627 TABLE public identity_restore_candidates fixture_role
+4913; 0 0 ACL public TABLE identity_restore_candidates fixture_role
+265; 1259 25610 TABLE public identity_restore_proofs fixture_role
+4914; 0 0 ACL public TABLE identity_restore_proofs fixture_role
+234; 1259 24845 TABLE public identity_sessions fixture_role
+4915; 0 0 ACL public TABLE identity_sessions fixture_role
+235; 1259 24879 TABLE public identity_tokens fixture_role
+4916; 0 0 ACL public TABLE identity_tokens fixture_role
+232; 1259 24795 TABLE public identity_transactions fixture_role
+4917; 0 0 ACL public TABLE identity_transactions fixture_role
+293; 1259 26423 TABLE public internal_feature_extensions fixture_role
+4918; 0 0 ACL public TABLE internal_feature_extensions fixture_role
+256; 1259 25393 TABLE public internal_grants fixture_role
+4919; 0 0 ACL public TABLE internal_grants fixture_role
+287; 1259 26173 TABLE public media_artifacts fixture_role
+4920; 0 0 ACL public TABLE media_artifacts fixture_role
+286; 1259 26140 TABLE public media_assets fixture_role
+4921; 0 0 ACL public TABLE media_assets fixture_role
+278; 1259 25952 TABLE public media_blocked_bindings fixture_role
+4922; 0 0 ACL public TABLE media_blocked_bindings fixture_role
+292; 1259 26382 TABLE public media_http_response_references fixture_role
+4923; 0 0 ACL public TABLE media_http_response_references fixture_role
+279; 1259 25961 TABLE public media_invocations fixture_role
+4924; 0 0 ACL public TABLE media_invocations fixture_role
+281; 1259 26018 TABLE public media_jobs fixture_role
+4925; 0 0 ACL public TABLE media_jobs fixture_role
+277; 1259 25938 TABLE public media_model_states fixture_role
+4926; 0 0 ACL public TABLE media_model_states fixture_role
+276; 1259 25930 TABLE public media_models fixture_role
+4927; 0 0 ACL public TABLE media_models fixture_role
+283; 1259 26091 TABLE public media_provider_associations fixture_role
+4928; 0 0 ACL public TABLE media_provider_associations fixture_role
+282; 1259 26074 TABLE public media_provider_attempts fixture_role
+4929; 0 0 ACL public TABLE media_provider_attempts fixture_role
+285; 1259 26126 TABLE public media_receipts fixture_role
+4930; 0 0 ACL public TABLE media_receipts fixture_role
+290; 1259 26307 TABLE public media_storage_budgets fixture_role
+4931; 0 0 ACL public TABLE media_storage_budgets fixture_role
+289; 1259 26291 TABLE public media_storage_policy fixture_role
+4932; 0 0 ACL public TABLE media_storage_policy fixture_role
+280; 1259 26004 TABLE public media_task_tokens fixture_role
+4933; 0 0 ACL public TABLE media_task_tokens fixture_role
+284; 1259 26109 TABLE public media_terminal_evidence fixture_role
+4934; 0 0 ACL public TABLE media_terminal_evidence fixture_role
+288; 1259 26211 TABLE public media_voices fixture_role
+4935; 0 0 ACL public TABLE media_voices fixture_role
+246; 1259 25114 TABLE public membership_revocations fixture_role
+4936; 0 0 ACL public TABLE membership_revocations fixture_role
+225; 1259 24638 TABLE public memberships fixture_role
+4937; 0 0 ACL public TABLE memberships fixture_role
+242; 1259 25041 TABLE public payment_event_audits fixture_role
+4938; 0 0 ACL public TABLE payment_event_audits fixture_role
+241; 1259 25040 SEQUENCE public payment_event_audits_id_seq fixture_role
+4939; 0 0 ACL public SEQUENCE payment_event_audits_id_seq fixture_role
+239; 1259 25015 TABLE public payment_events fixture_role
+4940; 0 0 ACL public TABLE payment_events fixture_role
+240; 1259 25030 TABLE public payment_orphan_events fixture_role
+4941; 0 0 ACL public TABLE payment_orphan_events fixture_role
+245; 1259 25096 TABLE public payment_refund_transactions fixture_role
+4942; 0 0 ACL public TABLE payment_refund_transactions fixture_role
+243; 1259 25059 TABLE public payment_transactions fixture_role
+4943; 0 0 ACL public TABLE payment_transactions fixture_role
+224; 1259 24627 TABLE public plans fixture_role
+4944; 0 0 ACL public TABLE plans fixture_role
+223; 1259 24613 TABLE public product_clients fixture_role
+4945; 0 0 ACL public TABLE product_clients fixture_role
+222; 1259 24604 TABLE public products fixture_role
+4946; 0 0 ACL public TABLE products fixture_role
+216; 1259 24519 TABLE public schema_migrations fixture_role
+4947; 0 0 ACL public TABLE schema_migrations fixture_role
+220; 1259 24570 TABLE public tenant_members fixture_role
+4948; 0 0 ACL public TABLE tenant_members fixture_role
+219; 1259 24555 TABLE public tenants fixture_role
+4949; 0 0 ACL public TABLE tenants fixture_role
+217; 1259 24526 TABLE public users fixture_role
+4950; 0 0 ACL public TABLE users fixture_role
+4792; 0 24589 TABLE DATA public billing_accounts fixture_role
+4808; 0 24948 TABLE DATA public billing_offer_withdrawals fixture_role
+4807; 0 24933 TABLE DATA public billing_offers fixture_role
+4809; 0 24961 TABLE DATA public billing_orders fixture_role
+4818; 0 25132 TABLE DATA public billing_outbox fixture_role
+4815; 0 25077 TABLE DATA public billing_refunds fixture_role
+4832; 0 25530 TABLE DATA public console_acl_events fixture_role
+4828; 0 25463 TABLE DATA public console_admins fixture_role
+4835; 0 25576 TABLE DATA public console_audit_events fixture_role
+4840; 0 25686 TABLE DATA public console_identity_aliases fixture_role
+4830; 0 25496 TABLE DATA public console_login_requests fixture_role
+4829; 0 25481 TABLE DATA public console_login_transactions fixture_role
+4833; 0 25552 TABLE DATA public console_operations fixture_role
+4841; 0 25738 TABLE DATA public console_reconciliation_cases fixture_role
+4831; 0 25514 TABLE DATA public console_sessions fixture_role
+4802; 0 24761 TABLE DATA public credit_entries fixture_role
+4799; 0 24723 TABLE DATA public credit_holds fixture_role
+4800; 0 24741 TABLE DATA public credit_journals fixture_role
+4797; 0 24661 TABLE DATA public credit_lots fixture_role
+4798; 0 24692 TABLE DATA public credit_reservations fixture_role
+4821; 0 25213 TABLE DATA public execution_blocked_bindings fixture_role
+4822; 0 25221 TABLE DATA public execution_invocations fixture_role
+4824; 0 25277 TABLE DATA public execution_jobs fixture_role
+4820; 0 25199 TABLE DATA public execution_model_states fixture_role
+4819; 0 25191 TABLE DATA public execution_models fixture_role
+4845; 0 25877 TABLE DATA public execution_provider_associations fixture_role
+4844; 0 25855 TABLE DATA public execution_provider_attempts fixture_role
+4825; 0 25327 TABLE DATA public execution_receipts fixture_role
+4842; 0 25786 TABLE DATA public execution_resolution_operations fixture_role
+4843; 0 25800 TABLE DATA public execution_resolutions fixture_role
+4826; 0 25344 TABLE DATA public execution_results fixture_role
+4823; 0 25264 TABLE DATA public execution_task_tokens fixture_role
+4846; 0 25895 TABLE DATA public execution_terminal_evidence fixture_role
+4789; 0 24538 TABLE DATA public external_identities fixture_role
+4804; 0 24810 TABLE DATA public identity_handoffs fixture_role
+4839; 0 25667 TABLE DATA public identity_migration_entries fixture_role
+4838; 0 25643 TABLE DATA public identity_migrations fixture_role
+4837; 0 25627 TABLE DATA public identity_restore_candidates fixture_role
+4836; 0 25610 TABLE DATA public identity_restore_proofs fixture_role
+4805; 0 24845 TABLE DATA public identity_sessions fixture_role
+4806; 0 24879 TABLE DATA public identity_tokens fixture_role
+4803; 0 24795 TABLE DATA public identity_transactions fixture_role
+4864; 0 26423 TABLE DATA public internal_feature_extensions fixture_role
+4827; 0 25393 TABLE DATA public internal_grants fixture_role
+4858; 0 26173 TABLE DATA public media_artifacts fixture_role
+4857; 0 26140 TABLE DATA public media_assets fixture_role
+4862; 0 26324 TABLE DATA public media_blobs fixture_role
+4849; 0 25952 TABLE DATA public media_blocked_bindings fixture_role
+4863; 0 26382 TABLE DATA public media_http_response_references fixture_role
+4850; 0 25961 TABLE DATA public media_invocations fixture_role
+4852; 0 26018 TABLE DATA public media_jobs fixture_role
+4848; 0 25938 TABLE DATA public media_model_states fixture_role
+4847; 0 25930 TABLE DATA public media_models fixture_role
+4854; 0 26091 TABLE DATA public media_provider_associations fixture_role
+4853; 0 26074 TABLE DATA public media_provider_attempts fixture_role
+4856; 0 26126 TABLE DATA public media_receipts fixture_role
+4861; 0 26307 TABLE DATA public media_storage_budgets fixture_role
+4860; 0 26291 TABLE DATA public media_storage_policy fixture_role
+4851; 0 26004 TABLE DATA public media_task_tokens fixture_role
+4855; 0 26109 TABLE DATA public media_terminal_evidence fixture_role
+4859; 0 26211 TABLE DATA public media_voices fixture_role
+4817; 0 25114 TABLE DATA public membership_revocations fixture_role
+4796; 0 24638 TABLE DATA public memberships fixture_role
+4813; 0 25041 TABLE DATA public payment_event_audits fixture_role
+4810; 0 25015 TABLE DATA public payment_events fixture_role
+4811; 0 25030 TABLE DATA public payment_orphan_events fixture_role
+4816; 0 25096 TABLE DATA public payment_refund_transactions fixture_role
+4814; 0 25059 TABLE DATA public payment_transactions fixture_role
+4795; 0 24627 TABLE DATA public plans fixture_role
+4794; 0 24613 TABLE DATA public product_clients fixture_role
+4793; 0 24604 TABLE DATA public products fixture_role
+4787; 0 24519 TABLE DATA public schema_migrations fixture_role
+4791; 0 24570 TABLE DATA public tenant_members fixture_role
+4790; 0 24555 TABLE DATA public tenants fixture_role
+4788; 0 24526 TABLE DATA public users fixture_role
+4951; 0 0 SEQUENCE SET public console_audit_events_id_seq fixture_role
+4952; 0 0 SEQUENCE SET public credit_entries_id_seq fixture_role
+4953; 0 0 SEQUENCE SET public payment_event_audits_id_seq fixture_role
+4008; 2606 24598 CONSTRAINT public billing_accounts billing_accounts_id_tenant_id_key fixture_role
+4010; 2606 24596 CONSTRAINT public billing_accounts billing_accounts_pkey fixture_role
+4069; 2606 24955 CONSTRAINT public billing_offer_withdrawals billing_offer_withdrawals_pkey fixture_role
+4065; 2606 24940 CONSTRAINT public billing_offers billing_offers_pkey fixture_role
+4067; 2606 24942 CONSTRAINT public billing_offers billing_offers_plan_id_version_key fixture_role
+4071; 2606 24989 CONSTRAINT public billing_orders billing_orders_id_billing_account_id_key fixture_role
+4073; 2606 24985 CONSTRAINT public billing_orders billing_orders_membership_id_key fixture_role
+4076; 2606 24983 CONSTRAINT public billing_orders billing_orders_pkey fixture_role
+4078; 2606 24987 CONSTRAINT public billing_orders billing_orders_user_id_product_id_tenant_id_billing_account_key fixture_role
+4101; 2606 25148 CONSTRAINT public billing_outbox billing_outbox_dedupe_key_key fixture_role
+4104; 2606 25146 CONSTRAINT public billing_outbox billing_outbox_pkey fixture_role
+4092; 2606 25089 CONSTRAINT public billing_refunds billing_refunds_operator_id_idempotency_key_key fixture_role
+4094; 2606 25087 CONSTRAINT public billing_refunds billing_refunds_pkey fixture_role
+4157; 2606 25539 CONSTRAINT public console_acl_events console_acl_events_pkey fixture_role
+4144; 2606 25480 CONSTRAINT public console_admins console_admins_issuer_subject_key fixture_role
+4146; 2606 25478 CONSTRAINT public console_admins console_admins_pkey fixture_role
+4168; 2606 25588 CONSTRAINT public console_audit_events console_audit_events_operation_id_key fixture_role
+4170; 2606 25586 CONSTRAINT public console_audit_events console_audit_events_pkey fixture_role
+4186; 2606 25697 CONSTRAINT public console_identity_aliases console_identity_aliases_migration_entry_id_key fixture_role
+4188; 2606 25695 CONSTRAINT public console_identity_aliases console_identity_aliases_pkey fixture_role
+4152; 2606 25508 CONSTRAINT public console_login_requests console_login_requests_pkey fixture_role
+4148; 2606 25493 CONSTRAINT public console_login_transactions console_login_transactions_pkey fixture_role
+4150; 2606 25495 CONSTRAINT public console_login_transactions console_login_transactions_state_hash_key fixture_role
+4159; 2606 25567 CONSTRAINT public console_operations console_operations_actor_id_key_hash_key fixture_role
+4161; 2606 25569 CONSTRAINT public console_operations console_operations_id_actor_id_key fixture_role
+4163; 2606 25565 CONSTRAINT public console_operations console_operations_pkey fixture_role
+4190; 2606 25752 CONSTRAINT public console_reconciliation_cases console_reconciliation_cases_last_operation_id_key fixture_role
+4192; 2606 25750 CONSTRAINT public console_reconciliation_cases console_reconciliation_cases_pkey fixture_role
+4155; 2606 25523 CONSTRAINT public console_sessions console_sessions_pkey fixture_role
+4048; 2606 24769 CONSTRAINT public credit_entries credit_entries_pkey fixture_role
+4040; 2606 24730 CONSTRAINT public credit_holds credit_holds_pkey fixture_role
+4042; 2606 24754 CONSTRAINT public credit_journals credit_journals_billing_account_id_kind_source_key fixture_role
+4044; 2606 24752 CONSTRAINT public credit_journals credit_journals_id_billing_account_id_key fixture_role
+4046; 2606 24750 CONSTRAINT public credit_journals credit_journals_pkey fixture_role
+4026; 2606 24681 CONSTRAINT public credit_lots credit_lots_id_billing_account_id_key fixture_role
+4028; 2606 24679 CONSTRAINT public credit_lots credit_lots_membership_id_key fixture_role
+4030; 2606 24677 CONSTRAINT public credit_lots credit_lots_pkey fixture_role
+4033; 2606 24705 CONSTRAINT public credit_reservations credit_reservations_billing_account_id_product_id_operation_key fixture_role
+4035; 2606 24707 CONSTRAINT public credit_reservations credit_reservations_id_billing_account_id_key fixture_role
+4037; 2606 24703 CONSTRAINT public credit_reservations credit_reservations_pkey fixture_role
+4110; 2606 25220 CONSTRAINT public execution_blocked_bindings execution_blocked_bindings_pkey fixture_role
+4112; 2606 25236 CONSTRAINT public execution_invocations execution_invocations_pkey fixture_role
+4114; 2606 25238 CONSTRAINT public execution_invocations execution_invocations_session_id_invocation_key_key fixture_role
+4119; 2606 25292 CONSTRAINT public execution_jobs execution_jobs_attempt_id_key fixture_role
+4121; 2606 25296 CONSTRAINT public execution_jobs execution_jobs_invocation_id_operation_key_key fixture_role
+4124; 2606 25290 CONSTRAINT public execution_jobs execution_jobs_pkey fixture_role
+4126; 2606 25294 CONSTRAINT public execution_jobs execution_jobs_reservation_id_key fixture_role
+4108; 2606 25207 CONSTRAINT public execution_model_states execution_model_states_pkey fixture_role
+4106; 2606 25198 CONSTRAINT public execution_models execution_models_pkey fixture_role
+4213; 2606 25888 CONSTRAINT public execution_provider_associations execution_provider_associations_pkey fixture_role
+4207; 2606 25869 CONSTRAINT public execution_provider_attempts execution_provider_attempts_attempt_id_key fixture_role
+4209; 2606 25867 CONSTRAINT public execution_provider_attempts execution_provider_attempts_pkey fixture_role
+4211; 2606 25871 CONSTRAINT public execution_provider_attempts execution_provider_attempts_request_id_key fixture_role
+4128; 2606 25338 CONSTRAINT public execution_receipts execution_receipts_pkey fixture_role
+4196; 2606 25799 CONSTRAINT public execution_resolution_operations execution_resolution_operations_actor_id_operation_key_key fixture_role
+4198; 2606 25797 CONSTRAINT public execution_resolution_operations execution_resolution_operations_pkey fixture_role
+4200; 2606 25818 CONSTRAINT public execution_resolutions execution_resolutions_attempt_id_key fixture_role
+4203; 2606 25816 CONSTRAINT public execution_resolutions execution_resolutions_pkey fixture_role
+4205; 2606 25820 CONSTRAINT public execution_resolutions execution_resolutions_reservation_id_key fixture_role
+4130; 2606 25353 CONSTRAINT public execution_results execution_results_pkey fixture_role
+4116; 2606 25271 CONSTRAINT public execution_task_tokens execution_task_tokens_pkey fixture_role
+4216; 2606 25907 CONSTRAINT public execution_terminal_evidence execution_terminal_evidence_pkey fixture_role
+4218; 2606 25909 CONSTRAINT public execution_terminal_evidence execution_terminal_evidence_provider_scope_hash_provider_re_key fixture_role
+3999; 2606 24548 CONSTRAINT public external_identities external_identities_pkey fixture_role
+4054; 2606 24817 CONSTRAINT public identity_handoffs identity_handoffs_pkey fixture_role
+4056; 2606 24819 CONSTRAINT public identity_handoffs identity_handoffs_transaction_id_key fixture_role
+4182; 2606 25680 CONSTRAINT public identity_migration_entries identity_migration_entries_migration_id_kind_subject_key fixture_role
+4184; 2606 25678 CONSTRAINT public identity_migration_entries identity_migration_entries_pkey fixture_role
+4176; 2606 25661 CONSTRAINT public identity_migrations identity_migrations_environment_key_hash_key fixture_role
+4178; 2606 25657 CONSTRAINT public identity_migrations identity_migrations_pkey fixture_role
+4180; 2606 25659 CONSTRAINT public identity_migrations identity_migrations_proof_id_key fixture_role
+4174; 2606 25637 CONSTRAINT public identity_restore_candidates identity_restore_candidates_pkey fixture_role
+4172; 2606 25626 CONSTRAINT public identity_restore_proofs identity_restore_proofs_pkey fixture_role
+4058; 2606 24853 CONSTRAINT public identity_sessions identity_sessions_pkey fixture_role
+4062; 2606 24887 CONSTRAINT public identity_tokens identity_tokens_pkey fixture_role
+4050; 2606 24802 CONSTRAINT public identity_transactions identity_transactions_pkey fixture_role
+4052; 2606 24804 CONSTRAINT public identity_transactions identity_transactions_state_hash_key fixture_role
+4282; 2606 26437 CONSTRAINT public internal_feature_extensions internal_feature_extensions_environment_id_issuance_key_key fixture_role
+4284; 2606 26439 CONSTRAINT public internal_feature_extensions internal_feature_extensions_grant_id_product_id_feature_key fixture_role
+4286; 2606 26435 CONSTRAINT public internal_feature_extensions internal_feature_extensions_pkey fixture_role
+4132; 2606 25416 CONSTRAINT public internal_grants internal_grants_environment_id_billing_account_id_key fixture_role
+4134; 2606 25418 CONSTRAINT public internal_grants internal_grants_environment_id_issuance_key_key fixture_role
+4136; 2606 25412 CONSTRAINT public internal_grants internal_grants_lot_id_key fixture_role
+4138; 2606 25410 CONSTRAINT public internal_grants internal_grants_membership_id_key fixture_role
+4140; 2606 25408 CONSTRAINT public internal_grants internal_grants_pkey fixture_role
+4142; 2606 25414 CONSTRAINT public internal_grants internal_grants_source_key fixture_role
+4259; 2606 26183 CONSTRAINT public media_artifacts media_artifacts_pkey fixture_role
+4261; 2606 26185 CONSTRAINT public media_artifacts media_artifacts_storage_key_key fixture_role
+4255; 2606 26150 CONSTRAINT public media_assets media_assets_pkey fixture_role
+4257; 2606 26152 CONSTRAINT public media_assets media_assets_storage_key_key fixture_role
+4241; 2606 26381 CONSTRAINT public media_provider_attempts media_attempt_reference_identity fixture_role
+4274; 2606 26340 CONSTRAINT public media_blobs media_blobs_pkey fixture_role
+4224; 2606 25960 CONSTRAINT public media_blocked_bindings media_blocked_bindings_pkey fixture_role
+4276; 2606 26393 CONSTRAINT public media_http_response_references media_http_response_reference_job_id_attempt_id_binding_has_key fixture_role
+4278; 2606 26395 CONSTRAINT public media_http_response_references media_http_response_reference_provider_scope_hash_namespace_key fixture_role
+4280; 2606 26391 CONSTRAINT public media_http_response_references media_http_response_references_pkey fixture_role
+4226; 2606 25976 CONSTRAINT public media_invocations media_invocations_pkey fixture_role
+4228; 2606 25978 CONSTRAINT public media_invocations media_invocations_session_id_invocation_key_key fixture_role
+4232; 2606 26038 CONSTRAINT public media_jobs media_jobs_attempt_id_key fixture_role
+4234; 2606 26042 CONSTRAINT public media_jobs media_jobs_invocation_id_operation_key_key fixture_role
+4236; 2606 26036 CONSTRAINT public media_jobs media_jobs_pkey fixture_role
+4238; 2606 26040 CONSTRAINT public media_jobs media_jobs_reservation_id_key fixture_role
+4222; 2606 25946 CONSTRAINT public media_model_states media_model_states_pkey fixture_role
+4220; 2606 25937 CONSTRAINT public media_models media_models_pkey fixture_role
+4247; 2606 26101 CONSTRAINT public media_provider_associations media_provider_associations_pkey fixture_role
+4243; 2606 26085 CONSTRAINT public media_provider_attempts media_provider_attempts_attempt_id_key fixture_role
+4245; 2606 26083 CONSTRAINT public media_provider_attempts media_provider_attempts_pkey fixture_role
+4253; 2606 26134 CONSTRAINT public media_receipts media_receipts_pkey fixture_role
+4270; 2606 26318 CONSTRAINT public media_storage_budgets media_storage_budgets_pkey fixture_role
+4267; 2606 26306 CONSTRAINT public media_storage_policy media_storage_policy_pkey fixture_role
+4230; 2606 26012 CONSTRAINT public media_task_tokens media_task_tokens_pkey fixture_role
+4251; 2606 26120 CONSTRAINT public media_terminal_evidence media_terminal_evidence_pkey fixture_role
+4263; 2606 26220 CONSTRAINT public media_voices media_voices_job_id_key fixture_role
+4265; 2606 26218 CONSTRAINT public media_voices media_voices_pkey fixture_role
+4099; 2606 25121 CONSTRAINT public membership_revocations membership_revocations_pkey fixture_role
+4020; 2606 24650 CONSTRAINT public memberships memberships_id_billing_account_id_key fixture_role
+4022; 2606 24648 CONSTRAINT public memberships memberships_operator_id_issuance_key_key fixture_role
+4024; 2606 24646 CONSTRAINT public memberships memberships_pkey fixture_role
+4088; 2606 25048 CONSTRAINT public payment_event_audits payment_event_audits_pkey fixture_role
+4080; 2606 25024 CONSTRAINT public payment_events payment_events_channel_mode_merchant_id_event_id_key fixture_role
+4082; 2606 25022 CONSTRAINT public payment_events payment_events_pkey fixture_role
+4084; 2606 25039 CONSTRAINT public payment_orphan_events payment_orphan_events_channel_mode_merchant_id_event_id_fin_key fixture_role
+4086; 2606 25037 CONSTRAINT public payment_orphan_events payment_orphan_events_pkey fixture_role
+4097; 2606 25103 CONSTRAINT public payment_refund_transactions payment_refund_transactions_pkey fixture_role
+4090; 2606 25066 CONSTRAINT public payment_transactions payment_transactions_pkey fixture_role
+4016; 2606 24637 CONSTRAINT public plans plans_name_version_key fixture_role
+4018; 2606 24635 CONSTRAINT public plans plans_pkey fixture_role
+4014; 2606 24621 CONSTRAINT public product_clients product_clients_pkey fixture_role
+4012; 2606 24612 CONSTRAINT public products products_pkey fixture_role
+3995; 2606 24525 CONSTRAINT public schema_migrations schema_migrations_pkey fixture_role
+4006; 2606 24578 CONSTRAINT public tenant_members tenant_members_pkey fixture_role
+4002; 2606 24564 CONSTRAINT public tenants tenants_id_owner_user_id_key fixture_role
+4004; 2606 24562 CONSTRAINT public tenants tenants_pkey fixture_role
+3997; 2606 24537 CONSTRAINT public users users_pkey fixture_role
+4074; 1259 25160 INDEX public billing_orders_owner fixture_role
+4102; 1259 25159 INDEX public billing_outbox_due fixture_role
+4165; 1259 25600 INDEX public console_audit_actor fixture_role
+4166; 1259 25599 INDEX public console_audit_created fixture_role
+4117; 1259 25771 INDEX public console_pending_queue fixture_role
+4164; 1259 25770 INDEX public console_review_history fixture_role
+4193; 1259 25769 INDEX public console_review_state fixture_role
+4194; 1259 25768 INDEX public console_review_updated fixture_role
+4153; 1259 25529 INDEX public console_sessions_admin fixture_role
+4031; 1259 24775 INDEX public credit_lots_wallet_expiry fixture_role
+4038; 1259 24776 INDEX public credit_reservations_wallet_status fixture_role
+4122; 1259 25359 INDEX public execution_jobs_lease_idx fixture_role
+4214; 1259 25894 INDEX public execution_provider_response_unique fixture_role
+4201; 1259 25836 INDEX public execution_resolutions_operation fixture_role
+4000; 1259 24554 INDEX public external_identities_user_idx fixture_role
+4059; 1259 25392 INDEX public identity_sessions_source_transaction fixture_role
+4060; 1259 24894 INDEX public identity_sessions_user_idx fixture_role
+4063; 1259 24893 INDEX public identity_tokens_session_idx fixture_role
+4271; 1259 26357 INDEX public media_blobs_gc_idx fixture_role
+4272; 1259 26356 INDEX public media_blobs_owner_idx fixture_role
+4239; 1259 26073 INDEX public media_jobs_work_idx fixture_role
+4248; 1259 26108 INDEX public media_provider_job_unique fixture_role
+4249; 1259 26107 INDEX public media_provider_response_unique fixture_role
+4268; 1259 26358 INDEX public media_storage_budget_owner_idx fixture_role
+4095; 1259 25095 INDEX public one_pending_refund fixture_role
+4453; 2620 28571 TRIGGER public credit_entries a_b2_rows fixture_role
+4441; 2620 28567 TRIGGER public credit_holds a_b2_rows fixture_role
+4447; 2620 28569 TRIGGER public credit_journals a_b2_rows fixture_role
+4431; 2620 28565 TRIGGER public credit_reservations a_b2_rows fixture_role
+4609; 2620 28553 TRIGGER public media_artifacts a_b2_rows fixture_role
+4603; 2620 28551 TRIGGER public media_assets a_b2_rows fixture_role
+4627; 2620 28561 TRIGGER public media_blobs a_b2_rows fixture_role
+4563; 2620 28535 TRIGGER public media_blocked_bindings a_b2_rows fixture_role
+4632; 2620 28563 TRIGGER public media_http_response_references a_b2_rows fixture_role
+4567; 2620 28537 TRIGGER public media_invocations a_b2_rows fixture_role
+4576; 2620 28541 TRIGGER public media_jobs a_b2_rows fixture_role
+4560; 2620 28533 TRIGGER public media_model_states a_b2_rows fixture_role
+4556; 2620 28531 TRIGGER public media_models a_b2_rows fixture_role
+4587; 2620 28545 TRIGGER public media_provider_associations a_b2_rows fixture_role
+4582; 2620 28543 TRIGGER public media_provider_attempts a_b2_rows fixture_role
+4598; 2620 28549 TRIGGER public media_receipts a_b2_rows fixture_role
+4622; 2620 28559 TRIGGER public media_storage_budgets a_b2_rows fixture_role
+4620; 2620 28557 TRIGGER public media_storage_policy a_b2_rows fixture_role
+4572; 2620 28539 TRIGGER public media_task_tokens a_b2_rows fixture_role
+4592; 2620 28547 TRIGGER public media_terminal_evidence a_b2_rows fixture_role
+4615; 2620 28555 TRIGGER public media_voices a_b2_rows fixture_role
+4454; 2620 28572 TRIGGER public credit_entries a_b2_truncate fixture_role
+4442; 2620 28568 TRIGGER public credit_holds a_b2_truncate fixture_role
+4448; 2620 28570 TRIGGER public credit_journals a_b2_truncate fixture_role
+4432; 2620 28566 TRIGGER public credit_reservations a_b2_truncate fixture_role
+4610; 2620 28554 TRIGGER public media_artifacts a_b2_truncate fixture_role
+4604; 2620 28552 TRIGGER public media_assets a_b2_truncate fixture_role
+4628; 2620 28562 TRIGGER public media_blobs a_b2_truncate fixture_role
+4564; 2620 28536 TRIGGER public media_blocked_bindings a_b2_truncate fixture_role
+4633; 2620 28564 TRIGGER public media_http_response_references a_b2_truncate fixture_role
+4568; 2620 28538 TRIGGER public media_invocations a_b2_truncate fixture_role
+4577; 2620 28542 TRIGGER public media_jobs a_b2_truncate fixture_role
+4561; 2620 28534 TRIGGER public media_model_states a_b2_truncate fixture_role
+4557; 2620 28532 TRIGGER public media_models a_b2_truncate fixture_role
+4588; 2620 28546 TRIGGER public media_provider_associations a_b2_truncate fixture_role
+4583; 2620 28544 TRIGGER public media_provider_attempts a_b2_truncate fixture_role
+4599; 2620 28550 TRIGGER public media_receipts a_b2_truncate fixture_role
+4623; 2620 28560 TRIGGER public media_storage_budgets a_b2_truncate fixture_role
+4621; 2620 28558 TRIGGER public media_storage_policy a_b2_truncate fixture_role
+4573; 2620 28540 TRIGGER public media_task_tokens a_b2_truncate fixture_role
+4593; 2620 28548 TRIGGER public media_terminal_evidence a_b2_truncate fixture_role
+4616; 2620 28556 TRIGGER public media_voices a_b2_truncate fixture_role
+4425; 2620 28573 TRIGGER public credit_lots b2_media_lot_commit fixture_role
+4465; 2620 25185 TRIGGER public billing_orders billing_orders_reconcile fixture_role
+4476; 2620 25187 TRIGGER public billing_refunds billing_refunds_reconcile fixture_role
+4511; 2620 25550 TRIGGER public console_acl_events console_acl_events_immutable fixture_role
+4512; 2620 25551 TRIGGER public console_acl_events console_acl_events_no_truncate fixture_role
+4532; 2620 25714 TRIGGER public console_identity_aliases console_alias_namespace fixture_role
+4533; 2620 25734 TRIGGER public console_identity_aliases console_aliases_immutable fixture_role
+4534; 2620 25735 TRIGGER public console_identity_aliases console_aliases_no_truncate fixture_role
+4517; 2620 25608 TRIGGER public console_audit_events console_audit_bound fixture_role
+4518; 2620 25603 TRIGGER public console_audit_events console_audit_immutable fixture_role
+4519; 2620 25604 TRIGGER public console_audit_events console_audit_no_truncate fixture_role
+4510; 2620 25713 TRIGGER public console_admins console_canonical_namespace fixture_role
+4513; 2620 25606 TRIGGER public console_operations console_operation_audited fixture_role
+4514; 2620 25601 TRIGGER public console_operations console_operations_immutable fixture_role
+4515; 2620 25602 TRIGGER public console_operations console_operations_no_truncate fixture_role
+4536; 2620 25777 TRIGGER public console_reconciliation_cases console_review_case_audited fixture_role
+4537; 2620 25774 TRIGGER public console_reconciliation_cases console_review_no_delete fixture_role
+4538; 2620 25775 TRIGGER public console_reconciliation_cases console_review_no_truncate fixture_role
+4516; 2620 25780 TRIGGER public console_operations console_review_operation_bound fixture_role
+4539; 2620 25773 TRIGGER public console_reconciliation_cases console_review_revision fixture_role
+4433; 2620 26289 TRIGGER public credit_reservations credit_reservations_media_reconcile fixture_role
+4455; 2620 24788 TRIGGER public credit_entries entries_balanced fixture_role
+4456; 2620 24781 TRIGGER public credit_entries entries_immutable fixture_role
+4457; 2620 24898 TRIGGER public credit_entries entries_no_truncate fixture_role
+4458; 2620 24793 TRIGGER public credit_entries entries_reconcile fixture_role
+4459; 2620 24784 TRIGGER public credit_entries entry_insert_guard fixture_role
+4460; 2620 24917 TRIGGER public credit_entries entry_reservations_reconcile fixture_role
+4489; 2620 25377 TRIGGER public execution_blocked_bindings execution_blocked_bindings_no_truncate fixture_role
+4490; 2620 25363 TRIGGER public execution_blocked_bindings execution_blocks_immutable fixture_role
+4491; 2620 25369 TRIGGER public execution_invocations execution_invocation_guard fixture_role
+4492; 2620 25371 TRIGGER public execution_invocations execution_invocation_reconcile fixture_role
+4493; 2620 25378 TRIGGER public execution_invocations execution_invocations_no_truncate fixture_role
+4496; 2620 25365 TRIGGER public execution_jobs execution_job_guard fixture_role
+4497; 2620 25373 TRIGGER public execution_jobs execution_job_reconcile fixture_role
+4498; 2620 25926 TRIGGER public execution_jobs execution_job_terminal_evidence_guard fixture_role
+4499; 2620 25380 TRIGGER public execution_jobs execution_jobs_no_truncate fixture_role
+4488; 2620 25376 TRIGGER public execution_model_states execution_model_states_no_truncate fixture_role
+4486; 2620 25360 TRIGGER public execution_models execution_models_immutable fixture_role
+4487; 2620 25375 TRIGGER public execution_models execution_models_no_truncate fixture_role
+4500; 2620 25842 TRIGGER public execution_jobs execution_no_initial_waiver fixture_role
+4549; 2620 25917 TRIGGER public execution_provider_associations execution_provider_association_binding fixture_role
+4550; 2620 25920 TRIGGER public execution_provider_associations execution_provider_associations_immutable fixture_role
+4551; 2620 25923 TRIGGER public execution_provider_associations execution_provider_associations_no_truncate fixture_role
+4546; 2620 25916 TRIGGER public execution_provider_attempts execution_provider_attempt_binding fixture_role
+4547; 2620 25919 TRIGGER public execution_provider_attempts execution_provider_attempts_immutable fixture_role
+4548; 2620 25922 TRIGGER public execution_provider_attempts execution_provider_attempts_no_truncate fixture_role
+4502; 2620 25383 TRIGGER public execution_receipts execution_receipt_reconcile fixture_role
+4503; 2620 25361 TRIGGER public execution_receipts execution_receipts_immutable fixture_role
+4504; 2620 25381 TRIGGER public execution_receipts execution_receipts_no_truncate fixture_role
+4434; 2620 25385 TRIGGER public credit_reservations execution_reservation_reconcile fixture_role
+4543; 2620 25848 TRIGGER public execution_resolutions execution_resolution_audited fixture_role
+4540; 2620 25846 TRIGGER public execution_resolution_operations execution_resolution_operation_audited fixture_role
+4541; 2620 25839 TRIGGER public execution_resolution_operations execution_resolution_operations_immutable fixture_role
+4542; 2620 25840 TRIGGER public execution_resolution_operations execution_resolution_operations_no_truncate fixture_role
+4544; 2620 25837 TRIGGER public execution_resolutions execution_resolutions_immutable fixture_role
+4545; 2620 25838 TRIGGER public execution_resolutions execution_resolutions_no_truncate fixture_role
+4505; 2620 25367 TRIGGER public execution_results execution_result_guard fixture_role
+4506; 2620 25382 TRIGGER public execution_results execution_results_no_truncate fixture_role
+4494; 2620 25379 TRIGGER public execution_task_tokens execution_task_tokens_no_truncate fixture_role
+4552; 2620 25918 TRIGGER public execution_terminal_evidence execution_terminal_evidence_binding fixture_role
+4553; 2620 25921 TRIGGER public execution_terminal_evidence execution_terminal_evidence_immutable fixture_role
+4554; 2620 25924 TRIGGER public execution_terminal_evidence execution_terminal_evidence_no_truncate fixture_role
+4555; 2620 25928 TRIGGER public execution_terminal_evidence execution_terminal_resolution_guard fixture_role
+4495; 2620 25362 TRIGGER public execution_task_tokens execution_tokens_immutable fixture_role
+4501; 2620 25851 TRIGGER public execution_jobs execution_waiver_audited fixture_role
+4443; 2620 24907 TRIGGER public credit_holds hold_append_guard fixture_role
+4444; 2620 24782 TRIGGER public credit_holds holds_immutable fixture_role
+4445; 2620 24899 TRIGGER public credit_holds holds_no_truncate fixture_role
+4446; 2620 24911 TRIGGER public credit_holds holds_reconcile fixture_role
+4535; 2620 25722 TRIGGER public console_identity_aliases identity_alias_member fixture_role
+4523; 2620 25716 TRIGGER public identity_restore_candidates identity_candidate_member fixture_role
+4524; 2620 25726 TRIGGER public identity_restore_candidates identity_candidates_immutable fixture_role
+4525; 2620 25727 TRIGGER public identity_restore_candidates identity_candidates_no_truncate fixture_role
+4529; 2620 25732 TRIGGER public identity_migration_entries identity_entries_immutable fixture_role
+4530; 2620 25733 TRIGGER public identity_migration_entries identity_entries_no_truncate fixture_role
+4531; 2620 25720 TRIGGER public identity_migration_entries identity_entry_member fixture_role
+4526; 2620 25724 TRIGGER public identity_migrations identity_migration_complete fixture_role
+4527; 2620 25730 TRIGGER public identity_migrations identity_migrations_immutable fixture_role
+4528; 2620 25731 TRIGGER public identity_migrations identity_migrations_no_truncate fixture_role
+4520; 2620 25718 TRIGGER public identity_restore_proofs identity_proof_candidates fixture_role
+4521; 2620 25728 TRIGGER public identity_restore_proofs identity_proofs_immutable fixture_role
+4522; 2620 25729 TRIGGER public identity_restore_proofs identity_proofs_no_truncate fixture_role
+4463; 2620 25164 TRIGGER public billing_offer_withdrawals immutable_history fixture_role
+4461; 2620 25162 TRIGGER public billing_offers immutable_history fixture_role
+4482; 2620 25176 TRIGGER public membership_revocations immutable_history fixture_role
+4472; 2620 25170 TRIGGER public payment_event_audits immutable_history fixture_role
+4468; 2620 25166 TRIGGER public payment_events immutable_history fixture_role
+4470; 2620 25168 TRIGGER public payment_orphan_events immutable_history fixture_role
+4480; 2620 25174 TRIGGER public payment_refund_transactions immutable_history fixture_role
+4474; 2620 25172 TRIGGER public payment_transactions immutable_history fixture_role
+4464; 2620 25165 TRIGGER public billing_offer_withdrawals immutable_truncate fixture_role
+4462; 2620 25163 TRIGGER public billing_offers immutable_truncate fixture_role
+4483; 2620 25177 TRIGGER public membership_revocations immutable_truncate fixture_role
+4473; 2620 25171 TRIGGER public payment_event_audits immutable_truncate fixture_role
+4469; 2620 25167 TRIGGER public payment_events immutable_truncate fixture_role
+4471; 2620 25169 TRIGGER public payment_orphan_events immutable_truncate fixture_role
+4481; 2620 25175 TRIGGER public payment_refund_transactions immutable_truncate fixture_role
+4475; 2620 25173 TRIGGER public payment_transactions immutable_truncate fixture_role
+4638; 2620 26463 TRIGGER public internal_feature_extensions internal_feature_extension_binding fixture_role
+4639; 2620 26460 TRIGGER public internal_feature_extensions internal_feature_extensions_immutable fixture_role
+4640; 2620 26461 TRIGGER public internal_feature_extensions internal_feature_extensions_no_truncate fixture_role
+4507; 2620 25457 TRIGGER public internal_grants internal_grants_consistent fixture_role
+4508; 2620 25454 TRIGGER public internal_grants internal_grants_immutable fixture_role
+4509; 2620 25455 TRIGGER public internal_grants internal_grants_no_truncate fixture_role
+4426; 2620 25461 TRIGGER public credit_lots internal_lot_consistent fixture_role
+4422; 2620 25459 TRIGGER public memberships internal_membership_audited fixture_role
+4449; 2620 24786 TRIGGER public credit_journals journal_balanced fixture_role
+4450; 2620 24780 TRIGGER public credit_journals journal_immutable fixture_role
+4451; 2620 24915 TRIGGER public credit_journals journal_reservations_reconcile fixture_role
+4452; 2620 24897 TRIGGER public credit_journals journals_no_truncate fixture_role
+4427; 2620 24929 TRIGGER public credit_lots lot_funding_guard fixture_role
+4428; 2620 24913 TRIGGER public credit_lots lots_holds_reconcile fixture_role
+4429; 2620 24900 TRIGGER public credit_lots lots_no_truncate fixture_role
+4430; 2620 24791 TRIGGER public credit_lots lots_reconcile fixture_role
+4611; 2620 26247 TRIGGER public media_artifacts media_artifact_guard fixture_role
+4612; 2620 26277 TRIGGER public media_artifacts media_artifacts_media_reconcile fixture_role
+4613; 2620 26269 TRIGGER public media_artifacts media_artifacts_no_truncate fixture_role
+4614; 2620 26376 TRIGGER public media_artifacts media_artifacts_storage_reconcile fixture_role
+4605; 2620 26246 TRIGGER public media_assets media_asset_guard fixture_role
+4606; 2620 26275 TRIGGER public media_assets media_assets_media_reconcile fixture_role
+4607; 2620 26268 TRIGGER public media_assets media_assets_no_truncate fixture_role
+4608; 2620 26374 TRIGGER public media_assets media_assets_storage_reconcile fixture_role
+4629; 2620 26368 TRIGGER public media_blobs media_blobs_storage_reconcile fixture_role
+4565; 2620 26251 TRIGGER public media_blocked_bindings media_blocked_bindings_immutable fixture_role
+4566; 2620 26260 TRIGGER public media_blocked_bindings media_blocked_bindings_no_truncate fixture_role
+4634; 2620 26418 TRIGGER public media_http_response_references media_http_reference_binding fixture_role
+4635; 2620 26421 TRIGGER public media_http_response_references media_http_reference_reconciliation fixture_role
+4636; 2620 26406 TRIGGER public media_http_response_references media_http_response_immutable fixture_role
+4637; 2620 26407 TRIGGER public media_http_response_references media_http_response_no_truncate fixture_role
+4569; 2620 26242 TRIGGER public media_invocations media_invocation_guard fixture_role
+4570; 2620 26271 TRIGGER public media_invocations media_invocations_media_reconcile fixture_role
+4571; 2620 26261 TRIGGER public media_invocations media_invocations_no_truncate fixture_role
+4578; 2620 26244 TRIGGER public media_jobs media_job_guard fixture_role
+4579; 2620 26273 TRIGGER public media_jobs media_jobs_media_reconcile fixture_role
+4580; 2620 26263 TRIGGER public media_jobs media_jobs_no_truncate fixture_role
+4581; 2620 26372 TRIGGER public media_jobs media_jobs_storage_reconcile fixture_role
+4562; 2620 26259 TRIGGER public media_model_states media_model_states_no_truncate fixture_role
+4558; 2620 26250 TRIGGER public media_models media_models_immutable fixture_role
+4559; 2620 26258 TRIGGER public media_models media_models_no_truncate fixture_role
+4589; 2620 26254 TRIGGER public media_provider_associations media_provider_associations_immutable fixture_role
+4590; 2620 26283 TRIGGER public media_provider_associations media_provider_associations_media_reconcile fixture_role
+4591; 2620 26265 TRIGGER public media_provider_associations media_provider_associations_no_truncate fixture_role
+4584; 2620 26253 TRIGGER public media_provider_attempts media_provider_attempts_immutable fixture_role
+4585; 2620 26281 TRIGGER public media_provider_attempts media_provider_attempts_media_reconcile fixture_role
+4586; 2620 26264 TRIGGER public media_provider_attempts media_provider_attempts_no_truncate fixture_role
+4600; 2620 26256 TRIGGER public media_receipts media_receipts_immutable fixture_role
+4601; 2620 26287 TRIGGER public media_receipts media_receipts_media_reconcile fixture_role
+4602; 2620 26267 TRIGGER public media_receipts media_receipts_no_truncate fixture_role
+4630; 2620 26366 TRIGGER public media_blobs media_storage_blob_guard fixture_role
+4631; 2620 26361 TRIGGER public media_blobs media_storage_blob_quota fixture_role
+4624; 2620 26364 TRIGGER public media_storage_budgets media_storage_budget_guard fixture_role
+4625; 2620 26362 TRIGGER public media_storage_budgets media_storage_budget_quota fixture_role
+4626; 2620 26370 TRIGGER public media_storage_budgets media_storage_budgets_storage_reconcile fixture_role
+4574; 2620 26252 TRIGGER public media_task_tokens media_task_tokens_immutable fixture_role
+4575; 2620 26262 TRIGGER public media_task_tokens media_task_tokens_no_truncate fixture_role
+4594; 2620 26255 TRIGGER public media_terminal_evidence media_terminal_evidence_immutable fixture_role
+4595; 2620 26285 TRIGGER public media_terminal_evidence media_terminal_evidence_media_reconcile fixture_role
+4596; 2620 26266 TRIGGER public media_terminal_evidence media_terminal_evidence_no_truncate fixture_role
+4597; 2620 26378 TRIGGER public media_terminal_evidence media_terminal_evidence_storage_reconcile fixture_role
+4617; 2620 26257 TRIGGER public media_voices media_voices_immutable fixture_role
+4618; 2620 26279 TRIGGER public media_voices media_voices_media_reconcile fixture_role
+4619; 2620 26270 TRIGGER public media_voices media_voices_no_truncate fixture_role
+4423; 2620 24779 TRIGGER public memberships memberships_immutable fixture_role
+4424; 2620 24896 TRIGGER public memberships memberships_no_truncate fixture_role
+4420; 2620 24778 TRIGGER public plans plans_immutable fixture_role
+4421; 2620 24895 TRIGGER public plans plans_no_truncate fixture_role
+4477; 2620 25190 TRIGGER public billing_refunds refund_order_revision fixture_role
+4435; 2620 24923 TRIGGER public credit_reservations reservation_funding_guard fixture_role
+4436; 2620 24905 TRIGGER public credit_reservations reservation_guard fixture_role
+4437; 2620 25843 TRIGGER public credit_reservations reservation_no_initial_waiver fixture_role
+4438; 2620 25853 TRIGGER public credit_reservations reservation_waiver_audited fixture_role
+4439; 2620 24901 TRIGGER public credit_reservations reservations_no_truncate fixture_role
+4440; 2620 24909 TRIGGER public credit_reservations reservations_reconcile fixture_role
+4466; 2620 25178 TRIGGER public billing_orders workflow_guard fixture_role
+4484; 2620 25182 TRIGGER public billing_outbox workflow_guard fixture_role
+4478; 2620 25180 TRIGGER public billing_refunds workflow_guard fixture_role
+4467; 2620 25179 TRIGGER public billing_orders workflow_truncate fixture_role
+4485; 2620 25183 TRIGGER public billing_outbox workflow_truncate fixture_role
+4479; 2620 25181 TRIGGER public billing_refunds workflow_truncate fixture_role
+4291; 2606 24599 FK CONSTRAINT public billing_accounts billing_accounts_tenant_id_fkey fixture_role
+4318; 2606 24956 FK CONSTRAINT public billing_offer_withdrawals billing_offer_withdrawals_offer_id_fkey fixture_role
+4317; 2606 24943 FK CONSTRAINT public billing_offers billing_offers_plan_id_fkey fixture_role
+4319; 2606 25005 FK CONSTRAINT public billing_orders billing_orders_billing_account_id_tenant_id_fkey fixture_role
+4320; 2606 25010 FK CONSTRAINT public billing_orders billing_orders_membership_id_billing_account_id_fkey fixture_role
+4321; 2606 25000 FK CONSTRAINT public billing_orders billing_orders_offer_id_fkey fixture_role
+4322; 2606 24995 FK CONSTRAINT public billing_orders billing_orders_product_id_fkey fixture_role
+4323; 2606 24990 FK CONSTRAINT public billing_orders billing_orders_user_id_fkey fixture_role
+4334; 2606 25149 FK CONSTRAINT public billing_outbox billing_outbox_order_id_fkey fixture_role
+4335; 2606 25154 FK CONSTRAINT public billing_outbox billing_outbox_refund_id_fkey fixture_role
+4329; 2606 25090 FK CONSTRAINT public billing_refunds billing_refunds_order_id_fkey fixture_role
+4360; 2606 25540 FK CONSTRAINT public console_acl_events console_acl_events_admin_id_fkey fixture_role
+4361; 2606 25545 FK CONSTRAINT public console_acl_events console_acl_events_request_id_fkey fixture_role
+4363; 2606 25589 FK CONSTRAINT public console_audit_events console_audit_events_actor_id_fkey fixture_role
+4364; 2606 25594 FK CONSTRAINT public console_audit_events console_audit_events_operation_id_actor_id_fkey fixture_role
+4368; 2606 25698 FK CONSTRAINT public console_identity_aliases console_identity_aliases_admin_id_fkey fixture_role
+4369; 2606 25703 FK CONSTRAINT public console_identity_aliases console_identity_aliases_migration_entry_id_fkey fixture_role
+4358; 2606 25509 FK CONSTRAINT public console_login_requests console_login_requests_approved_admin_id_fkey fixture_role
+4362; 2606 25570 FK CONSTRAINT public console_operations console_operations_actor_id_fkey fixture_role
+4370; 2606 25758 FK CONSTRAINT public console_reconciliation_cases console_reconciliation_cases_actor_id_fkey fixture_role
+4371; 2606 25753 FK CONSTRAINT public console_reconciliation_cases console_reconciliation_cases_job_id_fkey fixture_role
+4372; 2606 25763 FK CONSTRAINT public console_reconciliation_cases console_reconciliation_cases_last_operation_id_fkey fixture_role
+4359; 2606 25524 FK CONSTRAINT public console_sessions console_sessions_admin_id_fkey fixture_role
+4303; 2606 24770 FK CONSTRAINT public credit_entries credit_entries_journal_id_billing_account_id_fkey fixture_role
+4300; 2606 24736 FK CONSTRAINT public credit_holds credit_holds_lot_id_billing_account_id_fkey fixture_role
+4301; 2606 24731 FK CONSTRAINT public credit_holds credit_holds_reservation_id_billing_account_id_fkey fixture_role
+4302; 2606 24755 FK CONSTRAINT public credit_journals credit_journals_billing_account_id_fkey fixture_role
+4295; 2606 24682 FK CONSTRAINT public credit_lots credit_lots_billing_account_id_fkey fixture_role
+4296; 2606 24687 FK CONSTRAINT public credit_lots credit_lots_membership_id_billing_account_id_fkey fixture_role
+4297; 2606 24718 FK CONSTRAINT public credit_reservations credit_reservations_billing_account_id_tenant_id_fkey fixture_role
+4298; 2606 24713 FK CONSTRAINT public credit_reservations credit_reservations_product_id_fkey fixture_role
+4299; 2606 24708 FK CONSTRAINT public credit_reservations credit_reservations_user_id_fkey fixture_role
+4337; 2606 25254 FK CONSTRAINT public execution_invocations execution_invocations_billing_account_id_fkey fixture_role
+4338; 2606 25259 FK CONSTRAINT public execution_invocations execution_invocations_model_fkey fixture_role
+4339; 2606 25249 FK CONSTRAINT public execution_invocations execution_invocations_product_id_fkey fixture_role
+4340; 2606 25239 FK CONSTRAINT public execution_invocations execution_invocations_session_id_fkey fixture_role
+4341; 2606 25244 FK CONSTRAINT public execution_invocations execution_invocations_user_id_fkey fixture_role
+4343; 2606 25302 FK CONSTRAINT public execution_jobs execution_jobs_billing_account_id_fkey fixture_role
+4344; 2606 25297 FK CONSTRAINT public execution_jobs execution_jobs_invocation_id_fkey fixture_role
+4345; 2606 25317 FK CONSTRAINT public execution_jobs execution_jobs_model_fkey fixture_role
+4346; 2606 25312 FK CONSTRAINT public execution_jobs execution_jobs_product_id_fkey fixture_role
+4347; 2606 25322 FK CONSTRAINT public execution_jobs execution_jobs_reservation_id_fkey fixture_role
+4348; 2606 25307 FK CONSTRAINT public execution_jobs execution_jobs_user_id_fkey fixture_role
+4336; 2606 25208 FK CONSTRAINT public execution_model_states execution_model_states_model_id_fkey fixture_role
+4377; 2606 25889 FK CONSTRAINT public execution_provider_associations execution_provider_associations_job_id_fkey fixture_role
+4376; 2606 25872 FK CONSTRAINT public execution_provider_attempts execution_provider_attempts_job_id_fkey fixture_role
+4349; 2606 25339 FK CONSTRAINT public execution_receipts execution_receipts_job_id_fkey fixture_role
+4373; 2606 25821 FK CONSTRAINT public execution_resolutions execution_resolutions_job_id_fkey fixture_role
+4374; 2606 25826 FK CONSTRAINT public execution_resolutions execution_resolutions_operation_id_fkey fixture_role
+4375; 2606 25831 FK CONSTRAINT public execution_resolutions execution_resolutions_reservation_id_fkey fixture_role
+4350; 2606 25354 FK CONSTRAINT public execution_results execution_results_job_id_fkey fixture_role
+4342; 2606 25272 FK CONSTRAINT public execution_task_tokens execution_task_tokens_invocation_id_fkey fixture_role
+4378; 2606 25910 FK CONSTRAINT public execution_terminal_evidence execution_terminal_evidence_job_id_fkey fixture_role
+4287; 2606 24549 FK CONSTRAINT public external_identities external_identities_user_id_fkey fixture_role
+4305; 2606 24835 FK CONSTRAINT public identity_handoffs identity_handoffs_billing_account_id_tenant_id_fkey fixture_role
+4306; 2606 24840 FK CONSTRAINT public identity_handoffs identity_handoffs_issuer_subject_fkey fixture_role
+4307; 2606 24830 FK CONSTRAINT public identity_handoffs identity_handoffs_tenant_id_user_id_fkey fixture_role
+4308; 2606 24820 FK CONSTRAINT public identity_handoffs identity_handoffs_transaction_id_fkey fixture_role
+4309; 2606 24825 FK CONSTRAINT public identity_handoffs identity_handoffs_user_id_fkey fixture_role
+4367; 2606 25681 FK CONSTRAINT public identity_migration_entries identity_migration_entries_migration_id_fkey fixture_role
+4366; 2606 25662 FK CONSTRAINT public identity_migrations identity_migrations_proof_id_fkey fixture_role
+4365; 2606 25638 FK CONSTRAINT public identity_restore_candidates identity_restore_candidates_proof_id_fkey fixture_role
+4310; 2606 24869 FK CONSTRAINT public identity_sessions identity_sessions_billing_account_id_tenant_id_fkey fixture_role
+4311; 2606 24874 FK CONSTRAINT public identity_sessions identity_sessions_issuer_subject_fkey fixture_role
+4312; 2606 24859 FK CONSTRAINT public identity_sessions identity_sessions_product_id_client_id_fkey fixture_role
+4313; 2606 25387 FK CONSTRAINT public identity_sessions identity_sessions_source_transaction_id_fkey fixture_role
+4314; 2606 24864 FK CONSTRAINT public identity_sessions identity_sessions_tenant_id_user_id_fkey fixture_role
+4315; 2606 24854 FK CONSTRAINT public identity_sessions identity_sessions_user_id_fkey fixture_role
+4316; 2606 24888 FK CONSTRAINT public identity_tokens identity_tokens_session_id_fkey fixture_role
+4304; 2606 24805 FK CONSTRAINT public identity_transactions identity_transactions_product_id_client_id_fkey fixture_role
+4416; 2606 26450 FK CONSTRAINT public internal_feature_extensions internal_feature_extensions_billing_account_id_tenant_id_fkey fixture_role
+4417; 2606 26440 FK CONSTRAINT public internal_feature_extensions internal_feature_extensions_grant_id_fkey fixture_role
+4418; 2606 26455 FK CONSTRAINT public internal_feature_extensions internal_feature_extensions_tenant_id_user_id_fkey fixture_role
+4419; 2606 26445 FK CONSTRAINT public internal_feature_extensions internal_feature_extensions_user_id_fkey fixture_role
+4351; 2606 25434 FK CONSTRAINT public internal_grants internal_grants_billing_account_id_tenant_id_fkey fixture_role
+4352; 2606 25449 FK CONSTRAINT public internal_grants internal_grants_lot_id_billing_account_id_fkey fixture_role
+4353; 2606 25444 FK CONSTRAINT public internal_grants internal_grants_membership_id_billing_account_id_fkey fixture_role
+4354; 2606 25424 FK CONSTRAINT public internal_grants internal_grants_session_id_fkey fixture_role
+4355; 2606 25429 FK CONSTRAINT public internal_grants internal_grants_source_transaction_id_fkey fixture_role
+4356; 2606 25439 FK CONSTRAINT public internal_grants internal_grants_tenant_id_user_id_fkey fixture_role
+4357; 2606 25419 FK CONSTRAINT public internal_grants internal_grants_user_id_fkey fixture_role
+4401; 2606 26206 FK CONSTRAINT public media_artifacts media_artifacts_billing_account_id_tenant_id_fkey fixture_role
+4402; 2606 26191 FK CONSTRAINT public media_artifacts media_artifacts_invocation_id_fkey fixture_role
+4403; 2606 26186 FK CONSTRAINT public media_artifacts media_artifacts_job_id_fkey fixture_role
+4404; 2606 26201 FK CONSTRAINT public media_artifacts media_artifacts_product_id_fkey fixture_role
+4405; 2606 26196 FK CONSTRAINT public media_artifacts media_artifacts_user_id_fkey fixture_role
+4397; 2606 26168 FK CONSTRAINT public media_assets media_assets_billing_account_id_tenant_id_fkey fixture_role
+4398; 2606 26153 FK CONSTRAINT public media_assets media_assets_invocation_id_fkey fixture_role
+4399; 2606 26163 FK CONSTRAINT public media_assets media_assets_product_id_fkey fixture_role
+4400; 2606 26158 FK CONSTRAINT public media_assets media_assets_user_id_fkey fixture_role
+4411; 2606 26351 FK CONSTRAINT public media_blobs media_blobs_billing_account_id_tenant_id_fkey fixture_role
+4412; 2606 26341 FK CONSTRAINT public media_blobs media_blobs_invocation_id_fkey fixture_role
+4413; 2606 26346 FK CONSTRAINT public media_blobs media_blobs_job_id_fkey fixture_role
+4414; 2606 26401 FK CONSTRAINT public media_http_response_references media_http_response_reference_job_id_attempt_id_binding_ha_fkey fixture_role
+4415; 2606 26396 FK CONSTRAINT public media_http_response_references media_http_response_references_job_id_fkey fixture_role
+4380; 2606 25999 FK CONSTRAINT public media_invocations media_invocations_billing_account_id_tenant_id_fkey fixture_role
+4381; 2606 25994 FK CONSTRAINT public media_invocations media_invocations_model_fkey fixture_role
+4382; 2606 25989 FK CONSTRAINT public media_invocations media_invocations_product_id_fkey fixture_role
+4383; 2606 25979 FK CONSTRAINT public media_invocations media_invocations_session_id_fkey fixture_role
+4384; 2606 25984 FK CONSTRAINT public media_invocations media_invocations_user_id_fkey fixture_role
+4386; 2606 26068 FK CONSTRAINT public media_jobs media_jobs_billing_account_id_tenant_id_fkey fixture_role
+4387; 2606 26043 FK CONSTRAINT public media_jobs media_jobs_invocation_id_fkey fixture_role
+4388; 2606 26058 FK CONSTRAINT public media_jobs media_jobs_model_fkey fixture_role
+4389; 2606 26053 FK CONSTRAINT public media_jobs media_jobs_product_id_fkey fixture_role
+4390; 2606 26063 FK CONSTRAINT public media_jobs media_jobs_reservation_id_fkey fixture_role
+4391; 2606 26048 FK CONSTRAINT public media_jobs media_jobs_user_id_fkey fixture_role
+4379; 2606 25947 FK CONSTRAINT public media_model_states media_model_states_model_id_fkey fixture_role
+4393; 2606 26102 FK CONSTRAINT public media_provider_associations media_provider_associations_job_id_fkey fixture_role
+4392; 2606 26086 FK CONSTRAINT public media_provider_attempts media_provider_attempts_job_id_fkey fixture_role
+4396; 2606 26135 FK CONSTRAINT public media_receipts media_receipts_job_id_fkey fixture_role
+4410; 2606 26319 FK CONSTRAINT public media_storage_budgets media_storage_budgets_job_id_fkey fixture_role
+4385; 2606 26013 FK CONSTRAINT public media_task_tokens media_task_tokens_invocation_id_fkey fixture_role
+4394; 2606 26121 FK CONSTRAINT public media_terminal_evidence media_terminal_evidence_job_id_fkey fixture_role
+4395; 2606 26410 FK CONSTRAINT public media_terminal_evidence media_terminal_http_reference fixture_role
+4406; 2606 26236 FK CONSTRAINT public media_voices media_voices_billing_account_id_tenant_id_fkey fixture_role
+4407; 2606 26221 FK CONSTRAINT public media_voices media_voices_job_id_fkey fixture_role
+4408; 2606 26231 FK CONSTRAINT public media_voices media_voices_product_id_fkey fixture_role
+4409; 2606 26226 FK CONSTRAINT public media_voices media_voices_user_id_fkey fixture_role
+4332; 2606 25122 FK CONSTRAINT public membership_revocations membership_revocations_membership_id_fkey fixture_role
+4333; 2606 25127 FK CONSTRAINT public membership_revocations membership_revocations_order_id_fkey fixture_role
+4293; 2606 24651 FK CONSTRAINT public memberships memberships_billing_account_id_fkey fixture_role
+4294; 2606 24656 FK CONSTRAINT public memberships memberships_plan_id_fkey fixture_role
+4325; 2606 25049 FK CONSTRAINT public payment_event_audits payment_event_audits_event_id_fkey fixture_role
+4326; 2606 25054 FK CONSTRAINT public payment_event_audits payment_event_audits_order_id_fkey fixture_role
+4324; 2606 25025 FK CONSTRAINT public payment_events payment_events_order_id_fkey fixture_role
+4330; 2606 25104 FK CONSTRAINT public payment_refund_transactions payment_refund_transactions_order_id_fkey fixture_role
+4331; 2606 25109 FK CONSTRAINT public payment_refund_transactions payment_refund_transactions_refund_id_fkey fixture_role
+4327; 2606 25072 FK CONSTRAINT public payment_transactions payment_transactions_event_id_fkey fixture_role
+4328; 2606 25067 FK CONSTRAINT public payment_transactions payment_transactions_order_id_fkey fixture_role
+4292; 2606 24622 FK CONSTRAINT public product_clients product_clients_product_id_fkey fixture_role
+4289; 2606 24579 FK CONSTRAINT public tenant_members tenant_members_tenant_id_fkey fixture_role
+4290; 2606 24584 FK CONSTRAINT public tenant_members tenant_members_user_id_fkey fixture_role
+4288; 2606 24565 FK CONSTRAINT public tenants tenants_owner_user_id_fkey fixture_role

@@ -1,0 +1,28 @@
+{
+  "variant": "A",
+  "page": "13",
+  "title": "对话与脚本",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-4e113831-c9f1-4d4b-b15e-f2540e09c994.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/A/13.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "对话与脚本",
+    "Agent 底座",
+    "执行引擎",
+    "模型覆盖",
+    "保存底座"
+  ],
+  "status": "visually-reviewed-corrected",
+  "visuallyConfirmedLabels": [
+    "对话与脚本",
+    "Agent 底座",
+    "执行引擎",
+    "模型覆盖",
+    "保存底座"
+  ],
+  "qaNotes": "Manual visual check confirms mandatory heading/control labels; not a guarantee for every decorative glyph",
+  "previousSource": "/Users/jiandan/.codex/generated_images/01a13b8e-f8e2-7a90-9676-a91b8de1387f/exec-1005b364-31d5-4718-917b-c156e76c954f.png",
+  "controlSemanticsConfirmed": true,
+  "sha256": "f83e9fbb6d9a683b6147de12bd9d8a81c843dff0b8d23089815f9f75a996fa78"
+}

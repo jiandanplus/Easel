@@ -1,0 +1,282 @@
+{
+  "activation": {
+    "html_matches_new_package": true,
+    "model_calls": 0,
+    "ok": true,
+    "old_application_untouched": true,
+    "old_launcher_backups_private": true,
+    "old_launchers_forward_to_v24": true,
+    "pid": 3439,
+    "port": 17868,
+    "same_home_workspace": true,
+    "source_files_changed": [
+      "web/frontend/src/components/AccountsPage.tsx",
+      "web/frontend/src/components/AppearanceControls.tsx",
+      "web/frontend/src/components/BreakdownPage.tsx",
+      "web/frontend/src/components/BundledProviderSettings.tsx",
+      "web/frontend/src/components/CalendarPage.tsx",
+      "web/frontend/src/components/CentralAccountSettings.tsx",
+      "web/frontend/src/components/CentralBillingSettings.tsx",
+      "web/frontend/src/components/CentralExecutionRecovery.tsx",
+      "web/frontend/src/components/CentralExecutionSettings.tsx",
+      "web/frontend/src/components/DashboardPage.tsx",
+      "web/frontend/src/components/EnvBoard.tsx",
+      "web/frontend/src/components/HarnessSettings.tsx",
+      "web/frontend/src/components/IdeasPage.tsx",
+      "web/frontend/src/components/MediaGatewaySettings.tsx",
+      "web/frontend/src/components/OnboardingWizard.tsx",
+      "web/frontend/src/components/PlatformAccountSettings.tsx",
+      "web/frontend/src/components/ProfilePage.tsx",
+      "web/frontend/src/components/PublishPage.tsx",
+      "web/frontend/src/components/SettingsPanel.tsx",
+      "web/frontend/src/components/SkillPage.tsx",
+      "web/frontend/src/components/ThemeSettings.tsx",
+      "web/frontend/src/components/TrendsPage.tsx"
+    ]
+  },
+  "current_root_browser_catalog_readonly": {
+    "action": "refresh image catalog GET only",
+    "models": [
+      {
+        "available": true,
+        "id": "gpt-image-2.5-flare",
+        "points_per_image": 1
+      },
+      {
+        "available": true,
+        "id": "gpt-image-2.5-sunburst",
+        "points_per_image": 1
+      }
+    ],
+    "new_model_posts": 0,
+    "new_real_generation": false,
+    "screenshot": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v24/image-model-catalog.png",
+    "source": "root current actual browser confirmation; reporter visually inspected supplied corrected screenshot"
+  },
+  "current_root_browser_readonly": {
+    "active_requests": 0,
+    "authenticated": true,
+    "available_microcredits": 6952153,
+    "issued_microcredits": 10000000,
+    "new_model_posts": 0,
+    "pending_reconciliation": 1,
+    "pending_reconciliation_limit": 3,
+    "reserved_microcredits": 1000000,
+    "screenshot": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v24/account-login-wallet.png",
+    "source": "root actual current browser observation; reporter visually inspected supplied screenshot; not a fresh server ledger audit",
+    "spent_microcredits": 2047847
+  },
+  "date": "2026-10-27",
+  "embedded_runtime_verification": {
+    "auth_synthetic_only": true,
+    "bundled_pi_manifest_verified": true,
+    "durable_unknown_refresh_fence": true,
+    "embedded_python_used": true,
+    "external_http": 0,
+    "new_real_generation": false,
+    "pillow_version": "12.3.0",
+    "previous_protocol_images_fully_decoded": 2,
+    "provider_posts": 0,
+    "restart_refresh_replays": 0,
+    "source": "root recorded successful execution; verification scripts inspected but not rerun; no separate result JSON supplied",
+    "successful_rotation_saved": true
+  },
+  "evidence_boundary": {
+    "not_full_delivery_completion": true,
+    "reporter_actions": "read existing receipts, root test log and screenshot; create only this report and companion safe JSON",
+    "reporter_model_requests": 0,
+    "reporter_read_raw_user_auth": false,
+    "reporter_reran_tests": false,
+    "reporter_ssh": false,
+    "server_release_changed_by_this_delivery": false
+  },
+  "evidence_inputs": [
+    {
+      "bytes": 371,
+      "path": "/private/tmp/easel-delivery-20261027-v24/package-safe.json",
+      "sha256": "7b51a9220d0786d77e44dbe93bd51cffade65cfcc68bce874f5a4068d9bb7672",
+      "source": "root_existing_safe_receipt"
+    },
+    {
+      "bytes": 405,
+      "path": "/private/tmp/easel-delivery-20261027-v24/fresh-install-safe.json",
+      "sha256": "d2a3d6b2e16d8334474d00c7f1199f97c24c30271039471daf99b3e4344b35e9",
+      "source": "root_existing_safe_receipt"
+    },
+    {
+      "bytes": 1505,
+      "path": "/private/tmp/easel-delivery-20261027-v24/activation-safe.json",
+      "sha256": "9f87c5d9640ca65148cdd9e75d262fb388c0a389acf9d23d7141d1ba260d6e53",
+      "source": "root_existing_safe_receipt"
+    },
+    {
+      "bytes": 241,
+      "path": "/private/tmp/easel-delivery-20261027-v24/preservation-safe.json",
+      "sha256": "7d8f619b81dffd9a5e993dc445d17c6db4e10982d97f9cf6fcad57ae195f8b64",
+      "source": "root_existing_safe_receipt"
+    },
+    {
+      "bytes": 1501,
+      "path": "/private/tmp/easel-delivery-20261027-v24/source-diff-safe.json",
+      "sha256": "95b2eeafe6933886c4b462153d2f0f9ab0e1b8d046c35d7cc6650d1f3dddd791",
+      "source": "root_existing_safe_receipt"
+    },
+    {
+      "bytes": 2194,
+      "path": "/private/tmp/easel-delivery-20261027-v24/legacy-forwarding-safe.json",
+      "sha256": "ede08b337622a844abb0882412cdc3ec947a7cd99ad7b7b03d99adc069548abd",
+      "source": "root_existing_safe_receipt"
+    },
+    {
+      "bytes": 976,
+      "path": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v24/artifact.json",
+      "sha256": "28d43cfa99376402ac22ae8f61abed3de29af1846372249cdf2b7d0ec9e5fa71",
+      "source": "package_build_record"
+    },
+    {
+      "bytes": 41020,
+      "path": "/private/tmp/easel-delivery-20261027-v24/frontend-tests-root.log",
+      "sha256": "e78fc5496e9b4e3f03f642e2ffa31546aec928e91b8393469ffdf01bb266b9c2",
+      "source": "root_existing_test_log"
+    },
+    {
+      "bytes": 52988,
+      "path": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v24/account-login-wallet.png",
+      "sha256": "b0e58c6903d766b9adfadde12ba20dfb3bc47eef3dca597ad4165d214c219bbe",
+      "source": "root_actual_browser_screenshot"
+    },
+    {
+      "bytes": 61049,
+      "path": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v24/image-model-catalog.png",
+      "sha256": "495a38fe244b68318d6a2203049e7c7642c0cd1da29e0a214ae871ff058bd841",
+      "source": "root_actual_browser_correct_image_catalog_viewport"
+    }
+  ],
+  "fresh_install": {
+    "auth_posts": 0,
+    "bundled_pi": true,
+    "clean_device_or_gatekeeper_verified": false,
+    "clean_home_workspace": true,
+    "default_subscription": true,
+    "external_model_posts": 0,
+    "host_path": "system_only",
+    "ok": true,
+    "owned_instance_stopped": true,
+    "prior_credentials_required": false,
+    "public_login_entry_configured": true,
+    "same_machine_test": true,
+    "supplier_key_required": false
+  },
+  "frontend_tests": [
+    {
+      "actor": "author",
+      "passed": 449,
+      "reporter_reran": false,
+      "separate_result_file_supplied": false,
+      "source": "root trusted handoff of author run"
+    },
+    {
+      "actor": "root",
+      "duration_ms": 3715.64925,
+      "failed": 0,
+      "log_path": "/private/tmp/easel-delivery-20261027-v24/frontend-tests-root.log",
+      "passed": 449,
+      "reporter_reran": false,
+      "skipped": 0
+    }
+  ],
+  "legacy_forwarding": {
+    "backups_private": true,
+    "helper_count": 8,
+    "helpers_executed": false,
+    "old_apps_and_zips_unchanged": true,
+    "provider_posts": 0,
+    "v18_absence_source": "root_record_no_blanket_v18_forwarding_claim",
+    "v18_same_date_directory_absent": true,
+    "v23_forwarded_during_activation": true,
+    "versions": [
+      19,
+      20,
+      21,
+      22
+    ]
+  },
+  "not_verified": [
+    "native_clipboard_copy_and_paste_end_to_end",
+    "Chinese_IME_composition",
+    "VoiceOver",
+    "code_signing",
+    "notarization",
+    "independent_clean_device",
+    "Gatekeeper_acceptance",
+    "original_Python_archive_SHA"
+  ],
+  "package": {
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v24/Easel/Easel.app",
+    "app_inventory_files_verified": 15399,
+    "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v24/Easel-Pi-macOS15-arm64.zip",
+    "bytes": 129819302,
+    "crc_ok": true,
+    "entries": 36112,
+    "no_user_state_in_zip": true,
+    "notarized": false,
+    "ok": true,
+    "signed": false,
+    "source_manifest_sha256": "4b2ac6ce213a7e0223379a0e0d2a76dec97dd0ca9f0c44c31c459b26c581f978",
+    "verification_source": "root_existing_package_safe_not_reporter_reverification",
+    "zip_sha256": "5789d1f441054f14479b25b5581bdaeb10d2fe5436f7d42b504386a42d53ee0f"
+  },
+  "preservation": {
+    "changes": [],
+    "history_and_custom_config_preserved": true,
+    "model_calls": 0,
+    "new_private_runtime_files": [],
+    "ok": true,
+    "protected_files": 155,
+    "same_account_scope": true,
+    "same_wallet": true,
+    "wallet_observed": true
+  },
+  "prior_live_image_acceptance": {
+    "claimed_as_v24_new_generation": false,
+    "desktop_version": "v23",
+    "models": [
+      "gpt-image-2.5-sunburst",
+      "gpt-image-2.5-flare"
+    ],
+    "original_image_manifest_modified": false,
+    "report_path": "/Users/jiandan/Code/GitCode/Easel/docs/validation/2026-10-27-newapi-image-workbench-delivery.md"
+  },
+  "sources": {
+    "build_inputs_unchanged": true,
+    "changed_public_sources": [
+      "web/frontend/src/components/AccountsPage.tsx",
+      "web/frontend/src/components/AppearanceControls.tsx",
+      "web/frontend/src/components/BreakdownPage.tsx",
+      "web/frontend/src/components/BundledProviderSettings.tsx",
+      "web/frontend/src/components/CalendarPage.tsx",
+      "web/frontend/src/components/CentralAccountSettings.tsx",
+      "web/frontend/src/components/CentralBillingSettings.tsx",
+      "web/frontend/src/components/CentralExecutionRecovery.tsx",
+      "web/frontend/src/components/CentralExecutionSettings.tsx",
+      "web/frontend/src/components/DashboardPage.tsx",
+      "web/frontend/src/components/EnvBoard.tsx",
+      "web/frontend/src/components/HarnessSettings.tsx",
+      "web/frontend/src/components/IdeasPage.tsx",
+      "web/frontend/src/components/MediaGatewaySettings.tsx",
+      "web/frontend/src/components/OnboardingWizard.tsx",
+      "web/frontend/src/components/PlatformAccountSettings.tsx",
+      "web/frontend/src/components/ProfilePage.tsx",
+      "web/frontend/src/components/PublishPage.tsx",
+      "web/frontend/src/components/SettingsPanel.tsx",
+      "web/frontend/src/components/SkillPage.tsx",
+      "web/frontend/src/components/ThemeSettings.tsx",
+      "web/frontend/src/components/TrendsPage.tsx"
+    ],
+    "m2_and_m3_central_source_excluded": true,
+    "new_public_source_count": 901,
+    "old_public_source_count": 901,
+    "public_manifest_sha256": "4b2ac6ce213a7e0223379a0e0d2a76dec97dd0ca9f0c44c31c459b26c581f978"
+  },
+  "status": "v24_local_package_activated_and_existing_account_preserved"
+}

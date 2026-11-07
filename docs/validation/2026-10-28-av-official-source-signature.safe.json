@@ -1,0 +1,13 @@
+{
+  "status": "OFFICIAL_SOURCE_DOWNLOAD_INCOMPLETE_SIGNATURE_NOT_VERIFIED",
+  "archive_downloaded": false,
+  "gpg_executed": false,
+  "source_extracted": false,
+  "software_built_or_installed": false,
+  "production_service_actions": false,
+  "private_business_data_read": false,
+  "root_evidence_files": 4,
+  "root_evidence_bytes": 8675,
+  "manifest_sha256": "93740daff095b02bb0b497d0e0cd37896144e6599d1abbc399ec63251f25b088",
+  "document_sha256": "a87ee381dd88ca9b1d982b05cb9d30f783bafd9b15bac5e3c1f30064e01456a6"
+}

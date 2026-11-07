@@ -11,14 +11,24 @@ from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 
+class _CoreView:
+    """Stand-in for the core app module: `_core.NAME` reads the same test namespace."""
+    def __init__(self, env):
+        self._env = env
+
+    def __getattr__(self, name):
+        return self._env[name]
+
+
 def load_web_functions():
-    tree = ast.parse((ROOT / 'web/app.py').read_text(encoding='utf-8'))
+    tree = ast.parse((ROOT / 'easel/routes/accounts.py').read_text(encoding='utf-8'))
     names = {'api_mp_login_start', '_stop_mp_login_on_shutdown'}
     nodes = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name in names]
     for node in nodes:
         node.decorator_list = []
     env = {'subprocess': subprocess}
-    exec(compile(ast.Module(body=nodes, type_ignores=[]), 'web/app.py', 'exec'), env)
+    env['_core'] = _CoreView(env)
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), 'easel/routes/accounts.py', 'exec'), env)
     return env
 
 class MpLoginTests(unittest.TestCase):

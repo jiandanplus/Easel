@@ -178,7 +178,7 @@ export default function PublishPage({ persona }: PublishPageProps) {
     if (empty || publishing || checking) return;
     const targets = PLATFORMS.filter((p) => platforms.includes(p.key) && PUBLISHABLE.has(p.key));
     if (targets.length === 0) {
-      showToast('所选平台暂不支持一键发布（B站请用「复制」或终端 biliup）');
+      showToast('所选平台暂不支持一键发布，可复制内容手动发布');
       return;
     }
     setChecking(true);
@@ -296,7 +296,6 @@ export default function PublishPage({ persona }: PublishPageProps) {
     <div className="publish-page">
       <div className="publish-editor">
         <h1 className="page-title"><IconPublish size={21} /> 发布中心</h1>
-        <p className="page-subtitle">一次编辑 → AI 一键改写成各平台版本 → 预检 → 附媒体 → 一键真发布。</p>
 
         <label className="field-label">标题</label>
         <input className="field" value={title} placeholder="标题（部分平台需要）"
@@ -365,7 +364,7 @@ export default function PublishPage({ persona }: PublishPageProps) {
             <IconCalendar size={14} /> 存草稿并排期
           </button>
           <button className="btn btn-sm btn-primary" disabled={empty || publishing || checking || !canPublish}
-            title={canPublish ? '真实发布到已登录平台' : '所选平台无一键发布（B站走终端 biliup）'}
+            title={canPublish ? '真实发布到已登录平台' : '所选平台暂不支持一键发布'}
             onClick={publishAll}>
             <IconPublish size={14} /> {publishing ? '发布中…' : '一键发布'}
           </button>
@@ -375,7 +374,7 @@ export default function PublishPage({ persona }: PublishPageProps) {
           </button>
         </div>
         {adapting && <div className="adapt-hint"><span className="live-pulse" />AI 正在逐字改写各平台版本…可随时停止。</div>}
-        <p className="publish-saved-note">草稿已自动保存，切换页面/刷新回来内容都在。一键发布仅对「已登录 + 媒体齐全」的平台生效。</p>
+        <p className="publish-saved-note">草稿已自动保存</p>
         {checkResult && (
           <div className="panel" style={{ marginTop: 14 }}>
             <div className="panel-title"><IconCheck size={14} /> 发布前预检</div>

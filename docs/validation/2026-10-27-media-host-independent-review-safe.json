@@ -1,0 +1,90 @@
+{
+  "results": [
+    {
+      "label": "outside-sdk",
+      "exit_code": 0,
+      "seconds": 15.6,
+      "log": "/private/tmp/easel-media-review-20261027-m4/outside-sdk.log"
+    },
+    {
+      "label": "postgres-three",
+      "exit_code": 0,
+      "seconds": 3.74,
+      "log": "/private/tmp/easel-media-review-20261027-m4/postgres-three.log"
+    },
+    {
+      "label": "frontend-target",
+      "exit_code": 0,
+      "seconds": 0.76,
+      "log": "/private/tmp/easel-media-review-20261027-m4/frontend-target.log"
+    }
+  ],
+  "source_before_after_hash_equal": true,
+  "changed_paths": [],
+  "input_files": {
+    "docs/validation/2026-10-27-media-host-validation.md": "2b8bef2d33505a39ecfcb02a516a402dea13f7040dea1adf2acb891a7377a2ee",
+    "easel/harnesses/base.py": "e7240994bd1c1cb9c025aae3813f2572a7b453adde4cded1af9932a500f7efdc",
+    "easel/harnesses/pi.py": "b153519c6c8a89efaccc86d25888e25c8a668d936aafa1225adb8827820da863",
+    "easel/harnesses/pi_tools.py": "a2fd2906cd817451c7f1ab84de58c222072a6d4496c669a77f9ff246d564c524",
+    "easel/platform/central.py": "0ee4be6b523e0e45c7a35b5ad7a118a2011b015fc5c546d2fdc1da8cbddae7d0",
+    "easel/platform/central_session.py": "cefe9d73e0229bd92e8d3498f7acfb4bef723ae4a21cdda2d0b7fec80c0a90a2",
+    "easel/platform/central_web.py": "2f9fae27d1c2c0e943bfb17df42e2c6c2d2227d91734ae5d3798f45cd82be01f",
+    "easel/platform/execution_records.py": "05a89ee21c6864ee3df6f3c529cc70e7a57eec361e34bb37ec2599430c093eee",
+    "easel/platform/media.py": "412b5a17e77cad90f16e29f8b5f5967ef7ae366c211c6b4bcfb59f3d3ec23963",
+    "easel/platform/media_records.py": "efd4ced9d071072b1aedaf92e85d99114c7428510a12a944a041668f0b358efc",
+    "easel/platform/session.py": "f181b017d25b326e05711aee1f8d2993e183790452d4afbdc617a57ccd5928ec",
+    "runtime/pi/worker.mjs": "fa122e93d0d9cffae32aac5f95724189c039ab22a705f09d74c125d57515342f",
+    "services/platform/tests/test_media_desktop_host_roundtrip.py": "86928471d2cfd713774f9dd138bc97161664809bb820b8dab92a7bab140c5126",
+    "tests/frontend/centralAccount.test.mjs": "c9c1bd4cc39b1f03b03380c2842609cd44ba4c31d46c3fd5505da80dfc3dfa19",
+    "tests/frontend/centralMedia.test.mjs": "b963bb7118e581b7a56f2b295f615b0398c6d2ae9e064cfe91ad19296f95e8b5",
+    "tests/frontend/conversationRecovery.test.mjs": "c2cccb73e1d244d1ca57f66d2c551c7e30c2c61d411c43b04436cffce74e096e",
+    "tests/pi_media_worker_fixture.mjs": "7859aa50768af71e308d9acedd37e5643748d5e5539f31998d9c3f27d20ee22b",
+    "tests/test_central_media_host.py": "9917f68086a5d1e5dd12ad80ae5355734b16fc0484f7badeface6b71b8f9c783",
+    "tests/test_central_media_web.py": "f3d306f509731b381f46470ad995ea133d70951ab0d48f0eb3a42eee11a03dc1",
+    "tests/test_pi_media_host.py": "c5ef377246f90949fee1989be5adb169e563e5991d23d99fd5864a4f5cdf4fc8",
+    "web/frontend/src/components/CentralMediaSettings.tsx": "3e3049dd26646a6df48f510cf112c70071288b3bb21a94e758d64694c68d0925",
+    "web/frontend/src/components/ConversationRecovery.tsx": "123bf54f9e63bd21aefe7348e25787ebee0095356442ab2e87ddd0543aa37854",
+    "web/frontend/src/lib/api.ts": "728e17eed4d8d514d4849725a405f3057f5fb886343dc53901d0f980757f60b0"
+  },
+  "sdk_worker_source_equal": true,
+  "backend_wheel_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+  "no_production_actions": true,
+  "freeze_manifest_sha256": "46e926161e03e254d2c861c9d7d0b349f47936b1f664542e4c8798c98948f02d",
+  "tests": {
+    "outside_and_real_sdk_and_media_web_and_independent_records": {
+      "passed": 257,
+      "skipped": 0,
+      "seconds": 14.92
+    },
+    "central_http_postgres": {
+      "passed": 3,
+      "skipped": 0,
+      "seconds": 2.71
+    },
+    "frontend_target": {
+      "passed": 55,
+      "skipped": 0
+    }
+  },
+  "independent_records_checks": [
+    "51 old paid records remain owned across pagination; cross owner denied",
+    "actual 999 records + two concurrent fresh claims -> one admit, one capacity reject; final1000",
+    "full capacity keeps exact turn read and original duplicate claim without mint",
+    "incomplete scan explicit; exact turn and same original claim survive"
+  ],
+  "resolved_review_findings": [
+    "refresh strict wall budget through private async refresh",
+    "401 refresh_replayed invalidation and late token guard",
+    "decoded actual 1024 delivery match before charging; host rechecks at save",
+    "owned lookup independent of latest50 display pagination; bounded capacity before mint",
+    "processing media label and unknown cost remain correct"
+  ],
+  "remaining_known_blocking_findings": [],
+  "evidence_limits": [
+    "local SDK and synthetic provider only; no real supplier call by reviewer",
+    "PostgreSQL writes only random isolated synthetic schemas",
+    "no production mutations and no fresh macOS installation or new DMG claim",
+    "M2/M3 not included in this review",
+    "file-store scan4096 entries/2sec and record capacity1000 are explicit failclosed bounds; no auto-delete or archive"
+  ]
+}

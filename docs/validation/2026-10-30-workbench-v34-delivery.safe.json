@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "version": "v34",
+  "branch": "codex/ui-redesign",
+  "head": "e972af07444e181e3eb737441ecac306bca778b3",
+  "full_goal_complete": false,
+  "archive": {
+    "path": "outputs/_run/pi-portable-20261030-v34/Easel-Pi-macOS15-arm64.zip",
+    "bytes": 129749024,
+    "sha256": "4baed43e680341f73a57a728bc9600ab13684ba9a05f99066a268f6a5e53742c",
+    "unsigned": true,
+    "notarized": false,
+    "minimum_macos": "15.0",
+    "architecture": "arm64"
+  },
+  "verification": {
+    "frontend_passed": 585,
+    "frontend_failed": 0,
+    "frontend_skipped": 0,
+    "targeted_account_passed": 63,
+    "targeted_overlaps_full_frontend": true,
+    "frontend_input_count": 139,
+    "build_exit_code": 0,
+    "independent_package_checks_passed": 23,
+    "resources_after_launch_rehashed": 15402,
+    "source_records": 904,
+    "build_inputs": 60,
+    "synthetic_browser_cases_observed": 6,
+    "synthetic_services_stopped": 6,
+    "real_model_send_actions": 0,
+    "real_payment_actions": 0
+  },
+  "activation": {
+    "origin": "http://127.0.0.1:17868",
+    "same_workspace_and_home": true,
+    "owned_new_pid": 96768,
+    "r1_failed_before_stop": true,
+    "r1_status_diagnostic_seconds": 11.238,
+    "r2_status_get_timeout_seconds": 30,
+    "fresh_backup_regular_files": 887,
+    "fresh_backup_content_bytes": 15539620,
+    "protected_files": 150,
+    "wallet_equal_at_r2_after": true,
+    "post_ui_account_refresh_only": true,
+    "post_ui_wallet_reread": false,
+    "actual_unknown_card_and_settings_verified": true,
+    "original_conversation_restored": true
+  },
+  "evidence": {
+    "preactivation_manifest_sha256": "aaa196d9d0de6bc028c31f483f35adb396d830dd0bff667e0ed5c7b9a7d825c8",
+    "preactivation_file_count": 53,
+    "activation_closure_sha256": "b91b9dfd20744ce39f70dec31cb003017acbe0b2623481bd3d0249e383c5358e",
+    "activation_file_count": 16,
+    "both_closures_reverified": true
+  },
+  "b1_archive_reverified": {
+    "bytes": 42467,
+    "sha256": "6b40acaf3aac814bb4b4115666f2ca8ce4bcd2976d09effdbbc07ae2db33494b",
+    "members": 17,
+    "crc_passed": true
+  },
+  "pending_separate_confirmation": [
+    "B2 local implementation design",
+    "fourth AV one-shot",
+    "permanent workspace migration"
+  ],
+  "other_unfinished": [
+    "formal payments explicitly deferred",
+    "second real product unspecified",
+    "complete AV isolation source build and supplier acceptance",
+    "F2 actual Linux PostgreSQL WPD and successful complete media restore/timer",
+    "native IME VoiceOver system clipboard independent clean-machine Gatekeeper signing and notarization"
+  ],
+  "git_actions": {
+    "commit": false,
+    "push": false,
+    "merge": false
+  }
+}

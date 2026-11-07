@@ -1,0 +1,69 @@
+{
+  "status": "local_candidate_verified_not_deployed",
+  "protocol": "newapi_incho_v1",
+  "candidate_files": 16,
+  "candidate_current_hashes_match": true,
+  "branch": "codex/ui-redesign",
+  "focused": {
+    "passed": 346,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 78.46,
+    "tool_session_id": 66760,
+    "exit_code": 0
+  },
+  "runner_followup": {
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 2.65,
+    "scope": "strict migration constant020 and original prepare-only/auth/no-payment/controlled-protocol tests"
+  },
+  "counts_are_separate": true,
+  "frozen_superset": {
+    "count": 429,
+    "changed": [
+      "services/platform/scripts/verify_mixed_media_restore_drill.py"
+    ],
+    "changed_file_outside_candidate_and_selected_test_execution_path": true,
+    "candidate14_original_freeze_unchanged": true
+  },
+  "protected_migrations": {
+    "001-019_unchanged": true,
+    "count": 19
+  },
+  "desktop": {
+    "source_sha256": "af1409356af8d850d3ce3ba6bc451bffab9f9841547e4f56b50640410e7b6ee0",
+    "delta": "music.generate whitelist adds n and lyric only",
+    "not_in_v26": true,
+    "actual_owned_sdk_rechecked": true,
+    "sdk_boolean_count_can_reach_host": true,
+    "host_invalid_parameters_before_mint_supplier_posts": 0
+  },
+  "production": {
+    "deployed": false,
+    "music_enabled": false,
+    "model_or_rate_seeded": false,
+    "provider_posts": 0,
+    "source_models_changed": false,
+    "routing_current": "missing incho_music ability",
+    "v4_5": "unsupported_no_downgrade",
+    "formal_payments_enabled": false
+  },
+  "evidence_sha256": {
+    "candidate-r1-manifest.json": "a5411543bc5eac3dd42a60ff4c0e9872c222fde132fbd559952d8e7383f3680d",
+    "candidate-r1-source.tar.gz": "e4240159beb3726d742dccc7ef919c82c052efd640acf671cd72189023e1ee32",
+    "candidate-r1.patch": "da18b7ea574762f557a326936b17750961c0dac2ee586a7b5092b5a8a87fb8e0",
+    "final-focused.log": "9b906f8b79eee2709540d6491098802fd204c186900ee447bf2153ac170169ad",
+    "final-focused.junit.xml": "8fbb754883419cd9ae24e7adb37c3ecd2a93868a377381219b7993b58a6c870f",
+    "prepare-runner-green.log": "1be2bb0a34acdd27fbb18ccf18623ad6a2d7aa69f35312d0163180ef35371fef",
+    "prepare-runner-green.junit.xml": "e146a3151c654cdf75d4102809803f6ce63b8abd687c73f0c430feaea676c909",
+    "protected-migrations.json": "3a6544f72b285ea2a59669132e33febcd1f266b1c9803d002f0263ff3aab40dd"
+  },
+  "scope_limits": [
+    "controlled supplier protocols only",
+    "not a complete central suite run",
+    "independent review pending",
+    "real supplier and production routing/tools/rate verification pending"
+  ]
+}

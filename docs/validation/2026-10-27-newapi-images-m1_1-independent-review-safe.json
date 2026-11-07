@@ -1,0 +1,140 @@
+{
+  "reviewer": "delivery_media_review",
+  "scope": "M1.1 New API image profile + original internal grant feature extension only",
+  "candidate_manifest_sha256": "9eb82d20233578cdb63db5dd96d88d6f0765dd2119bafcdfcc4e69426898f954",
+  "candidate_changes": [
+    {
+      "path": "platform_service/internal_features.py",
+      "sha256": "3e8f0019aa54df21c2c4f0a132b0af5a7bb81cf6bff919315f2d689a0040541f",
+      "new": true
+    },
+    {
+      "path": "platform_service/media_config.py",
+      "sha256": "19c4865e0515e08a111eeda215a3e063dc6f92474ffc500f8ed7fd76e036c042",
+      "new": false
+    },
+    {
+      "path": "platform_service/media_runtime.py",
+      "sha256": "3692786e4f956b5198de7f7cc2504b6baa040b24502d302360310f51fde99be8",
+      "new": false
+    },
+    {
+      "path": "platform_service/membership.py",
+      "sha256": "b28dd740a0fc1b5bf2141d3ad58d692db51671a2c51d3652ac379ec206f3c922",
+      "new": false
+    },
+    {
+      "path": "platform_service/permissions.py",
+      "sha256": "4bdd5882f30bf9ee4777a733d2a8aa814f4bf765904f6bd61b97f33c044677a5",
+      "new": false
+    },
+    {
+      "path": "platform_service/media/contracts.py",
+      "sha256": "1af81b67d6057e3abcee58289e77b72a399a8a8465d9d0499022f3352b273e6d",
+      "new": false
+    },
+    {
+      "path": "platform_service/media/core.py",
+      "sha256": "97272499a7b7d8d2560952e9535373f93d33ce432ae6a13bd0653d9f6afd403b",
+      "new": false
+    },
+    {
+      "path": "platform_service/media/references.py",
+      "sha256": "f90465b257eeb0b836c619b3466f158bcdc4f7bf330d5b4b8cd1978a5485c959",
+      "new": true
+    },
+    {
+      "path": "platform_service/media/adapters/base.py",
+      "sha256": "3707fd509771e45d29527e588f602716219b874c3edbf8c62ba4241d8839f0e9",
+      "new": false
+    },
+    {
+      "path": "platform_service/media/adapters/openai_images.py",
+      "sha256": "e53be2410ca1f850890b3b32dadafbd4aa1514d9418e6a6d2c82ab488003647d",
+      "new": false
+    },
+    {
+      "path": "platform_service/migrations/016_m1_image_enablement.sql",
+      "sha256": "a5a1dcfdb90299ebd063b18377a900ad68e1338bb2137cba9a7010f9694d6cba",
+      "new": true
+    }
+  ],
+  "candidate_tests": {
+    "test_internal_features.py": "1e9ec6ca7e013c1974acab66cbd25e3f9fa4a86882a688c26f58c23d840dc735",
+    "test_internal_grants.py": "48bb61b8f9a7fa824289e7628201a6c692619bf196e903497976ed51906357f6",
+    "test_media_images_runtime.py": "03e34268b45a9b4792f3ea40b8565008104c6b283d0ffd056e32db177e17423a",
+    "test_media_newapi_images.py": "ed2617fa6cbb4574720ae47d1eb9fd4589705a7524e1ae6c41b32a77485edf7d",
+    "test_media_storage.py": "7b58f143921040f755bdf5d3f27559144c71c9d8fbd8962b21731fe58a16c5b6"
+  },
+  "wheel": {
+    "wheel_sha256": "02626db045e2a4f3ed7e82e151704b9aeec94bc0ad2e19052e545150376a2209",
+    "wheel_file_count": 83,
+    "crc_ok": true,
+    "all_py_sql_byte_match": true,
+    "py_sql_file_count": 76,
+    "old_001_015_byte_match_baseline_b070": true,
+    "old_migration_count": 15,
+    "candidate_manifest_sha256": "9eb82d20233578cdb63db5dd96d88d6f0765dd2119bafcdfcc4e69426898f954",
+    "support_manifest_sha256": "09bda4d52bf1fdb3150d9cb619408853fd1fd02019638f4a85bf8b323220163e"
+  },
+  "full_candidate_central_regression": {
+    "exit_code": 0,
+    "elapsed_seconds": 287.71,
+    "log": "/private/tmp/easel-media-review-20261027-m11/candidate-central-full.log",
+    "source_manifest_verified_before_after": true,
+    "support_files_verified_before_after": 189,
+    "wheel_sha256": "02626db045e2a4f3ed7e82e151704b9aeec94bc0ad2e19052e545150376a2209",
+    "excluded_paused_m2_m3": [
+      "test_media_audio_protocol.py",
+      "test_media_audio_references.py",
+      "test_media_voice_protocol.py",
+      "test_media_voice_stages.py",
+      "test_media_resources.py",
+      "test_media_av_artifacts.py"
+    ],
+    "passed": 1317,
+    "skipped": 2,
+    "pytest_seconds": 286.78,
+    "new_two_modules_collected": 24,
+    "new_two_modules_all_in_full_suite": true,
+    "skip_reasons": [
+      {
+        "test": "test_encrypted_restore_drill.py:100",
+        "reason": "explicit synthetic Docker environment required"
+      },
+      {
+        "test": "test_encrypted_restore_drill.py:350",
+        "reason": "explicit synthetic Docker environment required"
+      }
+    ]
+  },
+  "schema_roundtrip": {
+    "constraint_count": 529,
+    "constraints_and_flags_equal_after_exact_reconstruction": true,
+    "first_restore_raw_comparison_passed": false,
+    "known_exact_old_checks_rebuilt": 7,
+    "new016_constraint_changes_required": false,
+    "no_business_keys_read": true,
+    "ok": true,
+    "owned_schema_retained": true,
+    "raw_plain_schema_sha256": "9c2dee12d3f6f65015fa6daf60bc3b68a7298fd607fe57b91172c2c30c2c8db7",
+    "raw_schema_bytes_equal_after_exact_reconstruction": true,
+    "reconstruction_tool_sha256": "4d3c4210469d6630dd4cbc71d8d5327e62aa972eedb7084685bb0df85a2c88ea",
+    "schema": "m11_roundtrip_5e544236b03e46a1a835fd45424baf95",
+    "typed_terminal_fk_deferrable": true,
+    "typed_terminal_fk_initially_deferred": true
+  },
+  "remaining_known_blocking_findings": [],
+  "resolved_review_findings": [
+    "live image feature=text bypass rejected at publish/read/dispatch",
+    "startup rejects accidental table/column INSERT on internal_feature_extensions"
+  ],
+  "evidence_limits": [
+    "isolated PostgreSQL and synthetic provider fixtures only",
+    "no real provider POST or business key access by reviewer",
+    "no production SQL or feature/model enablement by reviewer",
+    "six paused M2/M3 test modules excluded because absent from candidate artifact",
+    "first raw restore differs at exactly seven known old CHECK definitions; exact frozen R2 source reconstruction required before byte equality",
+    "two opt-in encrypted Docker tests skipped, not claimed passed"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "observed_at_utc": "2026-10-24T04:06:06.980204+00:00",
+  "checks": [
+    {
+      "host": "accounts.drawbookai.cn",
+      "scheme": "http",
+      "curl_exit_code": 56,
+      "http_status": "302",
+      "redirect_hostname": "webblock.volcengine.com",
+      "server": "Suzaku",
+      "strict_tls": false,
+      "body_or_cookie_saved": false
+    },
+    {
+      "host": "accounts.drawbookai.cn",
+      "scheme": "https",
+      "curl_exit_code": 35,
+      "http_status": "000",
+      "redirect_hostname": null,
+      "server": null,
+      "strict_tls": true,
+      "body_or_cookie_saved": false
+    },
+    {
+      "host": "console.drawbookai.cn",
+      "scheme": "http",
+      "curl_exit_code": 0,
+      "http_status": "302",
+      "redirect_hostname": "webblock.volcengine.com",
+      "server": "Suzaku",
+      "strict_tls": false,
+      "body_or_cookie_saved": false
+    },
+    {
+      "host": "console.drawbookai.cn",
+      "scheme": "https",
+      "curl_exit_code": 35,
+      "http_status": "000",
+      "redirect_hostname": null,
+      "server": null,
+      "strict_tls": true,
+      "body_or_cookie_saved": false
+    },
+    {
+      "host": "login.drawbookai.cn",
+      "scheme": "http",
+      "curl_exit_code": 56,
+      "http_status": "302",
+      "redirect_hostname": "webblock.volcengine.com",
+      "server": "Suzaku",
+      "strict_tls": false,
+      "body_or_cookie_saved": false
+    },
+    {
+      "host": "login.drawbookai.cn",
+      "scheme": "https",
+      "curl_exit_code": 35,
+      "http_status": "000",
+      "redirect_hostname": null,
+      "server": null,
+      "strict_tls": true,
+      "body_or_cookie_saved": false
+    }
+  ],
+  "read_only": true,
+  "production_service_changes": false
+}

@@ -97,7 +97,9 @@ def test_cmd_web_returns_zero_on_success(monkeypatch):
 
 def test_cmd_web_returns_1_when_script_missing(monkeypatch, tmp_path):
     """web/app.py 不存在（安装不完整）时应返回 1 并提示，而不是起进程后崩。"""
-    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)  # tmp_path 下没有 web/app.py
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setenv("EASEL_RESOURCE_ROOT", str(tmp_path/"missing"))
+    monkeypatch.setattr(cli.subprocess, "run", lambda *a, **kw: pytest.fail("missing script must not spawn"))
     rc = cli.cmd_web(types.SimpleNamespace(port=7860))
     assert rc == 1
 

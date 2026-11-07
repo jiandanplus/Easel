@@ -229,8 +229,10 @@ def read_env_file(path: Path | None = None) -> dict[str, str]:
             if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
                 value = value[1:-1]
             values[key.strip()] = value
+    saved = values.copy()
     values.update({key: value for key, value in os.environ.items() if value})
-    return values
+    from media_gateway import refresh_gateway_environment
+    return refresh_gateway_environment(values, saved)
 
 
 def _configured_value(key: dict[str, Any], env: dict[str, str]) -> str:
@@ -243,6 +245,16 @@ def _configured_value(key: dict[str, Any], env: dict[str, str]) -> str:
 
 def configured_providers(group: str, env: dict[str, str]) -> list[dict[str, Any]]:
     """Return usable providers and non-secret model names without exposing credentials."""
+    from media_gateway import gateway_managed, gateway_readiness, resolve_media_environment
+    if gateway_managed(group, env):
+        state = gateway_readiness(group, env)
+        if not state["configured"]:
+            return []
+        provider = next(item for item in MODEL_GROUPS[group]["providers"] if item["id"] == state["provider"])
+        effective = resolve_media_environment(group, env)
+        models = {key["env"]: effective[key["env"]] for key in provider["keys"]
+                  if not key["secret"] and "MODEL" in key["env"] and effective.get(key["env"])}
+        return [{"id": provider["id"], "name": provider["name"], "models": models}]
     configured = []
     for provider in MODEL_GROUPS[group]["providers"]:
         required = [key for key in provider["keys"] if key["required"]]

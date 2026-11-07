@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "fetchedAt": "2026-10-20T08:21:37.951464+00:00",
+  "sources": {
+    "releaseApi": "https://api.github.com/repos/QuantumNous/new-api/releases/latest",
+    "releasePage": "https://github.com/QuantumNous/new-api/releases/tag/v1.0.0-rc.45",
+    "pluginIndex": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/index.json",
+    "pluginRepositoryCommit": "423535f2c6d46171d2e9553c6d33a0987116aa63",
+    "pluginIndexSha256": "ccf5737967a443ca197ef70487172cc64e269d5317d48d6b77a64595094bb011",
+    "dockerHubTag": "https://hub.docker.com/v2/repositories/calciumion/new-api/tags/v1.0.0-rc.45"
+  },
+  "host": {
+    "tag": "v1.0.0-rc.45",
+    "commit": "6cf0d90b5ff27f901697dddd61e0c28aba8efefc",
+    "publishedAt": "2026-10-17T15:42:41Z",
+    "githubPrerelease": false,
+    "releaseStage": "release-candidate",
+    "image": {
+      "repository": "calciumion/new-api",
+      "tag": "v1.0.0-rc.45",
+      "digest": "sha256:6c63c7ee9cd5bf7880df3984e99dd3ef07992d7a97538cfb2719adf9d87bc3f9",
+      "reference": "calciumion/new-api@sha256:6c63c7ee9cd5bf7880df3984e99dd3ef07992d7a97538cfb2719adf9d87bc3f9",
+      "latestTagDigest": "sha256:6c63c7ee9cd5bf7880df3984e99dd3ef07992d7a97538cfb2719adf9d87bc3f9",
+      "platforms": [
+        {
+          "os": "linux",
+          "architecture": "amd64",
+          "digest": "sha256:65e4c0dff7ffea41ccaa631af8289b73fe2599b29425200cf691411b10a12259"
+        },
+        {
+          "os": "linux",
+          "architecture": "arm64",
+          "digest": "sha256:56c0606d7bb73cdd6a76437d03fdadfcab8bf9311be70f5022dc489f86195e86"
+        }
+      ]
+    }
+  },
+  "plugins": [
+    {
+      "key": "alibaba",
+      "name": "Alibaba Bailian",
+      "version": "1.4.2",
+      "sha256": "63ef98833760d0bdcdddc66ec9e1dbc12e43a1b6016cda9caa4f3d4bf329e546",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/alibaba/1.4.2/plugin.js",
+      "repositoryPath": "plugins/tasks/alibaba/1.4.2/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "doubao",
+      "name": "Doubao",
+      "version": "1.3.0",
+      "sha256": "b3ad4a16dfbf582bb2917c7a631fc46a8b36d5a8b2ad26c6dd160fd6f9ea3f1c",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/doubao/1.3.0/plugin.js",
+      "repositoryPath": "plugins/tasks/doubao/1.3.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "google",
+      "name": "Google Veo (Gemini API)",
+      "version": "1.1.0",
+      "sha256": "edb5107d2798d55028331f5d804976e1c8c12576eafea266fa8ae1b57b20d2c5",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/google/1.1.0/plugin.js",
+      "repositoryPath": "plugins/tasks/google/1.1.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "hailuo",
+      "name": "Hailuo Video",
+      "version": "1.3.0",
+      "sha256": "773b9aa3449dcab67890e2ddad9530b8951f32026114d1abd4100469e0917324",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/hailuo/1.3.0/plugin.js",
+      "repositoryPath": "plugins/tasks/hailuo/1.3.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "incho",
+      "name": "Incho",
+      "version": "1.0.2",
+      "sha256": "0fcda09aef4aeabc6a6a8449d4742ac887c390d49324b2d3f2083b2ca5ad1479",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/incho/1.0.2/plugin.js",
+      "repositoryPath": "plugins/tasks/incho/1.0.2/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "marketplace",
+      "factoryIncluded": false,
+      "icon": {
+        "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/incho/icon.svg",
+        "sha256": "0e78ee101737a3582e99305024f33c6e6fb1d1ca3bca701e2a6799db423a9a8e",
+        "mediaType": "image/svg+xml"
+      }
+    },
+    {
+      "key": "jimeng",
+      "name": "Jimeng",
+      "version": "1.1.0",
+      "sha256": "8ca1acc9fff4abf6188234324f7e41407f037c37b098d7ff27ab9f1e5d162f67",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/jimeng/1.1.0/plugin.js",
+      "repositoryPath": "plugins/tasks/jimeng/1.1.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "kling",
+      "name": "Kling",
+      "version": "1.1.0",
+      "sha256": "c297187e42ef290bcc56564571a5cfeffc78121ae3f69029168d109b55ae5106",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/kling/1.1.0/plugin.js",
+      "repositoryPath": "plugins/tasks/kling/1.1.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "sora",
+      "name": "Sora",
+      "version": "1.1.0",
+      "sha256": "0ffd66fdf389c7eff407dede145da9409b185c248e89e93e686c97ac3ba15c4e",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/sora/1.1.0/plugin.js",
+      "repositoryPath": "plugins/tasks/sora/1.1.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "sunoapi",
+      "name": "SunoAPI",
+      "version": "1.1.0",
+      "sha256": "a4679364a8a8f119ab993ae5064b727d9e0af91e4075f6d0bb32d9297ef5285a",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/sunoapi/1.1.0/plugin.js",
+      "repositoryPath": "plugins/tasks/sunoapi/1.1.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "typesafe",
+      "name": "TypeSafe",
+      "version": "1.2.0",
+      "sha256": "60828f2fc3c32dab787d7748f4f398838dff84de6dd5da438276fc3f54689310",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/typesafe/1.2.0/plugin.js",
+      "repositoryPath": "plugins/tasks/typesafe/1.2.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "marketplace",
+      "factoryIncluded": false,
+      "icon": {
+        "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/typesafe/icon.png",
+        "sha256": "40fe116f8438653bf6bad9b198f23371627f52b52b8654d6852e8345a014e585",
+        "mediaType": "image/png"
+      }
+    },
+    {
+      "key": "vertex-ai",
+      "name": "Google Veo (Vertex AI)",
+      "version": "1.1.0",
+      "sha256": "084e70d7578ad965f730741375d99f9c8ca2df81e64086c6e0b1ff7b145e84a6",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/vertex-ai/1.1.0/plugin.js",
+      "repositoryPath": "plugins/tasks/vertex-ai/1.1.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "vidu",
+      "name": "Vidu",
+      "version": "1.1.0",
+      "sha256": "d7252585c1de4caf3a255aff7c92ff27b54ddaaea27077cca3b72149642d2c5f",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/vidu/1.1.0/plugin.js",
+      "repositoryPath": "plugins/tasks/vidu/1.1.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    },
+    {
+      "key": "xai",
+      "name": "xAI",
+      "version": "1.1.0",
+      "sha256": "9ec1f0514fae96ed945a493636ded0f280ae340a6fd493e108c7e18e665b52a7",
+      "sourceUrl": "https://raw.githubusercontent.com/QuantumNous/new-api-plugins/423535f2c6d46171d2e9553c6d33a0987116aa63/plugins/tasks/xai/1.1.0/plugin.js",
+      "repositoryPath": "plugins/tasks/xai/1.1.0/plugin.js",
+      "kind": "task",
+      "apiVersion": 1,
+      "minApiVersion": 1,
+      "delivery": "factory",
+      "factoryIncluded": true
+    }
+  ],
+  "upgradeNotes": [
+    {
+      "id": "release-candidate",
+      "summary": "GitHub latest returns this tag and prerelease=false, but the tag and release notes identify a release candidate before the final v1 release.",
+      "sourceUrl": "https://github.com/QuantumNous/new-api/releases/tag/v1.0.0-rc.45"
+    },
+    {
+      "id": "video-pricing",
+      "summary": "Users upgrading from rc.26 or earlier must reconfigure video model prices after the rc.27 task-plugin architecture change; inspect existing prices before enabling traffic.",
+      "sourceUrl": "https://github.com/QuantumNous/new-api/releases/tag/v1.0.0-rc.37"
+    },
+    {
+      "id": "playground-history",
+      "summary": "rc.44 moves Playground storage to per-account records and clears previous Playground history once after upgrade.",
+      "sourceUrl": "https://github.com/QuantumNous/new-api/releases/tag/v1.0.0-rc.44"
+    },
+    {
+      "id": "sensitive-word-filter",
+      "summary": "rc.45 disables sensitive-word filtering by default; deployments that entered a word list without explicitly saving the switch must re-enable it in Request checks after upgrade.",
+      "sourceUrl": "https://github.com/QuantumNous/new-api/releases/tag/v1.0.0-rc.45"
+    },
+    {
+      "id": "runtime-factory",
+      "summary": "This host embeds 11 marketplace plugins at exactly the catalog versions and source hashes; Incho and TypeSafe require marketplace upload. Installation and runtime registration do not configure supplier credentials, model prices, or prove live inference.",
+      "sourceUrl": "https://github.com/QuantumNous/new-api/blob/6cf0d90b5ff27f901697dddd61e0c28aba8efefc/plugins/embed.go"
+    },
+    {
+      "id": "backup-before-migration",
+      "summary": "Snapshot the application configuration, data directory, PostgreSQL database and Redis persistence before replacement. Retain the previous image digest and verify a restore against a separate database before relying on rollback.",
+      "sourceUrl": "https://github.com/QuantumNous/new-api/blob/6cf0d90b5ff27f901697dddd61e0c28aba8efefc/docker-compose.yml"
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "schema": "pi_glm_acceptance_224eb02f1842488baa4d5e0bfa44c339",
+  "financial_snapshot": {
+    "counts": {
+      "execution_jobs": 4,
+      "execution_receipts": 3,
+      "credit_reservations": 4,
+      "credit_journals": 8,
+      "credit_entries": 19
+    },
+    "lots": [
+      {
+        "issued": 100000000,
+        "available": 99989865,
+        "held": 8960,
+        "spent": 1175
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "id": "c4db863e-7714-4cfa-9b7e-ba23aec9082a",
+      "status": "settled",
+      "reason": null,
+      "actual": 533,
+      "input_tokens": 511,
+      "output_tokens": 185,
+      "amount": 8960,
+      "reservation_status": "settled"
+    },
+    {
+      "id": "c7da2f9b-b274-412e-bba6-4921a32e58ed",
+      "status": "settled",
+      "reason": null,
+      "actual": 298,
+      "input_tokens": 547,
+      "output_tokens": 16,
+      "amount": 8960,
+      "reservation_status": "settled"
+    },
+    {
+      "id": "9a23d9b1-be66-4dc0-9d08-daa86de172d1",
+      "status": "settled",
+      "reason": null,
+      "actual": 344,
+      "input_tokens": 574,
+      "output_tokens": 38,
+      "amount": 8960,
+      "reservation_status": "settled"
+    },
+    {
+      "id": "1b33a66c-1e62-4801-8dc4-c8cbb0182e84",
+      "status": "pending_reconciliation",
+      "reason": "upstream_uncertain",
+      "actual": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "amount": 8960,
+      "reservation_status": "pending_reconciliation"
+    }
+  ],
+  "receipts": [
+    {
+      "job_id": "c4db863e-7714-4cfa-9b7e-ba23aec9082a",
+      "input_tokens": 511,
+      "output_tokens": 185,
+      "terminal_status": "completed",
+      "provider_response_id": "chatcmpl-202610230855378554771988268d9d6UfDx8lT4",
+      "actual": 533
+    },
+    {
+      "job_id": "c7da2f9b-b274-412e-bba6-4921a32e58ed",
+      "input_tokens": 547,
+      "output_tokens": 16,
+      "terminal_status": "completed",
+      "provider_response_id": "chatcmpl-202610230856191992618038268d9d6H6s9hkyu",
+      "actual": 298
+    },
+    {
+      "job_id": "9a23d9b1-be66-4dc0-9d08-daa86de172d1",
+      "input_tokens": 574,
+      "output_tokens": 38,
+      "terminal_status": "completed",
+      "provider_response_id": "chatcmpl-202610230856434554438628268d9d6I9PbHX9A",
+      "actual": 344
+    }
+  ],
+  "no_payment_rows": {
+    "billing_orders": 0,
+    "payment_events": 0,
+    "payment_transactions": 0
+  },
+  "previous_wallet": [
+    {
+      "id": "f040dc12-dc4c-4fe6-b8d8-c9456486d3e6",
+      "issued": "100000000",
+      "available": "99965499",
+      "held": "33152",
+      "spent": "1349"
+    }
+  ],
+  "old_pi_wallet": [
+    {
+      "id": "5f2d1873-65bc-42c5-a3da-b35fa5b77020",
+      "issued": "100000000",
+      "available": "99988356",
+      "held": "9728",
+      "spent": "1916"
+    }
+  ],
+  "protected_wallets_unchanged": true,
+  "old_provider_posts": 5,
+  "new_provider_post_bound": 7,
+  "combined_provider_post_bound": 12,
+  "custom_post_bound": 4,
+  "dispatches": [
+    {
+      "sequence": 1,
+      "body_sha256": "c3ba7de8332b9fc87c61d6db49355540f4eb8987b5bd6dd9bfa782356b22ec51",
+      "http_status": 200,
+      "gateway_request_id": "202610230854537884900288268d9d65bpUmyBk"
+    },
+    {
+      "sequence": 2,
+      "body_sha256": "3f13e44d2b65ca992fb5412aec066c12b0e318f9a97c0ec6d222345757b01ac1",
+      "http_status": 200,
+      "gateway_request_id": "202610230855378554771988268d9d6UfDx8lT4"
+    },
+    {
+      "sequence": 3,
+      "body_sha256": "91e2fe28228d07c36414618401e9e81d323e99cc20389ce65f79506cac7d6a86",
+      "http_status": 200,
+      "gateway_request_id": "202610230856191992618038268d9d6H6s9hkyu"
+    },
+    {
+      "sequence": 4,
+      "body_sha256": "c871d6c0c62304a9f51f7d8b0fab1b3afe444f0f027a5ba3b29ea653bf59e8ad",
+      "http_status": 200,
+      "gateway_request_id": "202610230856434554438628268d9d6I9PbHX9A"
+    },
+    {
+      "sequence": 5,
+      "body_sha256": "e2dba8d9e7755e4b0dfd899df4ebfe1ac6abe230e63f6b39758057f26f783a46",
+      "http_status": 200,
+      "gateway_request_id": "202610230859170023332968268d9d6zwVszIIo"
+    },
+    {
+      "sequence": 6,
+      "body_sha256": "2a20a42958d8aacdcb5022eb2748efd2b3f815438f6d35a0e664eb44a9bd434b",
+      "http_status": 200,
+      "gateway_request_id": "202610230902001324985548268d9d6IvUFWVFT"
+    },
+    {
+      "sequence": 7,
+      "body_sha256": "f840d27b9c70ebf07f25c79d649f35498636e289b417ae1c570ebe4e8607cc14",
+      "http_status": 200,
+      "gateway_request_id": "202610230902093126052388268d9d6KfpI8s5u"
+    }
+  ]
+}

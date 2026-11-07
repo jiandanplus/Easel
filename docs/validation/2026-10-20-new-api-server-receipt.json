@@ -1,0 +1,225 @@
+{
+  "checked_at": "2026-10-20T09:15:19.226340+00:00",
+  "state": "verified",
+  "exit_code": 0,
+  "version": "v1.0.0-rc.45",
+  "root_verified": true,
+  "https_verified_scope": "loopback_with_public_hostname_and_validated_SNI",
+  "selected_settings": {
+    "RetryTimes": "0",
+    "TaskPluginEnabled": "true",
+    "RegisterEnabled": "false"
+  },
+  "plugins": [
+    {
+      "key": "alibaba",
+      "version": "1.4.2",
+      "sha256": "63ef98833760d0bdcdddc66ec9e1dbc12e43a1b6016cda9caa4f3d4bf329e546",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "doubao",
+      "version": "1.3.0",
+      "sha256": "b3ad4a16dfbf582bb2917c7a631fc46a8b36d5a8b2ad26c6dd160fd6f9ea3f1c",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "google",
+      "version": "1.1.0",
+      "sha256": "edb5107d2798d55028331f5d804976e1c8c12576eafea266fa8ae1b57b20d2c5",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "hailuo",
+      "version": "1.3.0",
+      "sha256": "773b9aa3449dcab67890e2ddad9530b8951f32026114d1abd4100469e0917324",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "incho",
+      "version": "1.0.2",
+      "sha256": "0fcda09aef4aeabc6a6a8449d4742ac887c390d49324b2d3f2083b2ca5ad1479",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "jimeng",
+      "version": "1.1.0",
+      "sha256": "8ca1acc9fff4abf6188234324f7e41407f037c37b098d7ff27ab9f1e5d162f67",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "kling",
+      "version": "1.1.0",
+      "sha256": "c297187e42ef290bcc56564571a5cfeffc78121ae3f69029168d109b55ae5106",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "sora",
+      "version": "1.1.0",
+      "sha256": "0ffd66fdf389c7eff407dede145da9409b185c248e89e93e686c97ac3ba15c4e",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "sunoapi",
+      "version": "1.1.0",
+      "sha256": "a4679364a8a8f119ab993ae5064b727d9e0af91e4075f6d0bb32d9297ef5285a",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "typesafe",
+      "version": "1.2.0",
+      "sha256": "60828f2fc3c32dab787d7748f4f398838dff84de6dd5da438276fc3f54689310",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "vertex-ai",
+      "version": "1.1.0",
+      "sha256": "084e70d7578ad965f730741375d99f9c8ca2df81e64086c6e0b1ff7b145e84a6",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "vidu",
+      "version": "1.1.0",
+      "sha256": "d7252585c1de4caf3a255aff7c92ff27b54ddaaea27077cca3b72149642d2c5f",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "xai",
+      "version": "1.1.0",
+      "sha256": "9ec1f0514fae96ed945a493636ded0f280ae340a6fd493e108c7e18e665b52a7",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "easel-dashscope-music",
+      "version": "1.0.0",
+      "sha256": "65b2d8434d171837c8d4bb1f63d4583d4f155c1c8d175894c7593bf3344ac241",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "easel-dashscope-voice",
+      "version": "1.0.0",
+      "sha256": "0a33cc6da2590fb7b5fa4318ac5d09970f7230694d46e5badf9576ac7135b3a7",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "easel-fish-tts",
+      "version": "1.0.0",
+      "sha256": "c8b188927dea5ca94e8baa2578f922be924d69f48e245e6d1bff3e7700f62acc",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "easel-image-variations",
+      "version": "1.0.0",
+      "sha256": "4c262d62bc9d41547f24efa215b97aafbbb6ccbfc1974ef05d4cf4ff94220bd5",
+      "runtime_status": "registered"
+    },
+    {
+      "key": "easel-minimax-voice",
+      "version": "1.0.0",
+      "sha256": "dfb3f1a7d6f1d48106a491c38b22b673d3e27971a14a0d86e47c4cb384e7ba85",
+      "runtime_status": "registered"
+    }
+  ],
+  "plugin_count": 18,
+  "runtime_generation": 19,
+  "backup": {
+    "path": "/srv/backups/new-api/20261020T085002Z-af86b3d1",
+    "archive_hashes_verified": true,
+    "manifest_sha256_verified": true,
+    "restore_verified": true,
+    "restore_database": "newapi_verify_20261020t085002z_af86b3d1",
+    "source_counts": {
+      "channels": 0,
+      "options": 4,
+      "users": 1
+    },
+    "restore_counts": {
+      "channels": 0,
+      "options": 4,
+      "users": 1
+    },
+    "archives": {
+      "configuration.tar": "cf2cc7ecae18c994514f292025a32ec56139eea8e535a662d260222a2248e1d4",
+      "data.tar": "ab78b11fe366cedb6b10f76264e3803eca073cbfb3b6b825bc7bff5283982c8a",
+      "logs.tar": "b49bfbcda4b3d78141f4736533ae2c7ea07d7da7add9b009bd51400014d56a77",
+      "postgres.dump": "42799f0d3f521060b869b75f142183dd6057a7184bd34a2cb707e114c545c4a7",
+      "redis-data.tar": "af11faa6b6a7aeb6cd927c6c3c5e43af4faaf870162b023173c43c3c9013c896",
+      "website.tar": "070dd56fbe8a43099ca2dac8a20e038844884a628ed178c2110f8d5b9ac6729b"
+    }
+  },
+  "containers": [
+    {
+      "service": "new-api",
+      "name": "1panel-new-api",
+      "image": "calciumion/new-api:v1.0.0-rc.45@sha256:6c63c7ee9cd5bf7880df3984e99dd3ef07992d7a97538cfb2719adf9d87bc3f9",
+      "healthy": true,
+      "published_ports": [
+        {
+          "container_port": "3000/tcp",
+          "host_ip": "127.0.0.1",
+          "host_port": "3000"
+        },
+        {
+          "container_port": "3000/tcp",
+          "host_ip": "127.0.0.1",
+          "host_port": "3000"
+        }
+      ]
+    },
+    {
+      "service": "new-api-db",
+      "name": "1panel-new-api-db",
+      "image": "postgres:17-alpine",
+      "healthy": true,
+      "published_ports": [],
+      "configuration_unchanged": true
+    },
+    {
+      "service": "new-api-redis",
+      "name": "1panel-new-api-redis",
+      "image": "redis:7-alpine",
+      "healthy": true,
+      "published_ports": [],
+      "configuration_unchanged": true
+    }
+  ],
+  "database_counts": {
+    "users": 1,
+    "channels": 0,
+    "tokens": 0,
+    "tasks": 0
+  },
+  "unauthenticated_checks": {
+    "/v1/models": 401,
+    "/easel/dashscope/api/v1/services/audio/music/generation": 401
+  },
+  "private_fixture_counts": {
+    "easel-dashscope-music": 25,
+    "easel-dashscope-voice": 35,
+    "easel-fish-tts": 21,
+    "easel-image-variations": 16,
+    "easel-minimax-voice": 29
+  },
+  "private_fixture_total": 126,
+  "fixture_clock_rebased": [
+    "easel-fish-tts"
+  ],
+  "real_supplier_calls": 0,
+  "fish_bridge_deployed": false,
+  "public_domain": {
+    "url": "https://api.drawbookai.cn",
+    "http_status": 302,
+    "http_server": "Suzaku",
+    "http_location": "https://webblock.volcengine.com",
+    "https_result": "TLS connection closed before HTTP response",
+    "specific_block_reason": "unconfirmed",
+    "provider_block_bypassed": false
+  },
+  "workspace_preservation": {
+    "branch": "codex/ui-redesign",
+    "preexisting_ui_files_unchanged": 12,
+    "main_ref_unchanged": true,
+    "committed": false,
+    "pushed": false
+  }
+}

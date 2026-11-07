@@ -1,0 +1,33 @@
+{
+  "backup_sha256": "40d20ed3f7181e58272058e23d566a2350ed341df60d1313cbdcfbc8d9a588fc",
+  "checks": {
+    "application_count": true,
+    "clients_sha256": true,
+    "data_sha256": true,
+    "distinct_database_contexts": true,
+    "required_apps_present": true,
+    "schema_sha256": false,
+    "user_count": true,
+    "users_sha256": true
+  },
+  "collector_sha256": "11d2e78c2025c439121e1bfb548dee17f69fa238a757a3e710356f2b60cfabcf",
+  "compared_at": "2026-10-24T03:59:33.161959+00:00",
+  "final_proof_eligible": false,
+  "full_inventory_hashes_compared": true,
+  "identity_mapping_applied": false,
+  "kind": "logto_full_inventory_comparison_v2",
+  "manifest_sha256": "6ff020ca6fcb4f4fbd9918375b520564892c97974d002b8510098835d4c82dde",
+  "operation_id": "5f146e98762fd2d3e52cb12f0d04dc04",
+  "package_version": "0.1.0",
+  "production_ready": false,
+  "proof_created": false,
+  "raw_candidate_ids_exported": false,
+  "read_only": true,
+  "rehearsal_observation_only": true,
+  "restore_receipt_sha256": "f85fd8d1bb06a17175078600f3c46ee3cef82e8df4edeb8f60c5952ced747fbb",
+  "row_data_exported": false,
+  "source_completed_at": "2026-10-24T03:59:32.128694+00:00",
+  "success": false,
+  "target_completed_at": "2026-10-24T03:59:33.042397+00:00",
+  "writers_fenced": false
+}

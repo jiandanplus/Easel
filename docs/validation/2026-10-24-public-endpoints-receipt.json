@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-10-23T16:47:21.969158+00:00",
+  "completed_at": "2026-10-23T16:48:12.624302+00:00",
+  "scope": "Public DNS and verified TLS; only specified health and OIDC discovery GET requests",
+  "target_ip": "115.190.211.112",
+  "dns": [
+    {
+      "hostname": "accounts.drawbookai.cn",
+      "type": "A",
+      "resolver": "1.1.1.1",
+      "records": [
+        {
+          "address": "115.190.211.112",
+          "ttl_seconds": 600
+        }
+      ],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "accounts.drawbookai.cn",
+      "type": "A",
+      "resolver": "8.8.8.8",
+      "records": [
+        {
+          "address": "115.190.211.112",
+          "ttl_seconds": 600
+        }
+      ],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "accounts.drawbookai.cn",
+      "type": "AAAA",
+      "resolver": "1.1.1.1",
+      "records": [],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "accounts.drawbookai.cn",
+      "type": "AAAA",
+      "resolver": "8.8.8.8",
+      "records": [],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "console.drawbookai.cn",
+      "type": "A",
+      "resolver": "1.1.1.1",
+      "records": [
+        {
+          "address": "115.190.211.112",
+          "ttl_seconds": 600
+        }
+      ],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "console.drawbookai.cn",
+      "type": "A",
+      "resolver": "8.8.8.8",
+      "records": [
+        {
+          "address": "115.190.211.112",
+          "ttl_seconds": 600
+        }
+      ],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "console.drawbookai.cn",
+      "type": "AAAA",
+      "resolver": "1.1.1.1",
+      "records": [],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "console.drawbookai.cn",
+      "type": "AAAA",
+      "resolver": "8.8.8.8",
+      "records": [],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "login.drawbookai.cn",
+      "type": "A",
+      "resolver": "1.1.1.1",
+      "records": [
+        {
+          "address": "115.190.211.112",
+          "ttl_seconds": 600
+        }
+      ],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "login.drawbookai.cn",
+      "type": "A",
+      "resolver": "8.8.8.8",
+      "records": [
+        {
+          "address": "115.190.211.112",
+          "ttl_seconds": 600
+        }
+      ],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "login.drawbookai.cn",
+      "type": "AAAA",
+      "resolver": "1.1.1.1",
+      "records": [],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    },
+    {
+      "hostname": "login.drawbookai.cn",
+      "type": "AAAA",
+      "resolver": "8.8.8.8",
+      "records": [],
+      "query_status": "NOERROR",
+      "exit_code": 0
+    }
+  ],
+  "probes": [
+    {
+      "hostname": "accounts.drawbookai.cn",
+      "connection_mode": "system_dns",
+      "fixed_target": null,
+      "tls_verified": false,
+      "http": [],
+      "error": {
+        "kind": "ConnectionResetError"
+      }
+    },
+    {
+      "hostname": "accounts.drawbookai.cn",
+      "connection_mode": "fixed_target",
+      "fixed_target": "115.190.211.112",
+      "tls_verified": false,
+      "http": [],
+      "error": {
+        "kind": "ConnectionResetError"
+      }
+    },
+    {
+      "hostname": "console.drawbookai.cn",
+      "connection_mode": "system_dns",
+      "fixed_target": null,
+      "tls_verified": false,
+      "http": [],
+      "error": {
+        "kind": "ConnectionResetError"
+      }
+    },
+    {
+      "hostname": "console.drawbookai.cn",
+      "connection_mode": "fixed_target",
+      "fixed_target": "115.190.211.112",
+      "tls_verified": false,
+      "http": [],
+      "error": {
+        "kind": "ConnectionResetError"
+      }
+    },
+    {
+      "hostname": "login.drawbookai.cn",
+      "connection_mode": "system_dns",
+      "fixed_target": null,
+      "tls_verified": false,
+      "http": [],
+      "error": {
+        "kind": "SSLError"
+      }
+    },
+    {
+      "hostname": "login.drawbookai.cn",
+      "connection_mode": "fixed_target",
+      "fixed_target": "115.190.211.112",
+      "tls_verified": false,
+      "http": [],
+      "error": {
+        "kind": "ConnectionResetError"
+      }
+    }
+  ],
+  "safety": {
+    "certificate_validation_disabled": false,
+    "cookies_or_tokens_sent": false,
+    "redirects_followed": false,
+    "proxy_environment_used": false,
+    "configuration_changed": false,
+    "model_payment_or_newapi_requests": false
+  },
+  "limitations": [
+    "DNS answers alone do not prove service deployment.",
+    "TLS failures prevent HTTP inspection; no application readiness is inferred.",
+    "Successful health or discovery does not prove authenticated login, identity migration, financial correctness, model readiness, or production capacity."
+  ],
+  "curl_cross_check": [
+    {
+      "hostname": "accounts.drawbookai.cn",
+      "connection_mode": "system_dns",
+      "path": "/health",
+      "client": "curl_default_verified_tls",
+      "exit_code": 35,
+      "http_status": 0,
+      "peer_address": "115.190.211.112",
+      "ssl_verify_result": 1,
+      "tls_verified": false,
+      "error_category": "connection_or_tls_failed"
+    },
+    {
+      "hostname": "accounts.drawbookai.cn",
+      "connection_mode": "fixed_target",
+      "path": "/health",
+      "client": "curl_default_verified_tls",
+      "exit_code": 35,
+      "http_status": 0,
+      "peer_address": "115.190.211.112",
+      "ssl_verify_result": 1,
+      "tls_verified": false,
+      "error_category": "connection_or_tls_failed"
+    },
+    {
+      "hostname": "console.drawbookai.cn",
+      "connection_mode": "system_dns",
+      "path": "/health",
+      "client": "curl_default_verified_tls",
+      "exit_code": 35,
+      "http_status": 0,
+      "peer_address": "115.190.211.112",
+      "ssl_verify_result": 1,
+      "tls_verified": false,
+      "error_category": "connection_or_tls_failed"
+    },
+    {
+      "hostname": "console.drawbookai.cn",
+      "connection_mode": "fixed_target",
+      "path": "/health",
+      "client": "curl_default_verified_tls",
+      "exit_code": 35,
+      "http_status": 0,
+      "peer_address": "115.190.211.112",
+      "ssl_verify_result": 1,
+      "tls_verified": false,
+      "error_category": "connection_or_tls_failed"
+    },
+    {
+      "hostname": "login.drawbookai.cn",
+      "connection_mode": "system_dns",
+      "path": "/oidc/.well-known/openid-configuration",
+      "client": "curl_default_verified_tls",
+      "exit_code": 35,
+      "http_status": 0,
+      "peer_address": "139.196.51.51",
+      "ssl_verify_result": 1,
+      "tls_verified": false,
+      "error_category": "connection_or_tls_failed"
+    },
+    {
+      "hostname": "login.drawbookai.cn",
+      "connection_mode": "fixed_target",
+      "path": "/oidc/.well-known/openid-configuration",
+      "client": "curl_default_verified_tls",
+      "exit_code": 35,
+      "http_status": 0,
+      "peer_address": "115.190.211.112",
+      "ssl_verify_result": 1,
+      "tls_verified": false,
+      "error_category": "connection_or_tls_failed"
+    }
+  ]
+}

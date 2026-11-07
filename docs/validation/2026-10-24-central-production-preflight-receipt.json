@@ -1,0 +1,284 @@
+{
+  "branch": "codex/ui-redesign",
+  "credentials_exported": false,
+  "custom_and_subscription_preserved": true,
+  "cutover_runbook_sha256": "d77092975ea1719d0871d911bef980f84fb51872c4a5e5432ab5f727f566934e",
+  "delivery_archive": "outputs/_run/central-production-preflight-20261024.zip",
+  "delivery_zip_receipt_external_to_archive": "2026-10-24-delivery-receipt.json",
+  "dns_tls_proxy_or_original_service_configuration_modified": false,
+  "git_writes_this_phase": false,
+  "head": "e972af07444e181e3eb737441ecac306bca778b3",
+  "legacy_archives": {
+    "central-identity-continuity-20261023.zip": {
+      "bytes": 310262,
+      "preserved": true,
+      "sha256": "181dff6f536126ea7724294838ecd95b8c944a94e187b499d88294f3e54f926b"
+    },
+    "central-production-preparation-20261023.zip": {
+      "bytes": 259759,
+      "preserved": true,
+      "sha256": "3acbdebb27bffdf3c1bb82bee16a4fbe1a592a70d2a92803fb26e03923c5f6dc"
+    }
+  },
+  "main_head": "bb3c8ff0463f36c202454d74171682ba6e470cb1",
+  "migrations_001_through_010_unchanged_from_s5a2": true,
+  "payment_calls_this_phase": 0,
+  "production_applied_migration_count": 9,
+  "production_cutover_executed": false,
+  "production_database_or_roles_modified": false,
+  "production_ready": false,
+  "real_model_calls_this_phase": 0,
+  "receipts": {
+    "linux_first_attempt": {
+      "code": "linux_package_preflight_failed",
+      "exception_type": "TimeoutExpired",
+      "phase": "locked_public_pypi_install",
+      "production_ready": false,
+      "success": false
+    },
+    "preservation": {
+      "credentials_exported": false,
+      "original_source_issuer_preserved": true,
+      "safe_projection_equal": {
+        "admin_state_counts": true,
+        "execution_status_counts": true,
+        "financial_balanced": true,
+        "journals_balanced": true,
+        "migrations": true,
+        "row_counts": true
+      },
+      "supplier_config_read": false,
+      "three_production_sites_still_absent": true,
+      "verified_at": "2026-10-23T17:19:06.108843+00:00"
+    },
+    "real_logto_source": {
+      "application_count": 4,
+      "collector_sha256": "ba35a40f67173f64a2279e90f2db7cdeb19859f71d4fe40c5f268104d42c272e",
+      "context_sha256": "f6785ee5f84506095dc594d8c770a4850956c1ad67eb5bcbdee6497dbe4dc804",
+      "data_sha256": "4a77716455ec90629946807a1c0cba7c8d0260feed9b4ad75a1cf06c9c7ce41e",
+      "elapsed_seconds": 0.607,
+      "identity_mapping_applied": false,
+      "ok": true,
+      "production_ready": false,
+      "proof_created": false,
+      "read_only": true,
+      "required_clients_present": {
+        "console": true,
+        "product": true
+      },
+      "row_data_exported": false,
+      "schema_sha256": "453f675bc2e68f91363a81a7a4e995b52a1f7d324d2d2e08e047bde5edc3e772",
+      "target_restored_or_compared": false,
+      "user_count": 5,
+      "verification": "real_single_source_readonly_inventory",
+      "verified_at": "2026-10-23T16:57:38.515208+00:00"
+    },
+    "real_source_metadata": {
+      "applications_count": 8,
+      "database": "easel_logto_preview",
+      "default_applications_count": 4,
+      "default_users_count": 5,
+      "enum_column_count": 9,
+      "inheritance_count": 0,
+      "native_enum_count": 8,
+      "policy_count": 153,
+      "read_only": true,
+      "relation_count": 79,
+      "row_data_exported": false,
+      "schema": "public",
+      "schema_or_permissions_modified": false,
+      "server_version_num": "160015",
+      "source_owner_is_superuser": true,
+      "transaction_read_only": "on",
+      "trigger_count": 85,
+      "users_count": 6
+    },
+    "synthetic_enum_restore": {
+      "central_dump_bytes": 273046,
+      "central_dump_sha256": "221268a0bd743ea503c5f8a32cbc9bc67071bb6ca4378e0f47181d033c17d45b",
+      "cleanup_requested": true,
+      "comparison": {
+        "all_equal": true,
+        "data_equal": true,
+        "schema_equal": true,
+        "sequence_equal": true
+      },
+      "container": "easel-console-tests-cbabf5af7060",
+      "container_stopped": false,
+      "credentials_exported": false,
+      "executed": true,
+      "guards": {
+        "actual_console_guard": true,
+        "actual_console_read": true,
+        "actual_product_guard": true,
+        "private_read_denied": true
+      },
+      "migration": {
+        "collector_executed": true,
+        "console_count": 2,
+        "identity_backup_sha256": "d648601183cafbd0989a18d43715fd2dca083be487cf73799f42294cabeb0ab5",
+        "native_enum_fixture": true,
+        "product_count": 1
+      },
+      "model_calls": 0,
+      "new_database": true,
+      "owned_cleanup_complete": true,
+      "payment_calls": 0,
+      "production_ready": false,
+      "same_schema_name": true,
+      "schema_snapshot": {
+        "data_sha256": "407c997517983e981acebf9adbf9e0ec4c6884e7391819a04c96878fbd7fa1fd",
+        "schema_sha256": "a0152c7e9d27070fe62449eaf93c8fd20c72477ae8a1ecdc91d18ee7cf0e4d2e",
+        "sequence_sha256": "84c2cdd63cf9db6a7f987cab14ea9f68ccc194bf54e63f5ac553233af00bc1cc",
+        "table_counts": {
+          "billing_accounts": 2,
+          "billing_offer_withdrawals": 0,
+          "billing_offers": 0,
+          "billing_orders": 0,
+          "billing_outbox": 0,
+          "billing_refunds": 0,
+          "console_acl_events": 3,
+          "console_admins": 2,
+          "console_audit_events": 0,
+          "console_identity_aliases": 2,
+          "console_login_requests": 2,
+          "console_login_transactions": 3,
+          "console_operations": 0,
+          "console_sessions": 1,
+          "credit_entries": 9,
+          "credit_holds": 2,
+          "credit_journals": 4,
+          "credit_lots": 1,
+          "credit_reservations": 2,
+          "execution_blocked_bindings": 0,
+          "execution_invocations": 1,
+          "execution_jobs": 2,
+          "execution_model_states": 1,
+          "execution_models": 1,
+          "execution_receipts": 1,
+          "execution_results": 1,
+          "execution_task_tokens": 1,
+          "external_identities": 2,
+          "identity_handoffs": 0,
+          "identity_migration_entries": 3,
+          "identity_migrations": 1,
+          "identity_restore_candidates": 3,
+          "identity_restore_proofs": 1,
+          "identity_sessions": 1,
+          "identity_tokens": 0,
+          "identity_transactions": 0,
+          "internal_grants": 0,
+          "membership_revocations": 0,
+          "memberships": 1,
+          "payment_event_audits": 0,
+          "payment_events": 0,
+          "payment_orphan_events": 0,
+          "payment_refund_transactions": 0,
+          "payment_transactions": 0,
+          "plans": 1,
+          "product_clients": 1,
+          "products": 2,
+          "schema_migrations": 10,
+          "tenant_members": 2,
+          "tenants": 2,
+          "users": 2
+        }
+      },
+      "semantics": {
+        "active_admin_match": true,
+        "console_alias_count": 2,
+        "disabled_admin_match": true,
+        "entry_count": 3,
+        "financial_balanced": true,
+        "journal_balanced": true,
+        "membership_count": 1,
+        "migration_count": 1,
+        "pending_count": 1,
+        "pending_held_positive": true,
+        "product_alias_same_user": true,
+        "proof_count": 1,
+        "settled_count": 1,
+        "wallet_balanced": true
+      },
+      "success": true,
+      "verification": "actual_synthetic_restore",
+      "verified_at": "2026-10-23T17:05:57.280407+00:00"
+    },
+    "test_container_cleanup": {
+      "container": "easel-console-tests-cbabf5af7060",
+      "container_removed": false,
+      "only_owned_test_container_stopped": true,
+      "other_containers_modified": false,
+      "private_backups_retained": true,
+      "running_after": false,
+      "tmpfs_test_database_released_on_stop": true,
+      "verified_at": "2026-10-23T17:16:25.689742+00:00"
+    }
+  },
+  "remaining": [
+    "reviewed_executable_writer_fence_and_resume_steps",
+    "real_logto_and_central_backup_and_isolated_restore",
+    "source_callback_preparation_before_final_identity_dump",
+    "final_write_cutoff_and_unknown_cost_preservation",
+    "production_migration_010_and_identity_proof_alias_apply",
+    "three_openresty_sites_and_verified_tls",
+    "real_user_and_existing_admin_new_issuer_login",
+    "reboot_backup_monitoring_capacity_acceptance"
+  ],
+  "requirements_sha256": "cc4ed5666cf61eb591c99ef7951fda4018e0c96e6d6d87e9ca98978c19958c84",
+  "schema_version": 1,
+  "source_counts": {
+    "python": 42,
+    "sql": 10,
+    "static": 4
+  },
+  "source_file_count": 56,
+  "supplier_configuration_read": false,
+  "target_linux": {
+    "database_calls": 0,
+    "existing_venv_byte_for_byte_audited": false,
+    "existing_venv_not_install_target": true,
+    "installed_distributions": 26,
+    "lifespan_started": false,
+    "model_calls": 0,
+    "payment_calls": 0,
+    "private_configuration_loaded": false,
+    "receipt": "2026-10-24-linux-install-receipt.json",
+    "receipt_sha256": "dd5923a709bbf86f7f43e5aa56da2135f0cde41ac1f7f4f406419e5b059feb5a",
+    "remote_directory": "/opt/easel-central-preflight/20261024-921f7caabe29fff26b2ba397af17db6d",
+    "services_started": false,
+    "success": true
+  },
+  "tests": {
+    "central_full": {
+      "excluded": 0,
+      "passed": 886,
+      "seconds": 93.3
+    },
+    "deployment_preparation_after_public_config": {
+      "passed": 79,
+      "seconds": 0.19
+    },
+    "enum_focused": {
+      "passed": 60,
+      "seconds": 8.86
+    },
+    "linux_verifier_v1": {
+      "passed": 20,
+      "seconds": 0.03
+    },
+    "linux_verifier_v2_root_fresh": {
+      "passed": 25,
+      "seconds": 0.03
+    },
+    "overlapping_subsets_not_additive": true,
+    "restore_harness": {
+      "passed": 44,
+      "seconds": 0.12
+    }
+  },
+  "uv_lock_sha256": "eb00eae7b6966760595376c65da0571d40406dc2d2a3019c1247f575dfa44f2a",
+  "verification": "real_preflight_and_synthetic_validation",
+  "verified_at": "2026-10-23T17:30:50.902847+00:00",
+  "wheel_sha256": "ec2e5577c79cf39f27f3962e462025c3f37ab27f2979d076e1e723c4c65b4cc9"
+}

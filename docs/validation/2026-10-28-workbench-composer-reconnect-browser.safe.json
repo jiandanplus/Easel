@@ -1,0 +1,105 @@
+{
+  "status": "ACTUAL_REACTDOM_SYNTHETIC_CUA_PASS_NOT_DESKTOP_PACKAGE",
+  "synthetic_only": true,
+  "models_gets": 10,
+  "status_gets": 6,
+  "chat_task_posts": 0,
+  "other_posts": 0,
+  "checks": {
+    "fixture-chat": {
+      "failure": "network",
+      "failed_refresh_time": 1793180622.284,
+      "reconnect_refresh_time": 1793180634.977,
+      "status_get_between": 1,
+      "same_session": true,
+      "refresh_true": true
+    },
+    "fixture-dashboard": {
+      "failure": "unavailable",
+      "failed_refresh_time": 1793180661.582,
+      "reconnect_refresh_time": 1793180675.242,
+      "status_get_between": 1,
+      "same_session": true,
+      "refresh_true": true
+    }
+  },
+  "source_before": {
+    "web/frontend/src/components/ChatPage.tsx": "5294c2d04e62140d89a6586e96cd43cc4cf9b66792c67984bb0fd86d939b1015",
+    "web/frontend/src/components/ComposerModelPicker.tsx": "a9e77bbe03a2110e9ec999fdfcdbd34b98b03fc3571f516699fcc83f7ed25eeb",
+    "web/frontend/src/App.tsx": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+    "web/frontend/src/lib/api.ts": "728e17eed4d8d514d4849725a405f3057f5fb886343dc53901d0f980757f60b0",
+    "web/frontend/src/lib/composerDrafts.ts": "cfbc599739ead07661a337d44ec828851e93b74ff81924a047c720aaa291839f",
+    "web/frontend/src/lib/useComposerDraft.ts": "0cf64994f5eabdd4a5085234e22924471b0a216ad4a06611ba615e775ed33a55",
+    "web/frontend/src/lib/chatModels.ts": "a8261fd72511b4aa1e2453b66f0bec1ab4eb590f0c10660ea958297e032f37e1",
+    "web/frontend/src/lib/workbenchReadiness.ts": "7ebc372650158ba37d4896fec3b81048bdf40847aa5ad7c9f6dc751f47eaa251",
+    "web/frontend/src/components/DashboardPage.tsx": "a32303d92d8651b0b013b8219e7f14312d50702c627ae4715b527355da9ce733"
+  },
+  "source_after": {
+    "web/frontend/src/components/ChatPage.tsx": "5294c2d04e62140d89a6586e96cd43cc4cf9b66792c67984bb0fd86d939b1015",
+    "web/frontend/src/components/ComposerModelPicker.tsx": "a9e77bbe03a2110e9ec999fdfcdbd34b98b03fc3571f516699fcc83f7ed25eeb",
+    "web/frontend/src/App.tsx": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+    "web/frontend/src/lib/api.ts": "728e17eed4d8d514d4849725a405f3057f5fb886343dc53901d0f980757f60b0",
+    "web/frontend/src/lib/composerDrafts.ts": "cfbc599739ead07661a337d44ec828851e93b74ff81924a047c720aaa291839f",
+    "web/frontend/src/lib/useComposerDraft.ts": "0cf64994f5eabdd4a5085234e22924471b0a216ad4a06611ba615e775ed33a55",
+    "web/frontend/src/lib/chatModels.ts": "a8261fd72511b4aa1e2453b66f0bec1ab4eb590f0c10660ea958297e032f37e1",
+    "web/frontend/src/lib/workbenchReadiness.ts": "7ebc372650158ba37d4896fec3b81048bdf40847aa5ad7c9f6dc751f47eaa251",
+    "web/frontend/src/components/DashboardPage.tsx": "a32303d92d8651b0b013b8219e7f14312d50702c627ae4715b527355da9ce733"
+  },
+  "source_unchanged": true,
+  "corrected_child_environment_keys": [
+    "LANG",
+    "NODE_ENV",
+    "PATH",
+    "PYTHONDONTWRITEBYTECODE",
+    "TMPDIR"
+  ],
+  "first_run_home_override_preserved_then_removed": true,
+  "first_run_owned_pids_stopped": [
+    68871,
+    68872
+  ],
+  "second_run_owned_pids": [
+    78004,
+    78005
+  ],
+  "live_provider_calls": 0,
+  "original_17868_touched": false,
+  "new_package_built": false,
+  "dom_observations": {
+    "dashboard": {
+      "failure_disables_send": true,
+      "reconnect_reenables_send": true,
+      "model_B_high_preserved": true,
+      "draft_preserved": true,
+      "synthetic_attachment_preserved": true
+    },
+    "chat": {
+      "failure_disables_send": true,
+      "reconnect_reenables_send": true,
+      "model_B_high_preserved": true,
+      "draft_preserved": true,
+      "synthetic_attachment_preserved": true
+    }
+  },
+  "automation_notes": [
+    "Two exact Playwright checkbox selectors did not match native AX role projection; root used fresh AX indices and completed both flows. No task submitted."
+  ],
+  "owned_fixture_shutdown": {
+    "mock": {
+      "pid": 78004,
+      "port": 52774,
+      "port_closed": true
+    },
+    "vite": {
+      "pid": 78005,
+      "port": 5173,
+      "port_closed": true
+    }
+  },
+  "durable_evidence": {
+    "path": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/workbench-composer-reconnect-browser-20261028",
+    "count": 32,
+    "bytes": 573869,
+    "manifest_sha256": "840b8ab78c2f44613d80dc093c8e98901658d826c4de369834228b031643607f"
+  }
+}

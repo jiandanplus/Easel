@@ -1,0 +1,80 @@
+{
+  "reviewer": "delivery_media_review",
+  "scope": "M1 disabled preparation + explicit candidate/cutover + new media recovery tool only",
+  "frozen_test_run": {
+    "exit_code": 0,
+    "seconds": 32.1,
+    "source_and_test_hashes_before": {
+      "services/platform/scripts/prepare_m1_image_release.py": "ff9d019ef275798b24e12adcc25c8018c9f8f3ff244dc003133f2df4912c02ef",
+      "services/platform/scripts/prepare_m1_image_cutover.py": "32ba883a5362af05edf3a53dc070c05f80ec8275a947a4bb7063078ae80aba36",
+      "services/platform/scripts/verify_media_restore_drill.py": "68dccf3699a3c9b06d79e5cf87609dcf567b2d6c93c8b3c6186cc40c3474e1d3",
+      "services/platform/scripts/verify_encrypted_restore_drill.py": "4d3c4210469d6630dd4cbc71d8d5327e62aa972eedb7084685bb0df85a2c88ea",
+      "services/platform/tests/test_m1_image_release_preparation.py": "cd6ac4406c9885c479e16c10ca2a48408337502f54e3bcaf5ae0ef6aff05aa83",
+      "services/platform/tests/test_m1_image_cutover.py": "9fc8fd6a4fe748cbad2d9c02f85e4c224bb02d08c1bd1ce69cc7d0465b2d3956",
+      "services/platform/tests/test_media_restore_drill.py": "43490c8c3b66a963ab3106304056e718eadf168514a8e69a3974b3d1edf85644"
+    },
+    "source_and_test_hashes_after": {
+      "services/platform/scripts/prepare_m1_image_release.py": "ff9d019ef275798b24e12adcc25c8018c9f8f3ff244dc003133f2df4912c02ef",
+      "services/platform/scripts/prepare_m1_image_cutover.py": "32ba883a5362af05edf3a53dc070c05f80ec8275a947a4bb7063078ae80aba36",
+      "services/platform/scripts/verify_media_restore_drill.py": "68dccf3699a3c9b06d79e5cf87609dcf567b2d6c93c8b3c6186cc40c3474e1d3",
+      "services/platform/scripts/verify_encrypted_restore_drill.py": "4d3c4210469d6630dd4cbc71d8d5327e62aa972eedb7084685bb0df85a2c88ea",
+      "services/platform/tests/test_m1_image_release_preparation.py": "cd6ac4406c9885c479e16c10ca2a48408337502f54e3bcaf5ae0ef6aff05aa83",
+      "services/platform/tests/test_m1_image_cutover.py": "9fc8fd6a4fe748cbad2d9c02f85e4c224bb02d08c1bd1ce69cc7d0465b2d3956",
+      "services/platform/tests/test_media_restore_drill.py": "43490c8c3b66a963ab3106304056e718eadf168514a8e69a3974b3d1edf85644"
+    },
+    "all_frozen_inputs_stable": true,
+    "log": "/private/tmp/easel-ops-independent-review-20261027/ops-final-tests.log",
+    "production_mutations": false,
+    "business_keys_read": false,
+    "passed": 56,
+    "skipped": 0,
+    "pytest_seconds": 31.79,
+    "split": {
+      "preparation": 5,
+      "cutover": 12,
+      "media_restore": 39
+    }
+  },
+  "synthetic_nonempty_actual_restore": {
+    "blob_bytes": 34,
+    "blob_count": 1,
+    "candidate_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+    "complete_inventory_match": true,
+    "constraint_count": 529,
+    "core_sha256": "4d3c4210469d6630dd4cbc71d8d5327e62aa972eedb7084685bb0df85a2c88ea",
+    "durable_ciphertext_restored": true,
+    "main_units_and_dropins_restored": true,
+    "migration_016_sha256": "a5a1dcfdb90299ebd063b18377a900ad68e1338bb2137cba9a7010f9694d6cba",
+    "migrations": 16,
+    "money": {
+      "journals_balanced": true,
+      "lots_balanced": true
+    },
+    "real_provider_requests": 0,
+    "registry_binding_match": true,
+    "rows": 29,
+    "schema_sha256": "5eb131def800def34ac53d8df9d124c0a259123d60a426967ac70e4fac64ebcf",
+    "script_sha256": "68dccf3699a3c9b06d79e5cf87609dcf567b2d6c93c8b3c6186cc40c3474e1d3",
+    "server_executed": false,
+    "source_configuration_count": 11,
+    "source_configuration_metadata_matched": true,
+    "source_gid": 20,
+    "source_uid": 501,
+    "status": "synthetic_nonempty_016_restore_verified",
+    "tables": 75,
+    "tampered_ciphertext_rejected": true,
+    "uid_gid_and_600_700_restored": true
+  },
+  "remaining_known_blocking_findings": [],
+  "production_apply_or_cutover_executed_by_reviewer": false,
+  "business_key_or_dsn_read_by_reviewer": false,
+  "limitations": [
+    "pure preparation/cutover fixtures plus static review do not prove actual production zero-money migration",
+    "actual local nonempty restore fixture is central DB only, synthetic attached34bytes; no real image/provider data",
+    "new whole-tool two-database production run not executed by reviewer",
+    "first real production proof must new units active, exactly disabled models and empty media invocation/job/blob/budget and directory, honest blob_count0",
+    "source uid/gid501:20 are local fixture; production tool independently requires997:997 media owner",
+    "not PITR, not cross-database atomic, not continuous media backup",
+    "old R2 tools/timer/core unchanged; no unverified old-binary rollback"
+  ]
+}

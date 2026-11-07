@@ -1,0 +1,165 @@
+{
+  "dependency": "PyNaCl",
+  "direct_native_version_query": false,
+  "evidence_limits": [
+    "macOS execution is arm64 only; universal2 x86_64 slice not executed",
+    "Linux execution is CPython3.12.16/glibc2.36/amd64 under Docker emulation, not target production host or glibc2.34 minimum runtime",
+    "direct native version APIs unavailable on both stripped static wheels",
+    "PyPI signature proves upload publisher identity; not SLSA build materials or reproducible build",
+    "B2 installable full package and production/deployment remain later tasks"
+  ],
+  "evidence_receipt_sha256": "8d2edd822a653a03f01ba91321884283e8ac1aeb42afa4e7b78f322dd505ca08",
+  "native_version_evidence": "source-attributed",
+  "official_metadata": "https://pypi.org/pypi/PyNaCl/1.6.2/json",
+  "publisher_attestations": {
+    "both_cli_exit_zero": true,
+    "certificate_identity": "https://github.com/pyca/pynacl/.github/workflows/pypi-publish.yml@refs/heads/main",
+    "claims": "Trusted Publisher upload identity for exact wheel subjects; no SLSA build materials or reproducible binary claim",
+    "exact_repository": "https://github.com/pyca/pynacl",
+    "predicate": "https://docs.pypi.org/attestations/publish/v1",
+    "publisher_commit": "4d5ea2812b2b86dce1a892d7dff5e3bd03c00f24",
+    "publisher_run": 20642680872,
+    "verifier": "pypi-attestations==0.0.30"
+  },
+  "schema_version": 1,
+  "security_sources": {
+    "CVE_2025_69277_point_rejected_on_both_actual_natives": true,
+    "all_possible_vulnerabilities_audited": false,
+    "fixed_release_changelog": "https://github.com/pyca/pynacl/blob/ecf41f55a3d8f1e10ce89c61c4b4d67f3f4467cf/CHANGELOG.rst",
+    "upstream_author": "https://00f.net/2025/12/30/libsodium-vulnerability/",
+    "upstream_fix": "https://github.com/jedisct1/libsodium/commit/ad3004ec8731730e93fcfbbc824e67eadc1c1bae"
+  },
+  "slsa_build_or_reproducible_build_claimed": false,
+  "source_attributed_libsodium": {
+    "direct_runtime_query_available": false,
+    "method": "exact verified published wheel and loaded native hash + exact release/publisher source context + actual CVE point rejection; source-attributed, not direct version API return",
+    "publisher_commit": "4d5ea2812b2b86dce1a892d7dff5e3bd03c00f24",
+    "release_commit": "ecf41f55a3d8f1e10ce89c61c4b4d67f3f4467cf",
+    "release_tag": "1.6.2",
+    "same_release_publisher_recipe_and_vendor_files": [
+      {
+        "git_blob_sha": "357b26f4d5578830210c68b4909964bf4c703274",
+        "path": "src/libsodium/configure.ac",
+        "publisher_fetched": true,
+        "publisher_identical": true,
+        "sha256": "38e2c329b36150cecd7e3a3521720224e62d04cd9993445b48b7fc8831bd98ff"
+      },
+      {
+        "git_blob_sha": "b9a4276ec165573c00c3c749f38572d721f09e9f",
+        "path": "src/libsodium/src/libsodium/crypto_core/ed25519/ref10/ed25519_ref10.c",
+        "publisher_fetched": true,
+        "publisher_identical": true,
+        "sha256": "4622ef47f5d58390382e97d23e57a75c4e7edb8d4a7912aff788c009bd256395"
+      },
+      {
+        "git_blob_sha": "73859a2d198dea59cccefab023f98d399cee75d2",
+        "path": ".github/workflows/wheel-builder.yml",
+        "publisher_fetched": true,
+        "publisher_identical": true,
+        "sha256": "f124c7b34ea4f2fcb914a04226d2a9b04004168dcf5ae65468d9bca2338c29de"
+      },
+      {
+        "git_blob_sha": "ea87da7345cb504774d1bbe19796a6d4499e8878",
+        "path": "setup.py",
+        "publisher_fetched": true,
+        "publisher_identical": true,
+        "sha256": "eb24c03ec0bbe0967a92e00f6448b72f34e53f7cc417c3f73a88d1e99383a25c"
+      },
+      {
+        "path": "src/bindings/build.py",
+        "publisher_fetched": true,
+        "publisher_identical": true,
+        "sha256": "dd9deb3f005d911d690fa87bfbaf81665c4a62378e21983ca7039fdb4cc45056"
+      }
+    ],
+    "slsa_build_or_reproducible_build_claimed": false,
+    "tag_signature_method": "GitHub API reports verified=true/reason=valid; not local GPG validation",
+    "version": "1.0.20-stable (2025-12-31 build)"
+  },
+  "version": "1.6.2",
+  "wheels": {
+    "linux": {
+      "bytes": 1402859,
+      "filename": "pynacl-1.6.2-cp38-abi3-manylinux_2_34_x86_64.whl",
+      "license_sha256": {
+        "PyNaCl": "d3174ad63e721d4c9dccb8ad4320848992d314369bc46319720b5802c9153fe9",
+        "libsodium": "508a76d186356c0dd807a670ef510964f8724557024796a2c426c6c0e19ab683"
+      },
+      "native_sha256": "554206748472a39920ad95a26b6c217ce65439fd58d755a0f05457b3cbfbb57f",
+      "requires_python": ">=3.8",
+      "sha256": "c8a231e36ec2cab018c4ad4358c386e36eede0319a0c41fed24f840b1dac59f6",
+      "source": "https://files.pythonhosted.org/packages/c9/a8/b917096b1accc9acd878819a49d3d84875731a41eb665f6ebc826b1af99e/pynacl-1.6.2-cp38-abi3-manylinux_2_34_x86_64.whl",
+      "upload_time": "2026-01-01T17:32:27.215385Z"
+    },
+    "macos": {
+      "bytes": 388458,
+      "filename": "pynacl-1.6.2-cp38-abi3-macosx_10_10_universal2.whl",
+      "license_sha256": {
+        "PyNaCl": "d3174ad63e721d4c9dccb8ad4320848992d314369bc46319720b5802c9153fe9",
+        "libsodium": "508a76d186356c0dd807a670ef510964f8724557024796a2c426c6c0e19ab683"
+      },
+      "native_sha256": "49032c357199dde6ae341319e558ce3ed9daa80f5ac83972aa9a63158b0b5371",
+      "requires_python": ">=3.8",
+      "sha256": "c949ea47e4206af7c8f604b8278093b674f7c79ed0d4719cc836902bf4517465",
+      "source": "https://files.pythonhosted.org/packages/be/7b/4845bbf88e94586ec47a432da4e9107e3fc3ce37eb412b1398630a37f7dd/pynacl-1.6.2-cp38-abi3-macosx_10_10_universal2.whl",
+      "upload_time": "2026-01-01T17:32:16.829569Z"
+    }
+  },
+  "whole_vendor_git_tree_binding": {
+    "publisher": {
+      "commit": "4d5ea2812b2b86dce1a892d7dff5e3bd03c00f24",
+      "entries": {
+        ".github/workflows/wheel-builder.yml": {
+          "sha": "73859a2d198dea59cccefab023f98d399cee75d2",
+          "type": "blob"
+        },
+        "setup.py": {
+          "sha": "ea87da7345cb504774d1bbe19796a6d4499e8878",
+          "type": "blob"
+        },
+        "src/bindings": {
+          "sha": "71a1914e2e217dd2795e9e9fd717edcfc08ca6e5",
+          "type": "tree"
+        },
+        "src/libsodium": {
+          "sha": "7060cc94c6cc45eaec3413ac3b1d0b0918a896fd",
+          "type": "tree"
+        },
+        "src/nacl": {
+          "sha": "7c5137115e6928d704fb6503313bda44f4bba861",
+          "type": "tree"
+        }
+      },
+      "official_api": "https://api.github.com/repos/pyca/pynacl/git/trees/4d5ea2812b2b86dce1a892d7dff5e3bd03c00f24?recursive=1",
+      "response_sha256": "c5233494a1cc1e701dabc3f41a21120ed1c54b82c8ebec008b5ef28092e3a0d5"
+    },
+    "release": {
+      "commit": "ecf41f55a3d8f1e10ce89c61c4b4d67f3f4467cf",
+      "entries": {
+        ".github/workflows/wheel-builder.yml": {
+          "sha": "73859a2d198dea59cccefab023f98d399cee75d2",
+          "type": "blob"
+        },
+        "setup.py": {
+          "sha": "ea87da7345cb504774d1bbe19796a6d4499e8878",
+          "type": "blob"
+        },
+        "src/bindings": {
+          "sha": "71a1914e2e217dd2795e9e9fd717edcfc08ca6e5",
+          "type": "tree"
+        },
+        "src/libsodium": {
+          "sha": "7060cc94c6cc45eaec3413ac3b1d0b0918a896fd",
+          "type": "tree"
+        },
+        "src/nacl": {
+          "sha": "7c5137115e6928d704fb6503313bda44f4bba861",
+          "type": "tree"
+        }
+      },
+      "official_api": "https://api.github.com/repos/pyca/pynacl/git/trees/ecf41f55a3d8f1e10ce89c61c4b4d67f3f4467cf?recursive=1",
+      "response_sha256": "c7a3c76b8474c77f1c34290326434de9ccf2259cefdb94501b8a3a0d2752a557"
+    }
+  },
+  "whole_vendor_source_binding_sha256": "ec21cc71b3f4c81e897d18c11075b241f234573a9cbc64b53fae3c80dcb76e72"
+}

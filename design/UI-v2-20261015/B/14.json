@@ -1,0 +1,28 @@
+{
+  "variant": "B",
+  "page": "14",
+  "title": "语音转写",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-f8e2-7a90-9676-a91b8de1387f/exec-9c1faf15-7e79-4416-bed7-2e48adcda160.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/14.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "语音转写",
+    "转写优先级",
+    "自带字幕",
+    "API 转写",
+    "本地兜底",
+    "保存配置"
+  ],
+  "status": "reviewed-required-labels-legible; active-sidebar-correct",
+  "visuallyConfirmedLabels": [
+    "语音转写",
+    "转写优先级",
+    "自带字幕",
+    "API 转写",
+    "本地兜底",
+    "保存配置"
+  ],
+  "qaNotes": "Manual visual check confirms mandatory heading/control labels; not a guarantee for every decorative glyph",
+  "sha256": "1399433d457529be07f8602e286e7f33ac88ae27acd027481d3b9ea74adaf968"
+}

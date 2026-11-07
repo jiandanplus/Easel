@@ -1,0 +1,103 @@
+{
+  "status": "r2_local_independent_and_real_ubuntu61_algorithm_verified_not_production_ready",
+  "explicit_user_payload_authorization_received": true,
+  "approved_payload_files": 13,
+  "approved_payload_bytes": 56314,
+  "approved_manifest_sha256": "1d521fefce0c609cb8d30a6bf20604c27c2d36bc408b92e99c04a0a52521d71e",
+  "remote_stage": "/root/easel-central-av-preparation-20261028/metering-tdd-candidate-r2",
+  "target_host": "154.217.245.179",
+  "strict_hostkey": true,
+  "private_mode": "0700",
+  "tool_sessions": {
+    "upload": {
+      "id": 64810,
+      "exit": 0
+    },
+    "remote_hash_verification": {
+      "id": 35485,
+      "exit": 0
+    },
+    "unique_linux_run": {
+      "id": 48647,
+      "exit": 0
+    },
+    "small_receipt_download": {
+      "id": 90245,
+      "exit": 0
+    }
+  },
+  "linux": {
+    "positive": 14,
+    "negative": 3,
+    "short_rate_direct_gates": 3,
+    "rate_gate_delta_ms": [
+      "23",
+      "23",
+      "80"
+    ],
+    "rate_gate_exit": [
+      234,
+      234,
+      234
+    ],
+    "version": {
+      "ffmpeg": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+      "ffprobe": "ffprobe version 6.1.1-3ubuntu5 Copyright (c) 2007-2023 the FFmpeg developers"
+    },
+    "official_ELF_count": 216,
+    "all_full_decode_stages_share_deadline": true,
+    "source_and_ELF_and_old_media_unchanged": true,
+    "direct_cleanenv": {
+      "ffmpeg": {
+        "exit": 127,
+        "missing_library": "libavdevice.so.60"
+      },
+      "ffprobe": {
+        "exit": 127,
+        "missing_library": "libavdevice.so.60"
+      }
+    },
+    "result_sha256": "db044bdafe95751bfd74d2ca063c8234cabab8e36983035b5815cb22a0df02a1"
+  },
+  "local_independent_review_receipt_sha256": "b39310449e9a0420bbbaec7a12b22a985cb6adf1d9c149a9dc7deb846cb374c7",
+  "current_source_sha256": {
+    "services/platform/src/platform_service/media/av_artifacts.py": "e2f8c862084345d72e0563be41b817692c50f03b033be459595f61e5ab1cef74",
+    "services/platform/src/platform_service/media/decoded_timeline.py": "41a0f2cfd5e79017240e1f8485cf8907e2d402f42aae00cee85093a302c8fc9e",
+    "services/platform/tests/test_media_av_artifacts.py": "2215eabc3418ffacbb0ac31d730e94ac984af35f9455836f135d0f2097391cc9",
+    "services/platform/tests/test_media_decoded_timeline.py": "50718fc6694229b254248d3dbe1f93a643a872ac094ce14a8ae9cb1e8a9300ca"
+  },
+  "initial_SCP_rejection_preserved_then_resolved_by_specific_user_authorization": true,
+  "source_payload_or_business_data_exposed_publicly": false,
+  "production_changes": false,
+  "OS_package_install": false,
+  "real_API_UID_systemd_verified": false,
+  "fresh_full_central_verified": false,
+  "model_wallet_auth_or_PG_operations": false,
+  "published_security_fix_gap": {
+    "tested_base": "7:6.1.1-3ubuntu5",
+    "published_noble_fix_in_USN_8915_1": "7:6.1.1-3ubuntu5+esm15",
+    "official_notice": "https://ubuntu.com/security/notices/USN-8915-1",
+    "base_not_admitted_for_production_install": true,
+    "specific_CVE_reachability_under_this_application_profile_not_claimed": true
+  },
+  "evidence": {
+    "approved-payload/expected.json": "745a8567d5dd04a88bd140ba6557e314918088f7817b95446d418ea94a1103d2",
+    "approved-payload/decoded_timeline.py": "41a0f2cfd5e79017240e1f8485cf8907e2d402f42aae00cee85093a302c8fc9e",
+    "approved-payload/rate-gate-8000.mp3": "02ebdf3b31e30d91174a0ada171817718e51ae1ff458a79aacd60e3ab57911cf",
+    "approved-payload/rate-gate-48000.mp3": "ce16ab6f484cad159a06bf2424b01eba28435f72403c7a983eb7a5f6ecec4774",
+    "approved-payload/rate-direct-16000-48000-16000.mp3": "cc526f9aa2a96cd58318d31adcfab2efd4962ac062029db39a6d28f09682a0bc",
+    "approved-payload/dynamic-channels-0.02.mp3": "abb130f8e9ab2b674e59a44b5a0a2b6810be96bc6a415476dfdd2baf4687fc98",
+    "approved-payload/linux_r2.py": "fd8674e3d50719ec67b8aa2f18211a1903257bda0cd1aacd689ad5cdf81173e9",
+    "approved-payload/rate-gate-16000.mp3": "bcc265cf19669d4ff0c29ea269f1c17a6adcc4a810b5fa3a663619cf4b89aa68",
+    "approved-payload/av_artifacts.py": "e2f8c862084345d72e0563be41b817692c50f03b033be459595f61e5ab1cef74",
+    "approved-payload/rate-direct-16000-48000-8000-48000-16000.mp3": "3ae460128b38c0f89aa710d582f5af0a07bff5c7f62ebd9e8ce6a83ffcbeff74",
+    "approved-payload/rate-direct-48000-16000-48000.mp3": "e1a9b96fe2d0e7c318e3d8cd09723bba28be9dbd96ff07c52e37d50cd7904af7",
+    "approved-payload/h264-size-change.mp4": "4de11598450cbdf62f4652760622f1a75869e406fc75fb34fc32298a58d20a4b",
+    "approved-payload/upload-manifest.json": "1d521fefce0c609cb8d30a6bf20604c27c2d36bc408b92e99c04a0a52521d71e",
+    "result.safe.json": "db044bdafe95751bfd74d2ca063c8234cabab8e36983035b5815cb22a0df02a1",
+    "native-av.compact.txt": "0df6d490d02f682ad7d49b5d32fdf5a11563b05b24be9e8dc18df7088c1aaaad",
+    "independent-review.md": "594211722a867cefeca49f7019d8f53ef0a9467dc7b4b51b11effdc33314cac1",
+    "independent-review.safe.json": "b39310449e9a0420bbbaec7a12b22a985cb6adf1d9c149a9dc7deb846cb374c7"
+  },
+  "goal_complete": false
+}

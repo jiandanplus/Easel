@@ -1,0 +1,1 @@
+Edit only the 快手 table row: login status must be gray dot 未登录; replace 校验账号 and 退出登录 buttons in that row with single orange 登录 button. The open 快手 扫码登录 panel means this platform is not yet signed in. Preserve all other rows, exact Chinese text, layout, colors, and styling. High quality readable Chinese glyphs.

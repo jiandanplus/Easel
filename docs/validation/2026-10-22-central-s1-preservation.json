@@ -1,0 +1,14 @@
+{
+  "branch": "codex/ui-redesign",
+  "head_unchanged": true,
+  "main_unchanged": true,
+  "env_unchanged": true,
+  "preexisting_files": 99,
+  "preexisting_missing": [],
+  "preexisting_changed": [
+    "tests/frontend/platformAccount.test.mjs",
+    "web/app.py",
+    "web/frontend/src/lib/api.ts"
+  ],
+  "owned_test_resources_removed": true
+}

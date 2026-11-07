@@ -1,0 +1,29 @@
+{
+  "variant": "E",
+  "page": "13",
+  "title": "对话与脚本",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-51dd3f0f-7c22-4924-b2da-ff82881dfb12.png",
+  "requiredLabels": [
+    "对话与脚本",
+    "Agent 底座",
+    "执行引擎",
+    "模型覆盖",
+    "保存底座"
+  ],
+  "status": "visually-reviewed-corrected",
+  "width": 1585,
+  "height": 992,
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/E/13.png",
+  "originalSource": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-d8a46efc-9116-4801-a15a-767dde8c58fb.png",
+  "visuallyConfirmedLabels": [
+    "对话与脚本",
+    "Agent 底座",
+    "执行引擎",
+    "模型覆盖",
+    "保存底座"
+  ],
+  "qaNotes": [
+    "Preserve this exact Swiss orange/black settings page, all text, layout and active 设置 sidebar. Correct controls semantics. Codex 沙箱 contains ONLY two mutually exclusive radio options: 只读 and 项目工作区写入. Remove 永久通过授权 from this radio group and place it on its own separate row with an independent OFF toggle to the right. 认证由原生 CLI 管理 is purely informational text: REMOVE its toggle; show this note as ordinary text without any editable control. Preserve bottom 保存底座 and 重新读取 buttons and all engine choices. Crisp legible exact Chinese."
+  ],
+  "sha256": "9542fbeb765326228da55cd2e30509124d5c82db8380b5833bc4ec405177ae77"
+}

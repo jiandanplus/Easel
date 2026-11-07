@@ -4,6 +4,8 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
+
+from easel.routes import settings as settings_routes  # noqa: E402
 import web.app as web
 
 
@@ -24,7 +26,7 @@ def sandbox(tmp_path, monkeypatch):
 
 def seed(env_path, config_path, slot, env_key="sk-env-test", base="https://current.example/v1",
          mirror_base="https://old.example/v1", mirror_key="sk-mirror-test"):
-    base_var, key_var = web._SLOT_ENV_KEYS[slot]
+    base_var, key_var = settings_routes._SLOT_ENV_KEYS[slot]
     env_path.write_text(f"{base_var}={base}\n{key_var}={env_key}\n", encoding="utf-8")
     provider = "openai" if slot == "openai" else "anthropic"
     config_path.write_text(json.dumps({"models": {"providers": {provider: {

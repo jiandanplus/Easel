@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "status": "synthetic_browser_scope_origin_boundary_verified_user_migration_not_performed",
+  "observed_utc": "2026-10-28T10:53:44.654647+00:00",
+  "actual_browser_operator": "root agent using CUA",
+  "archive": {
+    "path": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/workspace-migration-preflight-20261028",
+    "copied_files": 40,
+    "copied_content_bytes": 371181,
+    "copy_manifest_sha256": "b75620857faacafc4406fc6285e74dda6a69bf8aaa2fe5da03a0ce13a872e083",
+    "all_files_including_manifest": 41,
+    "all_bytes_including_manifest": 378176
+  },
+  "cases": {
+    "same_origin_different_workspace_scope": {
+      "A_saved_text_one_attachment": true,
+      "B_empty": true,
+      "return_A_restored": true
+    },
+    "same_workspace_scope_different_origin": {
+      "same_source_scope": true,
+      "same_session": true,
+      "second_origin_empty": true,
+      "first_origin_refresh_preserved": true
+    }
+  },
+  "browser_state": {
+    "observation_count": 15,
+    "contract_gets": 11,
+    "mock_validation_posts": 3,
+    "task_post_attempts": 0,
+    "preflight_rejected_task_gets": 2,
+    "synthetic_saved_available_observations": 3,
+    "root_browser_state_sha256": "153481c31d9e811638514bc580ef60d618b4dfdaebc0bc236445037d38c29100"
+  },
+  "synthetic_scopes": {
+    "A": "3a66713765f6f3ee9db90e873851579972e572afa65ffe60920c9c3e5ec56185",
+    "B": "4fedd67ca89da1d967695beaa1fd4f46b93d422de0790fdae3bc7e487dcac0d5",
+    "source": "e407b71aaeca3eb7e2988eeb40a7ed0d0b73f21a63f0318c4e7d51f45082ef99",
+    "session": "synthetic-migration-session-20261028"
+  },
+  "source_identity": {
+    "v29_manifest_matched_five": {
+      "web/frontend/src/lib/useComposerDraft.ts": "0cf64994f5eabdd4a5085234e22924471b0a216ad4a06611ba615e775ed33a55",
+      "web/frontend/src/lib/composerDrafts.ts": "cfbc599739ead07661a337d44ec828851e93b74ff81924a047c720aaa291839f",
+      "web/frontend/src/lib/api.ts": "728e17eed4d8d514d4849725a405f3057f5fb886343dc53901d0f980757f60b0",
+      "web/frontend/src/App.tsx": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+      "easel/workbench.py": "c7e43e0a54d53e571c55d867446f79e21957a9432149e1055ac0bfd90acb26ac"
+    },
+    "original13_before": {
+      "docs/superpowers/plans/2026-10-27-delivery-completion.md": "c42f8885cbf4dd6e8511dd18766a4dcc01c17bf2ec6c14f6dfc5dce775de7712",
+      "docs/superpowers/plans/2026-10-15-portable-runtime.md": "10749cbe2a899e1e9b2ceade5a21127c45daa79f7c10d1f729347853e8470352",
+      "docs/superpowers/plans/2026-10-28-restore-window-v2.md": "a7bedbe99d78b78117553bd89bd984e7a45362d76de69da50908da1eac8458ae",
+      "docs/superpowers/plans/2026-10-28-m3-r2-package-deployment-preflight.md": "64991cf9d393f551503d5f2576fc40262f3bc00beac8635e3097e94d47310db0",
+      "docs/validation/2026-10-28-workbench-v29-delivery.md": "f397c8eb877bb7a3240a14524e82d68ee133749e68f2a74cd2a38bf2b35f43ff",
+      "docs/validation/2026-10-28-workbench-v29-delivery.safe.json": "046404018d4f8f266d2997e4c1afdbb964e85832effb717c5a1498334c527eff",
+      "easel/portable.py": "be519a72ffc716bfcacf43f4b458e103b31a321082e1c99395db23995223834b",
+      "easel/workbench.py": "c7e43e0a54d53e571c55d867446f79e21957a9432149e1055ac0bfd90acb26ac",
+      "web/frontend/src/lib/composerDrafts.ts": "cfbc599739ead07661a337d44ec828851e93b74ff81924a047c720aaa291839f",
+      "web/frontend/src/App.tsx": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+      "outputs/_run/pi-portable-20261028-v29/artifact.json": "784a16b4d92bfc612db2bf6188ea3d8085c4abba89ae4d01d08f94eae2822c1a",
+      "outputs/_run/pi-portable-20261028-v29/Easel/README.md": "c551f51c569b48627ccde8613995c6091f75fce98b298451d07e4bb568a57b04",
+      "outputs/_run/pi-portable-20261028-v29/Easel/Stop Easel.command": "d94bd9be699a76d363aa64bb8eb51b4e41823054e3a3ae44a14bb1177975a106"
+    },
+    "original13_final": {
+      "docs/superpowers/plans/2026-10-27-delivery-completion.md": "c42f8885cbf4dd6e8511dd18766a4dcc01c17bf2ec6c14f6dfc5dce775de7712",
+      "docs/superpowers/plans/2026-10-15-portable-runtime.md": "10749cbe2a899e1e9b2ceade5a21127c45daa79f7c10d1f729347853e8470352",
+      "docs/superpowers/plans/2026-10-28-restore-window-v2.md": "a7bedbe99d78b78117553bd89bd984e7a45362d76de69da50908da1eac8458ae",
+      "docs/superpowers/plans/2026-10-28-m3-r2-package-deployment-preflight.md": "64991cf9d393f551503d5f2576fc40262f3bc00beac8635e3097e94d47310db0",
+      "docs/validation/2026-10-28-workbench-v29-delivery.md": "f397c8eb877bb7a3240a14524e82d68ee133749e68f2a74cd2a38bf2b35f43ff",
+      "docs/validation/2026-10-28-workbench-v29-delivery.safe.json": "046404018d4f8f266d2997e4c1afdbb964e85832effb717c5a1498334c527eff",
+      "easel/portable.py": "be519a72ffc716bfcacf43f4b458e103b31a321082e1c99395db23995223834b",
+      "easel/workbench.py": "c7e43e0a54d53e571c55d867446f79e21957a9432149e1055ac0bfd90acb26ac",
+      "web/frontend/src/lib/composerDrafts.ts": "cfbc599739ead07661a337d44ec828851e93b74ff81924a047c720aaa291839f",
+      "web/frontend/src/App.tsx": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+      "outputs/_run/pi-portable-20261028-v29/artifact.json": "784a16b4d92bfc612db2bf6188ea3d8085c4abba89ae4d01d08f94eae2822c1a",
+      "outputs/_run/pi-portable-20261028-v29/Easel/README.md": "c551f51c569b48627ccde8613995c6091f75fce98b298451d07e4bb568a57b04",
+      "outputs/_run/pi-portable-20261028-v29/Easel/Stop Easel.command": "d94bd9be699a76d363aa64bb8eb51b4e41823054e3a3ae44a14bb1177975a106"
+    },
+    "original13_unchanged": true,
+    "actual_hook_store_api_imported": true,
+    "App_imported": false,
+    "App_SHA_only_checked": true,
+    "ChatPage_imported": false,
+    "ChatPage_current_sha256": "5294c2d04e62140d89a6586e96cd43cc4cf9b66792c67984bb0fd86d939b1015",
+    "ChatPage_v29_sha256": "c1a3fcfc499407b3daa5e3df5d915476c56fb647622b9c3088309700f0c1d227",
+    "full_1333_or_11932_inventory_rehashed": false
+  },
+  "http_preflight": {
+    "passed_GET_checks": 16,
+    "task_POST_probe_sent": false,
+    "CSP_connect_self_only": true,
+    "envDir": false,
+    "strict_fs_allow": true,
+    "HOME_omitted": true
+  },
+  "cleanup": {
+    "children": [
+      {
+        "pid": 24679,
+        "exit_code": 143,
+        "waited": true
+      },
+      {
+        "pid": 24678,
+        "exit_code": 0,
+        "waited": true
+      }
+    ],
+    "supervisor_pid": 24677,
+    "stopped": true
+  },
+  "browser_synthetic_localStorage_cleared": false,
+  "synthetic_localStorage_retained": true,
+  "actual_user_migration_performed": false,
+  "real_workspace_or_17868_accessed": false,
+  "real_credential_auth_model_calls": 0,
+  "product_source_or_package_changes": false,
+  "full_App_ChatPage_or_production_attachment_effect_verified": false,
+  "attachment_service": "synthetic mock; real API client/store used; not production ownership proof",
+  "native_clipboard_IME_VoiceOver_or_clean_device_verified": false,
+  "preparation_failures_preserved": [
+    "sandbox bind denied; child wait confirmed",
+    "Vite port0 fell back5173; own backend/node waited; other5173 untouched",
+    "missing .env index fallback200; no env contents; fixed fixture403; own old services waited"
+  ],
+  "broad_suite_reruns": 0,
+  "source_tar_or_payload_copied": false
+}

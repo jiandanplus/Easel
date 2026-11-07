@@ -1,7 +1,7 @@
 """Internal contract for agent harness integrations."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Awaitable, Callable, Protocol
 
@@ -35,6 +35,18 @@ class RunRequest:
     command: tuple[str, ...] = ()
     session_key: str = ""
     codex_auto_approve: bool = False
+    service_source: str = "custom"
+    execution_target: str = "local"
+    account_id: str = ""
+    platform_url: str = ""
+    subscription_backend: str = "legacy"
+    central_scope: dict = field(default_factory=dict)
+    invocation_key: str = ""
+    reasoning_effort: str = ""
+    reasoning_efforts: tuple[str, ...] = ()
+    selection_verified: bool = False
+    provider_binding: str = ""
+    turn_id: str = ""
 
 
 class Adapter(Protocol):

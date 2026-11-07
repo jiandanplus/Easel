@@ -1,0 +1,25 @@
+{
+  "variant": "E",
+  "page": "08",
+  "title": "内容库",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-a84c6c23-bd7d-4869-a4e5-73740598bbd6.png",
+  "requiredLabels": [
+    "内容库",
+    "搜索项目或文件",
+    "图文",
+    "视频",
+    "音频"
+  ],
+  "status": "visually-reviewed",
+  "width": 1586,
+  "height": 992,
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/E/08.png",
+  "visuallyConfirmedLabels": [
+    "内容库",
+    "搜索项目或文件",
+    "图文",
+    "视频",
+    "音频"
+  ],
+  "sha256": "c82eed1969f1a10f22f0a813f44145ff86b2e226488cf405502e6a9ad631412c"
+}

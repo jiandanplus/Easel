@@ -16,8 +16,10 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "web"))
 import app as web
+from easel.routes import settings as settings_routes  # noqa: E402
 from easel import direct_api
 from easel.harnesses import store
+from easel.routes import chat as chat_routes  # noqa: E402
 
 BASE = "http://localhost:50288/v1"
 SETTINGS = {"EASEL_DIRECT_API_BASE_URL": BASE, "EASEL_DIRECT_API_MODEL": "gpt-6.1-sol", "EASEL_DIRECT_API_KEY": "gateway-secret"}
@@ -49,6 +51,8 @@ def sandbox(tmp_path, monkeypatch):
     env = tmp_path / ".env"
     env.write_text("EASEL_CHAT_TRANSPORT=api\n" + "\n".join(f"{k}={v}" for k, v in SETTINGS.items()))
     monkeypatch.setattr(web, "ENV_FILE", env)
+    # 工作台任务记录要求会话目录位于项目根之内。
+    monkeypatch.setattr(web, "PROJECT_ROOT", tmp_path)
     monkeypatch.setattr(web, "SESSIONS_DIR", tmp_path / "sessions")
     monkeypatch.setattr(web, "OPENCLAW_SESSIONS_DIR", tmp_path / "openclaw-sessions")
     monkeypatch.setattr(web, "OUTPUTS_DIR", tmp_path / "outputs")
@@ -58,12 +62,14 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "_DIRECT_CHAT_TASKS", set())
     def forbidden(*args, **kwargs):
         raise AssertionError("API mode must not call OpenClaw")
-    for name in ("openclaw_base_cmd", "_gateway_http_ready", "check_gateway",
-                 "_heal_openclaw_session", "_sync_openclaw_chat", "_openclaw_provider_creds"):
+    for name in ("openclaw_base_cmd", "check_gateway", "_heal_openclaw_session"):
         monkeypatch.setattr(web, name, forbidden)
+    monkeypatch.setattr(chat_routes, "_gateway_http_ready", forbidden)
+    for name in ("_sync_openclaw_chat", "_openclaw_provider_creds"):
+        monkeypatch.setattr(settings_routes, name, forbidden)
     monkeypatch.setattr(web, "GatewayClient", forbidden)
     local = "http://127.0.0.1:7860"
-    with TestClient(web.app, base_url=local, headers={"Origin": local}) as client:
+    with TestClient(web.app, base_url=local, headers={"Origin": local}, client=("127.0.0.1", 50000)) as client:
         yield client
 
 
@@ -145,7 +151,7 @@ def test_private_models_only_allowed_for_configured_gateway(sandbox, monkeypatch
         web.ENV_FILE.write_text("EASEL_CHAT_TRANSPORT=http\n" + "\n".join(
             f"{key}={value}" for key, value in SETTINGS.items()), encoding="utf-8")
         store.write_json(web.OUTPUTS_DIR / "_harness" / "config.json", {"runtime": "api"})
-    monkeypatch.setattr(web, "_ssrf_safe", lambda url: False)
+    monkeypatch.setattr(settings_routes, "_ssrf_safe", lambda url: False)
     captured = []
     class Response:
         def __enter__(self):
@@ -358,9 +364,9 @@ def test_queued_turn_does_not_overwrite_running_snapshot(sandbox, monkeypatch):
         monkeypatch.setattr(web, "stream_chat", fake_stream)
         first = web.ChatRequest(message="first", sessionId="queue", turnId="first")
         second = web.ChatRequest(message="second", sessionId="queue", turnId="second")
-        active = asyncio.create_task(web._run_direct_chat(first, "queue", "first", "", lambda *args: None))
+        active = asyncio.create_task(chat_routes._run_direct_chat(first, "queue", "first", "", lambda *args: None))
         await started.wait()
-        queued = asyncio.create_task(web._run_direct_chat(second, "queue", "second", "", lambda *args: None))
+        queued = asyncio.create_task(chat_routes._run_direct_chat(second, "queue", "second", "", lambda *args: None))
         await asyncio.sleep(0)
         snapshot = json.loads(web._turn_file("web:queue").read_text(encoding="utf-8"))
         assert snapshot["status"] == "running" and snapshot["turn_id"] == "first"
@@ -372,7 +378,7 @@ def test_queued_turn_does_not_overwrite_running_snapshot(sandbox, monkeypatch):
 
 
 def test_model_listing_does_not_send_stored_key_to_draft_url(sandbox, monkeypatch):
-    monkeypatch.setattr(web, "_ssrf_safe", lambda url: True)
+    monkeypatch.setattr(settings_routes, "_ssrf_safe", lambda url: True)
     def forbidden(*args, **kwargs):
         raise AssertionError("must not send stored credentials to a new URL")
     monkeypatch.setattr(web.urllib.request, "build_opener", forbidden)
@@ -427,11 +433,17 @@ def test_cancelled_queue_releases_tracking_without_overwriting_active_turn(sandb
         await lock.acquire()
         web._save_turn("web:queue", "running", "active", {"turn_id": "owner"})
         request = web.ChatRequest(message="queued", sessionId="queue")
-        queued = asyncio.create_task(web._run_direct_chat(request, "queue", "", "", lambda *args: None))
-        await asyncio.sleep(0)
+        waiting = asyncio.Event()
+        def emit(kind, text):
+            if kind == "activity":
+                waiting.set()
+        queued = asyncio.create_task(chat_routes._run_direct_chat(request, "queue", "", "", emit))
+        # Acceptance is offloaded before queue tracking; wait for the actual
+        # queued state rather than assuming one event-loop tick is sufficient.
+        await asyncio.wait_for(waiting.wait(), timeout=2)
         assert web._DIRECT_CHAT_TASKS
         with pytest.raises(web.HTTPException) as error:
-            await web.api_chat_transport_save(web.ChatTransportRequest(transport="openclaw"))
+            await settings_routes.api_chat_transport_save(settings_routes.ChatTransportRequest(transport="openclaw"))
         assert error.value.status_code == 409
         queued.cancel()
         with pytest.raises(asyncio.CancelledError):
@@ -486,7 +498,7 @@ def test_generated_stream_turn_id_matches_recovery_and_replay(sandbox, monkeypat
     response = sandbox.post("/api/chat/stream", json={"message": "test", "sessionId": "generated"})
     snapshot = sandbox.get("/api/chat/last/generated").json()
     assert "event: done" in response.text
-    assert web._job_event_file(snapshot["turn_id"]).is_file()
+    assert chat_routes._job_event_file(snapshot["turn_id"]).is_file()
     recovered = sandbox.get("/api/chat/last/generated", params={"turn_id": snapshot["turn_id"]}).json()
     assert recovered["status"] == "done" and recovered["text"] == "complete"
 
@@ -529,3 +541,26 @@ oc_set() { printf '%s\\n' "$3" > "$PROVIDER_CAPTURE"; }
                                  "PROJECT_ROOT": str(tmp_path)}, capture_output=True, text=True, timeout=15)
     assert result.returncode == 0, result.stderr
     assert env_file.read_text() == "EASEL_CHAT_TRANSPORT=http\n"
+
+
+def test_submitted_direct_model_survives_waiting_defaults_change(sandbox, monkeypatch):
+    async def exercise():
+        lock = web._session_lock("queued")
+        await lock.acquire()
+        seen = []
+        async def fake_stream(settings, content, **kwargs):
+            seen.append(settings["EASEL_DIRECT_API_MODEL"])
+            yield "token", "done"
+            yield "finish", "stop"
+        monkeypatch.setattr(web, "stream_chat", fake_stream)
+        response = await chat_routes.api_chat_stream(web.ChatRequest(message="hello", sessionId="queued"))
+        await asyncio.sleep(0)
+        web.ENV_FILE.write_text("EASEL_DIRECT_API_MODEL=changed\n")
+        lock.release()
+        await asyncio.wait_for(asyncio.gather(*web._BG_TASKS), 2)
+        assert seen == ["gpt-6.1-sol"]
+        last = await chat_routes.api_chat_last("queued")
+        assert last["route"]["model"] == "gpt-6.1-sol"
+        assert last["route"]["tools"] is False
+        await response.body_iterator.aclose()
+    asyncio.run(exercise())

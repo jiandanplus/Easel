@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-28",
+  "scope": "source candidate only; root owns review, freeze, build, archive and activation",
+  "production_changes": {
+    "web/app.py": "three return expressions only; configured propagated and bootstrap local setup uses it",
+    "web/frontend/src/App.tsx": "persona recommendation requires data.gateway === true"
+  },
+  "before_sha256": {
+    "web/app.py": "81f4b3fdc43295b3e4ee97cdb0e9dd149d3690ddc2c7e9b582fd0e5b46f7e1f2",
+    "web/frontend/src/App.tsx": "475b2d4263d10cb278c99cfbb62d74abdf396dc4160a8dd0106add9d29191450",
+    "tests/test_pi_integration.py": "9fcffbca40a53a6570f900c8617b5187ceb21bf47dfe2cebbe3d8feb0a99620c",
+    "tests/frontend/settingsNavigation.test.mjs": "8791a8d0808782ac1a0e13308061abe72b81f9091a34b04f9eafc8d534eab15f",
+    "tests/test_web_model_config_parity.py": "0d47f1fc84c1d9543a2cb26b64119de79b45c722b3243637d448539d76f4042b"
+  },
+  "after_sha256": {
+    "web/app.py": "b28421d957220882d52e4118569361cf0684d878d3f2f83ed9f8899511f4c831",
+    "web/frontend/src/App.tsx": "db3bbfff2eb9947c92245aab103e292e576b5ffb39c07eaf065aee1c186514fe",
+    "tests/test_pi_integration.py": "f76a2bb54cf954fcdaafef0d5a01854f1745bfac5e6b8b9a87703b1cec050317",
+    "tests/frontend/settingsNavigation.test.mjs": "001f76b3d72639aa09041e15bea629852204683602d4e76a582847d2743e80be",
+    "tests/test_web_model_config_parity.py": "fd120c826a4551e6e0d17dca4dff7d53847c12fc03b884719cb9d8d94ee749d0",
+    "packaging/pi/source-manifest.json": "e66128ff51fd6146a78c16b5e19623833d2e1b263801848bd6edf14937895094"
+  },
+  "verification": {
+    "backend_red": {
+      "failed": 8,
+      "passed": 2,
+      "deselected": 17,
+      "runtime": ".venv/bin/python -m pytest"
+    },
+    "frontend_red": {
+      "failed": 8,
+      "passed": 10
+    },
+    "backend_green": {
+      "passed": 42,
+      "failed": 0,
+      "isolated_legacy_parity_fixture": true
+    },
+    "frontend_focused_green": {
+      "passed": 95,
+      "failed": 0
+    },
+    "frontend_full_green": {
+      "passed": 541,
+      "failed": 0
+    },
+    "typescript": {
+      "command": "web/frontend/node_modules/.bin/tsc -b web/frontend",
+      "exit_code": 0
+    },
+    "diff_check": {
+      "exit_code": 0
+    }
+  },
+  "evidence_directory": "/private/tmp/easel-subscription-onboarding-fix-20261028",
+  "limits": [
+    "No post-change browser verification",
+    "No new app build, packaging, activation, freeze, commit, push or merge",
+    "The running v30 package does not contain this source candidate",
+    "Initial legacy parity run inherited local healthz probing; final fixture isolates gateway and config path to tmp; no model or central service calls"
+  ]
+}

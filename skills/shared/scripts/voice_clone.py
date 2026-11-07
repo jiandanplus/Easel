@@ -9,7 +9,7 @@
   - minimax            MiniMax 语音克隆（上传样本 → voice_id → T2A 合成）；情感走 emotion 枚举
   - fish-audio         Fish Audio（参考音频 TTS / 已有 model_id）
   - openai-compatible  OpenAI 兼容 /audio/speech（含 SiliconFlow 硅基流动托管 CosyVoice2）
-  - gemini             Google Gemini TTS（免费层可用；情感走自然语言前缀）
+  - gemini             Google Gemini TTS（原生 HTTP；情感按模型使用指令或元数据）
 
 逐行情感：clone 支持 --emotion（中文情绪词）→ 各 provider 情感通道（minimax emotion 枚举 /
 dashscope·gemini·openai 自然语言指令；SiliconFlow CosyVoice2 用内联 <|endofprompt|>）。
@@ -22,7 +22,8 @@ dashscope·gemini·openai 自然语言指令；SiliconFlow CosyVoice2 用内联 
   【minimax】 MINIMAX_API_KEY、MINIMAX_GROUP_ID，可选 MINIMAX_MODEL / MINIMAX_BASE_URL
   【fish-audio】 FISH_API_KEY，可选 FISH_BASE_URL
   【openai-compatible】 VOICE_API_KEY、VOICE_BASE_URL，可选 VOICE_MODEL、VOICE_INSTRUCT_MODE(field|inline)
-  【gemini】 GEMINI_API_KEY，可选 GEMINI_TTS_MODEL / GEMINI_VOICE / GEMINI_BASE_URL
+  【gemini】 GEMINI_API_KEY，可选 GEMINI_TTS_MODEL / GEMINI_VOICE / GEMINI_BASE_URL / GEMINI_TTS_API
+             GEMINI_TTS_API=generate-content（默认，可接 New API 原生 Gemini 路由）或 interactions（直连）
 
   ── SiliconFlow 硅基流动（云端 CosyVoice2，无需 GPU，中文情感、便宜/新用户有赠额）──
      VOICE_PROVIDER=openai-compatible
@@ -31,9 +32,9 @@ dashscope·gemini·openai 自然语言指令；SiliconFlow CosyVoice2 用内联 
      VOICE_MODEL=FunAudioLLM/CosyVoice2-0.5B
      VOICE_INSTRUCT_MODE=inline          # 情感用 <|endofprompt|> 内联进文本
      # clone 时 --voice-id FunAudioLLM/CosyVoice2-0.5B:alex（8 预置音色 alex/anna/...）
-  ── Gemini（真免费层，Google AI Studio key）──
+  ── Gemini（Google AI Studio 或兼容网关，按模型和账户规则计费）──
      VOICE_PROVIDER=gemini
-     GEMINI_API_KEY=<你的免费 key>       # 可选 GEMINI_VOICE=Kore（30 音色）
+     GEMINI_API_KEY=<你的业务 key>       # 可选 GEMINI_VOICE=Kore
 
 子命令：
     check     离线校验当前 provider 所需 env（不发请求）
@@ -48,6 +49,9 @@ dashscope·gemini·openai 自然语言指令；SiliconFlow CosyVoice2 用内联 
         --text "大家好，欢迎来到我的频道" -o outputs/voice-clone/vo.mp3
 """
 from __future__ import annotations
+
+from media_gateway import require_media_available
+require_media_available()
 
 import argparse
 import http.client
@@ -90,12 +94,14 @@ def find_default_env_file() -> Path | None:
 
 
 def load_env_file(env_file: Path | None) -> None:
+    require_media_available()
     if env_file is None:
         return
     try:
         lines = env_file.read_text(encoding="utf-8").splitlines()
     except OSError as exc:
         fail(f"无法读取 .env 文件：{exc}")
+    saved_gateway = {}
     for raw in lines:
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -106,8 +112,15 @@ def load_env_file(env_file: Path | None) -> None:
             continue
         key, value = line.split("=", 1)
         key = key.strip()
+        saved_gateway[key] = strip_env_value(value)
         if key and key not in os.environ:
             os.environ[key] = strip_env_value(value)
+
+    from media_gateway import GATEWAY_ENV_KEYS, refresh_gateway_environment
+    effective = refresh_gateway_environment(os.environ, saved_gateway)
+    for name in GATEWAY_ENV_KEYS:
+        os.environ.pop(name, None)
+    os.environ.update(effective)
 
 
 def env_lookup(name: str) -> str:
@@ -127,7 +140,15 @@ def require_env(name: str) -> str:
 
 
 def resolve_provider(explicit: str | None) -> str:
-    provider = (explicit or os.environ.get("VOICE_PROVIDER", "") or "").strip()
+    from media_gateway import gateway_managed, resolve_media_environment
+    try:
+        effective = resolve_media_environment("voice", os.environ)
+    except ValueError as error:
+        fail(str(error))
+    selected = effective.get("VOICE_PROVIDER", "").strip()
+    if gateway_managed("voice", os.environ) and explicit and explicit != selected:
+        fail("显式 provider 与统一语音网关配置冲突；请求未提交。")
+    provider = (explicit or selected or "").strip()
     if not provider:
         fail(f"未指定 provider。用 --provider 或设 VOICE_PROVIDER。可选：{'、'.join(PROVIDERS)}。")
     if provider not in PROVIDERS:
@@ -187,6 +208,25 @@ def instruct_text(emotion_cn: str | None) -> str:
 
 
 # ── HTTP ────────────────────────────────────────────────────
+class _GatewayNoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _open(req, timeout):
+    from media_gateway import gateway_managed
+    if gateway_managed("voice", os.environ):
+        return urllib.request.build_opener(_GatewayNoRedirect()).open(req, timeout=timeout)
+    return urllib.request.urlopen(req, timeout=timeout)
+
+
+def _remote_detail(value) -> str:
+    from media_gateway import gateway_managed
+    if gateway_managed("voice", os.environ):
+        return "网关响应详情已隐藏，避免回显业务密钥。"
+    return str(value)
+
+
 def http_json(url: str, headers: dict[str, str], payload: dict | None,
               method: str = "POST", timeout: int = 120) -> dict[str, Any]:
     data = json.dumps(payload).encode("utf-8") if payload is not None else None
@@ -196,16 +236,16 @@ def http_json(url: str, headers: dict[str, str], payload: dict | None,
     h.update(headers)
     req = urllib.request.Request(url, data=data, headers=h, method=method)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _open(req, timeout=timeout) as resp:
             raw = resp.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
-        fail(f"接口 HTTP {exc.code}：{exc.read().decode('utf-8', 'replace')[:500]}")
+        fail(f"接口 HTTP {exc.code}：{_remote_detail(exc.read().decode('utf-8', 'replace')[:500])}")
     except (urllib.error.URLError, http.client.RemoteDisconnected, TimeoutError) as exc:
-        fail(f"接口连接失败：{exc}")
+        fail(f"接口连接失败：{_remote_detail(exc)}")
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        fail(f"接口返回非 JSON：{raw[:300]}")
+        fail(f"接口返回非 JSON：{_remote_detail(raw[:300])}")
     return {}
 
 
@@ -228,12 +268,12 @@ def http_multipart(url: str, headers: dict[str, str], fields: dict[str, str],
     h.update(headers)
     req = urllib.request.Request(url, data=bytes(body), headers=h, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _open(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
-        fail(f"上传 HTTP {exc.code}：{exc.read().decode('utf-8', 'replace')[:500]}")
+        fail(f"上传 HTTP {exc.code}：{_remote_detail(exc.read().decode('utf-8', 'replace')[:500])}")
     except (urllib.error.URLError, TimeoutError) as exc:
-        fail(f"上传连接失败：{exc}")
+        fail(f"上传连接失败：{_remote_detail(exc)}")
     return {}
 
 
@@ -241,10 +281,10 @@ def download(url: str, out: Path, timeout: int = 180) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _open(req, timeout=timeout) as resp:
             out.write_bytes(resp.read())
     except (urllib.error.URLError, TimeoutError) as exc:
-        fail(f"下载失败：{exc}")
+        fail(f"下载失败：{_remote_detail(exc)}")
     return out
 
 
@@ -296,7 +336,13 @@ def enroll_dashscope(a) -> str:
 
 def cmd_enroll(a) -> int:
     provider = resolve_provider(a.provider)
-    if provider == "minimax":
+    import newapi_voice
+    gateway_mode = newapi_voice.enabled(fail)
+    if getattr(a, "resume_id", None) and (not gateway_mode or provider not in ("minimax", "dashscope")):
+        fail("--resume-id 仅用于 new-api 模式的 MiniMax/DashScope enroll 恢复；不会新建旧接口音色。")
+    if gateway_mode and provider in newapi_voice.PROVIDERS:
+        vid = newapi_voice.enroll(provider, a, require_env=require_env, fail=fail)
+    elif provider == "minimax":
         if not a.sample:
             fail("--sample 语音样本文件必填。")
         vid = enroll_minimax(a)
@@ -378,10 +424,10 @@ def clone_fish(a, out: Path) -> Path:
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
                  "User-Agent": UA}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
+        with _open(req, timeout=180) as resp:
             return _save_bytes(resp.read(), out)  # fish 直接返回音频字节
     except urllib.error.HTTPError as exc:
-        fail(f"fish-audio HTTP {exc.code}：{exc.read().decode('utf-8', 'replace')[:300]}")
+        fail(f"fish-audio HTTP {exc.code}：{_remote_detail(exc.read().decode('utf-8', 'replace')[:300])}")
     return out
 
 
@@ -412,10 +458,10 @@ def clone_openai(a, out: Path) -> Path:
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
                  "User-Agent": UA}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=180) as resp:
+        with _open(req, timeout=180) as resp:
             return _save_bytes(resp.read(), out)
     except urllib.error.HTTPError as exc:
-        fail(f"openai 兼容 HTTP {exc.code}：{exc.read().decode('utf-8', 'replace')[:300]}")
+        fail(f"openai 兼容 HTTP {exc.code}：{_remote_detail(exc.read().decode('utf-8', 'replace')[:300])}")
     return out
 
 
@@ -433,46 +479,139 @@ def _pcm_to_wav_bytes(pcm: bytes, rate: int = 24000, channels: int = 1, width: i
 
 
 def clone_gemini(a, out: Path) -> Path:
-    """Google Gemini TTS（免费层可用）。情感走自然语言前缀；返回 base64 PCM → 包 WAV（→按需 ffmpeg 转码）。
-    env：GEMINI_API_KEY；可选 GEMINI_TTS_MODEL / GEMINI_VOICE / GEMINI_BASE_URL / GEMINI_TTS_RATE。"""
-    import base64
+    """Gemini 原生 TTS；显式选择 Generate Content 或 Interactions，按真实音频格式保存。"""
+    from urllib.parse import quote
     key = require_env("GEMINI_API_KEY")
     base = (os.environ.get("GEMINI_BASE_URL", "").strip()
             or "https://generativelanguage.googleapis.com/v1beta").rstrip("/")
     model = a.model or os.environ.get("GEMINI_TTS_MODEL", "").strip() or "gemini-2.5-flash-preview-tts"
     voice = a.voice_id or os.environ.get("GEMINI_VOICE", "").strip() or "Kore"
-    rate = int(os.environ.get("GEMINI_TTS_RATE", "24000") or 24000)
+    api = os.environ.get("GEMINI_TTS_API", "generate-content").strip().lower()
+    if api not in {"generate-content", "interactions"}:
+        fail("GEMINI_TTS_API 只能是 generate-content 或 interactions。")
+    try:
+        rate = int(os.environ.get("GEMINI_TTS_RATE", "24000") or 24000)
+    except ValueError:
+        fail("GEMINI_TTS_RATE 必须是有效采样率。")
+    if not 1 <= rate <= 384000:
+        fail("GEMINI_TTS_RATE 必须在 1 到 384000 Hz 之间。")
     instr = instruct_text(getattr(a, "emotion", None))
-    text = f"{instr}：{a.text}" if instr else a.text   # 情感前缀（Gemini 用自然语言指令控制语气）
-    payload = {"model": model, "input": text, "response_format": {"type": "audio"},
-               "generation_config": {"speech_config": [{"voice": voice}]}}
-    resp = http_json(f"{base}/interactions", {"x-goog-api-key": key}, payload)
-    # 兼容两种返回：interactions（output_audio.data）与 generateContent（candidates…inlineData.data）
-    b64 = ((resp.get("output_audio") or {}).get("data")
-           or _dig_inline_data(resp) or "")
-    if not b64:
-        fail(f"Gemini 未返回音频：{json.dumps(resp, ensure_ascii=False)[:300]}")
-    raw = base64.b64decode(b64)
-    wav = _pcm_to_wav_bytes(raw, rate=rate)   # Gemini 返回裸 PCM
-    suffix = out.suffix.lstrip(".").lower() or "wav"
-    if suffix == "wav":
-        return _save_bytes(wav, out)
-    # 非 wav（如 mp3）：有 ffmpeg 则转码，否则退回同名 .wav 并告警
+    modern = model.removeprefix("models/").startswith("gemini-3.8-")
+    text = a.text if modern or not instr else f"{instr}：{a.text}"
+    if api == "generate-content":
+        part: dict[str, Any] = {"text": text}
+        if modern and instr:
+            part["speech_metadata"] = {"style": instr}
+        voice_config = {"voice": voice} if modern else {"prebuiltVoiceConfig": {"voiceName": voice}}
+        payload = {
+            "contents": [{"role": "user", "parts": [part]}],
+            "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": voice_config}},
+        }
+        endpoint = f"{base}/models/{quote(model.removeprefix('models/'), safe='')}:generateContent"
+    else:
+        input_value: Any = text
+        if modern:
+            content: dict[str, Any] = {"type": "text", "text": text}
+            if instr:
+                content["annotations"] = [{"type": "speech_metadata", "style": instr}]
+            input_value = [{"type": "user_input", "content": [content]}]
+        payload = {"model": model, "input": input_value,
+                   "response_format": {"type": "audio", "mime_type": "audio/wav"},
+                   "generation_config": {"speech_config": [{"voice": voice}]}}
+        endpoint = f"{base}/interactions"
+    resp = http_json(endpoint, {"x-goog-api-key": key}, payload)
+    encoded, mime = _gemini_audio_part(resp)
+    raw, source_format = _decode_gemini_audio(encoded, mime, rate)
+    return _save_gemini_audio(raw, source_format, out)
+
+
+def _gemini_audio_part(obj: Any) -> tuple[str, str]:
+    """查找有音频类型的内联内容，跳过图片；保留 MIME 和采样率信息。"""
+    def visit(value: Any):
+        if isinstance(value, dict):
+            for name in ("output_audio", "inlineData", "inline_data"):
+                item = value.get(name)
+                if isinstance(item, dict):
+                    yield item
+            if value.get("type") == "audio":
+                yield value
+            for child in value.values():
+                yield from visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from visit(child)
+
+    for item in visit(obj):
+        data = item.get("data")
+        mime = item.get("mimeType") or item.get("mime_type") or ""
+        if isinstance(data, str) and data and isinstance(mime, str) and (not mime or mime.lower().startswith("audio/")):
+            return data, mime
+    fail("Gemini 未返回可识别的内联音频。")
+    raise AssertionError("unreachable")
+
+
+def _decode_gemini_audio(encoded: str, mime: str, fallback_rate: int) -> tuple[bytes, str]:
+    """严格解码，已有 WAV 保持原容器，只有明确的 PCM 才添加 WAV 头。"""
+    import base64
+    import binascii
+    import io
+    import wave
+    try:
+        raw = base64.b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError):
+        fail("Gemini 音频不是有效的 Base64。")
+    if not raw:
+        fail("Gemini 返回了空音频。")
+    media = mime.split(";", 1)[0].strip().lower()
+    is_wav = raw[:4] == b"RIFF" and raw[8:12] == b"WAVE"
+    if is_wav or media in {"audio/wav", "audio/x-wav", "audio/wave"}:
+        try:
+            with wave.open(io.BytesIO(raw), "rb") as audio:
+                if audio.getnframes() < 1 or len(audio.readframes(audio.getnframes())) != audio.getnframes() * audio.getnchannels() * audio.getsampwidth():
+                    fail("Gemini WAV 音频不完整。")
+        except (wave.Error, EOFError):
+            fail("Gemini 返回的 WAV 容器不合法。")
+        return raw, "wav"
+    if media in {"audio/l16", "audio/pcm", "audio/x-pcm", "audio/linear16"}:
+        params = {}
+        for parameter in mime.split(";")[1:]:
+            name, separator, value = parameter.strip().partition("=")
+            if separator:
+                params[name.strip().lower()] = value.strip().strip('"')
+        try:
+            rate = int(params.get("rate", str(fallback_rate)))
+            channels = int(params.get("channels", "1"))
+        except ValueError:
+            fail("Gemini PCM 的采样率或声道信息不合法。")
+        if not 1 <= rate <= 384000 or channels not in {1, 2} or len(raw) % (2 * channels):
+            fail("Gemini PCM 的采样率、声道或字节长度不合法。")
+        return _pcm_to_wav_bytes(raw, rate=rate, channels=channels), "wav"
+    formats = {"audio/mp3": "mp3", "audio/mpeg": "mp3", "audio/ogg": "ogg", "audio/ogg_opus": "ogg", "audio/opus": "opus"}
+    if media in formats:
+        return raw, formats[media]
+    fail("Gemini 音频 MIME 缺失或暂不支持，无法安全确定编码格式。")
+    raise AssertionError("unreachable")
+
+
+def _save_gemini_audio(raw: bytes, source_format: str, out: Path) -> Path:
+    suffix = out.suffix.lstrip(".").lower() or source_format
+    if suffix == source_format:
+        return _save_bytes(raw, out)
     import shutil as _sh
     import subprocess as _sp
     import tempfile as _tf
     if _sh.which("ffmpeg"):
         with _tf.TemporaryDirectory() as td:
-            wp = Path(td) / "g.wav"
-            wp.write_bytes(wav)
+            source = Path(td) / f"gemini.{source_format}"
+            source.write_bytes(raw)
             out.parent.mkdir(parents=True, exist_ok=True)
             r = _sp.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-                         "-i", str(wp), str(out)], capture_output=True, text=True)
+                         "-i", str(source), str(out)], capture_output=True, text=True)
             if r.returncode == 0 and out.is_file():
                 return out
-    alt = out.with_suffix(".wav")
-    print(f"提示：无 ffmpeg 无法转 {suffix}，已输出 WAV：{alt}", file=sys.stderr)
-    return _save_bytes(wav, alt)
+    alt = out.with_suffix("." + source_format)
+    print(f"提示：无法转换为 {suffix}，已保留 {source_format.upper()} 音频：{alt}", file=sys.stderr)
+    return _save_bytes(raw, alt)
 
 
 def _dig_inline_data(obj: Any) -> str | None:
@@ -525,7 +664,13 @@ def cmd_clone(a) -> int:
     dispatch = {"minimax": clone_minimax, "dashscope": clone_dashscope,
                 "fish-audio": clone_fish, "openai-compatible": clone_openai,
                 "gemini": clone_gemini}
-    result = dispatch[provider](a, out)
+    import newapi_voice
+    if newapi_voice.enabled(fail) and provider in newapi_voice.PROVIDERS:
+        emotion = (minimax_emotion(getattr(a, "emotion", None)) if provider == "minimax"
+                   else instruct_text(getattr(a, "emotion", None)) if provider == "dashscope" else "")
+        result = newapi_voice.clone(provider, a, out, require_env=require_env, fail=fail, emotion=emotion)
+    else:
+        result = dispatch[provider](a, out)
     kb = result.stat().st_size / 1024 if result.is_file() else 0
     print(f"✅ {result} ({kb:.0f} KB) [{provider}]")
     return 0
@@ -533,9 +678,12 @@ def cmd_clone(a) -> int:
 
 def cmd_check(a) -> int:
     provider = resolve_provider(a.provider)
-    missing = [e for e in REQUIRED_ENV[provider] if not env_lookup(e)]
+    import newapi_voice
+    required = (("NEW_API_BASE_URL", "NEW_API_KEY")
+                if newapi_voice.enabled(fail) and provider in newapi_voice.PROVIDERS else REQUIRED_ENV[provider])
+    missing = [e for e in required if not env_lookup(e)]
     print(f"provider: {provider}")
-    for e in REQUIRED_ENV[provider]:
+    for e in required:
         print(f"  {'✅' if env_lookup(e) else '❌'} {e}")
     if missing:
         print(f"缺少：{', '.join(missing)}。请在 .env 配置。", file=sys.stderr)
@@ -603,6 +751,7 @@ def build_parser() -> argparse.ArgumentParser:
     pe.add_argument("--sample", help="本人语音样本文件（minimax 等）")
     pe.add_argument("--sample-url", help="公网样本 URL（dashscope 声音复刻）")
     pe.add_argument("--name", help="自定义 voice_id / 前缀")
+    pe.add_argument("--resume-id", help="仅 new-api：从已有 upload/create 公共任务 ID 继续登记或审核")
     pe.set_defaults(func=cmd_enroll)
 
     pcl = sub.add_parser("clone", parents=[common], help="用音色合成语音")
@@ -629,6 +778,13 @@ def main() -> int:
     if getattr(a, "cmd", None) != "selftest":
         env_file = Path(a.env_file) if getattr(a, "env_file", None) else find_default_env_file()
         load_env_file(env_file)
+        from media_gateway import gateway_managed, resolve_media_environment
+        try:
+            os.environ.update(resolve_media_environment("voice", os.environ))
+        except ValueError as error:
+            fail(str(error))
+        if gateway_managed("voice", os.environ) and hasattr(a, "voice_id") and not a.voice_id:
+            a.voice_id = os.environ.get("VOICE_NARRATOR_VOICE_ID", "").strip() or None
     return a.func(a)
 
 

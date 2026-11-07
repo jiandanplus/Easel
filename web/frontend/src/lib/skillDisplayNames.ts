@@ -1,5 +1,5 @@
 // 技能中文展示名（本地补丁 · 2026-09-17）
-// 展示层：中文名给用户看（大字）；skill id 原名保持小字，供 agent / 排查使用。
+// 展示层使用中文名；skill id 保留用于调用和搜索。
 // 数据源：能力清单菜单（capability-menu），重新生成即可更新。
 export const SKILL_DISPLAY_NAMES: Record<string, string> = {
   'ai-image-gen': 'AI 生图',
@@ -109,6 +109,7 @@ export const SKILL_DISPLAY_NAMES: Record<string, string> = {
   'video-editing': '自然语言剪辑',
   'video-highlights': '高光切片',
   'video-intro-outro': '片头 / 片尾',
+  'video-production': '整片视频制作',
   'video-reframe': '画幅转换',
   'video-script': '视频脚本',
   'video-strategy': '视频策略选型',
