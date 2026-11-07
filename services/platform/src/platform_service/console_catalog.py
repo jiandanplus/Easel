@@ -4,6 +4,7 @@ from datetime import datetime
 import hashlib
 import json
 from uuid import uuid4
+import psycopg
 from psycopg.types.json import Jsonb
 
 from .contracts import OperatorIdentity
@@ -34,6 +35,15 @@ def text(value, maximum):
 def protected(value):
     if isinstance(value, str) and value.startswith('easel-internal-'):
         raise PlatformError(403, 'console_internal_plan_protected')
+
+
+ALLOWANCE_ERRORS = {
+    'EA403': (403, 'console_permission_denied'),
+    'EA404': (404, 'billing_account_not_found'),
+    'EA409': (409, 'owner_grant_active'),
+    'EA410': (409, 'wallet_capacity_exceeded'),
+    'EA422': (422, 'invalid_console_command'),
+}
 
 
 class ConsoleCatalog:
@@ -104,6 +114,17 @@ class ConsoleCatalog:
                 result = await ExecutionService(bound, None).set_enabled(target_id, payload['enabled'], operator)
                 state = await (await conn.execute('SELECT updated_at FROM execution_model_states WHERE model_id=%s', (target_id,))).fetchone()
                 result = {**result, 'id': target_id, 'updated_at': state['updated_at'].isoformat()}
+            elif action == 'allowance.issue':
+                try:
+                    async with conn.transaction():
+                        row = await (await conn.execute('SELECT console_issue_owner_allowance(%s,%s,%s,%s) AS grant',
+                                                        (actor, target_id, key_hash, reason))).fetchone()
+                except psycopg.Error as error:
+                    failure = ALLOWANCE_ERRORS.get(getattr(error, 'sqlstate', None))
+                    if failure is None:
+                        raise
+                    raise PlatformError(*failure) from None
+                result = row['grant']
             else:
                 raise PlatformError(422, 'invalid_console_command')
             operation_id = uuid4().hex
@@ -133,6 +154,11 @@ class ConsoleCatalog:
         if not isinstance(definition, dict):
             raise PlatformError(422, 'invalid_console_command')
         return await self._command(principal, 'model.publish', 'model', definition.get('id'), definition, reason, key, ('execution:publish',))
+
+    async def issue_allowance(self, principal, wallet, reason, key):
+        if isinstance(reason, str) and len(reason) > 256:
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'allowance.issue', 'wallet', wallet, {}, reason, key, ('owner:allowance',))
 
     async def set_model_state(self, principal, id, enabled, reason, key, expected_updated_at):
         try:

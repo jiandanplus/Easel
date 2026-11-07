@@ -250,6 +250,12 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
         value, key = await command(request, {"reason"})
         return await catalog.withdraw_offer(actor, item_id, value["reason"], key)
 
+    @app.post("/api/wallets/{item_id}/allowance")
+    async def allowance(request: Request, item_id: str):
+        actor = await principal(request, "owner:allowance", write=True)
+        value, key = await command(request, {"reason"})
+        return await catalog.issue_allowance(actor, item_id, value["reason"], key)
+
     @app.post("/api/models/{item_id}/state")
     async def model_state(request: Request, item_id: str):
         actor = await principal(request, "execution:publish", write=True)

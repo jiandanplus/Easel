@@ -68,7 +68,7 @@ UPDATE_COLUMNS = {
     ),
     "execution_results": ("payload",),
     "billing_accounts": ("id",),  # SELECT ... FOR UPDATE requires UPDATE privilege.
-    "external_identities": ("email", "email_verified"),
+    "external_identities": ("email", "email_verified", "username"),
     "credit_lots": ("available", "held", "spent", "expired", "refunded", "frozen"),
     "credit_reservations": ("status", "actual", "completion_key", "updated_at"),
     "identity_transactions": ("state_hash", "nonce_hash", "cookie_hash", "consumed"),
@@ -136,6 +136,21 @@ IMMUTABLE_TABLES = (
 # Explicit product SELECT authority: future Console/auth tables are never inherited.
 SELECT_TABLES = tuple(dict.fromkeys((*INSERT_TABLES, *IMMUTABLE_TABLES, "products", "product_clients")))
 SEQUENCE_NAMES = ("credit_entries_id_seq", "payment_event_audits_id_seq")
+
+
+ALLOWANCE_FUNCTION = "console_issue_owner_allowance(text,text,text,text)"
+
+
+async def can_issue_allowance(conn, role, schema):
+    """False when the function is absent (before migration 024)."""
+    row = await (
+        await conn.execute(
+            """SELECT CASE WHEN to_regprocedure(%s) IS NULL THEN false
+            ELSE has_function_privilege(%s,to_regprocedure(%s),'EXECUTE') END AS allowed""",
+            (schema + "." + ALLOWANCE_FUNCTION, role, schema + "." + ALLOWANCE_FUNCTION),
+        )
+    ).fetchone()
+    return row["allowed"]
 
 
 async def assert_safe_runtime_role(conn, role=None, *, check_grants=True):
@@ -225,6 +240,9 @@ async def assert_safe_runtime_role(conn, role=None, *, check_grants=True):
             ).fetchone()
             if unsafe["unsafe"]:
                 raise PlatformError(503, "unsafe_runtime_role")
+            # Only the Console may issue the web owner allowance (migration 024).
+            if await can_issue_allowance(conn, name, context["schema"]):
+                raise PlatformError(503, "unsafe_runtime_role")
             catalog_write = await (
                 await conn.execute(
                     "SELECT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=%s AND c.relname IN ('execution_models','execution_model_states','media_models','media_model_states','media_storage_policy','internal_grants','internal_feature_extensions') AND has_any_column_privilege(%s,c.oid,'INSERT')) AS unsafe",
@@ -310,7 +328,21 @@ async def grant_runtime_permissions(conn, role: str):
                 namespace, sql.Identifier(table), ident
             )
         )
-    for table, columns in UPDATE_COLUMNS.items():
+    # A schema held at an older migration may lack later columns (username, 023).
+    present = {
+        (row["relname"], row["attname"])
+        for row in await (
+            await conn.execute(
+                """SELECT c.relname,a.attname FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid
+                JOIN pg_namespace n ON n.oid=c.relnamespace
+                WHERE n.nspname=current_schema() AND a.attnum>0 AND NOT a.attisdropped"""
+            )
+        ).fetchall()
+    }
+    for table, wanted in UPDATE_COLUMNS.items():
+        columns = [column for column in wanted if (table, column) in present]
+        if not columns:
+            continue
         await conn.execute(
             sql.SQL("GRANT UPDATE ({}) ON {}.{} TO {}").format(
                 sql.SQL(",").join(map(sql.Identifier, columns)),

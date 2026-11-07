@@ -77,7 +77,7 @@ async def test_read_pages_real_snapshot_no_expiry_mutation(db):
 async def test_all_pages_paginate_and_fixed_safe_projection(db):
     await seed(db)
     async with db.connection() as c:
-        await c.execute("INSERT INTO external_identities(issuer,subject,user_id,email) VALUES ('private-issuer','private-subject','u','private-email@example.invalid')")
+        await c.execute("INSERT INTO external_identities(issuer,subject,user_id,email,username) VALUES ('private-issuer','private-subject','u','person@example.invalid','person-name')")
     api = service(db)
     first = await api.users(PRINCIPAL, limit=1)
     second = await api.users(PRINCIPAL, limit=1, offset=1)
@@ -87,10 +87,14 @@ async def test_all_pages_paginate_and_fixed_safe_projection(db):
         result = await getattr(api, name)(PRINCIPAL, limit=1, offset=0, q='')
         assert set(result) == {'items','limit','offset','has_more'}
         serialized = json.dumps(result)
-        assert all(secret not in serialized for secret in ('private-subject','private-email','never-export-session'))
+        assert all(secret not in serialized for secret in ('private-subject','private-issuer','never-export-session'))
+    named = (await api.users(PRINCIPAL, q='PERSON-NAME'))['items']
+    assert [(row['id'], row['username'], row['email']) for row in named] == [('u', 'person-name', 'person@example.invalid')]
+    assert [row['id'] for row in (await api.users(PRINCIPAL, q='@example.invalid'))['items']] == ['u']
     detail = await api.user(PRINCIPAL, 'u')
     assert detail['id'] == 'u' and detail['wallets'][0]['id'] == 'wallet'
-    assert 'subject' not in json.dumps(detail) and 'email' not in detail
+    assert detail['identities'] == [{'username': 'person-name', 'email': 'person@example.invalid', 'email_verified': False}]
+    assert 'private-subject' not in json.dumps(detail) and 'private-issuer' not in json.dumps(detail)
 
 
 @pytest.mark.asyncio

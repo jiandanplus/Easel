@@ -191,12 +191,23 @@ class OIDC:
                 not isinstance(email, str) or not 1 <= len(email) <= 320
             ):
                 raise ValueError()
+            # Display only: a username never authorizes anything. A malformed one is
+            # dropped rather than failing the login.
+            username = claims.get("username")
+            if not (
+                isinstance(username, str)
+                and username.strip()
+                and len(username) <= 128
+                and username.isprintable()
+            ):
+                username = None
             return VerifiedIdentity(
                 issuer=claims["iss"],
                 subject=claims["sub"],
                 email=email,
                 email_verified=claims.get("email_verified") is True,
                 authenticated_at=int(claims.get("auth_time", claims["iat"])),
+                username=username,
             )
         except (jwt.PyJWTError, ValueError, TypeError, KeyError, AttributeError):
             raise PlatformError(401, "identity_token_invalid") from None

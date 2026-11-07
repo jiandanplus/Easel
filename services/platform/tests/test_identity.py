@@ -160,6 +160,22 @@ async def test_login_product_scope_and_same_identity_shared_wallet(identity, db)
     assert one["access_token"] not in dumped and one["refresh_token"] not in dumped
 
 
+async def test_login_keeps_display_username_and_drops_malformed_ones(identity, db):
+    async def stored():
+        async with db.connection() as conn:
+            return (await (await conn.execute(
+                "SELECT username FROM external_identities WHERE subject='subject-1'")).fetchone())["username"]
+    await login(identity, username="alice")
+    assert await stored() == "alice"
+    await login(identity, username="alice-renamed")
+    assert await stored() == "alice-renamed"
+    for bad in ("", "   ", "x" * 129, "bad\nname", 42):
+        await login(identity, username=bad)
+        assert await stored() is None
+    await login(identity)
+    assert await stored() is None
+
+
 async def test_email_never_merges_subjects(identity):
     first = await login(identity)
     second = await login(identity, sub="subject-2")

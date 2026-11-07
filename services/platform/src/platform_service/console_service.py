@@ -134,8 +134,12 @@ class ConsoleQueries:
                 FROM credit_lots l JOIN billing_accounts b ON b.id=l.billing_account_id JOIN tenants t ON t.id=b.tenant_id
                 WHERE t.owner_user_id=u.id AND NOT l.test_only) AS spendable_available,
             (SELECT max(m.expires_at) FROM memberships m JOIN billing_accounts b ON b.id=m.billing_account_id
-                JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id) AS expires_at
-            FROM users u WHERE %s='' OR strpos(lower(u.id),lower(%s))>0 ORDER BY u.created_at DESC,u.id DESC""", (q,q),limit,offset,q)
+                JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id) AS expires_at,
+            (SELECT min(e.username) FROM external_identities e WHERE e.user_id=u.id) AS username,
+            (SELECT min(e.email) FROM external_identities e WHERE e.user_id=u.id) AS email
+            FROM users u WHERE %s='' OR strpos(lower(u.id),lower(%s))>0 OR EXISTS(SELECT 1 FROM external_identities e
+                WHERE e.user_id=u.id AND (strpos(lower(coalesce(e.username,'')),lower(%s))>0 OR strpos(lower(coalesce(e.email,'')),lower(%s))>0))
+            ORDER BY u.created_at DESC,u.id DESC""", (q,q,q,q),limit,offset,q)
 
     async def user(self, principal, id):
         identifier(id)
@@ -144,6 +148,7 @@ class ConsoleQueries:
             if not row:
                 raise PlatformError(404,'console_user_not_found')
             result = projected(row)
+            result['identities'] = [projected(r) for r in await (await conn.execute('SELECT username,email,email_verified FROM external_identities WHERE user_id=%s ORDER BY username,email LIMIT 10',(id,))).fetchall()]
             result['tenants'] = [projected(r) for r in await (await conn.execute('SELECT tenant_id AS id,role,active FROM tenant_members WHERE user_id=%s ORDER BY tenant_id LIMIT 101',(id,))).fetchall()]
             result['wallets'] = [projected(r) for r in await (await conn.execute('SELECT b.id,b.tenant_id FROM billing_accounts b JOIN tenant_members m ON m.tenant_id=b.tenant_id WHERE m.user_id=%s ORDER BY b.id LIMIT 101',(id,))).fetchall()]
             result['products'] = [projected(r) for r in await (await conn.execute('SELECT product_id,count(*) AS session_count FROM identity_sessions WHERE user_id=%s GROUP BY product_id ORDER BY product_id LIMIT 101',(id,))).fetchall()]

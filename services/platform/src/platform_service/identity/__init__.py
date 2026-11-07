@@ -207,10 +207,11 @@ class IdentityService:
             if ext:
                 user_id = ext["user_id"]
                 await conn.execute(
-                    "UPDATE external_identities SET email=%s,email_verified=%s WHERE issuer=%s AND subject=%s",
+                    "UPDATE external_identities SET email=%s,email_verified=%s,username=%s WHERE issuer=%s AND subject=%s",
                     (
                         verified.email,
                         verified.email_verified,
+                        verified.username,
                         verified.issuer,
                         verified.subject,
                     ),
@@ -231,13 +232,14 @@ class IdentityService:
                 user_id, tenant_id, billing_id = opaque(), opaque(), opaque()
                 await conn.execute("INSERT INTO users(id) VALUES (%s)", (user_id,))
                 await conn.execute(
-                    "INSERT INTO external_identities(issuer,subject,user_id,email,email_verified) VALUES (%s,%s,%s,%s,%s)",
+                    "INSERT INTO external_identities(issuer,subject,user_id,email,email_verified,username) VALUES (%s,%s,%s,%s,%s,%s)",
                     (
                         verified.issuer,
                         verified.subject,
                         user_id,
                         verified.email,
                         verified.email_verified,
+                        verified.username,
                     ),
                 )
                 await conn.execute(

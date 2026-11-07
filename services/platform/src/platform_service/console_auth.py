@@ -14,8 +14,10 @@ from .contracts import OperatorIdentity
 from .errors import PlatformError
 from .identity.oidc import OIDC, digest
 
-PERMISSIONS = frozenset({"console:read","plans:publish","billing:publish","execution:publish","execution:review"})
-ROLES = {"admin": PERMISSIONS, "operator": PERMISSIONS, "viewer": frozenset({"console:read"})}
+OPERATOR_PERMISSIONS = frozenset({"console:read","plans:publish","billing:publish","execution:publish","execution:review"})
+# Issuing the owner allowance is admin-only (decision 0011).
+PERMISSIONS = OPERATOR_PERMISSIONS | {"owner:allowance"}
+ROLES = {"admin": PERMISSIONS, "operator": OPERATOR_PERMISSIONS, "viewer": frozenset({"console:read"})}
 
 
 @dataclass(frozen=True)

@@ -34,12 +34,15 @@ class VerifiedIdentity:
     email: str | None
     email_verified: bool
     authenticated_at: int
+    username: str | None = None
 
     def __post_init__(self):
         _identifier(self.issuer, "issuer", 2048)
         _identifier(self.subject, "subject")
         if self.email is not None:
             _identifier(self.email, "email", 320)
+        if self.username is not None:
+            _identifier(self.username, "username", 128)
         if not isinstance(self.email_verified, bool):
             raise ValueError("invalid email_verified")
         _nonnegative_integer(self.authenticated_at, "authenticated_at")

@@ -38,3 +38,20 @@ test('protected offers do not expose withdrawal and detail audits show safe resu
   assert.doesNotMatch(html,/>撤回<\/button>/);
   const detail=render('DetailFields',{data:{result_summary:{enabled:true,version:'approved-v2'}}});assert.match(detail,/approved-v2/);
 });
+test('users list and summary name people by username and email',()=>{
+  const list=render('DataPage',{domain:'users',permissions:['console:read'],query:'',offset:0,state:{kind:'ready',data:{items:[{id:'user-1',username:'alice',email:'alice@example.test',spendable_available:'3',active:true,created_at:'2026-11-06T00:00:00Z'}],limit:25,offset:0,has_more:false}},onSearch(){},onPage(){},onInspect(){},onPublish(){},onAction(){},onRetry(){}});
+  assert.match(list,/用户名/);assert.match(list,/alice@example\.test/);assert.match(list,/alice/);
+  const named=render('UserSummary',{data:{id:'user-1',active:true,created_at:'2026-11-06T00:00:00Z',identities:[{username:'alice',email:'alice@example.test',email_verified:true}],wallet_details:[]}});
+  assert.match(named,/alice · alice@example\.test/);
+  const unnamed=render('UserSummary',{data:{id:'user-2',active:true,created_at:'2026-11-06T00:00:00Z',identities:[{username:null,email:null,email_verified:false}],wallet_details:[]}});
+  assert.match(unnamed,/下次登录后显示/);
+});
+test('admins see the fixed allowance action only when no owner allowance is active',()=>{
+  const wallet={id:'wallet-1',spendable_available:'0',spent:'0',held:'0',pending_reconciliation:0,memberships:[],reservations:[]};
+  const base={id:'user-1',active:true,created_at:'2026-11-06T00:00:00Z',identities:[]};
+  assert.match(render('UserSummary',{data:{...base,wallet_details:[wallet]},onAllowance(){}}),/发放所有者额度/);
+  assert.doesNotMatch(render('UserSummary',{data:{...base,wallet_details:[wallet]}}),/发放所有者额度/);
+  const active={...wallet,memberships:[{id:'m',plan_id:'easel-owner-allowance-v1',expires_at:'2999-01-01T00:00:00Z'}]};
+  const html=render('UserSummary',{data:{...base,wallet_details:[active]},onAllowance(){}});
+  assert.doesNotMatch(html,/发放所有者额度<\/button>/);assert.match(html,/到期前不能再发/);
+});

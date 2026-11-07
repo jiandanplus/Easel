@@ -87,7 +87,7 @@ export class ConsoleClient {
   operation(path: string, value: unknown, permission: string) {
     if (!this.session?.admin.permissions.includes(permission)) throw new ConsoleError(403, 'permission_denied');
     const session = this.session, epoch = this.epoch, key = this.newKey(), body = JSON.stringify(value);
-    if (!/^\/api\/(?:plans|offers|models)(?:\/[A-Za-z0-9%_.~-]+\/(?:withdraw|state))?$/.test(path)) throw new ConsoleError(400, 'invalid_operation');
+    if (!/^\/api\/(?:(?:plans|offers|models)(?:\/[A-Za-z0-9%_.~-]+\/(?:withdraw|state))?|wallets\/[A-Za-z0-9%_.~-]+\/allowance)$/.test(path)) throw new ConsoleError(400, 'invalid_operation');
     return { key, send: async () => {
       if (this.epoch !== epoch || this.session !== session) throw new ConsoleError(401, 'session_changed');
       return this.request<RecordData>(path, { method: 'POST', body, headers: { 'Content-Type': 'application/json', 'X-Console-CSRF': session.csrf_token, 'Idempotency-Key': key } });

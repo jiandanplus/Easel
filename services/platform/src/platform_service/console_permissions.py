@@ -2,7 +2,7 @@
 from psycopg import sql
 
 from .errors import PlatformError
-from .permissions import assert_safe_runtime_role
+from .permissions import ALLOWANCE_FUNCTION, assert_safe_runtime_role
 
 SELECT_TABLES = frozenset({
     "console_admins", "console_sessions", "console_login_transactions",
@@ -16,7 +16,7 @@ SELECT_TABLES = frozenset({
 SELECT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),
     "console_identity_aliases": frozenset({"issuer","subject","admin_id"}),
-    "external_identities": frozenset({"user_id","email","email_verified"}),
+    "external_identities": frozenset({"user_id","email","email_verified","username"}),
     "identity_sessions": frozenset({"user_id","product_id"}),
     "internal_grants": frozenset({"id","lot_id","membership_id"}),
     "billing_orders": frozenset({"id","product_id","billing_account_id","channel","mode","amount_minor",
@@ -131,4 +131,7 @@ async def grant_console_permissions(conn,role):
     seq=await (await conn.execute("SELECT pg_get_serial_sequence(%s,'id') AS name",(schema+'.console_audit_events',))).fetchone()
     if seq and seq['name']:
         await conn.execute(sql.SQL('GRANT USAGE ON SEQUENCE {} TO {}').format(sql.Identifier(*seq['name'].split('.')),ident))
+    # The web owner allowance goes through one audited SECURITY DEFINER function (024).
+    if (await (await conn.execute('SELECT to_regprocedure(%s) IS NOT NULL AS present',(schema+'.'+ALLOWANCE_FUNCTION,))).fetchone())['present']:
+        await conn.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}.{} TO {}').format(namespace,sql.SQL(ALLOWANCE_FUNCTION),ident))
     await assert_safe_console_role(conn,role)

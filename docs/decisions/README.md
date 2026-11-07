@@ -14,3 +14,4 @@
 | [0008](0008-native-mac-window.md) | 桌面版用 Mac 原生窗口 |
 | [0009](0009-product-name-youchuang.md) | 产品对外名称改为优创，内部标识不变 |
 | [0010](0010-owner-allowance.md) | 付款关闭期间的所有者额度（迁移 022） |
+| [0011](0011-console-owner-allowance.md) | 后台显示用户名和邮箱，管理员可在网页发放固定所有者额度（迁移 023、024） |
