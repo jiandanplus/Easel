@@ -2,7 +2,7 @@
 from psycopg import sql
 
 from .errors import PlatformError
-from .permissions import CONSOLE_FUNCTIONS, assert_safe_runtime_role
+from .permissions import CONSOLE_FUNCTIONS, RUNTIME_FUNCTIONS, assert_safe_runtime_role
 
 SELECT_TABLES = frozenset({
     "console_admins", "console_sessions", "console_login_transactions",
@@ -11,11 +11,13 @@ SELECT_TABLES = frozenset({
     "plans", "memberships", "membership_revocations", "credit_lots",
     "credit_holds", "credit_journals", "credit_entries",
     "billing_offers", "billing_offer_withdrawals",
-    "execution_models", "execution_model_states",
+    "execution_models", "execution_model_states", "redemption_batches", "redemption_codes",
 })
 SELECT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),
     "console_identity_aliases": frozenset({"issuer","subject","admin_id"}),
+    "console_login_requests": frozenset({"id","status","subject_hash","verified_at","expires_at"}),
+    "console_acl_events": frozenset({"id","admin_id","request_id","action","role","operator_id","created_at"}),
     "console_plan_grants": frozenset({"id","billing_account_id","plan_id","membership_id","operator_id","reason","credits","starts_at","expires_at","created_at"}),
     "external_identities": frozenset({"user_id","email","email_verified","username"}),
     "identity_sessions": frozenset({"user_id","product_id","created_at","expires_at","revoked_at"}),
@@ -76,6 +78,11 @@ async def assert_safe_console_role(conn,role=None,check_grants=True):
                 (c.oid<>%s AND has_sequence_privilege(%s,c.oid,'USAGE')))) AS unsafe""",
             (schema,name,audit_sequence,name))).fetchone()
         if sequence_access['unsafe']:raise PlatformError(503,'unsafe_console_role')
+        # Redeeming belongs to the product runtime, never the Console (026).
+        for function in RUNTIME_FUNCTIONS:
+            redeem=await (await conn.execute("""SELECT to_regprocedure(%s) IS NOT NULL
+                AND has_function_privilege(%s,to_regprocedure(%s),'EXECUTE') AS unsafe""",(schema+'.'+function,name,schema+'.'+function))).fetchone()
+            if redeem['unsafe']:raise PlatformError(503,'unsafe_console_role')
         # Column checks detect inherited and column-only accidental privileges.
         privileges=await (await conn.execute("""SELECT c.relname,a.attname,
             has_column_privilege(%s,c.oid,a.attnum,'SELECT') AS can_select,

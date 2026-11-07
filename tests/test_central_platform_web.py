@@ -257,3 +257,19 @@ async def test_local_revocation_status_logout_and_fresh_browser_login_recover(tm
     finally:
         await router.shutdown()
         await c.aclose()
+
+
+@pytest.mark.asyncio
+async def test_redeem_route_accepts_only_a_local_code_request(tmp_path):
+    router, c, state = await setup(tmp_path)
+    from easel.platform.central import CentralClient
+    CentralClient(tmp_path, url="http://127.0.0.1:8791").save_auth(auth())
+    base = router.prefix if getattr(router, "prefix", "") else ""
+    ok = await c.post(base + "/redemptions", json={"code": " ABCD-EFGH-JKMN-PQRS "})
+    assert ok.status_code == 200 and ok.json() == {"ok": True}
+    foreign = await c.post(base + "/redemptions", json={"code": "ABCD-EFGH-JKMN-PQRS"}, headers={"origin": "https://evil.example"})
+    assert foreign.status_code == 403
+    for body in ({"code": "x", "extra": 1}, ["code"], {"code": 7}):
+        assert (await c.post(base + "/redemptions", json=body)).status_code == 400
+    assert (await c.post(base + "/redemptions", content=b"{" * 600, headers={"content-type": "application/json"})).status_code == 400
+    await c.aclose()

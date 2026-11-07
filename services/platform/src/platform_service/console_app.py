@@ -18,7 +18,7 @@ from .errors import PlatformError
 SESSION_COOKIE = "easel_console_session"
 LOGIN_COOKIE = "easel_console_login"
 CALLBACK = "/oidc/console/callback"
-PAGES = {"", "overview", "stats", "users", "products", "plans", "wallets", "orders", "offers", "models", "providers", "executions", "reconciliation", "audits"}
+PAGES = {"", "overview", "stats", "redemptions", "admins", "users", "products", "plans", "wallets", "orders", "offers", "models", "providers", "executions", "reconciliation", "audits"}
 CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
 
 
@@ -244,6 +244,42 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
     @app.get("/api/users/{item_id}/audits")
     async def user_audits(request: Request, item_id: str):
         return await queries.user_audits(await principal(request), item_id)
+
+    @app.get("/api/redemptions")
+    async def redemptions_list(request: Request, limit: int = 25, offset: int = 0, q: str = ""):
+        return await queries.redemptions(await principal(request), limit=limit, offset=offset, q=q)
+
+    @app.get("/api/redemptions/{item_id}")
+    async def redemption_detail(request: Request, item_id: str):
+        return await queries.redemption(await principal(request), item_id)
+
+    @app.post("/api/redemptions")
+    async def redemption_create(request: Request):
+        actor = await principal(request, "redemption:manage", write=True)
+        value, key = await command(request, {"plan_id", "name", "count", "days", "reason"})
+        return await catalog.create_redemptions(actor, value["plan_id"], value["name"], value["count"], value["days"], value["reason"], key)
+
+    @app.post("/api/redemptions/{item_id}/disable")
+    async def redemption_disable(request: Request, item_id: str):
+        actor = await principal(request, "redemption:manage", write=True)
+        value, key = await command(request, {"reason"})
+        return await catalog.disable_redemptions(actor, item_id, value["reason"], key)
+
+    @app.get("/api/admins")
+    async def admins(request: Request):
+        return await queries.admins(await principal(request, "admins:manage"))
+
+    @app.post("/api/admin-requests/{item_id}/approve")
+    async def admin_approve(request: Request, item_id: str):
+        actor = await principal(request, "admins:manage", write=True)
+        value, key = await command(request, {"role", "reason"})
+        return await catalog.approve_admin(actor, item_id, value["role"], value["reason"], key)
+
+    @app.post("/api/admins/{item_id}/disable")
+    async def admin_disable(request: Request, item_id: str):
+        actor = await principal(request, "admins:manage", write=True)
+        value, key = await command(request, {"reason"})
+        return await catalog.disable_admin(actor, item_id, value["reason"], key)
 
     @app.get("/api/stats")
     async def stats(request: Request, days: int = 30):

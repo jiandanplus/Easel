@@ -21,3 +21,5 @@
   .central-account-header, .central-account-identity { align-items: flex-start; }
   .central-account .btn { max-width: 100%; white-space: normal; }
 }
+
+.central-redeem{display:flex;gap:8px;align-items:center;margin-top:8px}.central-redeem input{flex:1;min-width:0;max-width:320px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;padding:6px 10px;border:1px solid var(--border,#d6dbe4);border-radius:8px;background:transparent;color:inherit}

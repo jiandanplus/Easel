@@ -46,6 +46,13 @@ _BILLING_MESSAGES = {
     "order_not_pending": "订单状态已变化，请刷新订单",
     "reconciliation_required": "订单待人工核算，请联系运营者",
     "invalid_request": "购买请求格式无效，请刷新后重试",
+    "redemption_code_invalid": "兑换码不正确，请核对后再输入",
+    "redemption_code_used": "这个兑换码已经被使用过了",
+    "redemption_code_disabled": "这批兑换码已停用",
+    "redemption_code_expired": "这个兑换码已过期",
+    "redemption_batch_already_used": "你已经兑换过这一批的兑换码，同一批只能兑换一次",
+    "wallet_capacity_exceeded": "钱包点数已达上限，暂时不能兑换",
+    "account_unavailable": "账号暂不可用，请联系运营者",
 }
 _AUTH_INVALID = frozenset({"invalid_authentication", "session_invalid", "refresh_replayed"})
 _DESKTOP_CENTRAL_URL = "https://accounts.drawbookai.cn"
@@ -455,6 +462,10 @@ class CentralClient:
         order_read = method == "GET" and re.fullmatch(r"/v2/orders/[A-Za-z0-9]{32}", path)
         order_action = method == "POST" and re.fullmatch(r"/v2/orders/[A-Za-z0-9]{32}/(refresh|close)", path) and body is None
         order_create = method == "POST" and path == "/v2/orders"
+        redeem = method == "POST" and path == "/v2/redemptions"
+        if redeem and (not isinstance(body, dict) or set(body) != {"code"} or not isinstance(body.get("code"), str)
+                       or not re.fullmatch(r"[A-Za-z0-9 -]{4,64}", body["code"])):
+            raise CentralError("invalid_request", 400)
         if order_create:
             if (not isinstance(body, dict) or set(body) != {"offer_id", "channel", "idempotency_key"}
                     or not all(isinstance(body.get(k), str) and re.fullmatch(r"[A-Za-z0-9_-]{1,160}", body[k]) for k in ("offer_id", "idempotency_key"))
@@ -462,7 +473,7 @@ class CentralClient:
                 raise CentralError("invalid_request", 400)
         if method == "GET" and body is not None:
             raise CentralError("invalid_request", 400)
-        if not (order_read or order_action or order_create or (method == "GET" and path in allowed) or (method == "DELETE" and re.fullmatch(r"/v2/sessions/[A-Za-z0-9_-]{1,160}", path))):
+        if not (order_read or order_action or order_create or redeem or (method == "GET" and path in allowed) or (method == "DELETE" and re.fullmatch(r"/v2/sessions/[A-Za-z0-9_-]{1,160}", path))):
             raise HarnessError("中央平台执行链路 S3 尚未开放")
         if public and path not in {"/v2/capabilities?product_id=easel", "/v2/plans?product_id=easel", "/v2/billing/catalog?product_id=easel"}:
             raise HarnessError("中央平台请求需要登录")

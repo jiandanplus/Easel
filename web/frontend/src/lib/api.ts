@@ -207,6 +207,8 @@ export interface CentralCreateOrder { offer_id: string; channel: 'wechat' | 'ali
 export const centralBillingCatalog = (signal?: AbortSignal): Promise<CentralBillingCatalog> => request('/api/platform/central/billing/catalog', { signal });
 export const centralOrders = (signal?: AbortSignal): Promise<{ orders: CentralOrder[] }> => request('/api/platform/central/orders', { signal });
 export const centralOrder = (id: string, signal?: AbortSignal): Promise<CentralOrder> => request(`/api/platform/central/orders/${encodeURIComponent(id)}`, { signal });
+export interface CentralRedemption { plan_id: string; name?: string | null; credits: string; expires_at: string; redeemed_at: string; replayed: boolean }
+export const centralRedeem = (code: string, signal?: AbortSignal): Promise<CentralRedemption> => request('/api/platform/central/redemptions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }), signal });
 export const centralCreateOrder = (body: CentralCreateOrder, signal?: AbortSignal): Promise<CentralOrder> => request('/api/platform/central/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
 export const centralRefreshOrder = (id: string, signal?: AbortSignal): Promise<CentralOrder> => request(`/api/platform/central/orders/${encodeURIComponent(id)}/refresh`, { method: 'POST', signal });
 export const centralCloseOrder = (id: string, signal?: AbortSignal): Promise<CentralOrder> => request(`/api/platform/central/orders/${encodeURIComponent(id)}/close`, { method: 'POST', signal });

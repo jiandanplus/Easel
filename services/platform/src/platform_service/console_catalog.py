@@ -13,6 +13,7 @@ from .membership import MembershipService
 from .billing.service import BillingService
 from .execution.core import ExecutionService, validate_definition
 from .console_service import provider_registry
+from .redemptions import code_hash, new_code
 
 
 class BoundDatabase:
@@ -53,6 +54,8 @@ PLAN_ERRORS = {
     'EA407': (409, 'plan_above_console_limit'),
     'EA409': (409, 'plan_grant_active'),
 }
+ADMIN_ERRORS = {'EA403': (403, 'console_permission_denied'), 'EA404': (404, 'console_request_invalid'),
+                'EA409': (409, 'console_acl_conflict')}
 USER_ERRORS = {'EA403': (403, 'console_permission_denied'), 'EA404': (404, 'console_user_not_found')}
 
 
@@ -93,7 +96,7 @@ class ConsoleCatalog:
             raise PlatformError(409, 'console_provider_not_preverified')
         return d
 
-    async def _command(self, principal, action, target_type, target_id, payload, reason, key, permissions):
+    async def _command(self, principal, action, target_type, target_id, payload, reason, key, permissions, secret=None):
         reason, key = text(reason, 512), text(key, 128)
         target_id = text(target_id, 255)
         try:
@@ -157,6 +160,16 @@ class ConsoleCatalog:
                                        (actor, target_id, payload['active']), USER_ERRORS)
             elif action == 'user.logout':
                 result = await guarded(conn, 'SELECT console_force_logout(%s,%s) AS result', (actor, target_id), USER_ERRORS)
+            elif action == 'redemption.create':
+                result = await guarded(conn, 'SELECT console_create_redemption_batch(%s,%s,%s,%s,%s,%s) AS result',
+                    (actor, payload['plan_id'], payload['name'], reason, payload['days'], [code_hash(c) for c in secret]), PLAN_ERRORS)
+            elif action == 'redemption.disable':
+                result = await guarded(conn, 'SELECT console_disable_redemption_batch(%s,%s) AS result', (actor, target_id), USER_ERRORS)
+            elif action == 'admin.approve':
+                result = await guarded(conn, 'SELECT console_approve_request(%s,%s,%s,%s) AS result',
+                    (actor, target_id, payload['role'], self.auth.settings.issuer), ADMIN_ERRORS)
+            elif action == 'admin.disable':
+                result = await guarded(conn, 'SELECT console_disable_admin(%s,%s) AS result', (actor, target_id), ADMIN_ERRORS)
             elif action == 'user.note':
                 if not await (await conn.execute('SELECT 1 FROM users WHERE id=%s', (target_id,))).fetchone():
                     raise PlatformError(404, 'console_user_not_found')
@@ -172,7 +185,8 @@ class ConsoleCatalog:
                                (operation_id, actor, key_hash, request_hash, action, target_type, target_id, Jsonb(result)))
             await conn.execute('INSERT INTO console_audit_events(operation_id,actor_id,action,target_type,target_id,reason,key_hash,request_hash) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',
                                (operation_id, actor, action, target_type, target_id, reason, key_hash, request_hash))
-            return result
+            # Plain redemption codes are returned once and never stored, not even in the replay record.
+            return {**result, 'codes': secret} if secret is not None else result
 
     async def publish_plan(self, principal, definition, reason, key):
         if not isinstance(definition, dict):
@@ -214,6 +228,25 @@ class ConsoleCatalog:
             raise PlatformError(422, 'invalid_console_command')
         return await self._command(principal, 'user.note', 'user', user, {'note': note, 'tags': tags(tag_list)},
                                    reason, key, ('users:manage',))
+
+    async def create_redemptions(self, principal, plan_id, name, count, days, reason, key):
+        if (type(count) is not int or not 1 <= count <= 100 or type(days) is not int or not 1 <= days <= 365
+                or (isinstance(reason, str) and len(reason) > 256)):
+            raise PlatformError(422, 'invalid_console_command')
+        payload = {'plan_id': text(plan_id, 255), 'name': text(name, 60), 'count': count, 'days': days}
+        return await self._command(principal, 'redemption.create', 'redemption', 'new', payload, reason, key,
+                                   ('redemption:manage',), secret=[new_code() for _ in range(count)])
+
+    async def disable_redemptions(self, principal, batch, reason, key):
+        return await self._command(principal, 'redemption.disable', 'redemption', batch, {}, reason, key, ('redemption:manage',))
+
+    async def approve_admin(self, principal, request_id, role, reason, key):
+        if role not in ('operator', 'viewer'):
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'admin.approve', 'admin', request_id, {'role': role}, reason, key, ('admins:manage',))
+
+    async def disable_admin(self, principal, admin_id, reason, key):
+        return await self._command(principal, 'admin.disable', 'admin', admin_id, {}, reason, key, ('admins:manage',))
 
     async def issue_allowance(self, principal, wallet, reason, key):
         if isinstance(reason, str) and len(reason) > 256:

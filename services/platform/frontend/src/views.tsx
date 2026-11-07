@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { display, formatCredits, formatDate, formatDay, titles, writePermissions } from './core';
 import type { AuthState, Catalog, Domain, Fields, LoadState, PageData, RecordData } from './core';
 
-type Page = Domain | 'overview' | 'reconciliation' | 'stats';
+type Page = Domain | 'overview' | 'reconciliation' | 'stats' | 'redemptions' | 'admins';
 
 export function Mark() { return <span className="brand-mark" aria-hidden="true">优</span>; }
 export function AuthScreen({ state, onRetry }: { state: AuthState; onRetry: () => void }) {

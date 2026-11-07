@@ -5,6 +5,7 @@ import base64
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import inspect
+import json
 import re
 import secrets
 import threading
@@ -342,6 +343,22 @@ def create_router(workspace, guard, close_idle=None, *, transport=None, url=None
     async def create_order(request: Request):
         data = await billing_body(request, create=True)
         return await changed(client().call, "POST", "/v2/orders", data)
+
+    @router.post("/redemptions")
+    async def redeem(request: Request):
+        origin = request.headers.get("origin")
+        if origin and origin != str(request.base_url).rstrip("/"):
+            raise HTTPException(403, "请求来源无效")
+        try:
+            raw = await request.body()
+            if len(raw) > 512:
+                raise ValueError
+            data = json.loads(raw)
+            if not isinstance(data, dict) or set(data) != {"code"} or not isinstance(data["code"], str):
+                raise ValueError
+        except (ValueError, UnicodeError):
+            raise HTTPException(400, {"code": "invalid_request", "message": "兑换码格式无效"}) from None
+        return await changed(client().call, "POST", "/v2/redemptions", {"code": data["code"].strip()})
 
     @router.get("/orders/{order_id}")
     async def get_order(order_id: str):

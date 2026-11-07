@@ -257,3 +257,27 @@ def test_authenticated_call_clears_only_explicit_session_invalid(tmp_path):
         c.call("GET", "/v2/wallet")
     assert caught.value.code == "session_invalid"
     assert "auth" not in c.store.read()
+
+
+def test_redeem_posts_only_a_code_and_keeps_clear_errors(tmp_path):
+    seen = []
+
+    def handler(request):
+        seen.append((request.method, request.url.path, json.loads(request.content or b"null")))
+        if json.loads(request.content)["code"] == "USED-USED-USED-USED":
+            return httpx.Response(409, json={"error": {"code": "redemption_code_used"}})
+        return httpx.Response(200, json={"plan_id": "gift-v1", "name": "礼品卡", "credits": "30000000",
+                                         "expires_at": "2026-12-07T00:00:00Z", "redeemed_at": "2026-11-07T00:00:00Z", "replayed": False})
+
+    c = client(tmp_path, handler)
+    c.save_auth(auth())
+    assert c.call("POST", "/v2/redemptions", {"code": "ABCD-EFGH-JKMN-PQRS"})["credits"] == "30000000"
+    assert seen == [("POST", "/v2/redemptions", {"code": "ABCD-EFGH-JKMN-PQRS"})]
+    with pytest.raises(HarnessError) as caught:
+        c.call("POST", "/v2/redemptions", {"code": "USED-USED-USED-USED"})
+    assert caught.value.code == "redemption_code_used" and "已经被使用" in str(caught.value)
+    assert "auth" in c.store.read()
+    for bad in ({"code": "<script>"}, {"code": "x"}, {"code": "ABCD", "extra": 1}, None):
+        with pytest.raises(HarnessError):
+            c.call("POST", "/v2/redemptions", bad)
+    assert len(seen) == 2

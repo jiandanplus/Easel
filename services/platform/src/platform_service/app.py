@@ -19,6 +19,7 @@ from .execution_runtime import ExecutionRuntime
 from .execution_web import create_execution_router
 from .identity import IdentityService
 from .membership import MembershipService
+from .redemptions import RedemptionService
 from .payment_config import PaymentSettings
 from .payment_runtime import PaymentRuntime
 from .payment_web import create_payment_router
@@ -32,6 +33,7 @@ def create_app(settings: Settings | None = None, *, database=None, identity=None
     db = database or Database(settings.database_url, min_size=settings.pool_min_size, max_size=settings.pool_max_size, schema=settings.db_schema)
     accounts = identity or IdentityService(db, settings)
     memberships, ledger = MembershipService(db), CreditLedger(db)
+    redemptions = RedemptionService(db)
     payments = payment_runtime or PaymentRuntime(db, PaymentSettings.from_env(settings))
     executions = execution_runtime or ExecutionRuntime(db, accounts, ExecutionSettings.from_env(settings))
     media = media_runtime or MediaRuntime(db, accounts, MediaSettings.from_env(settings))
@@ -258,6 +260,14 @@ def create_app(settings: Settings | None = None, *, database=None, identity=None
     @app.get("/v2/usage")
     async def usage(request: Request):
         return {"usage": await ledger.usage(await scope(request))}
+
+    @app.post("/v2/redemptions")
+    async def redeem(request: Request):
+        current = await scope(request, "easel")
+        value = await body(request)
+        if set(value) != {"code"}:
+            raise PlatformError(400, "invalid_request")
+        return await redemptions.redeem(current, value["code"])
 
     @app.get("/v2/sessions")
     async def sessions(request: Request):

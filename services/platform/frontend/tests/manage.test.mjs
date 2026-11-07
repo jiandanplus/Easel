@@ -20,3 +20,11 @@ test('management commands use exact paths and need the matching permission',()=>
   assert.throws(()=>client.operation('/api/wallets/w/plans',{},'plans:issue'));
   assert.throws(()=>client.operation('/api/users/u1/delete',{},'users:manage'));
 });
+test('redemption and admin commands are allowed only on their exact paths',()=>{
+  const client=new c.ConsoleClient(async()=>new Response('{}'),()=> 'key-12345678');
+  client.setSession({admin:{id:'a',role:'admin',permissions:['console:read','redemption:manage','admins:manage']},csrf_token:'csrf'});
+  for(const [path,permission] of [['/api/redemptions','redemption:manage'],['/api/redemptions/b1/disable','redemption:manage'],['/api/admin-requests/r1/approve','admins:manage'],['/api/admins/a1/disable','admins:manage']])assert.ok(client.operation(path,{},permission));
+  assert.throws(()=>client.operation('/api/admins/a1/promote',{},'admins:manage'));
+  const r=load('RedemptionsPage.tsx');
+  assert.equal(r.codesText({name:'朋友',credits:'30000000',expires_at:'2026-12-07T00:00:00Z',codes:['AAAA-BBBB-CCCC-DDDD']}).split('\n')[1],'AAAA-BBBB-CCCC-DDDD');
+});

@@ -243,6 +243,36 @@ class ConsoleQueries:
                                              ([id, *wallets],))).fetchall()
             return {'items': [self._audit(r) for r in rows[:50]], 'has_more': len(rows) > 50}
 
+    async def redemptions(self, principal, limit=25, offset=0, q=''):
+        return await self._list(principal, """SELECT b.id,b.name,b.plan_id,b.credits,b.code_count,b.expires_at,b.disabled_at,b.created_at,
+            (p.definition->>'name') AS plan_name,(p.definition->>'days')::integer AS plan_days,
+            (SELECT count(*) FROM redemption_codes c WHERE c.batch_id=b.id AND c.redeemed_at IS NOT NULL) AS redeemed,
+            CASE WHEN b.disabled_at IS NOT NULL THEN 'disabled' WHEN b.expires_at<=transaction_timestamp() THEN 'expired' ELSE 'active' END AS state
+            FROM redemption_batches b JOIN plans p ON p.id=b.plan_id
+            WHERE %s='' OR strpos(lower(b.name||' '||b.plan_id||' '||b.id),lower(%s))>0 ORDER BY b.created_at DESC,b.id DESC""", (q, q), limit, offset, q)
+
+    async def redemption(self, principal, id):
+        identifier(id)
+        async with self._snapshot(principal) as conn:
+            batch = await (await conn.execute("""SELECT b.id,b.name,b.reason,b.plan_id,b.credits,b.code_count,b.expires_at,b.disabled_at,b.created_at,
+                (p.definition->>'name') AS plan_name FROM redemption_batches b JOIN plans p ON p.id=b.plan_id WHERE b.id=%s""", (id,))).fetchone()
+            if not batch:
+                raise PlatformError(404, 'console_redemption_not_found')
+            codes = await (await conn.execute("""SELECT left(c.code_hash,8) AS code_ref,c.redeemed_at,c.user_id,
+                (SELECT min(e.username) FROM external_identities e WHERE e.user_id=c.user_id) AS username,
+                (SELECT min(e.email) FROM external_identities e WHERE e.user_id=c.user_id) AS email
+                FROM redemption_codes c WHERE c.batch_id=%s ORDER BY c.redeemed_at DESC NULLS LAST,c.code_hash LIMIT 100""", (id,))).fetchall()
+            return {**projected(batch), 'codes': [projected(r) for r in codes]}
+
+    async def admins(self, principal):
+        async with self._snapshot(principal) as conn:
+            admins = await (await conn.execute("""SELECT a.id,a.role,a.active,a.created_at,
+                (SELECT max(s.created_at) FROM console_sessions s WHERE s.admin_id=a.id) AS last_login_at
+                FROM console_admins a ORDER BY a.active DESC,a.created_at""")).fetchall()
+            requests = await (await conn.execute("""SELECT id,subject_hash,verified_at,expires_at FROM console_login_requests
+                WHERE status='pending' AND expires_at>transaction_timestamp() ORDER BY verified_at DESC LIMIT 50""")).fetchall()
+            return {'admins': [projected(r) for r in admins], 'requests': [projected(r) for r in requests], 'self': principal.id}
+
     async def stats(self, principal, days=30):
         if days not in STAT_DAYS:
             raise PlatformError(422, 'console_query_invalid')

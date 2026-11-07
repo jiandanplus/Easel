@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { centralAccountSignature, centralStatus, centralStartLogin, centralCancelLogin, centralLogout, centralPlans, centralWallet, centralEntitlements, centralUsage, centralDevices, centralRevoke } from '../lib/api';
+import { centralAccountSignature, centralStatus, centralStartLogin, centralCancelLogin, centralLogout, centralPlans, centralWallet, centralEntitlements, centralUsage, centralDevices, centralRevoke, centralRedeem } from '../lib/api';
 import type { CentralStatus, CentralPlan, CentralWallet, CentralEntitlements, CentralUsage, CentralDevice } from '../lib/api';
 import './CentralAccountSettings.css';
 import CentralBillingSettings from './CentralBillingSettings';
@@ -22,6 +22,34 @@ function formatRequestCount(value: unknown, minimum = 0): string {
 }
 const unread = <T,>(): ReadState<T> => ({ data: null, error: '', loading: true });
 const failureMessage = (failure: unknown): string => failure instanceof Error ? failure.message : '暂不可用，请稍后重试。';
+
+/** One code gives one published plan; the server checks validity, expiry and single use. */
+function RedeemSection({ onRedeemed }: { onRedeemed: () => void }) {
+  const [code, setCode] = useState(''), [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState('');
+  const submit = async () => {
+    const value = code.trim();
+    if (busy) return;
+    setMessage(''); setError('');
+    if (value.replace(/[\s-]/g, '').length !== 16) { setError('兑换码是 16 位字母和数字，例如 ABCD-EFGH-JKMN-PQRS'); return; }
+    setBusy(true);
+    try {
+      const result = await centralRedeem(value);
+      setMessage(`${result.replayed ? '这个兑换码你已经兑换过了' : '兑换成功'}：${result.name || result.plan_id}，${formatMicrocredits(result.credits)} 点，${displayDate(result.expires_at)} 到期。`);
+      setCode(''); onRedeemed();
+    } catch (failure) { setError(failureMessage(failure)); }
+    finally { setBusy(false); }
+  };
+  return <section className="central-account-section" aria-label="兑换码">
+    <h4>兑换码</h4>
+    <p className="desc">收到兑换码后在这里输入，额度会加到你的钱包里。每个码只能用一次。</p>
+    <form className="central-redeem" onSubmit={event => { event.preventDefault(); void submit(); }}>
+      <input value={code} maxLength={40} disabled={busy} autoComplete="off" spellCheck={false} placeholder="ABCD-EFGH-JKMN-PQRS" aria-label="兑换码" onChange={event => setCode(event.target.value.toUpperCase())} />
+      <button type="submit" className="btn btn-sm" disabled={busy || !code.trim()}>{busy ? '兑换中…' : '兑换'}</button>
+    </form>
+    {message && <p role="status" className="central-account-notice">{message}</p>}
+    {error && <p role="alert" className="env-error">{error}</p>}
+  </section>;
+}
 function displayDate(value?: number | string | null): string {
   if (value == null) return '未知';
   const date = new Date(typeof value === 'number' ? value * 1000 : value);
@@ -170,6 +198,7 @@ export default function CentralAccountSettings() {
           <dl className="central-account-balances"><div><dt>内部体验可用点数</dt><dd>{formatMicrocredits(wallet.data.experience_available)}</dd></div><div><dt>内部体验累计发放</dt><dd>{formatMicrocredits(wallet.data.experience_issued)}</dd></div><div><dt>体验额度到期</dt><dd>{displayDate(wallet.data.experience_expires_at)}</dd></div></dl>
         </aside>}
       </section>
+      <RedeemSection onRedeemed={() => setRevision(value => value + 1)} />
       <section className="central-account-section" aria-label="当前权益" aria-busy={entitlements.loading}>
         <h4>当前权益</h4>{entitlements.data === null ? <p role={entitlements.error ? 'alert' : 'status'}>{readMessage(entitlements, '测试权益')}</p> : <>
           <p className="desc">{entitlements.data.test_only ? '测试权益 · 不代表正式订阅' : '包含正式权益 · 点数来源见共享钱包'}</p><p>{entitlements.data.active ? '权益生效中' : '当前无生效权益'} · 产品 {entitlements.data.product_id} · 并发 {entitlements.data.concurrency}</p><p>能力：{entitlements.data.features.map(feature => ({ text: '文本对话', image: '图片生成' } as Record<string, string>)[feature] || feature).join('、') || '暂无'}</p>

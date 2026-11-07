@@ -145,7 +145,13 @@ CONSOLE_FUNCTIONS = (
     "console_set_user_active(text,text,boolean)",
     "console_force_logout(text,text)",
     "console_issue_plan(text,text,text,text,text)",
+    "console_create_redemption_batch(text,text,text,text,integer,text[])",
+    "console_disable_redemption_batch(text,text)",
+    "console_approve_request(text,text,text,text)",
+    "console_disable_admin(text,text)",
 )
+# The one SECURITY DEFINER entry point the product runtime may call (migration 026).
+RUNTIME_FUNCTIONS = ("redeem_code(text,text,text)",)
 
 
 async def can_issue_allowance(conn, role, schema):
@@ -364,4 +370,8 @@ async def grant_runtime_permissions(conn, role: str):
     for sequence in SEQUENCE_NAMES:
         await conn.execute(sql.SQL("GRANT USAGE ON SEQUENCE {}.{} TO {}").format(
             namespace, sql.Identifier(sequence), ident))
+    for function in RUNTIME_FUNCTIONS:
+        present = await (await conn.execute("SELECT to_regprocedure(current_schema()||'.'||%s) IS NOT NULL AS present", (function,))).fetchone()
+        if present["present"]:
+            await conn.execute(sql.SQL("GRANT EXECUTE ON FUNCTION {}.{} TO {}").format(namespace, sql.SQL(function), ident))
     await assert_safe_runtime_role(conn, role)
