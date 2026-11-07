@@ -139,18 +139,28 @@ SEQUENCE_NAMES = ("credit_entries_id_seq", "payment_event_audits_id_seq")
 
 
 ALLOWANCE_FUNCTION = "console_issue_owner_allowance(text,text,text,text)"
+# Console-only SECURITY DEFINER entry points (migrations 024, 025).
+CONSOLE_FUNCTIONS = (
+    ALLOWANCE_FUNCTION,
+    "console_set_user_active(text,text,boolean)",
+    "console_force_logout(text,text)",
+    "console_issue_plan(text,text,text,text,text)",
+)
 
 
 async def can_issue_allowance(conn, role, schema):
-    """False when the function is absent (before migration 024)."""
-    row = await (
-        await conn.execute(
-            """SELECT CASE WHEN to_regprocedure(%s) IS NULL THEN false
-            ELSE has_function_privilege(%s,to_regprocedure(%s),'EXECUTE') END AS allowed""",
-            (schema + "." + ALLOWANCE_FUNCTION, role, schema + "." + ALLOWANCE_FUNCTION),
-        )
-    ).fetchone()
-    return row["allowed"]
+    """True when the role may call any Console entry point; absent ones count as no."""
+    for function in CONSOLE_FUNCTIONS + ("console_require_admin(text,text[])",):
+        row = await (
+            await conn.execute(
+                """SELECT CASE WHEN to_regprocedure(%s) IS NULL THEN false
+                ELSE has_function_privilege(%s,to_regprocedure(%s),'EXECUTE') END AS allowed""",
+                (schema + "." + function, role, schema + "." + function),
+            )
+        ).fetchone()
+        if row["allowed"]:
+            return True
+    return False
 
 
 async def assert_safe_runtime_role(conn, role=None, *, check_grants=True):

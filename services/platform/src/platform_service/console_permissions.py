@@ -2,11 +2,11 @@
 from psycopg import sql
 
 from .errors import PlatformError
-from .permissions import ALLOWANCE_FUNCTION, assert_safe_runtime_role
+from .permissions import CONSOLE_FUNCTIONS, assert_safe_runtime_role
 
 SELECT_TABLES = frozenset({
     "console_admins", "console_sessions", "console_login_transactions",
-    "console_operations", "console_audit_events",
+    "console_operations", "console_audit_events", "console_user_notes",
     "users", "tenants", "tenant_members", "billing_accounts", "products", "product_clients",
     "plans", "memberships", "membership_revocations", "credit_lots",
     "credit_holds", "credit_journals", "credit_entries",
@@ -16,6 +16,7 @@ SELECT_TABLES = frozenset({
 SELECT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),
     "console_identity_aliases": frozenset({"issuer","subject","admin_id"}),
+    "console_plan_grants": frozenset({"id","billing_account_id","plan_id","membership_id","operator_id","reason","credits","starts_at","expires_at","created_at"}),
     "external_identities": frozenset({"user_id","email","email_verified","username"}),
     "identity_sessions": frozenset({"user_id","product_id","created_at","expires_at","revoked_at"}),
     "internal_grants": frozenset({"id","lot_id","membership_id"}),
@@ -30,7 +31,7 @@ SELECT_COLUMNS = {
         "amount","actual","status","funding_mode","created_at","updated_at"}),
 }
 INSERT_TABLES = frozenset({"console_login_transactions","console_login_requests","console_sessions",
-    "console_operations","console_audit_events","plans","billing_offers","billing_offer_withdrawals",
+    "console_operations","console_audit_events","console_user_notes","plans","billing_offers","billing_offer_withdrawals",
     "execution_models","execution_model_states"})
 INSERT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),
@@ -39,6 +40,7 @@ UPDATE_COLUMNS = {
     "console_reconciliation_cases": frozenset({"state","revision","actor_id","reason","snapshot_hash","last_operation_id","updated_at"}),
     "console_login_transactions": frozenset({"consumed"}),
     "console_sessions": frozenset({"revoked_at"}),
+    "console_user_notes": frozenset({"note","tags","updated_by","updated_at"}),
     "execution_model_states": frozenset({"enabled","operator_id","updated_at"}),
 }
 # SELECT FOR UPDATE inside existing immutable-plan publication requires an UPDATE
@@ -133,6 +135,7 @@ async def grant_console_permissions(conn,role):
     if seq and seq['name']:
         await conn.execute(sql.SQL('GRANT USAGE ON SEQUENCE {} TO {}').format(sql.Identifier(*seq['name'].split('.')),ident))
     # The web owner allowance goes through one audited SECURITY DEFINER function (024).
-    if (await (await conn.execute('SELECT to_regprocedure(%s) IS NOT NULL AS present',(schema+'.'+ALLOWANCE_FUNCTION,))).fetchone())['present']:
-        await conn.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}.{} TO {}').format(namespace,sql.SQL(ALLOWANCE_FUNCTION),ident))
+    for function in CONSOLE_FUNCTIONS:
+        if (await (await conn.execute('SELECT to_regprocedure(%s) IS NOT NULL AS present',(schema+'.'+function,))).fetchone())['present']:
+            await conn.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}.{} TO {}').format(namespace,sql.SQL(function),ident))
     await assert_safe_console_role(conn,role)

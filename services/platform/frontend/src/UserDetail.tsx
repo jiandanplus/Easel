@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ConsoleError, formatCredits, formatDate, RequestGate } from './core';
 import type { ConsoleClient, LoadState, PageData, RecordData } from './core';
+import type { Manage } from './ManageDialog';
 import { BarChart, creditNumber, dayLabel, ModelBars } from './charts';
 import { Badge, DetailFields, Loading, UserSummary } from './views';
 
@@ -85,17 +86,26 @@ function Audits({ client, base, onFailure }: { client: ConsoleClient; base: stri
   if (state.kind !== 'ready') return <Loading state={state} onRetry={retry} />;
   const items = Array.isArray(state.data.items) ? state.data.items as RecordData[] : [];
   if (!items.length) return <div className="empty-state"><strong>后台还没有对这个用户做过操作</strong></div>;
-  const actions: Record<string, string> = { 'allowance.issue': '发放所有者额度' };
+  const actions: Record<string, string> = { 'allowance.issue': '发放所有者额度', 'plan.issue': '按套餐发放', 'user.status': '启用或停用账号', 'user.logout': '强制下线', 'user.note': '更新备注' };
   return <ul className="plain-list">{items.map(row => <li key={String(row.id)}><span>{formatDate(row.created_at)} · {actions[String(row.action)] ?? String(row.action)}</span><span className="muted">{String(row.reason ?? '')}</span></li>)}</ul>;
 }
 
-export function UserDetail({ client, data, onAllowance, onFailure }: { client: ConsoleClient; data: RecordData; onAllowance?: (wallet: RecordData) => void; onFailure: (error: unknown) => string }) {
+export function UserDetail({ client, data, permissions, onAllowance, onManage, onFailure }: { client: ConsoleClient; data: RecordData; permissions: string[]; onAllowance?: (wallet: RecordData) => void; onManage: (action: Manage) => void; onFailure: (error: unknown) => string }) {
   const [tab, setTab] = useState<Tab>('overview');
   const base = `/api/users/${encodeURIComponent(String(data.id))}`;
+  const manage = permissions.includes('users:manage'), note = (data.note ?? null) as RecordData | null;
+  const tags = Array.isArray(note?.tags) ? note.tags as string[] : [];
   return <div className="user-detail">
+    {manage && <div className="manage-bar">
+      {data.active === false ? <button className="button primary" onClick={() => onManage({ kind: 'enable', user: data })}>重新启用账号</button> : <button className="button danger" onClick={() => onManage({ kind: 'disable', user: data })}>停用账号</button>}
+      <button className="button" onClick={() => onManage({ kind: 'logout', user: data })}>强制下线</button>
+      <button className="button" onClick={() => onManage({ kind: 'note', user: data })}>{note ? '编辑备注' : '添加备注'}</button>
+    </div>}
+    {data.active === false && <p className="notice error">这个账号已停用，用户不能登录或使用模型。</p>}
+    {(note?.note || tags.length > 0) && <div className="note-card">{tags.length > 0 && <span className="tags">{tags.map(tag => <span key={tag} className="tag">{tag}</span>)}</span>}{typeof note?.note === 'string' && note.note && <p>{note.note}</p>}<small className="muted">备注只有后台能看到 · 更新于 {formatDate(note?.updated_at)}</small></div>}
     <div className="page-tabs" role="tablist" aria-label="用户详情">{TABS.map(([value, label]) => <button key={value} role="tab" aria-selected={tab === value} className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}</button>)}</div>
     <div role="tabpanel">
-      {tab === 'overview' && <><UserSummary data={data} onAllowance={onAllowance} /><Activity client={client} base={base} onFailure={onFailure} /></>}
+      {tab === 'overview' && <><UserSummary data={data} onAllowance={onAllowance} onPlan={permissions.includes('plans:issue') ? wallet => onManage({ kind: 'plan', user: data, wallet }) : undefined} /><Activity client={client} base={base} onFailure={onFailure} /></>}
       {tab === 'usage' && <Usage client={client} base={base} onFailure={onFailure} />}
       {tab === 'ledger' && <Ledger client={client} base={base} onFailure={onFailure} />}
       {tab === 'sessions' && <Sessions client={client} base={base} onFailure={onFailure} />}

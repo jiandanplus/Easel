@@ -46,6 +46,38 @@ ALLOWANCE_ERRORS = {
 }
 
 
+PLAN_ERRORS = {
+    **ALLOWANCE_ERRORS,
+    'EA405': (404, 'plan_not_found'),
+    'EA406': (403, 'console_internal_plan_protected'),
+    'EA407': (409, 'plan_above_console_limit'),
+    'EA409': (409, 'plan_grant_active'),
+}
+USER_ERRORS = {'EA403': (403, 'console_permission_denied'), 'EA404': (404, 'console_user_not_found')}
+
+
+async def guarded(conn, statement, params, errors):
+    """Call one Console SECURITY DEFINER function and map its own error codes."""
+    try:
+        async with conn.transaction():
+            row = await (await conn.execute(statement, params)).fetchone()
+    except psycopg.Error as error:
+        failure = errors.get(getattr(error, 'sqlstate', None))
+        if failure is None:
+            raise
+        raise PlatformError(*failure) from None
+    return row['result']
+
+
+def tags(values):
+    if (not isinstance(values, list) or len(values) > 10
+            or any(not isinstance(v, str) or not v.strip() or v != v.strip() or len(v) > 20
+                   or any(ord(c) < 32 or ord(c) == 127 or c == ',' for c in v) for v in values)
+            or len(set(values)) != len(values)):
+        raise PlatformError(422, 'invalid_console_command')
+    return values
+
+
 class ConsoleCatalog:
     def __init__(self, db, auth, *, provider_ids=()):
         self.db, self.auth = db, auth
@@ -115,16 +147,24 @@ class ConsoleCatalog:
                 state = await (await conn.execute('SELECT updated_at FROM execution_model_states WHERE model_id=%s', (target_id,))).fetchone()
                 result = {**result, 'id': target_id, 'updated_at': state['updated_at'].isoformat()}
             elif action == 'allowance.issue':
-                try:
-                    async with conn.transaction():
-                        row = await (await conn.execute('SELECT console_issue_owner_allowance(%s,%s,%s,%s) AS grant',
-                                                        (actor, target_id, key_hash, reason))).fetchone()
-                except psycopg.Error as error:
-                    failure = ALLOWANCE_ERRORS.get(getattr(error, 'sqlstate', None))
-                    if failure is None:
-                        raise
-                    raise PlatformError(*failure) from None
-                result = row['grant']
+                result = await guarded(conn, 'SELECT console_issue_owner_allowance(%s,%s,%s,%s) AS result',
+                                       (actor, target_id, key_hash, reason), ALLOWANCE_ERRORS)
+            elif action == 'plan.issue':
+                result = await guarded(conn, 'SELECT console_issue_plan(%s,%s,%s,%s,%s) AS result',
+                                       (actor, target_id, payload['plan_id'], key_hash, reason), PLAN_ERRORS)
+            elif action == 'user.status':
+                result = await guarded(conn, 'SELECT console_set_user_active(%s,%s,%s) AS result',
+                                       (actor, target_id, payload['active']), USER_ERRORS)
+            elif action == 'user.logout':
+                result = await guarded(conn, 'SELECT console_force_logout(%s,%s) AS result', (actor, target_id), USER_ERRORS)
+            elif action == 'user.note':
+                if not await (await conn.execute('SELECT 1 FROM users WHERE id=%s', (target_id,))).fetchone():
+                    raise PlatformError(404, 'console_user_not_found')
+                row = await (await conn.execute("""INSERT INTO console_user_notes(user_id,note,tags,updated_by)
+                    VALUES (%s,%s,%s,%s) ON CONFLICT (user_id) DO UPDATE SET note=EXCLUDED.note,tags=EXCLUDED.tags,
+                    updated_by=EXCLUDED.updated_by,updated_at=clock_timestamp() RETURNING note,tags,updated_at""",
+                    (target_id, payload['note'], payload['tags'], actor))).fetchone()
+                result = {'id': target_id, 'note': row['note'], 'tags': row['tags'], 'updated_at': row['updated_at'].isoformat()}
             else:
                 raise PlatformError(422, 'invalid_console_command')
             operation_id = uuid4().hex
@@ -154,6 +194,26 @@ class ConsoleCatalog:
         if not isinstance(definition, dict):
             raise PlatformError(422, 'invalid_console_command')
         return await self._command(principal, 'model.publish', 'model', definition.get('id'), definition, reason, key, ('execution:publish',))
+
+    async def issue_plan(self, principal, wallet, plan_id, reason, key):
+        if isinstance(reason, str) and len(reason) > 256:
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'plan.issue', 'wallet', wallet, {'plan_id': text(plan_id, 255)},
+                                   reason, key, ('plans:issue',))
+
+    async def set_user_active(self, principal, user, active, reason, key):
+        if type(active) is not bool:
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'user.status', 'user', user, {'active': active}, reason, key, ('users:manage',))
+
+    async def force_logout(self, principal, user, reason, key):
+        return await self._command(principal, 'user.logout', 'user', user, {}, reason, key, ('users:manage',))
+
+    async def set_user_note(self, principal, user, note, tag_list, reason, key):
+        if not isinstance(note, str) or len(note) > 500 or any(ord(c) < 32 and c not in '\n' or ord(c) == 127 for c in note):
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'user.note', 'user', user, {'note': note, 'tags': tags(tag_list)},
+                                   reason, key, ('users:manage',))
 
     async def issue_allowance(self, principal, wallet, reason, key):
         if isinstance(reason, str) and len(reason) > 256:

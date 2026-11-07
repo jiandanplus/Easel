@@ -15,3 +15,4 @@
 | [0009](0009-product-name-youchuang.md) | 产品对外名称改为优创，内部标识不变 |
 | [0010](0010-owner-allowance.md) | 付款关闭期间的所有者额度（迁移 022） |
 | [0011](0011-console-owner-allowance.md) | 后台显示用户名和邮箱，管理员可在网页发放固定所有者额度（迁移 023、024） |
+| [0012](0012-console-user-management.md) | 后台停用账号、强制下线、备注和标签、按套餐发放（迁移 025） |

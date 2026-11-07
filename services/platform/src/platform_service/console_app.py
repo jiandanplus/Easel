@@ -284,6 +284,30 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
         value, key = await command(request, {"reason"})
         return await catalog.issue_allowance(actor, item_id, value["reason"], key)
 
+    @app.post("/api/wallets/{item_id}/plans")
+    async def issue_plan(request: Request, item_id: str):
+        actor = await principal(request, "plans:issue", write=True)
+        value, key = await command(request, {"plan_id", "reason"})
+        return await catalog.issue_plan(actor, item_id, value["plan_id"], value["reason"], key)
+
+    @app.post("/api/users/{item_id}/status")
+    async def user_status(request: Request, item_id: str):
+        actor = await principal(request, "users:manage", write=True)
+        value, key = await command(request, {"active", "reason"})
+        return await catalog.set_user_active(actor, item_id, value["active"], value["reason"], key)
+
+    @app.post("/api/users/{item_id}/logout")
+    async def user_logout(request: Request, item_id: str):
+        actor = await principal(request, "users:manage", write=True)
+        value, key = await command(request, {"reason"})
+        return await catalog.force_logout(actor, item_id, value["reason"], key)
+
+    @app.post("/api/users/{item_id}/note")
+    async def user_note(request: Request, item_id: str):
+        actor = await principal(request, "users:manage", write=True)
+        value, key = await command(request, {"note", "tags", "reason"})
+        return await catalog.set_user_note(actor, item_id, value["note"], value["tags"], value["reason"], key)
+
     @app.post("/api/models/{item_id}/state")
     async def model_state(request: Request, item_id: str):
         actor = await principal(request, "execution:publish", write=True)

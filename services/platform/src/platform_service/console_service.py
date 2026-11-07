@@ -176,10 +176,12 @@ class ConsoleQueries:
             (SELECT count(*) """ + owned + """) AS calls,
             (SELECT max(r.created_at) """ + owned + """) AS last_used_at,
             (SELECT min(e.username) FROM external_identities e WHERE e.user_id=u.id) AS username,
-            (SELECT min(e.email) FROM external_identities e WHERE e.user_id=u.id) AS email
+            (SELECT min(e.email) FROM external_identities e WHERE e.user_id=u.id) AS email,
+            (SELECT n.tags FROM console_user_notes n WHERE n.user_id=u.id) AS tags
             FROM users u WHERE %s='' OR strpos(lower(u.id),lower(%s))>0 OR EXISTS(SELECT 1 FROM external_identities e
                 WHERE e.user_id=u.id AND (strpos(lower(coalesce(e.username,'')),lower(%s))>0 OR strpos(lower(coalesce(e.email,'')),lower(%s))>0))
-            ) x WHERE """ + USER_FILTERS[status] + " ORDER BY " + USER_SORTS[sort], (q,q,q,q),limit,offset,q)
+            OR EXISTS(SELECT 1 FROM console_user_notes n WHERE n.user_id=u.id AND (strpos(lower(n.note),lower(%s))>0 OR lower(%s)=ANY(SELECT lower(t) FROM unnest(n.tags) t)))
+            ) x WHERE """ + USER_FILTERS[status] + " ORDER BY " + USER_SORTS[sort], (q,q,q,q,q,q),limit,offset,q)
 
     @staticmethod
     async def _owned_wallets(conn, id):
@@ -262,6 +264,8 @@ class ConsoleQueries:
             if not row:
                 raise PlatformError(404,'console_user_not_found')
             result = projected(row)
+            note = await (await conn.execute('SELECT note,tags,updated_at FROM console_user_notes WHERE user_id=%s', (id,))).fetchone()
+            result['note'] = projected(note) if note else None
             result['identities'] = [projected(r) for r in await (await conn.execute('SELECT username,email,email_verified FROM external_identities WHERE user_id=%s ORDER BY username,email LIMIT 10',(id,))).fetchall()]
             result['tenants'] = [projected(r) for r in await (await conn.execute('SELECT tenant_id AS id,role,active FROM tenant_members WHERE user_id=%s ORDER BY tenant_id LIMIT 101',(id,))).fetchall()]
             result['wallets'] = [projected(r) for r in await (await conn.execute('SELECT b.id,b.tenant_id FROM billing_accounts b JOIN tenant_members m ON m.tenant_id=b.tenant_id WHERE m.user_id=%s ORDER BY b.id LIMIT 101',(id,))).fetchall()]

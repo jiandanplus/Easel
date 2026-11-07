@@ -69,7 +69,7 @@ async def test_signed_user_without_acl_only_requests_and_never_becomes_product_o
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('role,permissions',[('admin',{'console:read','plans:publish','billing:publish','execution:publish','execution:review','owner:allowance'}),('operator',{'console:read','plans:publish','billing:publish','execution:publish','execution:review'}),('viewer',{'console:read'})])
+@pytest.mark.parametrize('role,permissions',[('admin',{'console:read','plans:publish','billing:publish','execution:publish','execution:review','users:manage','owner:allowance','plans:issue'}),('operator',{'console:read','plans:publish','billing:publish','execution:publish','execution:review','users:manage'}),('viewer',{'console:read'})])
 async def test_session_has_current_role_csrf_and_only_cookie_hash_persisted(console,db,role,permissions):
     auth,_=console
     result,principal=await authenticated(console,role)
