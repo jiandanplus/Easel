@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { buildDefinition, ConsoleClient, ConsoleError, listPath, RequestGate, Submission, titles, validReason, writePermissions } from './core';
+import { buildDefinition, ConsoleClient, ConsoleError, csvText, formatCredits, listPath, RequestGate, Submission, titles, userFilters, userSorts, validReason, writePermissions } from './core';
 import type { AuthState, Catalog, Domain, Fields, LoadState, PageData, RecordData, Session } from './core';
 import { ReconciliationPage } from './ReconciliationPage';
 import { ReviewRegistry } from './reconciliation';
-import { AuthScreen, DataPage, DefinitionFields, DetailFields, initialFields, Loading, Mark, Modal, Overview, UserSummary } from './views';
+import { AuthScreen, DataPage, DefinitionFields, DetailFields, initialFields, Loading, Mark, Modal, Overview } from './views';
+import { StatsPage } from './StatsPage';
+import { UserDetail } from './UserDetail';
 import { AllowanceDialog } from './AllowanceDialog';
 
-type Page = Domain | 'overview' | 'reconciliation';
+type Page = Domain | 'overview' | 'reconciliation' | 'stats';
 type Mutation = { domain: Catalog; row?: RecordData };
-const mainPages: Page[] = ['overview', 'users', 'executions', 'models', 'audits'];
+const mainPages: Page[] = ['overview', 'stats', 'users', 'executions', 'models', 'audits'];
 const advancedPages: Page[] = ['reconciliation', 'wallets', 'orders', 'providers', 'products'];
 const catalogPages: Page[] = ['models', 'plans', 'offers'];
 const navLabel = (item: Page) => item === 'models' ? '模型与套餐' : titles[item];
-const navIcons: Partial<Record<Page, string>> = { overview: 'M3 10l7-6 7 6M5 9v7h10V9', users: 'M10 10a3 3 0 100-6 3 3 0 000 6zM4 17c0-3 3-5 6-5s6 2 6 5', executions: 'M4 16V10m6 6V5m6 11v-8', models: 'M10 3l7 4-7 4-7-4 7-4zM3 12l7 4 7-4', audits: 'M10 5v5l3 2M10 17a7 7 0 100-14 7 7 0 000 14z' };
+const navIcons: Partial<Record<Page, string>> = { overview: 'M3 10l7-6 7 6M5 9v7h10V9', stats: 'M3 17h14M6 14V9m4 5V5m4 9v-6', users: 'M10 10a3 3 0 100-6 3 3 0 000 6zM4 17c0-3 3-5 6-5s6 2 6 5', executions: 'M4 16V10m6 6V5m6 11v-8', models: 'M10 3l7 4-7 4-7-4 7-4zM3 12l7 4 7-4', audits: 'M10 5v5l3 2M10 17a7 7 0 100-14 7 7 0 000 14z' };
 export default function App() {
   const [client] = useState(() => new ConsoleClient());
   const [reviewRegistry] = useState(() => new ReviewRegistry());
@@ -23,6 +25,7 @@ export default function App() {
   const [detail, setDetail] = useState<LoadState<RecordData> | null>(null);
   const [mutation, setMutation] = useState<Mutation | null>(null);
   const [notice, setNotice] = useState(''), [logoutBusy, setLogoutBusy] = useState(false), [allowance, setAllowance] = useState<RecordData | null>(null);
+  const [userStatus, setUserStatus] = useState(''), [userSort, setUserSort] = useState('created'), [exporting, setExporting] = useState(false);
   const authGate = useRef(new RequestGate()), dataGate = useRef(new RequestGate()), detailGate = useRef(new RequestGate());
   const fail = useCallback((error: unknown) => {
     if (error instanceof ConsoleError && [401, 403].includes(error.status)) {
@@ -43,15 +46,15 @@ export default function App() {
   }, [client, fail]);
   useEffect(() => { void checkSession(); return () => { authGate.current.cancel(); dataGate.current.cancel(); detailGate.current.cancel(); }; }, [checkSession]);
   useEffect(() => {
-    if (auth.kind !== 'authenticated' || page === 'reconciliation') { dataGate.current.cancel(); return; }
+    if (auth.kind !== 'authenticated' || page === 'reconciliation' || page === 'stats') { dataGate.current.cancel(); return; }
     const request = dataGate.current.begin(); setData({ kind: 'loading' });
-    void client.read<PageData | RecordData>(page === 'overview' ? '/api/overview' : listPath(page, query, offset), request.signal).then(value => {
+    void client.read<PageData | RecordData>(page === 'overview' ? '/api/overview' : listPath(page, query, offset, { status: userStatus, sort: userSort }), request.signal).then(value => {
       if (!request.current()) return;
       if (!value || typeof value !== 'object' || (page !== 'overview' && (!Array.isArray(value.items) || typeof value.has_more !== 'boolean'))) throw new ConsoleError(502, 'invalid_response');
       setData({ kind: 'ready', data: value });
     }).catch(error => { if (request.current()) setData({ kind: 'error', message: fail(error) }); });
     return () => dataGate.current.cancel();
-  }, [auth, page, query, offset, revision, client, fail]);
+  }, [auth, page, query, offset, revision, client, fail, userStatus, userSort]);
   const inspect = async (row: RecordData) => {
     const request = detailGate.current.begin();
     if (!['users', 'wallets', 'orders'].includes(page)) { setDetail({ kind: 'ready', data: row }); return; }
@@ -66,7 +69,28 @@ export default function App() {
     catch (error) { if (request.current()) setDetail({ kind: 'error', message: fail(error) }); }
   };
   const closeDetail = () => { detailGate.current.cancel(); setDetail(null); };
-  const navigate = (next: Page) => { dataGate.current.cancel(); setData({ kind: 'loading' }); closeDetail(); setPage(next); setQuery(''); setOffset(0); setNotice(''); setRevision(x => x + 1); };
+  const navigate = (next: Page) => { dataGate.current.cancel(); setData({ kind: 'loading' }); closeDetail(); setPage(next); setQuery(''); setOffset(0); setNotice(''); setUserStatus(''); setUserSort('created'); setRevision(x => x + 1); };
+  const exportUsers = async () => {
+    if (exporting) return; setExporting(true);
+    try {
+      const rows: RecordData[] = [];
+      for (let start = 0; start < 2000; start += 100) {
+        const page = await client.read<PageData>(listPath('users', query, start, { status: userStatus, sort: userSort, limit: 100 }));
+        rows.push(...page.items); if (!page.has_more) break;
+      }
+      const header: [string, string][] = [['id', '用户编号'], ['username', '用户名'], ['email', '邮箱'], ['spendable_available', '余额（点）'], ['spent', '已用（点）'], ['calls', '调用次数'], ['last_used_at', '最近使用'], ['expires_at', '额度到期'], ['active', '账号可用'], ['created_at', '注册时间']];
+      const readable = rows.map(row => ({ ...row, spendable_available: formatCredits(row.spendable_available), spent: formatCredits(row.spent), active: row.active === false ? '否' : '是' }));
+      const url = URL.createObjectURL(new Blob([csvText(readable, header)], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a'); link.href = url; link.download = `优创用户-${new Date().toISOString().slice(0, 10)}.csv`; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setNotice(`已导出 ${rows.length} 个用户${rows.length >= 2000 ? '（只导出前 2000 个，请缩小筛选范围）' : ''}。`);
+    } catch (error) { setNotice(fail(error)); }
+    finally { setExporting(false); }
+  };
+  const userToolbar = <div className="filter-group">
+    <label><span className="sr-only">筛选</span><select value={userStatus} onChange={e => { setUserStatus(e.target.value); setOffset(0); }}>{userFilters.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+    <label><span className="sr-only">排序</span><select value={userSort} onChange={e => { setUserSort(e.target.value); setOffset(0); }}>{userSorts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+    <button className="button" disabled={exporting} onClick={() => void exportUsers()}>{exporting ? '导出中…' : '导出表格'}</button></div>;
   const openWallet = async (id: string) => {
     navigate('wallets'); setQuery(id);
     const request = detailGate.current.begin(); setDetail({ kind: 'loading' });
@@ -81,7 +105,7 @@ export default function App() {
   };
   if (auth.kind !== 'authenticated') return <AuthScreen state={auth} onRetry={() => void checkSession()} />;
   const navButton = (item: Page) => { const active = page === item || (item === 'models' && catalogPages.includes(page)); return <button key={item} className={`nav-link ${active ? 'active' : ''}`} aria-current={active ? 'page' : undefined} onClick={() => navigate(item)}><svg viewBox="0 0 20 20" aria-hidden="true"><path d={navIcons[item] ?? 'M5 7h10M5 10h10M5 13h6'} /></svg>{navLabel(item)}</button>; };
-  return <div className="console-shell"><a className="skip-link" href="#main">跳到主内容</a><aside className="sidebar"><a className="brand" href="/"><Mark /><span>优创 <small>后台</small></span></a><nav aria-label="运营导航"><section className="nav-group">{mainPages.map(navButton)}</section><details className="nav-advanced" open={advancedPages.includes(page)}><summary>高级</summary>{advancedPages.map(navButton)}</details></nav><div className="sidebar-bottom"><span className="avatar">{auth.session.admin.role === 'viewer' ? '阅' : '管'}</span><div><strong>{auth.session.admin.role === 'admin' ? '管理员' : auth.session.admin.role === 'operator' ? '运营者' : '只读查看者'}</strong></div><button className="text-button" disabled={logoutBusy} onClick={() => void logout()}>{logoutBusy ? '退出中' : '退出'}</button></div></aside><div className="workspace"><header className="topbar"><strong>{titles[page]}</strong><span className="secure-session"><span className="status-dot" />已登录</span></header><main id="main" className="main" tabIndex={-1}>{notice && <div className="notice" role="status">{notice}</div>}{page === 'reconciliation' ? <ReconciliationPage client={client} session={auth.session} registry={reviewRegistry} onFailure={fail} onWallet={id => void openWallet(id)} /> : page === 'overview' ? <Overview state={data as LoadState<RecordData>} onRetry={() => setRevision(x => x + 1)} onNavigate={navigate} /> : <>{catalogPages.includes(page) && <div className="page-tabs" role="group" aria-label="模型与套餐">{catalogPages.map(item => <button key={item} className={page === item ? 'active' : ''} aria-pressed={page === item} onClick={() => navigate(item)}>{titles[item]}</button>)}</div>}<DataPage domain={page} state={data as LoadState<PageData>} permissions={auth.session.admin.permissions} query={query} offset={offset} onSearch={q => { setQuery(q); setOffset(0); }} onPage={setOffset} onInspect={row => void inspect(row)} onPublish={() => setMutation({ domain: page as Catalog })} onAction={row => setMutation({ domain: page as Catalog, row })} onRetry={() => setRevision(x => x + 1)} /></>}<footer className="page-footer"><span>优创后台</span><span>所有改动都会留下操作记录</span></footer></main></div>{detail && <Modal title={page === 'users' ? '用户详情' : `${titles[page]}详情`} onClose={closeDetail} wide>{detail.kind === 'ready' ? <div className="dialog-content">{page === 'users' ? <><UserSummary data={detail.data} onAllowance={auth.session.admin.permissions.includes('owner:allowance') ? wallet => setAllowance(wallet) : undefined} /><details className="raw-details"><summary>全部字段</summary><DetailFields data={detail.data} /></details></> : <DetailFields data={detail.data} />}<Truncation data={detail.data} /></div> : <Loading state={detail} />}</Modal>}{mutation && <PublishDialog client={client} mutation={mutation} onClose={() => setMutation(null)} onFailure={fail} onDone={() => { setMutation(null); setRevision(x => x + 1); setNotice('操作已确认，目录与审计记录已更新。'); }} />}{allowance && <AllowanceDialog client={client} wallet={allowance} onClose={() => setAllowance(null)} onFailure={fail} onDone={() => { setAllowance(null); closeDetail(); setRevision(x => x + 1); setNotice('已发放所有者额度：100 点，365 天。操作已记入审计。'); }} />}</div>;
+  return <div className="console-shell"><a className="skip-link" href="#main">跳到主内容</a><aside className="sidebar"><a className="brand" href="/"><Mark /><span>优创 <small>后台</small></span></a><nav aria-label="运营导航"><section className="nav-group">{mainPages.map(navButton)}</section><details className="nav-advanced" open={advancedPages.includes(page)}><summary>高级</summary>{advancedPages.map(navButton)}</details></nav><div className="sidebar-bottom"><span className="avatar">{auth.session.admin.role === 'viewer' ? '阅' : '管'}</span><div><strong>{auth.session.admin.role === 'admin' ? '管理员' : auth.session.admin.role === 'operator' ? '运营者' : '只读查看者'}</strong></div><button className="text-button" disabled={logoutBusy} onClick={() => void logout()}>{logoutBusy ? '退出中' : '退出'}</button></div></aside><div className="workspace"><header className="topbar"><strong>{titles[page]}</strong><span className="secure-session"><span className="status-dot" />已登录</span></header><main id="main" className="main" tabIndex={-1}>{notice && <div className="notice" role="status">{notice}</div>}{page === 'stats' ? <StatsPage client={client} onFailure={fail} /> : page === 'reconciliation' ? <ReconciliationPage client={client} session={auth.session} registry={reviewRegistry} onFailure={fail} onWallet={id => void openWallet(id)} /> : page === 'overview' ? <Overview state={data as LoadState<RecordData>} onRetry={() => setRevision(x => x + 1)} onNavigate={navigate} /> : <>{catalogPages.includes(page) && <div className="page-tabs" role="group" aria-label="模型与套餐">{catalogPages.map(item => <button key={item} className={page === item ? 'active' : ''} aria-pressed={page === item} onClick={() => navigate(item)}>{titles[item]}</button>)}</div>}<DataPage toolbar={page === 'users' ? userToolbar : undefined} domain={page} state={data as LoadState<PageData>} permissions={auth.session.admin.permissions} query={query} offset={offset} onSearch={q => { setQuery(q); setOffset(0); }} onPage={setOffset} onInspect={row => void inspect(row)} onPublish={() => setMutation({ domain: page as Catalog })} onAction={row => setMutation({ domain: page as Catalog, row })} onRetry={() => setRevision(x => x + 1)} /></>}<footer className="page-footer"><span>优创后台</span><span>所有改动都会留下操作记录</span></footer></main></div>{detail && <Modal title={page === 'users' ? '用户详情' : `${titles[page]}详情`} onClose={closeDetail} wide>{detail.kind === 'ready' ? <div className="dialog-content">{page === 'users' ? <UserDetail client={client} data={detail.data} onFailure={fail} onAllowance={auth.session.admin.permissions.includes('owner:allowance') ? wallet => setAllowance(wallet) : undefined} /> : <DetailFields data={detail.data} />}<Truncation data={detail.data} /></div> : <Loading state={detail} />}</Modal>}{mutation && <PublishDialog client={client} mutation={mutation} onClose={() => setMutation(null)} onFailure={fail} onDone={() => { setMutation(null); setRevision(x => x + 1); setNotice('操作已确认，目录与审计记录已更新。'); }} />}{allowance && <AllowanceDialog client={client} wallet={allowance} onClose={() => setAllowance(null)} onFailure={fail} onDone={() => { setAllowance(null); closeDetail(); setRevision(x => x + 1); setNotice('已发放所有者额度：100 点，365 天。操作已记入审计。'); }} />}</div>;
 }
 function Truncation({ data }: { data: RecordData }) {
   const more = data.has_more;

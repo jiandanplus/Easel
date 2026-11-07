@@ -76,3 +76,15 @@ test('logout sends CSRF and clears session only after confirmation',async()=>{
   client.setSession({admin:{id:'a',role:'viewer',permissions:['console:read']},csrf_token:'memory-only'});
   await client.logout();assert.equal(requests[0].url,'/auth/logout');assert.equal(requests[0].init.method,'POST');assert.equal(requests[0].init.headers.get('X-Console-CSRF'),'memory-only');assert.equal(client.session,null);
 });
+test('user list paths carry only known filters and CSV export neutralizes formulas',()=>{
+  assert.equal(c.listPath('users','',0,{status:'funded',sort:'spent'}),'/api/users?limit=25&offset=0&status=funded&sort=spent');
+  assert.equal(c.listPath('users','',0,{status:'evil',sort:'nope'}),'/api/users?limit=25&offset=0');
+  assert.equal(c.listPath('models','',0,{status:'funded'}),'/api/models?limit=25&offset=0');
+  assert.throws(()=>c.listPath('users','',0,{limit:500}));
+  const csv=c.csvText([{a:'=1+1',b:'x,"y"'}],[['a','甲'],['b','乙']]);
+  assert.ok(csv.startsWith('﻿甲,乙\r\n'));assert.ok(csv.includes(`"'=1+1"`));assert.ok(csv.includes('"x,""y"""'));
+});
+test('summary credits round to two decimals without floating point',()=>{
+  assert.equal(c.roundCredits('355786226'),'355.79');assert.equal(c.roundCredits('100000000'),'100');assert.equal(c.roundCredits('1234567890000'),'1,234,567.89');
+  assert.equal(c.roundCredits('-1500000'),'-1.5');assert.equal(c.roundCredits('0'),'0');assert.equal(c.roundCredits(null),'未知');
+});

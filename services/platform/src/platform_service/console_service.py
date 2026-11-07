@@ -11,6 +11,39 @@ MONEY = {'issued','available','held','spent','expired','refunded','amount','actu
 SNAPSHOT_NOTE = '只读余额快照；账面剩余包含尚未过账的过期额度。冻结与未过账过期可能重叠，不可相加。'
 
 
+USER_FILTERS = {
+    '': 'true',
+    'funded': 'x.spendable_available>0',
+    'empty': 'x.spendable_available=0',
+    'expiring': "x.expires_at>transaction_timestamp() AND x.expires_at<=transaction_timestamp()+interval '7 days'",
+    'disabled': 'NOT x.active',
+}
+USER_SORTS = {
+    'created': 'x.created_at DESC,x.id DESC',
+    'balance': 'x.spendable_available DESC,x.id DESC',
+    'spent': 'x.spent DESC,x.id DESC',
+    'last_used': 'x.last_used_at DESC NULLS LAST,x.id DESC',
+}
+USAGE_STATUSES = {'', 'settled', 'released', 'reserved', 'dispatched', 'pending_reconciliation'}
+STAT_DAYS = {7, 30, 90}
+# Calendar days in China time; live points only, so test funding never inflates usage.
+DAILY_SQL = """SELECT d.day::date AS day,
+    (SELECT count(*) FROM users u WHERE (u.created_at AT TIME ZONE 'Asia/Shanghai')::date=d.day::date) AS new_users,
+    count(r.id) AS calls,
+    count(DISTINCT r.billing_account_id) AS active_wallets,
+    coalesce(sum(r.actual) FILTER(WHERE r.status='settled'),0) AS spent
+    FROM generate_series((transaction_timestamp() AT TIME ZONE 'Asia/Shanghai')::date-(%s-1),
+        (transaction_timestamp() AT TIME ZONE 'Asia/Shanghai')::date, interval '1 day') AS d(day)
+    LEFT JOIN credit_reservations r ON (r.created_at AT TIME ZONE 'Asia/Shanghai')::date=d.day::date
+        AND r.funding_mode='live' AND r.created_at>=transaction_timestamp()-make_interval(days=>%s+1) AND {where}
+    GROUP BY d.day ORDER BY d.day"""
+MODEL_SQL = """SELECT coalesce(ej.model,mj.model,r.operation) AS model,count(*) AS calls,
+    coalesce(sum(r.actual) FILTER(WHERE r.status='settled'),0) AS spent
+    FROM credit_reservations r LEFT JOIN execution_jobs ej ON ej.reservation_id=r.id LEFT JOIN media_jobs mj ON mj.reservation_id=r.id
+    WHERE r.created_at>=transaction_timestamp()-make_interval(days=>%s) AND {where} r.funding_mode='live'
+    GROUP BY 1 ORDER BY spent DESC,calls DESC,model LIMIT 10"""
+
+
 def provider_registry(values):
     """Only public server-supplied IDs/mappings; never endpoint or credentials."""
     result = {}
@@ -126,8 +159,12 @@ class ConsoleQueries:
             result['snapshot_note'] = SNAPSHOT_NOTE
             return result
 
-    async def users(self, principal, limit=25, offset=0, q=''):
-        return await self._list(principal, """SELECT u.id,u.active,u.created_at,
+    async def users(self, principal, limit=25, offset=0, q='', status='', sort='created'):
+        if status not in USER_FILTERS or sort not in USER_SORTS:
+            raise PlatformError(422, 'console_query_invalid')
+        owned = """FROM credit_reservations r JOIN billing_accounts b ON b.id=r.billing_account_id
+                JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id AND r.funding_mode='live'"""
+        return await self._list(principal, """SELECT * FROM (SELECT u.id,u.active,u.created_at,
             (SELECT count(*) FROM tenants t WHERE t.owner_user_id=u.id) AS tenant_count,
             (SELECT count(*) FROM billing_accounts b JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id) AS wallet_count,
             (SELECT coalesce(sum(l.available) FILTER(WHERE NOT l.frozen AND l.expires_at>transaction_timestamp()),0)
@@ -135,11 +172,88 @@ class ConsoleQueries:
                 WHERE t.owner_user_id=u.id AND NOT l.test_only) AS spendable_available,
             (SELECT max(m.expires_at) FROM memberships m JOIN billing_accounts b ON b.id=m.billing_account_id
                 JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id) AS expires_at,
+            (SELECT coalesce(sum(r.actual) FILTER(WHERE r.status='settled'),0) """ + owned + """) AS spent,
+            (SELECT count(*) """ + owned + """) AS calls,
+            (SELECT max(r.created_at) """ + owned + """) AS last_used_at,
             (SELECT min(e.username) FROM external_identities e WHERE e.user_id=u.id) AS username,
             (SELECT min(e.email) FROM external_identities e WHERE e.user_id=u.id) AS email
             FROM users u WHERE %s='' OR strpos(lower(u.id),lower(%s))>0 OR EXISTS(SELECT 1 FROM external_identities e
                 WHERE e.user_id=u.id AND (strpos(lower(coalesce(e.username,'')),lower(%s))>0 OR strpos(lower(coalesce(e.email,'')),lower(%s))>0))
-            ORDER BY u.created_at DESC,u.id DESC""", (q,q,q,q),limit,offset,q)
+            ) x WHERE """ + USER_FILTERS[status] + " ORDER BY " + USER_SORTS[sort], (q,q,q,q),limit,offset,q)
+
+    @staticmethod
+    async def _owned_wallets(conn, id):
+        identifier(id)
+        if not await (await conn.execute('SELECT 1 FROM users WHERE id=%s', (id,))).fetchone():
+            raise PlatformError(404, 'console_user_not_found')
+        rows = await (await conn.execute('SELECT b.id FROM billing_accounts b JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=%s ORDER BY b.id', (id,))).fetchall()
+        return [row['id'] for row in rows]
+
+    async def user_activity(self, principal, id, days=30):
+        if days not in STAT_DAYS:
+            raise PlatformError(422, 'console_query_invalid')
+        async with self._snapshot(principal) as conn:
+            wallets = await self._owned_wallets(conn, id)
+            daily = await (await conn.execute(DAILY_SQL.format(where="r.billing_account_id=ANY(%s)"), (days, days, wallets))).fetchall()
+            models = await (await conn.execute(MODEL_SQL.format(where="r.billing_account_id=ANY(%s) AND"), (days, wallets))).fetchall()
+            return {'days': days, 'daily': [projected(r) for r in daily], 'models': [projected(r) for r in models]}
+
+    async def user_usage(self, principal, id, limit=25, offset=0, model='', status=''):
+        page_args(limit, offset, model)
+        if status not in USAGE_STATUSES:
+            raise PlatformError(422, 'console_query_invalid')
+        async with self._snapshot(principal) as conn:
+            wallets = await self._owned_wallets(conn, id)
+            rows = await (await conn.execute("""SELECT r.id,r.created_at,r.operation,r.product_id,r.status,r.amount,r.actual,r.funding_mode,
+                coalesce(ej.model,mj.model) AS model
+                FROM credit_reservations r LEFT JOIN execution_jobs ej ON ej.reservation_id=r.id LEFT JOIN media_jobs mj ON mj.reservation_id=r.id
+                WHERE r.billing_account_id=ANY(%s) AND (%s='' OR coalesce(ej.model,mj.model,'')=%s) AND (%s='' OR r.status=%s)
+                ORDER BY r.created_at DESC,r.id DESC LIMIT %s OFFSET %s""", (wallets, model, model, status, status, limit + 1, offset))).fetchall()
+            return {'items': [projected(r) for r in rows[:limit]], 'limit': limit, 'offset': offset, 'has_more': len(rows) > limit}
+
+    async def user_ledger(self, principal, id, limit=25, offset=0):
+        page_args(limit, offset, '')
+        async with self._snapshot(principal) as conn:
+            wallets = await self._owned_wallets(conn, id)
+            rows = await (await conn.execute("""SELECT j.id,j.kind,j.created_at,j.billing_account_id,
+                (SELECT m.plan_id FROM memberships m WHERE j.kind='issue' AND m.id=j.source) AS plan_id,
+                coalesce(sum(e.delta) FILTER(WHERE e.bucket='available'),0) AS available,
+                coalesce(sum(e.delta) FILTER(WHERE e.bucket='held'),0) AS held,
+                coalesce(sum(e.delta) FILTER(WHERE e.bucket='spent'),0) AS spent,
+                coalesce(sum(e.delta) FILTER(WHERE e.bucket='expired'),0) AS expired
+                FROM credit_journals j JOIN credit_entries e ON e.journal_id=j.id
+                WHERE j.billing_account_id=ANY(%s) GROUP BY j.id ORDER BY j.created_at DESC,j.id DESC LIMIT %s OFFSET %s""",
+                (wallets, limit + 1, offset))).fetchall()
+            return {'items': [projected(r) for r in rows[:limit]], 'limit': limit, 'offset': offset, 'has_more': len(rows) > limit}
+
+    async def user_sessions(self, principal, id):
+        async with self._snapshot(principal) as conn:
+            await self._owned_wallets(conn, id)
+            rows = await (await conn.execute("""SELECT product_id,created_at,expires_at,revoked_at,
+                revoked_at IS NULL AND expires_at>transaction_timestamp() AS active
+                FROM identity_sessions WHERE user_id=%s ORDER BY created_at DESC LIMIT 51""", (id,))).fetchall()
+            return {'items': [projected(r) for r in rows[:50]], 'has_more': len(rows) > 50}
+
+    async def user_audits(self, principal, id):
+        async with self._snapshot(principal) as conn:
+            wallets = await self._owned_wallets(conn, id)
+            rows = await (await conn.execute(self._audit_sql() + " WHERE a.target_id=ANY(%s) ORDER BY a.created_at DESC,a.id DESC LIMIT 51",
+                                             ([id, *wallets],))).fetchall()
+            return {'items': [self._audit(r) for r in rows[:50]], 'has_more': len(rows) > 50}
+
+    async def stats(self, principal, days=30):
+        if days not in STAT_DAYS:
+            raise PlatformError(422, 'console_query_invalid')
+        async with self._snapshot(principal) as conn:
+            daily = await (await conn.execute(DAILY_SQL.format(where="true"), (days, days))).fetchall()
+            models = await (await conn.execute(MODEL_SQL.format(where=""), (days,))).fetchall()
+            totals = await (await conn.execute("""SELECT
+                (SELECT count(*) FROM users) AS users,
+                (SELECT count(*) FROM users WHERE created_at>=transaction_timestamp()-make_interval(days=>%s)) AS new_users,
+                (SELECT count(DISTINCT billing_account_id) FROM credit_reservations WHERE funding_mode='live'
+                    AND created_at>=transaction_timestamp()-make_interval(days=>%s)) AS active_wallets""", (days, days))).fetchone()
+            return {'days': days, 'totals': projected(totals), 'daily': [projected(r) for r in daily],
+                    'models': [projected(r) for r in models], 'as_of': (await (await conn.execute('SELECT transaction_timestamp() AS now')).fetchone())['now'].isoformat()}
 
     async def user(self, principal, id):
         identifier(id)
@@ -290,10 +404,14 @@ class ConsoleQueries:
         result['result_summary']={key:row['result_'+key] for key in ('enabled','name','version') if row['result_'+key] is not None}
         return result
 
-    async def audits(self, principal, limit=25, offset=0, q=''):
-        return await self._list(principal,"""SELECT a.id,a.operation_id,a.actor_id,a.action,a.target_type,a.target_id,a.reason,a.key_hash,a.request_hash,a.created_at,
+    @staticmethod
+    def _audit_sql():
+        return """SELECT a.id,a.operation_id,a.actor_id,a.action,a.target_type,a.target_id,a.reason,a.key_hash,a.request_hash,a.created_at,
             CASE WHEN jsonb_typeof(o.result->'enabled')='boolean' THEN (o.result->>'enabled')::boolean END AS result_enabled,
             CASE WHEN jsonb_typeof(o.result->'name')='string' THEN o.result->>'name' END AS result_name,
             CASE WHEN jsonb_typeof(o.result->'version')='string' THEN o.result->>'version' END AS result_version
-            FROM console_audit_events a JOIN console_operations o ON o.id=a.operation_id
+            FROM console_audit_events a JOIN console_operations o ON o.id=a.operation_id"""
+
+    async def audits(self, principal, limit=25, offset=0, q=''):
+        return await self._list(principal, self._audit_sql() + """
             WHERE %s='' OR strpos(lower(a.actor_id||' '||a.action||' '||a.target_id),lower(%s))>0 ORDER BY a.created_at DESC,a.id DESC""",(q,q),limit,offset,q,self._audit)

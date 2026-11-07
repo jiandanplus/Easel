@@ -234,3 +234,40 @@ async def test_audit_projection_includes_safe_model_after_state(db):
     assert rows[1]['result_summary']['name']=='Fixture text'
     assert 'result' not in rows[0] and 'limits' not in rows[1]['result_summary']
 
+
+
+@pytest.mark.asyncio
+async def test_user_pages_show_usage_ledger_sessions_and_live_only_stats(db):
+    from test_execution_core import setup, admit
+    service_, _, _, context = await setup(db)
+    await admit(service_, context)
+    api = service(db)
+    users = (await api.users(PRINCIPAL, sort='last_used'))['items']
+    owner = next(row for row in users if row['id'] == 'u')
+    assert owner['calls'] == 0 and owner['spent'] == '0'  # test funding is not live usage
+    assert [r['id'] for r in (await api.users(PRINCIPAL, status='funded'))['items']] == []
+    assert 'u' in [r['id'] for r in (await api.users(PRINCIPAL, status='empty'))['items']]
+    assert (await api.users(PRINCIPAL, status='disabled'))['items'] == []
+    for bad in ({'status': 'nope'}, {'sort': 'id; DROP TABLE users'}):
+        with pytest.raises(PlatformError) as error:
+            await api.users(PRINCIPAL, **bad)
+        assert error.value.status == 422
+    usage = await api.user_usage(PRINCIPAL, 'u')
+    assert [(r['model'], r['operation'], r['funding_mode']) for r in usage['items']] == [('fixture-text', 'execution', 'test')]
+    assert (await api.user_usage(PRINCIPAL, 'u', model='other'))['items'] == []
+    ledger = (await api.user_ledger(PRINCIPAL, 'u'))['items']
+    assert ledger and {r['kind'] for r in ledger} <= {'issue', 'reserve', 'settle', 'release', 'expire'}
+    issue = next(r for r in ledger if r['kind'] == 'issue')
+    assert issue['plan_id'] and int(issue['available']) > 0
+    sessions = (await api.user_sessions(PRINCIPAL, 'u'))['items']
+    assert [(s['product_id'], s['active']) for s in sessions] == [('easel', True)]
+    assert 'subject' not in json.dumps(sessions)
+    assert (await api.user_audits(PRINCIPAL, 'u'))['items'] == []
+    activity = await api.user_activity(PRINCIPAL, 'u', 7)
+    assert len(activity['daily']) == 7 and all(day['calls'] == 0 for day in activity['daily'])
+    stats = await api.stats(PRINCIPAL, 30)
+    assert len(stats['daily']) == 30 and stats['totals']['users'] >= 1
+    assert sum(day['new_users'] for day in stats['daily']) >= 1 and stats['models'] == []
+    for call in (lambda: api.stats(PRINCIPAL, 5), lambda: api.user_activity(PRINCIPAL, 'u', 365), lambda: api.user_usage(PRINCIPAL, 'missing')):
+        with pytest.raises(PlatformError):
+            await call()

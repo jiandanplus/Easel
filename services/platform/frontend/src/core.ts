@@ -6,7 +6,7 @@ export type AuthState = { kind: 'loading' | 'anonymous' } | { kind: 'pending'; r
 export const domains = ['users', 'products', 'plans', 'wallets', 'orders', 'offers', 'models', 'providers', 'executions', 'audits'] as const;
 export type Domain = typeof domains[number];
 export type Catalog = 'plans' | 'offers' | 'models';
-export const titles: Record<Domain | 'overview' | 'reconciliation', string> = { overview: '今天', reconciliation: '结果不明的任务', users: '用户', products: '产品', plans: '套餐', wallets: '钱包明细', orders: '订单与支付', offers: '售卖价格', models: '模型', providers: '供应商', executions: '用量与费用', audits: '操作记录' };
+export const titles: Record<Domain | 'overview' | 'reconciliation' | 'stats', string> = { overview: '今天', stats: '数据统计', reconciliation: '结果不明的任务', users: '用户', products: '产品', plans: '套餐', wallets: '钱包明细', orders: '订单与支付', offers: '售卖价格', models: '模型', providers: '供应商', executions: '用量与费用', audits: '操作记录' };
 export const writePermissions: Record<Catalog, string> = { plans: 'plans:publish', offers: 'billing:publish', models: 'execution:publish' };
 
 export function formatCredits(value: unknown): string {
@@ -15,6 +15,12 @@ export function formatCredits(value: unknown): string {
   const n = BigInt(value), a = n < 0n ? -n : n;
   const fraction = (a % 1000000n).toString().padStart(6, '0').replace(/0+$/, '');
   return `${n < 0n ? '-' : ''}${a / 1000000n}${fraction ? '.' + fraction : ''}`;
+}
+// Two decimals for summaries; exact values stay in tables and the ledger.
+export function roundCredits(value: unknown): string {
+  if (typeof value !== 'string' || !/^-?\d+$/.test(value)) return formatCredits(value);
+  const n = BigInt(value), sign = n < 0n ? '-' : '', a = (n < 0n ? -n : n) + 5000n, whole = a / 1000000n, cents = (a % 1000000n) / 10000n;
+  return `${sign}${whole.toLocaleString('en-US')}${cents ? '.' + cents.toString().padStart(2, '0').replace(/0$/, '') : ''}`;
 }
 export function decimalUnits(value: string, precision: number): string {
   if (!new RegExp(`^\\d+(?:\\.\\d{1,${precision}})?$`).test(value)) throw new Error(`请输入最多 ${precision} 位小数的非负金额`);
@@ -35,6 +41,11 @@ export function formatDate(value: unknown): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '数据无效' : date.toLocaleString('zh-CN', { hour12: false });
 }
+export function formatDay(value: unknown): string {
+  if (typeof value !== 'string') return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '数据无效' : date.toLocaleDateString('zh-CN');
+}
 export class ConsoleError extends Error {
   constructor(public status: number, public code: string) {
     super(status === 401 ? '登录已失效，请重新登录' : status === 403 ? '当前账号没有此操作权限，请联系运营者' : status === 409 ? '版本或幂等操作冲突。请核对原操作结果，再刷新数据' : status === 422 ? '提交内容未通过校验，请检查字段与版本' : status === 0 ? '连接中断，操作结果未知。请使用同一操作重试' : '服务暂不可用，请稍后重试');
@@ -50,7 +61,7 @@ export class ConsoleClient {
   }
   get sessionRevision() { return this.epoch; }
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    if (!/^\/api\/(?:session|overview|users|products|plans|wallets|orders|offers|models|providers|executions|audits|reconciliation-cases)(?:[/?]|$)/.test(path) && path !== '/auth/logout') throw new ConsoleError(400, 'invalid_path');
+    if (!/^\/api\/(?:session|overview|stats|users|products|plans|wallets|orders|offers|models|providers|executions|audits|reconciliation-cases)(?:[/?]|$)/.test(path) && path !== '/auth/logout') throw new ConsoleError(400, 'invalid_path');
     const epoch = this.epoch;
     let response: Response;
     try { response = await this.fetcher(path, { ...init, headers: new Headers(init.headers), credentials: 'same-origin', cache: 'no-store', redirect: 'error' }); }
@@ -121,11 +132,23 @@ export class Submission {
     finally { this.busy = false; }
   }
 }
-export function listPath(domain: Domain, query: string, offset: number): string {
-  if (!(domains as readonly string[]).includes(domain) || query.length > 128 || !Number.isInteger(offset) || offset < 0 || offset > 100000) throw new Error('筛选条件无效');
-  const params = new URLSearchParams({ limit: '25', offset: String(offset) });
+export const userFilters: [string, string][] = [['', '全部用户'], ['funded', '有余额'], ['empty', '没有余额'], ['expiring', '7 天内到期'], ['disabled', '已停用']];
+export const userSorts: [string, string][] = [['created', '最新注册'], ['last_used', '最近使用'], ['balance', '余额最多'], ['spent', '用得最多']];
+export type ListOptions = { status?: string; sort?: string; limit?: number };
+export function listPath(domain: Domain, query: string, offset: number, options: ListOptions = {}): string {
+  const limit = options.limit ?? 25;
+  if (!(domains as readonly string[]).includes(domain) || query.length > 128 || !Number.isInteger(offset) || offset < 0 || offset > 100000 || !Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error('筛选条件无效');
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
   if (query.trim()) params.set('q', query.trim());
+  if (domain === 'users') {
+    if (options.status && userFilters.some(([value]) => value === options.status)) params.set('status', options.status);
+    if (options.sort && options.sort !== 'created' && userSorts.some(([value]) => value === options.sort)) params.set('sort', options.sort);
+  }
   return `/api/${domain}?${params}`;
+}
+export function csvText(rows: RecordData[], columns: [string, string][]): string {
+  const cell = (value: unknown) => { const text = value == null ? '' : String(value); return /[",\n\r]/.test(text) || /^[=+\-@]/.test(text) ? `"${(/^[=+\-@]/.test(text) ? "'" : '') + text.replace(/"/g, '""')}"` : text; };
+  return '\ufeff' + [columns.map(([, label]) => cell(label)).join(','), ...rows.map(row => columns.map(([key]) => cell(row[key])).join(','))].join('\r\n');
 }
 export type Fields = Record<string, string | boolean>;
 export function validReason(value: string): string {

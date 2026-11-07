@@ -18,7 +18,7 @@ from .errors import PlatformError
 SESSION_COOKIE = "easel_console_session"
 LOGIN_COOKIE = "easel_console_login"
 CALLBACK = "/oidc/console/callback"
-PAGES = {"", "overview", "users", "products", "plans", "wallets", "orders", "offers", "models", "providers", "executions", "reconciliation", "audits"}
+PAGES = {"", "overview", "stats", "users", "products", "plans", "wallets", "orders", "offers", "models", "providers", "executions", "reconciliation", "audits"}
 CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
 
 
@@ -221,7 +221,35 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
         endpoint.__name__ = "console_list_" + name
         return endpoint
 
-    for name in ("users", "products", "plans", "wallets", "orders", "offers", "models", "providers", "executions", "audits"):
+    @app.get("/api/users")
+    async def users_list(request: Request, limit: int = 25, offset: int = 0, q: str = "", status: str = "", sort: str = "created"):
+        return await queries.users(await principal(request), limit=limit, offset=offset, q=q, status=status, sort=sort)
+
+    @app.get("/api/users/{item_id}/activity")
+    async def user_activity(request: Request, item_id: str, days: int = 30):
+        return await queries.user_activity(await principal(request), item_id, days)
+
+    @app.get("/api/users/{item_id}/usage")
+    async def user_usage(request: Request, item_id: str, limit: int = 25, offset: int = 0, model: str = "", status: str = ""):
+        return await queries.user_usage(await principal(request), item_id, limit=limit, offset=offset, model=model, status=status)
+
+    @app.get("/api/users/{item_id}/ledger")
+    async def user_ledger(request: Request, item_id: str, limit: int = 25, offset: int = 0):
+        return await queries.user_ledger(await principal(request), item_id, limit=limit, offset=offset)
+
+    @app.get("/api/users/{item_id}/sessions")
+    async def user_sessions(request: Request, item_id: str):
+        return await queries.user_sessions(await principal(request), item_id)
+
+    @app.get("/api/users/{item_id}/audits")
+    async def user_audits(request: Request, item_id: str):
+        return await queries.user_audits(await principal(request), item_id)
+
+    @app.get("/api/stats")
+    async def stats(request: Request, days: int = 30):
+        return await queries.stats(await principal(request), days)
+
+    for name in ("products", "plans", "wallets", "orders", "offers", "models", "providers", "executions", "audits"):
         app.add_api_route("/api/" + name, listing(name), methods=["GET"])
 
     def detail(name):

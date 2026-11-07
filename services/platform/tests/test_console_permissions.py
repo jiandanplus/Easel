@@ -237,6 +237,16 @@ async def test_every_query_and_catalog_runs_with_actual_low_role_and_auth(db,con
         assert set(result)=={'items','limit','offset','has_more'}
     users=(await queries.users(principal))['items']
     assert users and (await queries.user(principal,users[0]['id']))['id']==users[0]['id']
+    # Every user page and the stats page run with the low role's actual grants.
+    for status in ('','funded','empty','expiring','disabled'):
+        await queries.users(principal,status=status,sort='last_used')
+    for row in users:
+        await queries.user_activity(principal,row['id'],30)
+        await queries.user_usage(principal,row['id'])
+        await queries.user_ledger(principal,row['id'])
+        await queries.user_sessions(principal,row['id'])
+        await queries.user_audits(principal,row['id'])
+    assert len((await queries.stats(principal,7))['daily'])==7
     wallets=(await queries.wallets(principal))['items']
     assert wallets and (await queries.wallet(principal,wallets[0]['id']))['id']==wallets[0]['id']
     if scenario=='billing':
