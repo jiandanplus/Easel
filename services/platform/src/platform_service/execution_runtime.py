@@ -13,8 +13,8 @@ from starlette.responses import Response, StreamingResponse
 
 from .errors import PlatformError
 from .execution_evidence import correlation_id
-from .execution_protocol import (
 from .gateway_catalog import GatewayPreflight, ManagedBindings
+from .execution_protocol import (
     MAX_JSON,
     MAX_RESULT,
     SSEParser,
