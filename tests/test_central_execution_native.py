@@ -76,7 +76,7 @@ def test_media_gate_precedes_dotenv_and_subprocess(tmp_path, monkeypatch):
                                 env={"PATH": "/usr/bin:/bin", "EASEL_SUBSCRIPTION_BACKEND": "central"},
                                 capture_output=True, text=True)
         assert result.returncode != 0
-        assert "中央订阅当前仅开放文本" in result.stderr
+        assert "只能在内置 Pi 中使用" in result.stderr
 
 
 def test_real_native_fixture_tool_cycle_and_retry_zero(tmp_path, monkeypatch):
