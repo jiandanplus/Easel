@@ -27,7 +27,7 @@ def validate_plan(plan, *, allow_live=False):
     }
     if (
         not isinstance(plan, dict)
-        or set(plan) != required
+        or set(plan) - {"models", "pricing"} != required
         or type(plan["test_only"]) is not bool
         or (not allow_live and plan["test_only"] is not True)
     ):
@@ -45,6 +45,9 @@ def validate_plan(plan, *, allow_live=False):
             bounded(value)
     if not plan["included_products"]:
         raise PlatformError(422, "invalid_test_plan")
+    from .pricing import validate_plan_access
+
+    validate_plan_access(plan)
     credits = plan["credits"]
     if (
         not isinstance(credits, str)

@@ -12,6 +12,7 @@ SELECT_TABLES = frozenset({
     "credit_holds", "credit_journals", "credit_entries",
     "billing_offers", "billing_offer_withdrawals",
     "execution_models", "execution_model_states", "redemption_batches", "redemption_codes",
+    "media_models", "media_model_states", "provider_catalog", "managed_model_bindings", "model_prices", "model_trial_access",
 })
 SELECT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),
@@ -27,13 +28,14 @@ SELECT_COLUMNS = {
     "billing_refunds": frozenset({"id","order_id","amount_minor","status","created_at","updated_at"}),
     "execution_jobs": frozenset({"id","model","product_id","billing_account_id","status","amount","actual",
         "funding_mode","created_at","updated_at","model_definition","reservation_id"}),
-    "media_jobs": frozenset({"reservation_id","model"}),
+    "media_jobs": frozenset({"reservation_id","model","status"}),
     "execution_receipts": frozenset({"job_id","input_tokens","output_tokens"}),
     "credit_reservations": frozenset({"id","billing_account_id","product_id","operation","rate_version",
         "amount","actual","status","funding_mode","created_at","updated_at"}),
 }
 INSERT_TABLES = frozenset({"console_login_transactions","console_login_requests","console_sessions",
-    "console_operations","console_audit_events","console_user_notes","plans","billing_offers","billing_offer_withdrawals",
+    "console_operations","console_audit_events","console_user_notes","plans","billing_offers",
+    "media_models","media_model_states","managed_model_bindings","model_prices","model_trial_access","billing_offer_withdrawals",
     "execution_models","execution_model_states"})
 INSERT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),
@@ -43,6 +45,8 @@ UPDATE_COLUMNS = {
     "console_login_transactions": frozenset({"consumed"}),
     "console_sessions": frozenset({"revoked_at"}),
     "console_user_notes": frozenset({"note","tags","updated_by","updated_at"}),
+    "model_trial_access": frozenset({"active","operator_id"}),
+    "media_model_states": frozenset({"enabled","operator_id","updated_at"}),
     "execution_model_states": frozenset({"enabled","operator_id","updated_at"}),
 }
 # SELECT FOR UPDATE inside existing immutable-plan publication requires an UPDATE

@@ -20,6 +20,7 @@ from .rates import cost, quantities as rate_quantities, unicode_scalars
 from .storage import StorageLifecycle
 from .references import http_reference
 from ..internal_features import feature_memberships
+from ..pricing import catalog_ready, current_rate, display_multiplier, has_trial, plan_allows, price_record, scale_media, select_price
 
 
 def scope_of(value):
@@ -74,10 +75,10 @@ class MediaService(StorageLifecycle):
             if not row:raise PlatformError(404,'media_model_not_found')
             return row
 
-    async def _definition(self,c,model,mode,bindings,product):
+    async def _definition(self,c,model,mode,bindings,product,wallet=None):
         row=await (await c.execute('SELECT m.definition,s.enabled FROM media_models m JOIN media_model_states s ON s.model_id=m.id WHERE m.id=%s',(model,))).fetchone()
         binding=bindings.get(model) if isinstance(bindings,dict) else None
-        if (mode not in {'test','live'} or not row or not row['enabled'] or not isinstance(binding,dict)
+        if (mode not in {'test','live'} or not row or not (row['enabled'] or await has_trial(c,'media',model,wallet)) or not isinstance(binding,dict)
                 or row['definition']['test_only']!=(mode=='test') or product not in row['definition']['products']):
             raise PlatformError(503,'media_unavailable')
         definition=row['definition']
@@ -89,10 +90,13 @@ class MediaService(StorageLifecycle):
             raise PlatformError(503,'media_binding_blocked')
         return definition,binding
 
-    async def _entitlement(self,c,scope,mode,feature):
-        plans=await feature_memberships(c,scope,mode,feature)
+    async def _plans(self,c,scope,mode,definition):
+        plans=[p for p in await feature_memberships(c,scope,mode,definition['feature']) if plan_allows(p['definition'],definition['id'])]
         if not plans:raise PlatformError(403,'media_entitlement_required')
-        return max(p['expires_at'] for p in plans)
+        return plans
+
+    async def _entitlement(self,c,scope,mode,definition):
+        return max(p['expires_at'] for p in await self._plans(c,scope,mode,definition))
 
     async def readiness(self,product_id,*,mode,bindings,supported_meters=None,supported_capabilities=None):
         async with self.db.connection() as c:
@@ -110,9 +114,10 @@ class MediaService(StorageLifecycle):
             await self.identity.validate_scope(c,scope);await authorize(c,scope)
             for row in await (await c.execute('SELECT id FROM media_models ORDER BY id')).fetchall():
                 try:
-                    d,_=await self._definition(c,row['id'],mode,bindings,scope.product_id)
-                    await self._entitlement(c,scope,mode,d['feature'])
+                    d,_=await self._definition(c,row['id'],mode,bindings,scope.product_id,scope.billing_account_id)
+                    plans=await self._plans(c,scope,mode,d)
                 except PlatformError:continue
+                d={**d,'rate':scale_media(await current_rate(c,'media',d['id'],d['rate']),await display_multiplier(c,scope,mode,plans,d['id']))}
                 models.append({k:d[k] for k in ('id','name','version','capability','rate','limits','parameters','test_only')}|{'readiness':mode})
         return {'models':models}
 
@@ -126,7 +131,7 @@ class MediaService(StorageLifecycle):
                 raise PlatformError(409,'idempotency_conflict')
             d,_=await self._definition(c,model,mode,bindings,scope.product_id)
             if d['capability']!=capability:raise PlatformError(422,'media_capability_mismatch')
-            expiry=min(session['expires_at'],await self._entitlement(c,scope,mode,d['feature']),now()+timedelta(minutes=30))
+            expiry=min(session['expires_at'],await self._entitlement(c,scope,mode,d),now()+timedelta(minutes=30))
             if old:
                 if old['expires_at']<=now():raise PlatformError(410,'invocation_expired')
                 invocation=old['id'];current_permit(subject=invocation);expiry=min(expiry,old['expires_at'])
@@ -191,16 +196,21 @@ class MediaService(StorageLifecycle):
                 # mutates the already-owned attempt using this new capability.
                 return {**old,'financial_state':old['status'],'replay':True}
             if invocation['expires_at']<=now():raise PlatformError(410,'invocation_expired')
-            definition,binding=await self._definition(c,invocation['model'],invocation['funding_mode'],bindings,scope.product_id)
-            await self._entitlement(c,scope,invocation['funding_mode'],definition['feature'])
+            definition,binding=await self._definition(c,invocation['model'],invocation['funding_mode'],bindings,scope.product_id,scope.billing_account_id)
+            plans=await self._plans(c,scope,invocation['funding_mode'],definition)
             input_units,input_manifest=await self._inputs(c,invocation,request,definition,verified_inputs)
             request_hash=digest({'request':request,'definition':definition,'binding_hash':binding['binding_hash'],'inputs':input_manifest})
-            amount=cost(definition['rate'],definition['limits']['max_units'])
+            base=await current_rate(c,'media',definition['id'],definition['rate'])
+            factor,amount,memberships=await select_price(c,scope,invocation['funding_mode'],plans,definition['id'],lambda value:cost(scale_media(base,value),definition['limits']['max_units']))
             if invocation['operation_count']>=MAX_OPERATIONS or invocation['held']+invocation['spent']+amount>MAX_BUDGET:raise PlatformError(409,'invocation_budget_exceeded')
             permit=current_permit(kinds={'job'});job,attempt=permit.binding.subject_id,permit.binding.attempt_id
             await self._reserve_storage_budget(c,scope,job,definition,request)
-            reservation=await self.ledger.reserve_in_transaction(c,scope,operation='media',key=job,body_hash=request_hash,amount=amount,rate_version=definition['rate']['version'],funding_mode=invocation['funding_mode'],authorize_scope=False)
-            row=await (await c.execute("INSERT INTO media_jobs(id,invocation_id,operation_key,request_hash,request,input_units,scope,user_id,product_id,tenant_id,billing_account_id,model,capability,funding_mode,model_definition,binding_hash,attempt_id,reservation_id,status,amount,lease_until) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'reserved',%s,clock_timestamp()+interval '60 seconds') RETURNING *",(job,invocation['id'],key,request_hash,Jsonb(request),Jsonb(input_units),Jsonb(asdict(scope)),scope.user_id,scope.product_id,scope.tenant_id,scope.billing_account_id,definition['id'],definition['capability'],invocation['funding_mode'],Jsonb(definition),binding['binding_hash'],attempt,reservation['id'],amount))).fetchone()
+            reservation=await self.ledger.reserve_in_transaction(c,scope,operation='media',key=job,body_hash=request_hash,amount=amount,rate_version=definition['rate']['version'],funding_mode=invocation['funding_mode'],authorize_scope=False,membership_ids=memberships)
+            insert="INSERT INTO media_jobs(price,id,invocation_id,operation_key,request_hash,request,input_units,scope,user_id,product_id,tenant_id,billing_account_id,model,capability,funding_mode,model_definition,binding_hash,attempt_id,reservation_id,status,amount,lease_until) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'reserved',%s,clock_timestamp()+interval '60 seconds') RETURNING *"
+            values=(Jsonb(price_record(scale_media(base,factor),factor)),job,invocation['id'],key,request_hash,Jsonb(request),Jsonb(input_units),Jsonb(asdict(scope)),scope.user_id,scope.product_id,scope.tenant_id,scope.billing_account_id,definition['id'],definition['capability'],invocation['funding_mode'],Jsonb(definition),binding['binding_hash'],attempt,reservation['id'],amount)
+            if not await catalog_ready(c):
+                insert,values=insert.replace("media_jobs(price,","media_jobs(",1).replace("VALUES (%s,","VALUES (",1),values[1:]
+            row=await (await c.execute(insert,values)).fetchone()
             await c.execute('UPDATE media_invocations SET operation_count=operation_count+1,held=held+%s WHERE id=%s',(amount,invocation['id']))
             return {**row,'financial_state':row['status'],'replay':False}
 
@@ -235,7 +245,7 @@ class MediaService(StorageLifecycle):
             if not live_feature_allowed(row['model_definition']):raise PlatformError(503,'media_unavailable')
             inv=await (await c.execute('SELECT expires_at FROM media_invocations WHERE id=%s',(row['invocation_id'],))).fetchone()
             if row['lease_until']<=now() or inv['expires_at']<=now():raise PlatformError(410,'media_lease_expired')
-            await self._entitlement(c,scope,row['funding_mode'],row['model_definition']['feature'])
+            await self._entitlement(c,scope,row['funding_mode'],row['model_definition'])
             enabled=await (await c.execute('SELECT enabled FROM media_model_states WHERE model_id=%s',(row['model'],))).fetchone()
             if not enabled['enabled'] or await (await c.execute('SELECT 1 FROM media_blocked_bindings WHERE binding_hash=%s',(row['binding_hash'],))).fetchone():raise PlatformError(503,'media_unavailable')
             if not await (await c.execute('SELECT 1 FROM media_provider_attempts WHERE job_id=%s',(job_id,))).fetchone():raise PlatformError(409,'media_attempt_required')
@@ -415,7 +425,7 @@ class MediaService(StorageLifecycle):
             if not evidence:raise PlatformError(409,'media_terminal_evidence_required')
             if row['status']=='settled':return public(row)
             if row['status'] not in {'dispatched','pending_reconciliation'}:raise PlatformError(409,'media_not_dispatched')
-            actual=cost(row['model_definition']['rate'],evidence['quantities'])
+            actual=cost((row.get('price') or {}).get('rate') or row['model_definition']['rate'],evidence['quantities'])
             if actual>row['amount'] or any(n>row['model_definition']['limits']['max_units'][unit] for unit,n in evidence['quantities'].items()):
                 result=await self._pending(c,row,'usage_exceeds_reservation')
                 await c.execute("INSERT INTO media_blocked_bindings(binding_hash,reason) VALUES (%s,'usage_exceeds_reservation') ON CONFLICT DO NOTHING",(row['binding_hash'],))

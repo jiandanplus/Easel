@@ -152,6 +152,7 @@ CONSOLE_FUNCTIONS = (
 )
 # The one SECURITY DEFINER entry point the product runtime may call (migration 026).
 RUNTIME_FUNCTIONS = ("redeem_code(text,text,text)",)
+RUNTIME_CATALOG_TABLES = ("provider_catalog", "managed_model_bindings", "model_prices", "model_trial_access")
 
 
 async def can_issue_allowance(conn, role, schema):
@@ -370,6 +371,21 @@ async def grant_runtime_permissions(conn, role: str):
     for sequence in SEQUENCE_NAMES:
         await conn.execute(sql.SQL("GRANT USAGE ON SEQUENCE {}.{} TO {}").format(
             namespace, sql.Identifier(sequence), ident))
+    # Catalog tables (027): read the price and bindings, and report configured providers.
+    catalog = {
+        row["table_name"]
+        for row in await (await conn.execute(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema=current_schema()"
+        )).fetchall()
+    }
+    for table in RUNTIME_CATALOG_TABLES:
+        if table in catalog:
+            await conn.execute(sql.SQL("GRANT SELECT ON {}.{} TO {}").format(namespace, sql.Identifier(table), ident))
+    if "provider_catalog" in catalog:
+        await conn.execute(sql.SQL("GRANT INSERT ON {}.provider_catalog TO {}").format(namespace, ident))
+        await conn.execute(sql.SQL(
+            "GRANT UPDATE (provider_version,adapter,protocol_version,capabilities,updated_at) ON {}.provider_catalog TO {}"
+        ).format(namespace, ident))
     for function in RUNTIME_FUNCTIONS:
         present = await (await conn.execute("SELECT to_regprocedure(current_schema()||'.'||%s) IS NOT NULL AS present", (function,))).fetchone()
         if present["present"]:

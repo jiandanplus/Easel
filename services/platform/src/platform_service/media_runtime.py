@@ -11,6 +11,7 @@ from .errors import PlatformError
 from .media.artifacts import ArtifactStore, public_artifact
 from .media.adapters.openai_images import OpenAIImagesAdapter
 from .media_config import IMAGE_CAPABILITIES, ASYNC_CAPABILITIES, AUDIO_CAPABILITIES, VOICE_CAPABILITIES, AV_ADAPTERS, audio_profile
+from .gateway_catalog import GatewayPreflight, ManagedBindings
 from .media.async_store import MediaAsyncStore
 from .media.adapters.newapi_async import make_async_adapter
 from .media.worker import MediaWorker
@@ -60,6 +61,7 @@ class MediaRuntime:
         if source_root is not None and type(source_root) is not SourceRoot:raise MaintenanceError()
         self.maintenance,self._control_lock,self._source_root=maintenance,control_lock,source_root
         self.service, self.settings, self.bindings = service, settings, settings.bindings
+        self._managed = None if db is None else ManagedBindings(db, 'media', settings, lambda provider: (provider.adapter, provider.protocol_version, provider.capabilities))
         self.store = ArtifactStore(settings.storage_root, max_bytes=settings.max_asset_bytes, max_pixels=settings.max_pixels) if settings.storage_root is not None else None
         self._semaphore, self._uploads = asyncio.Semaphore(settings.concurrency), asyncio.Semaphore(1)
         self.tasks = set()
@@ -73,6 +75,7 @@ class MediaRuntime:
             timeout=httpx.Timeout(settings.timeout_seconds, connect=10),
             limits=httpx.Limits(max_connections=settings.concurrency + 1, max_keepalive_connections=settings.concurrency + 1))
         self._get_client = httpx.AsyncClient(transport=transport,trust_env=False,follow_redirects=False,timeout=httpx.Timeout(90,connect=10),limits=httpx.Limits(max_connections=settings.download_concurrency,max_keepalive_connections=settings.download_concurrency))
+        self._preflight = GatewayPreflight(self._get_client, 'media_channel_unavailable')
         self.worker = MediaWorker(self.async_queue,self.store,self._get_client,settings,self._frozen_async_provider) if self.async_queue is not None else None
 
     @runtime_lifecycle('start')
@@ -152,8 +155,13 @@ class MediaRuntime:
             raise PlatformError(503,'voice_sample_publication_unavailable')
         return provider
 
+    async def _sync(self):
+        if self._managed is not None:
+            self.settings, self.bindings = await self._managed.refresh()
+
     async def catalog(self, scope):
         if self.settings.mode == "disabled": return {"models": []}
+        await self._sync()
         value = await self.service.catalog(scope, mode=self.settings.mode, bindings=self.bindings)
         rows = []
         av_ready = await self._av_ready() if any(p.adapter in AV_ADAPTERS for p in self.settings.providers.values()) else False
@@ -173,6 +181,7 @@ class MediaRuntime:
         return row
 
     async def capabilities(self, product_id):
+        await self._sync()
         groups = {}
         av_ready=await self._av_ready() if any(p.adapter in AV_ADAPTERS for p in self.settings.providers.values()) else False
         for model,binding in self.bindings.items():
@@ -235,6 +244,7 @@ class MediaRuntime:
 
     async def _context(self, token):
         self._enabled()
+        await self._sync()
         value = await self.service.authenticate_task(token)
         if value["funding_mode"] != self.settings.mode: raise PlatformError(403, "media_mode_mismatch")
         return value
@@ -351,6 +361,8 @@ class MediaRuntime:
                     else: prepared = adapter.prepare(request, assets)
                     await physical_call(self.store.check_capacity,job["model_definition"]["limits"]["max_artifact_bytes"])
                     if len(prepared.payload) > 64 * 1024 * 1024: raise PlatformError(413, "media_input_too_large")
+                    if provider.preflight_models:
+                        await self._preflight.check(provider.base_url.rstrip('/')+'/models', provider.secret, prepared.upstream_model)
                     request_id = str(uuid4())
                     await self.service.record_provider_attempt(job["id"], job["attempt_id"],
                         provider_request_hash=hashlib.sha256(prepared.payload).hexdigest(),
@@ -487,6 +499,7 @@ class MediaRuntime:
 
     @runtime_boundary
     async def run_once(self):
+        await self._sync()
         maintenance=self._maintenance();state=await maintenance.control.status()
         if state['state']=='DRAINING':
             continued=0

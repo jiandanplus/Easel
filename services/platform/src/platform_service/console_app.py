@@ -281,6 +281,34 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
         value, key = await command(request, {"reason"})
         return await catalog.disable_admin(actor, item_id, value["reason"], key)
 
+    @app.get("/api/catalog")
+    async def model_catalog(request: Request):
+        return await queries.model_catalog(await principal(request))
+
+    @app.post("/api/catalog/models")
+    async def catalog_create(request: Request):
+        actor = await principal(request, "execution:publish", write=True)
+        value, key = await command(request, {"id", "name", "capability", "provider_id", "upstream_model", "prices", "reason"})
+        return await catalog.create_managed_model(actor, value["id"], value["name"], value["capability"], value["provider_id"], value["upstream_model"], value["prices"], value["reason"], key)
+
+    @app.post("/api/catalog/{kind}/{item_id:path}/price")
+    async def catalog_price(request: Request, kind: str, item_id: str):
+        actor = await principal(request, "execution:publish", write=True)
+        value, key = await command(request, {"prices", "reason"})
+        return await catalog.set_model_price(actor, kind, item_id, value["prices"], value["reason"], key)
+
+    @app.post("/api/catalog/{kind}/{item_id:path}/trial")
+    async def catalog_trial(request: Request, kind: str, item_id: str):
+        actor = await principal(request, "execution:publish", write=True)
+        value, key = await command(request, {"user", "active", "reason"})
+        return await catalog.set_model_trial(actor, kind, item_id, value["user"], value["active"], value["reason"], key)
+
+    @app.post("/api/catalog/media/{item_id:path}/state")
+    async def catalog_media_state(request: Request, item_id: str):
+        actor = await principal(request, "execution:publish", write=True)
+        value, key = await command(request, {"enabled", "reason"})
+        return await catalog.set_media_state(actor, item_id, value["enabled"], value["reason"], key)
+
     @app.get("/api/stats")
     async def stats(request: Request, days: int = 30):
         return await queries.stats(await principal(request), days)

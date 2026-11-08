@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 import hashlib
 import json
+import re
 from uuid import uuid4
 import psycopg
 from psycopg.types.json import Jsonb
@@ -14,6 +15,10 @@ from .billing.service import BillingService
 from .execution.core import ExecutionService, validate_definition
 from .console_service import provider_registry
 from .redemptions import code_hash, new_code
+from .execution.rates import cost as cost_text, normalize as normalize_text_rate
+from .media.contracts import MAX_BUDGET as MEDIA_BUDGET, validate_definition as validate_media_definition
+from .media.rates import cost as cost_media, normalize as normalize_media_rate
+from .model_templates import MEDIA, TEXT, build_rate
 
 
 class BoundDatabase:
@@ -125,6 +130,9 @@ class ConsoleCatalog:
             operator = OperatorIdentity(actor, frozenset(permissions))
             bound = BoundDatabase(conn)
             if action == 'plan.publish':
+                for model in payload.get('models') or ():
+                    if not await (await conn.execute('SELECT 1 FROM execution_models WHERE id=%s UNION ALL SELECT 1 FROM media_models WHERE id=%s', (model, model))).fetchone():
+                        raise PlatformError(422, 'console_plan_model_unknown')
                 result = await MembershipService(bound).publish_plan(operator, payload)
             elif action == 'offer.publish':
                 result = await BillingService(bound).publish_offer(operator, payload)
@@ -145,7 +153,12 @@ class ConsoleCatalog:
                 if row['updated_at'] != datetime.fromisoformat(payload['expected_updated_at']):
                     raise PlatformError(409, 'console_model_state_conflict')
                 if payload['enabled']:
-                    self._verified_model(row['definition'])
+                    managed = await (await conn.execute("SELECT 1 FROM managed_model_bindings WHERE kind='execution' AND model_id=%s", (target_id,))).fetchone()
+                    if managed:
+                        if not await self._has_real_call(conn, 'execution', target_id):
+                            raise PlatformError(409, 'console_model_needs_trial')
+                    else:
+                        self._verified_model(row['definition'])
                 result = await ExecutionService(bound, None).set_enabled(target_id, payload['enabled'], operator)
                 state = await (await conn.execute('SELECT updated_at FROM execution_model_states WHERE model_id=%s', (target_id,))).fetchone()
                 result = {**result, 'id': target_id, 'updated_at': state['updated_at'].isoformat()}
@@ -170,6 +183,14 @@ class ConsoleCatalog:
                     (actor, target_id, payload['role'], self.auth.settings.issuer), ADMIN_ERRORS)
             elif action == 'admin.disable':
                 result = await guarded(conn, 'SELECT console_disable_admin(%s,%s) AS result', (actor, target_id), ADMIN_ERRORS)
+            elif action == 'model.managed':
+                result = await self._create_managed(conn, actor, target_id, payload)
+            elif action == 'model.price':
+                result = await self._set_price(conn, actor, target_id, payload, reason)
+            elif action == 'model.trial':
+                result = await self._set_trial(conn, actor, target_id, payload)
+            elif action == 'media.state':
+                result = await self._set_media_state(conn, actor, target_id, payload)
             elif action == 'user.note':
                 if not await (await conn.execute('SELECT 1 FROM users WHERE id=%s', (target_id,))).fetchone():
                     raise PlatformError(404, 'console_user_not_found')
@@ -208,6 +229,116 @@ class ConsoleCatalog:
         if not isinstance(definition, dict):
             raise PlatformError(422, 'invalid_console_command')
         return await self._command(principal, 'model.publish', 'model', definition.get('id'), definition, reason, key, ('execution:publish',))
+
+    async def _provider(self, conn, kind, provider_id):
+        row = await (await conn.execute('SELECT * FROM provider_catalog WHERE kind=%s AND provider_id=%s', (kind, provider_id))).fetchone()
+        if not row:
+            raise PlatformError(404, 'console_provider_unknown')
+        return row
+
+    async def _create_managed(self, conn, actor, model, payload):
+        capability = payload['capability']
+        version = 'console-' + uuid4().hex[:12]
+        rate = build_rate(capability, version, payload['prices'])
+        common = {'id': model, 'version': version, 'name': payload['name'], 'capability': capability, 'products': ['easel'],
+                  'test_only': False, 'verification': 'live', 'verification_ref': 'console-managed:' + actor, 'rate': rate}
+        if capability == 'text':
+            kind = 'execution'
+            provider = await self._provider(conn, kind, payload['provider_id'])
+            definition = validate_definition({**common, 'feature': 'text', 'provider_id': provider['provider_id'],
+                                              'provider_version': provider['provider_version'], 'limits': dict(TEXT['limits'])})
+            await conn.execute('INSERT INTO execution_models(id,definition,operator_id) VALUES (%s,%s,%s)', (model, Jsonb(definition), actor))
+            await conn.execute('INSERT INTO execution_model_states(model_id,operator_id) VALUES (%s,%s)', (model, actor))
+        else:
+            template = MEDIA.get(capability)
+            if template is None:
+                raise PlatformError(422, 'invalid_console_command')
+            kind = 'media'
+            provider = await self._provider(conn, kind, payload['provider_id'])
+            if capability not in provider['capabilities']:
+                raise PlatformError(422, 'console_provider_capability')
+            definition = validate_media_definition({**common, 'feature': template['feature'], 'provider_id': provider['provider_id'],
+                'provider_version': provider['provider_version'], 'adapter': provider['adapter'], 'protocol_version': provider['protocol_version'],
+                'limits': {**template['limits'], 'max_units': {template['unit']: template['max_units']}}, 'parameters': template['parameters']})
+            await conn.execute('INSERT INTO media_models(id,definition,operator_id) VALUES (%s,%s,%s)', (model, Jsonb(definition), actor))
+            await conn.execute('INSERT INTO media_model_states(model_id,operator_id) VALUES (%s,%s)', (model, actor))
+        await conn.execute('INSERT INTO managed_model_bindings(kind,model_id,provider_id,upstream_model,operator_id) VALUES (%s,%s,%s,%s,%s)',
+                           (kind, model, payload['provider_id'], payload['upstream_model'], actor))
+        return {'id': model, 'kind': kind, 'enabled': False}
+
+    async def _model(self, conn, kind, model):
+        table = 'execution_models' if kind == 'execution' else 'media_models'
+        row = await (await conn.execute('SELECT definition FROM ' + table + ' WHERE id=%s', (model,))).fetchone()
+        if not row:
+            raise PlatformError(404, 'model_not_found')
+        return row['definition']
+
+    async def _set_price(self, conn, actor, model, payload, reason):
+        definition = await self._model(conn, payload['kind'], model)
+        rate = build_rate(definition['capability'], 'price-' + uuid4().hex[:12], payload['prices'])
+        if payload['kind'] == 'execution':
+            rate = normalize_text_rate(rate)
+            cost_text(rate, definition['limits']['max_input_tokens'], definition['limits']['max_output_tokens'])
+        else:
+            rate = normalize_media_rate(rate)
+            if {m['unit'] for m in rate['meters']} != {m['unit'] for m in definition['rate']['meters']}:
+                raise PlatformError(422, 'invalid_console_command')
+            if not 0 < cost_media(rate, definition['limits']['max_units']) <= MEDIA_BUDGET:
+                raise PlatformError(422, 'invalid_console_command')
+        await conn.execute('INSERT INTO model_prices(id,kind,model_id,rate,reason,operator_id) VALUES (%s,%s,%s,%s,%s,%s)',
+                           (uuid4().hex, payload['kind'], model, Jsonb(rate), reason, actor))
+        return {'id': model, 'kind': payload['kind'], 'rate': rate}
+
+    async def _set_trial(self, conn, actor, model, payload):
+        await self._model(conn, payload['kind'], model)
+        needle = payload['user']
+        rows = await (await conn.execute("""SELECT DISTINCT b.id FROM billing_accounts b JOIN tenants t ON t.id=b.tenant_id
+            LEFT JOIN external_identities e ON e.user_id=t.owner_user_id
+            WHERE t.owner_user_id=%s OR b.id=%s OR lower(e.username)=lower(%s) OR lower(e.email)=lower(%s) LIMIT 2""", (needle, needle, needle, needle))).fetchall()
+        if len(rows) != 1:
+            raise PlatformError(404, 'console_trial_user_not_found')
+        wallet = rows[0]['id']
+        await conn.execute("""INSERT INTO model_trial_access(kind,model_id,billing_account_id,operator_id,active) VALUES (%s,%s,%s,%s,%s)
+            ON CONFLICT (kind,model_id,billing_account_id) DO UPDATE SET active=EXCLUDED.active,operator_id=EXCLUDED.operator_id""",
+            (payload['kind'], model, wallet, actor, payload['active']))
+        return {'id': model, 'wallet': wallet, 'active': payload['active']}
+
+    @staticmethod
+    async def _has_real_call(conn, kind, model):
+        table = 'execution_jobs' if kind == 'execution' else 'media_jobs'
+        return bool(await (await conn.execute('SELECT 1 FROM ' + table + " WHERE model=%s AND status='settled' LIMIT 1", (model,))).fetchone())
+
+    async def _set_media_state(self, conn, actor, model, payload):
+        managed = await (await conn.execute("SELECT 1 FROM managed_model_bindings WHERE kind='media' AND model_id=%s", (model,))).fetchone()
+        if payload['enabled'] and managed and not await self._has_real_call(conn, 'media', model):
+            raise PlatformError(409, 'console_model_needs_trial')
+        row = await (await conn.execute('UPDATE media_model_states SET enabled=%s,operator_id=%s,updated_at=clock_timestamp() WHERE model_id=%s RETURNING enabled,updated_at',
+                                        (payload['enabled'], actor, model))).fetchone()
+        if not row:
+            raise PlatformError(404, 'model_not_found')
+        return {'id': model, 'enabled': row['enabled'], 'updated_at': row['updated_at'].isoformat()}
+
+    async def create_managed_model(self, principal, model, name, capability, provider_id, upstream_model, prices, reason, key):
+        payload = {'name': text(name, 128), 'capability': text(capability, 64), 'provider_id': text(provider_id, 64),
+                   'upstream_model': text(upstream_model, 128), 'prices': prices}
+        if not re.fullmatch(r'[A-Za-z0-9_.:/-]{1,128}', model or ''):
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'model.managed', 'model', model, payload, reason, key, ('execution:publish',))
+
+    async def set_model_price(self, principal, kind, model, prices, reason, key):
+        if kind not in ('execution', 'media'):
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'model.price', 'model', model, {'kind': kind, 'prices': prices}, reason, key, ('execution:publish',))
+
+    async def set_model_trial(self, principal, kind, model, user, active, reason, key):
+        if kind not in ('execution', 'media') or type(active) is not bool:
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'model.trial', 'model', model, {'kind': kind, 'user': text(user, 320), 'active': active}, reason, key, ('execution:publish',))
+
+    async def set_media_state(self, principal, model, enabled, reason, key):
+        if type(enabled) is not bool:
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'media.state', 'model', model, {'enabled': enabled}, reason, key, ('execution:publish',))
 
     async def issue_plan(self, principal, wallet, plan_id, reason, key):
         if isinstance(reason, str) and len(reason) > 256:

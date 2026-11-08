@@ -55,6 +55,8 @@ class MediaProvider:
     download_path_prefixes: tuple[str,...] = ()
     audio_profile: dict | None = None
     voice_profile: dict | None = field(default=None, repr=False)
+    preflight_models: bool = False
+    managed_models: bool = False
 
 
 @dataclass(frozen=True)
@@ -153,7 +155,7 @@ class MediaSettings:
                 if (not isinstance(prefix,str)or not 2<=len(prefix)<=512 or not prefix.startswith('/')or not prefix.endswith('/')
                     or any(not (c.isascii()and(c.isalnum()or c in '/_-.'))for c in prefix)or '//'in prefix
                     or any(part in {'.','..'}for part in prefix.split('/'))):raise ValueError('invalid_media_configuration')
-            if not isinstance(provider.models, dict) or not provider.models:
+            if not isinstance(provider.models, dict) or (not provider.models and not provider.managed_models):
                 raise ValueError("invalid_media_configuration")
             if provider.adapter=='newapi_incho_v1':
                 origin(provider.base_url,mode=self.mode,root=True)

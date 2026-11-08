@@ -244,6 +244,7 @@ class CreditLedger:
         rate_version,
         funding_mode="test",
         authorize_scope=True,
+        membership_ids=None,
     ):
         """Caller owns transaction; execution callers already hold canonical wallet."""
         if funding_mode not in ("test", "live"):
@@ -292,9 +293,9 @@ class CreditLedger:
         lots = await (
             await c.execute(
                 """SELECT * FROM credit_lots WHERE billing_account_id=%s AND available>0
-            AND NOT frozen AND test_only=%s
+            AND NOT frozen AND test_only=%s AND (%s::text[] IS NULL OR membership_id=ANY(%s::text[]))
             AND expires_at>clock_timestamp() ORDER BY expires_at,id FOR UPDATE""",
-                (scope.billing_account_id, funding_mode == "test"),
+                (scope.billing_account_id, funding_mode == "test", membership_ids, membership_ids),
             )
         ).fetchall()
         if sum(lot["available"] for lot in lots) < amount:

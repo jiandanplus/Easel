@@ -15,6 +15,7 @@ from ..contracts import Scope, OperatorIdentity
 from ..credits import CreditLedger, authorize, active_plans, bounded, integer
 from ..errors import PlatformError
 from ..identity import now, opaque
+from ..pricing import catalog_ready, current_rate, display_multiplier, has_trial, plan_allows, price_record, scale_text, select_price
 from .rates import normalize, cost
 from ..execution_protocol import model_reasoning
 
@@ -192,7 +193,7 @@ class ExecutionService:
                 raise PlatformError(404, "model_not_found")
             return row
 
-    async def _definition(self, c, model, mode, bindings, product):
+    async def _definition(self, c, model, mode, bindings, product, wallet=None):
         row = await (
             await c.execute(
                 "SELECT m.definition,s.enabled FROM execution_models m JOIN execution_model_states s ON s.model_id=m.id WHERE m.id=%s",
@@ -204,7 +205,7 @@ class ExecutionService:
         d = row["definition"]
         b = bindings.get(model)
         if (
-            not row["enabled"]
+            not (row["enabled"] or await has_trial(c, "execution", model, wallet))
             or d["test_only"] != (mode == "test")
             or product not in d["products"]
             or not b
@@ -223,15 +224,19 @@ class ExecutionService:
             raise PlatformError(503, "execution_binding_blocked")
         return d, b
 
-    async def _entitlement(self, c, scope, mode, feature):
+    async def _plans(self, c, scope, mode, definition):
         plans = [
             p
             for p in await active_plans(c, scope, mode)
-            if feature in p["definition"]["features"]
+            if definition["feature"] in p["definition"]["features"]
+            and plan_allows(p["definition"], definition["id"])
         ]
         if not plans:
             raise PlatformError(403, "execution_entitlement_required")
-        return max(p["expires_at"] for p in plans)
+        return plans
+
+    async def _entitlement(self, c, scope, mode, definition):
+        return max(p["expires_at"] for p in await self._plans(c, scope, mode, definition))
 
     async def readiness(self, product_id, *, mode, bindings):
         """Whether an enabled, verified definition matches this configured binding."""
@@ -259,11 +264,14 @@ class ExecutionService:
             for row in rows:
                 try:
                     d, _ = await self._definition(
-                        c, row["id"], mode, bindings, scope.product_id
+                        c, row["id"], mode, bindings, scope.product_id, scope.billing_account_id
                     )
-                    await self._entitlement(c, scope, mode, d["feature"])
+                    plans = await self._plans(c, scope, mode, d)
                 except PlatformError:
                     continue
+                d = {**d, "rate": scale_text(
+                    await current_rate(c, "execution", d["id"], d["rate"]),
+                    await display_multiplier(c, scope, mode, plans, d["id"]))}
                 result.append(
                     {
                         k: d[k]
@@ -301,8 +309,8 @@ class ExecutionService:
                 or old["scope"] != asdict(scope)
             ):
                 raise PlatformError(409, "idempotency_conflict")
-            d, _ = await self._definition(c, model, mode, bindings, scope.product_id)
-            member_expiry = await self._entitlement(c, scope, mode, d["feature"])
+            d, _ = await self._definition(c, model, mode, bindings, scope.product_id, scope.billing_account_id)
+            member_expiry = await self._entitlement(c, scope, mode, d)
             expiry = min(
                 session["expires_at"], member_expiry, now() + timedelta(seconds=1800)
             )
@@ -410,11 +418,15 @@ class ExecutionService:
                 invocation["funding_mode"],
                 bindings,
                 scope.product_id,
+                scope.billing_account_id,
             )
-            await self._entitlement(c, scope, invocation["funding_mode"], d["feature"])
+            plans = await self._plans(c, scope, invocation["funding_mode"], d)
             if output_limit > d["limits"]["max_output_tokens"]:
                 raise PlatformError(422, "output_limit_exceeded")
-            amount = cost(d["rate"], d["limits"]["max_input_tokens"], output_limit)
+            base = await current_rate(c, "execution", d["id"], d["rate"])
+            factor, amount, memberships = await select_price(
+                c, scope, invocation["funding_mode"], plans, d["id"],
+                lambda value: cost(scale_text(base, value), d["limits"]["max_input_tokens"], output_limit))
             if (
                 invocation["operation_count"] >= MAX_OPERATIONS
                 or invocation["spent"] + invocation["held"] + amount > MAX_BUDGET
@@ -431,11 +443,11 @@ class ExecutionService:
                 rate_version=d["rate"]["version"],
                 funding_mode=invocation["funding_mode"],
                 authorize_scope=False,
+                membership_ids=memberships,
             )
-            row = await (
-                await c.execute(
-                    "INSERT INTO execution_jobs(id,invocation_id,operation_key,body_hash,output_limit,scope,billing_account_id,user_id,product_id,model,funding_mode,model_definition,binding_hash,attempt_id,reservation_id,status,amount,lease_until) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'reserved',%s,clock_timestamp()+interval '60 seconds') RETURNING *",
-                    (
+            insert = "INSERT INTO execution_jobs(price,id,invocation_id,operation_key,body_hash,output_limit,scope,billing_account_id,user_id,product_id,model,funding_mode,model_definition,binding_hash,attempt_id,reservation_id,status,amount,lease_until) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'reserved',%s,clock_timestamp()+interval '60 seconds') RETURNING *"
+            values = (
+                        Jsonb(price_record(scale_text(base, factor), factor)),
                         job,
                         invocation["id"],
                         key,
@@ -452,9 +464,11 @@ class ExecutionService:
                         attempt,
                         reservation["id"],
                         amount,
-                    ),
-                )
-            ).fetchone()
+                    )
+            if not await catalog_ready(c):
+                insert = insert.replace("execution_jobs(price,", "execution_jobs(", 1).replace("VALUES (%s,", "VALUES (", 1)
+                values = values[1:]
+            row = await (await c.execute(insert, values)).fetchone()
             await c.execute(
                 "UPDATE execution_invocations SET operation_count=operation_count+1,held=held+%s WHERE id=%s",
                 (amount, invocation["id"]),
@@ -517,9 +531,7 @@ class ExecutionService:
             ).fetchone()
             if invocation["expires_at"] <= now():
                 raise PlatformError(410, "invocation_expired")
-            await self._entitlement(
-                c, scope, row["funding_mode"], row["model_definition"]["feature"]
-            )
+            await self._entitlement(c, scope, row["funding_mode"], row["model_definition"])
             blocked = await (
                 await c.execute(
                     "SELECT 1 FROM execution_blocked_bindings WHERE binding_hash=%s",
@@ -643,7 +655,7 @@ class ExecutionService:
             raise PlatformError(409, "execution_not_dispatched")
         input_tokens, output_tokens = receipt["input_tokens"], receipt["output_tokens"]
         try:
-            actual = cost(row["model_definition"]["rate"], input_tokens, output_tokens)
+            actual = cost((row.get("price") or {}).get("rate") or row["model_definition"]["rate"], input_tokens, output_tokens)
         except PlatformError:
             actual = row["amount"] + 1
         if (actual > row["amount"]

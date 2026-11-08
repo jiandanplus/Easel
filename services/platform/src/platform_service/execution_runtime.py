@@ -14,6 +14,7 @@ from starlette.responses import Response, StreamingResponse
 from .errors import PlatformError
 from .execution_evidence import correlation_id
 from .execution_protocol import (
+from .gateway_catalog import GatewayPreflight, ManagedBindings
     MAX_JSON,
     MAX_RESULT,
     SSEParser,
@@ -41,6 +42,8 @@ class ExecutionRuntime:
             service = ExecutionService(db, identity)
         self.service, self.settings = service, settings
         self.bindings = settings.bindings
+        self._managed = None if db is None else ManagedBindings(
+            db, "execution", settings, lambda provider: (None, None, ("text",)))
         self._semaphore = asyncio.Semaphore(settings.concurrency)
         self._client = httpx.AsyncClient(
             transport=transport,
@@ -52,10 +55,16 @@ class ExecutionRuntime:
                 max_keepalive_connections=settings.concurrency,
             ),
         )
+        self._preflight = GatewayPreflight(self._client, "model_channel_unavailable")
+
+    async def _sync(self):
+        if self._managed is not None:
+            self.settings, self.bindings = await self._managed.refresh()
 
     async def catalog(self, scope):
         if self.settings.mode == "disabled":
             return {"models": []}
+        await self._sync()
         return await self.service.catalog(
             scope, mode=self.settings.mode, bindings=self.bindings
         )
@@ -63,6 +72,7 @@ class ExecutionRuntime:
     async def mint(self, scope, data):
         if self.settings.mode == "disabled":
             raise PlatformError(503, "execution_disabled")
+        await self._sync()
         if not isinstance(data, dict) or set(data) != {"model", "invocation_key"}:
             raise PlatformError(400, "invalid_request")
         return await self.service.mint(
@@ -74,6 +84,7 @@ class ExecutionRuntime:
         )
 
     async def capabilities(self, product_id):
+        await self._sync()
         ready = (
             self.settings.mode != "disabled"
             and bool(self.bindings)
@@ -131,6 +142,7 @@ class ExecutionRuntime:
             raise PlatformError(503, "execution_disabled")
         if not isinstance(key, str) or not re.fullmatch(r"[\x21-\x7e]{1,128}", key):
             raise PlatformError(400, "idempotency_key_required")
+        await self._sync()
         context = await self.service.authenticate_task(task_token)
         if context["funding_mode"] != self.settings.mode:
             raise PlatformError(403, "execution_mode_mismatch")
@@ -217,6 +229,9 @@ class ExecutionRuntime:
                 raise PlatformError(503, "execution_binding_unavailable")
             provider = self.settings.providers[binding["provider_id"]]
             value["model"] = provider.models[context["model"]]
+            if provider.preflight_models:
+                await self._preflight.check(
+                    re.sub(r"/v1/.*$", "/v1/models", provider.endpoint), provider.secret, value["model"])
             payload = encode(value)
             await self._semaphore.acquire()
             acquired = True

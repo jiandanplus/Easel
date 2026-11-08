@@ -8,6 +8,8 @@ MONEY = {'issued','available','held','spent','expired','refunded','amount','actu
          'revision','test_available','live_available','experience_available','delta',
          'spendable_available','frozen_available','unposted_expired_available',
          'experience_issued','experience_held','experience_spent'}
+from .model_templates import public_templates
+
 SNAPSHOT_NOTE = '只读余额快照；账面剩余包含尚未过账的过期额度。冻结与未过账过期可能重叠，不可相加。'
 
 
@@ -314,6 +316,7 @@ class ConsoleQueries:
     def _plan(row):
         allowed = ('id','name','version','included_products','features','credits','days','concurrency','test_only')
         return {**{key:row['definition'][key] for key in allowed},
+                'models':row['definition'].get('models'),'pricing':row['definition'].get('pricing'),
                 'created_by':row['created_by'],'created_at':row['created_at'].isoformat(),
                 'protected':row['definition']['id'].startswith('easel-internal-')}
 
@@ -412,6 +415,24 @@ class ConsoleQueries:
         return await self._list(principal,"""SELECT m.definition,s.enabled,s.updated_at,s.operator_id
             FROM execution_models m JOIN execution_model_states s ON s.model_id=m.id
             WHERE %s='' OR strpos(lower(m.id||' '||(m.definition->>'name')),lower(%s))>0 ORDER BY m.created_at DESC,m.id DESC""",(q,q),limit,offset,q,self._model)
+
+    async def model_catalog(self, principal):
+        async with self._snapshot(principal) as conn:
+            rows = await (await conn.execute("""
+              WITH models AS (
+                SELECT 'execution' AS kind,m.id,m.definition,s.enabled,s.updated_at FROM execution_models m JOIN execution_model_states s ON s.model_id=m.id
+                UNION ALL SELECT 'media',m.id,m.definition,s.enabled,s.updated_at FROM media_models m JOIN media_model_states s ON s.model_id=m.id)
+              SELECT x.kind,x.id,x.definition,x.enabled,x.updated_at,b.upstream_model,
+                (SELECT p.rate FROM model_prices p WHERE p.kind=x.kind AND p.model_id=x.id AND p.effective_at<=transaction_timestamp() ORDER BY p.effective_at DESC,p.created_at DESC LIMIT 1) AS price,
+                (SELECT count(*) FROM model_trial_access t WHERE t.kind=x.kind AND t.model_id=x.id AND t.active) AS trial_wallets,
+                CASE WHEN x.kind='execution' THEN (SELECT count(*) FROM execution_jobs j WHERE j.model=x.id AND j.status='settled') ELSE (SELECT count(*) FROM media_jobs j WHERE j.model=x.id AND j.status='settled') END AS settled_calls
+              FROM models x LEFT JOIN managed_model_bindings b ON b.kind=x.kind AND b.model_id=x.id ORDER BY x.kind,x.id""")).fetchall()
+            providers = await (await conn.execute('SELECT kind,provider_id,provider_version,adapter,capabilities,updated_at FROM provider_catalog ORDER BY kind,provider_id')).fetchall()
+            items = [{'kind':r['kind'],'id':r['id'],'name':r['definition']['name'],'capability':r['definition']['capability'],'feature':r['definition']['feature'],
+                      'provider_id':r['definition']['provider_id'],'enabled':r['enabled'],'updated_at':r['updated_at'].isoformat(),'managed':r['upstream_model'] is not None,
+                      'upstream_model':r['upstream_model'],'rate':r['price'] or r['definition']['rate'],'custom_price':r['price'] is not None,
+                      'trial_wallets':r['trial_wallets'],'settled_calls':r['settled_calls']} for r in rows]
+            return {'items':items,'providers':[projected(r) for r in providers],'templates':public_templates()}
 
     async def providers(self, principal, limit=25, offset=0, q=''):
         page_args(limit,offset,q)

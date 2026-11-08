@@ -18,6 +18,8 @@ class ExecutionProvider:
     endpoint: str = field(repr=False)
     secret: str = field(repr=False)
     models: dict[str, str] = field(default_factory=dict)
+    preflight_models: bool = False
+    managed_models: bool = False
 
 
 @dataclass(frozen=True)
@@ -91,7 +93,7 @@ class ExecutionSettings:
                 )
             ):
                 raise ValueError("invalid_execution_configuration")
-            if not provider.models or not isinstance(provider.models, dict):
+            if not isinstance(provider.models, dict) or (not provider.models and not provider.managed_models):
                 raise ValueError("invalid_execution_configuration")
             for public, upstream in provider.models.items():
                 if (
