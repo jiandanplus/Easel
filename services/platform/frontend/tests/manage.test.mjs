@@ -28,3 +28,20 @@ test('redemption and admin commands are allowed only on their exact paths',()=>{
   const r=load('RedemptionsPage.tsx');
   assert.equal(r.codesText({name:'朋友',credits:'30000000',expires_at:'2026-12-07T00:00:00Z',codes:['AAAA-BBBB-CCCC-DDDD']}).split('\n')[1],'AAAA-BBBB-CCCC-DDDD');
 });
+test('plan editor builds exact multipliers and derives features from chosen models',()=>{
+  const p=load('PlanEditor.tsx');
+  assert.equal(JSON.stringify(p.multiplierFraction('0.8')),'{"numerator":"8","denominator":"10"}');
+  assert.equal(JSON.stringify(p.multiplierFraction('1')),'{"numerator":"1","denominator":"1"}');
+  for(const bad of ['0','-1','abc','1.23456'])assert.throws(()=>p.multiplierFraction(bad));
+  const items=[{id:'t',feature:'text'},{id:'i',feature:'image'}];
+  const plan=p.buildPlan({name:'专业版',credits:'50',days:'30',concurrency:'2',multiplier:'0.8',selected:['t','i'],overrides:{i:'0.5'}},items,'plan-x');
+  assert.equal(plan.credits,'50000000');assert.equal(JSON.stringify(plan.features),'["image","text"]');assert.equal(JSON.stringify(plan.models),'["t","i"]');
+  assert.equal(plan.pricing.models.i.numerator,'5');assert.equal(plan.test_only,false);
+  assert.throws(()=>p.buildPlan({name:'x',credits:'1',days:'30',concurrency:'1',multiplier:'1',selected:[],overrides:{}},items,'p'));
+});
+test('model catalog shows prices in points',()=>{
+  const m=load('ModelCatalogPage.tsx');
+  assert.equal(m.partPoints({numerator:'1000000',denominator:'1'},1),'1');assert.equal(m.partPoints({numerator:'2000',denominator:'1'},1000),'2');
+  const row={capability:'text',rate:{input:{numerator:'1',denominator:'2'},output:{numerator:'3',denominator:'2'}}};
+  assert.equal(JSON.stringify(m.pricesOf(row)),'[["每百万输入 token","0.5"],["每百万输出 token","1.5"]]');
+});
