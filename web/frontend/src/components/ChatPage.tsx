@@ -50,7 +50,7 @@ interface ChatPageProps {
   onQuestionAnswered?: (questionId: string) => void;   // 某道问答题提交成功（App 记录答过，重放不再出现）
 }
 
-// 空态推荐（贴合 Easel 社媒创作场景）
+// 空态推荐（贴合优创社媒创作场景）
 const SUGGESTIONS = [
   { icon: '🔥', title: '蹭个热点', prompt: '看看现在微博和抖音有什么热搜，挑几个适合我做二创的选题' },
   { icon: '✍️', title: '写小红书文案', prompt: '帮我写一条小红书种草文案，主题先问我' },

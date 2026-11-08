@@ -1,4 +1,4 @@
-"""Easel CLI — 社媒内容工作流整合层。
+"""优创命令行工具（命令名 easel）— 社媒内容工作流整合层。
 
 用法：
     easel chat                              # 新会话（选画像后进入）
@@ -85,10 +85,10 @@ def _build_chat_cmd(session_key: str, message_prefix: str = "") -> list[str]:
 
 
 def cmd_chat(_args) -> int:
-    """启动 Easel 交互对话（每次新会话）。"""
+    """启动优创交互对话（每次新会话）。"""
 
     print()
-    print(f"  {CYAN}Easel{NC} — 社媒内容工作流")
+    print(f"  {CYAN}优创{NC} — 社媒内容工作流")
     print()
 
     settings = read_settings()
@@ -238,7 +238,7 @@ def cmd_web(args) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="easel",
-        description="Easel — 社媒内容工作流整合层 CLI",
+        description="优创 — 社媒内容工作流整合层命令行工具",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

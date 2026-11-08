@@ -1169,7 +1169,7 @@ def cmd_login(a) -> int:
                     else:
                         login_state.write_status(sf, "qr_ready", "二维码已就绪，请扫码", qr=str(qr_out))
                     print(f"📱 二维码已保存：{qr_out}")
-                    print("   用小红书 App 扫码登录。若走 Easel Web UI，可在 outputs 里查看这张图。")
+                    print("   用小红书 App 扫码登录。若用优创桌面版，可在 outputs 里查看这张图。")
                     print("   （二维码有时效，约几分钟；过期请重跑 login）")
                 print(f"⏳ 等待扫码确认（最长 {timeout_s}s）...", file=sys.stderr)
 

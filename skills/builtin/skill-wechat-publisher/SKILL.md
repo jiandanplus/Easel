@@ -33,7 +33,7 @@ YAML 示例提供 2 个账号配置：`main`（刷屏AI / 飞哥 / `refined-blue
 
 ## 前置条件
 
-以下命令均从 Easel 项目根目录运行。
+以下命令均从项目根目录运行。
 
 ### 默认：公众号后台会话（Markdown / HTML）
 
@@ -129,7 +129,7 @@ python3 skills/builtin/skill-wechat-publisher/scripts/publish.py --account main 
 | `multi_publish.py` | 多平台同步（阶段七，默认不启用，需浏览器） |
 
 ## Profile 感知
-有 Easel Profile 时，用 Profile 的账号定位/受众/语气凝练覆盖账号 voice；无 Profile 时退到 yaml 内置 `main`/`tech` 双账号 voice。
+有优创画像（Profile）时，用 Profile 的账号定位/受众/语气凝练覆盖账号 voice；无 Profile 时退到 yaml 内置 `main`/`tech` 双账号 voice。
 
 ## 注意事项
 - 文章始终发**草稿箱**，不自动群发；后台会话发布到当前扫码账号，官方 API 模式才用 `--account` 选择发布账号。
