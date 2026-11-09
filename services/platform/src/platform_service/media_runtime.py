@@ -51,6 +51,9 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
 
 
+# The desktop refuses a longer list outright, which would take away every media tool.
+MAX_PUBLISHED_MODELS = 100
+
 class MediaRuntime:
     def __init__(self, db, identity, settings, *, service=None, transport=None, maintenance=None, control_lock=None, source_root=None, provider_keys=None):
         if service is None:
@@ -173,7 +176,7 @@ class MediaRuntime:
             except (PlatformError, KeyError): continue
             if provider.adapter in AV_ADAPTERS and not av_ready:continue
             if supported_metering(row, provider): rows.append(row)
-        return {"models": rows}
+        return {"models": rows[:MAX_PUBLISHED_MODELS]}
 
     async def _model(self, scope, model):
         rows = (await self.service.catalog(scope, mode=self.settings.mode, bindings=self.bindings)).get("models", [])

@@ -65,6 +65,7 @@ REQUIRED_MIGRATIONS = [
     "029_provider_platforms.sql",
     "030_voice_aliases_and_xhs.sql",
     "031_model_import.sql",
+    "032_provider_accounts.sql",
 ]
 ACCEPTANCE_CREDITS = 100_000_000
 ACCEPTANCE_RATE = {

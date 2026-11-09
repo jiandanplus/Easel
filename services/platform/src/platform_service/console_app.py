@@ -292,8 +292,8 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
     @app.post("/api/provider-configs/{channel}")
     async def provider_config_save(request: Request, channel: str):
         actor = await principal(request, "providers:manage", write=True)
-        value, key = await command(request, ("platform", "base_url", "key", "clear", "options", "reason"))
-        return await catalog.save_provider_config(actor, channel, value["platform"], value["base_url"], value["key"], value["clear"], value["options"], value["reason"], key)
+        value, key = await command(request, ("platform", "account", "name", "base_url", "key", "clear", "options", "reason"))
+        return await catalog.save_provider_config(actor, channel, value["platform"], value["base_url"], value["key"], value["clear"], value["options"], value["reason"], key, account=value["account"], name=value["name"])
 
     @app.post("/api/catalog/import")
     async def catalog_import(request: Request):

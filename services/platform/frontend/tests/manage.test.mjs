@@ -45,32 +45,30 @@ test('model catalog shows prices in points',()=>{
   const row={capability:'text',rate:{input:{numerator:'1',denominator:'2'},output:{numerator:'3',denominator:'2'}}};
   assert.equal(JSON.stringify(m.pricesOf(row)),'[["每百万输入 token","0.5"],["每百万输出 token","1.5"]]');
 });
-test('interface pages show the saved state and never need the key back',()=>{
-  const p=load('ProviderConfigForm.tsx');
+test('interface pages show each connection state and never need the key back',()=>{
+  const p=load('providerChannels.ts');
   assert.equal(p.CHANNELS.map(c=>c.label).join(),'对话与脚本,语音转写,配音,生图,视频,音乐');
   assert.equal(p.channelOf('text'),'chat');assert.equal(p.channelOf('audio.transcribe'),'transcribe');assert.equal(p.channelOf('image.edit'),'image');
-  const base={id:'gateway',config:null,status:null};
-  assert.equal(p.statusBadge(base,null)[1],'未配置');
-  assert.equal(p.statusBadge(base,'https://g/v1')[1],'使用服务器配置');
-  assert.equal(p.statusBadge({...base,id:'kling'},'https://g/v1')[1],'未配置');
-  const saved={...base,config:{id:'x',base_url:'https://g/v1',key_hint:'abcd',options:{},updated_at:'t'}};
-  assert.equal(p.statusBadge(saved,null)[1],'检测中…');
-  assert.equal(p.statusBadge({...saved,status:{state:'ok',models:['a','b'],checked_at:'t'}},null)[1],'连接正常 · 可用模型 2 个');
-  assert.equal(p.statusBadge({...saved,status:{state:'auth_failed',models:[],checked_at:'t'}},null)[1],'Key 无效或没有权限');
-  assert.match(p.statusBadge({...saved,status:{state:'no_model_list',models:[],checked_at:'t'}},null)[1],/不提供模型列表/);
+  assert.equal(p.statusBadge(null)[1],'检测中…');
+  assert.equal(p.statusBadge({state:'ok',models:['a','b'],checked_at:'t'})[1],'连接正常 · 可用模型 2 个');
+  assert.equal(p.statusBadge({state:'auth_failed',models:[],checked_at:'t'})[1],'Key 无效或没有权限');
+  assert.match(p.statusBadge({state:'no_model_list',models:[],checked_at:'t'})[1],/不提供模型列表/);
 });
-test('each page opens on a configured platform and names its interfaces',()=>{
-  const p=load('ProviderConfigForm.tsx');
-  const channel={channel:'video',platforms:[{id:'gateway',label:'网关',config:null},{id:'kling',label:'可灵',config:{key_hint:'abcd'}}]};
-  assert.equal(p.initialPlatform(channel),'kling');
-  assert.equal(p.initialPlatform({...channel,platforms:[channel.platforms[0]]}),'gateway');
-  assert.equal(p.providerLabel(channel,'console-video-kling'),'后台配置 · 可灵');
-  assert.equal(p.providerLabel(channel,'console-video'),'后台配置 · 网关');
-  assert.equal(p.providerLabel(channel,'newapi'),'服务器配置 · newapi');
-  assert.equal(p.providerLabel(channel,'console-video-kling-clone'),'后台配置 · 可灵 · 声音复刻');
+const speech={channel:'speech',server:null,platforms:[{id:'gateway',label:'网关'},{id:'minimax',label:'MiniMax'}],connections:[
+  {platform:'minimax',account:'',name:'',provider_id:'console-speech-minimax',status:{models:['a','b']}},
+  {platform:'minimax',account:'abcd1234',name:'MiniMax 备用',provider_id:'console-speech-minimax-abcd1234',status:{models:['b','c']}}]};
+test('two accounts of one platform are named apart and removed ones say so',()=>{
+  const p=load('providerChannels.ts');
+  assert.equal(p.providerLabel(speech,'console-speech-minimax'),'MiniMax');
+  assert.equal(p.providerLabel(speech,'console-speech-minimax-abcd1234'),'MiniMax 备用');
+  assert.equal(p.providerLabel(speech,'console-speech-minimax-abcd1234-clone'),'MiniMax 备用 · 声音复刻');
+  assert.equal(p.providerLabel(speech,'newapi'),'服务器配置 · newapi');
+  assert.equal(p.providerLabel(speech,'console-speech-fish'),'已删除的接入');
+  assert.equal(p.knownModels(speech).join(),'a,b,c');
+  assert.equal(p.isSameInterface('x-clone','x'),true);assert.equal(p.isSameInterface('x-abcd1234','x'),false);
 });
 test('interface options follow the fields the server asks for',()=>{
-  const p=load('ProviderConfigForm.tsx');
+  const p=load('providerChannels.ts');
   const fields=[{key:'voices',label:'可选音色',required:true,list:true},{key:'group_id',label:'Group ID',required:false,list:false}];
   assert.equal(JSON.stringify(p.parseList('a, b，a\nc')),'["a","b","c"]');
   assert.equal(JSON.stringify(p.buildOptions([],{})),'{}');
@@ -86,11 +84,13 @@ test('interface options follow the fields the server asks for',()=>{
 test('pulling models picks the right interface and hides what is already added',()=>{
   const p=load('ModelImportDialog.tsx',{'./views':{Modal:()=>null}});
   const providers=[{kind:'execution',provider_id:'file-a',capabilities:[]},{kind:'execution',provider_id:'console-chat-anthropic',capabilities:[]},{kind:'media',provider_id:'console-speech-minimax',capabilities:['audio.speech']},{kind:'media',provider_id:'console-speech-minimax-clone',capabilities:['voice.enroll']}];
-  assert.equal(p.providerFor(providers,'chat','anthropic',{kind:'execution',capability:'text'}),'console-chat-anthropic');
-  assert.equal(p.providerFor(providers,'chat','gateway',{kind:'execution',capability:'text'}),'file-a');
-  assert.equal(p.providerFor(providers,'chat','openai',{kind:'execution',capability:'text'}),'');
-  assert.equal(p.providerFor(providers,'speech','minimax',{kind:'media',capability:'voice.enroll'}),'console-speech-minimax-clone');
-  assert.equal(p.providerFor(providers,'speech','minimax',{kind:'media',capability:'audio.speech'}),'console-speech-minimax');
+  assert.equal(p.providerFor(providers,'console-chat-anthropic',{kind:'execution',capability:'text'}),'console-chat-anthropic');
+  assert.equal(p.providerFor(providers,null,{kind:'execution',capability:'text'}),'file-a');
+  assert.equal(p.providerFor(providers,'console-chat-openai',{kind:'execution',capability:'text'}),'');
+  assert.equal(p.providerFor(providers,'console-speech-minimax',{kind:'media',capability:'voice.enroll'}),'console-speech-minimax-clone');
+  assert.equal(p.providerFor(providers,'console-speech-minimax',{kind:'media',capability:'audio.speech'}),'console-speech-minimax');
+  assert.equal(p.sourceOf(speech,'console-speech-minimax-abcd1234').title,'MiniMax 备用');
+  assert.equal(p.sourceOf(speech,null),null);assert.equal(p.sourceOf(speech,'gone'),null);
   assert.equal(p.matchNames(['DeepSeek-V3','glm-4'],'deep').join(),'DeepSeek-V3');assert.equal(p.matchNames(['a','b'],' ').length,2);
   assert.deepEqual([...p.addedNames([{provider_id:'x',upstream_model:'a'},{provider_id:'y',upstream_model:'b'},{provider_id:'x',upstream_model:null}],'x')],['a']);
   const client=new (load('core.ts').ConsoleClient)(async()=>new Response('{}'),()=> 'key-12345678');

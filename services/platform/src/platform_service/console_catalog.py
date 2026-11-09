@@ -19,7 +19,7 @@ from .execution.rates import cost as cost_text, normalize as normalize_text_rate
 from .media.contracts import MAX_BUDGET as MEDIA_BUDGET, validate_definition as validate_media_definition
 from .media.rates import cost as cost_media, normalize as normalize_media_rate
 from .model_templates import MEDIA, TEXT, build_rate
-from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, PLATFORMS, clean_base_url, clean_key, clean_options, seal_scope, spec_of
+from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, PLATFORMS, clean_base_url, clean_key, clean_name, clean_options, provider_id as channel_provider_id, seal_scope, spec_of
 from .provider_secrets import seal, valid_public_key
 
 
@@ -283,6 +283,14 @@ class ConsoleCatalog:
     async def _model_taken(conn, model):
         return bool(await (await conn.execute('SELECT 1 FROM execution_models WHERE id=%s UNION ALL SELECT 1 FROM media_models WHERE id=%s', (model, model))).fetchone())
 
+    async def _connection_label(self, conn, capability, provider):
+        """What the admin called this connection, for telling two same-named models apart."""
+        channel = CAPABILITY_CHANNEL.get(capability)
+        for row in await self._current_connections(conn, channel) if channel else ():
+            if provider.removesuffix('-clone') == channel_provider_id(channel, row['platform'], row['account']):
+                return row['name'] or PLATFORMS[channel][row['platform']]['label']
+        return provider
+
     async def _import_models(self, conn, actor, operator, bound, payload):
         kind = 'execution' if payload['capability'] == 'text' else 'media'
         added, skipped = [], []
@@ -293,12 +301,14 @@ class ConsoleCatalog:
             model = re.sub(r'[^A-Za-z0-9_.:-]', '-', upstream).lstrip('-_.:')[:128]
             if not model:
                 raise PlatformError(422, 'invalid_console_command')
+            name = upstream
             if await self._model_taken(conn, model):
+                name = (upstream + '（' + await self._connection_label(conn, payload['capability'], payload['provider_id']) + '）')[:128]
                 model = (re.sub(r'[^A-Za-z0-9_.:-]', '-', payload['provider_id']) + ':' + model)[:128]
                 if await self._model_taken(conn, model):
                     skipped.append(upstream)
                     continue
-            await self._create_managed(conn, actor, model, {'name': upstream, 'capability': payload['capability'], 'provider_id': payload['provider_id'], 'upstream_model': upstream, 'prices': payload['prices']})
+            await self._create_managed(conn, actor, model, {'name': name, 'capability': payload['capability'], 'provider_id': payload['provider_id'], 'upstream_model': upstream, 'prices': payload['prices']})
             if payload['enabled'] and kind == 'execution':
                 await ExecutionService(bound, None).set_enabled(model, True, operator)
             elif payload['enabled']:
@@ -358,13 +368,34 @@ class ConsoleCatalog:
         row = await (await conn.execute('SELECT count(*) AS total FROM ' + table + ' j JOIN ' + models + " m ON m.id=j.model WHERE j.status IN ('reserved','dispatched') AND m.definition->>'capability'=ANY(%s)", (capabilities,))).fetchone()
         return row['total']
 
+    async def _models_in_use(self, conn, channel, platform, account):
+        kind = CHANNELS[channel]['kind']
+        states = 'execution_model_states' if kind == 'execution' else 'media_model_states'
+        own = channel_provider_id(channel, platform, account)
+        row = await (await conn.execute('SELECT count(*) AS total FROM managed_model_bindings b JOIN ' + states + ' s ON s.model_id=b.model_id WHERE b.kind=%s AND b.provider_id=ANY(%s) AND s.enabled',
+                                        (kind, [own, own + '-clone']))).fetchone()
+        return row['total']
+
+    @staticmethod
+    async def _current_connections(conn, channel):
+        return await (await conn.execute(
+            """SELECT DISTINCT ON (platform,account) platform,account,name,sealed_secret FROM provider_configs WHERE channel=%s
+            ORDER BY platform,account,created_at DESC,id DESC""", (channel,))).fetchall()
+
     async def _save_provider(self, conn, actor, target, payload, sealed):
-        channel, platform = payload['channel'], payload['platform']
-        await conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))', ('provider-config:' + target,))
-        previous = await (await conn.execute('SELECT base_url,sealed_secret,key_hint FROM provider_configs WHERE channel=%s AND platform=%s ORDER BY created_at DESC,id DESC LIMIT 1', (channel, platform))).fetchone()
+        channel, platform, account = payload['channel'], payload['platform'], payload['account']
+        # One lock for the page: names have to stay unique across its connections.
+        await conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))', ('provider-config:' + channel,))
+        previous = await (await conn.execute('SELECT base_url,sealed_secret,key_hint,name FROM provider_configs WHERE channel=%s AND platform=%s AND account=%s ORDER BY created_at DESC,id DESC LIMIT 1', (channel, platform, account))).fetchone()
         had_key = bool(previous and previous['sealed_secret'])
+        if payload['creating'] and previous:
+            raise PlatformError(409, 'console_idempotency_conflict')
+        if account and not payload['creating'] and not had_key:
+            raise PlatformError(404, 'console_provider_not_found')
         if payload['clear']:
             secret, hint = None, None
+            if had_key and await self._models_in_use(conn, channel, platform, account):
+                raise PlatformError(409, 'console_provider_in_use')
         elif sealed:
             secret, hint = sealed
         elif had_key and previous['base_url'] == payload['base_url']:
@@ -372,19 +403,33 @@ class ConsoleCatalog:
         else:
             # A sealed key is bound to its address, so moving it needs the key again.
             raise PlatformError(409, 'console_provider_key_required')
+        name = payload['name'] or (previous['name'] if previous else '')
+        if name and secret is not None and any(
+                row['sealed_secret'] is not None and row['name'].lower() == name.lower() and (row['platform'], row['account']) != (platform, account)
+                for row in await self._current_connections(conn, channel)):
+            raise PlatformError(409, 'console_provider_name_taken')
         connection_changed = not had_key or secret != previous['sealed_secret'] or previous['base_url'] != payload['base_url']
         if had_key and connection_changed and await self._running_calls(conn, channel):
             raise PlatformError(409, 'console_provider_busy')
         config_id = uuid4().hex
-        await conn.execute('INSERT INTO provider_configs(id,channel,platform,base_url,sealed_secret,key_hint,options,operator_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',
-                           (config_id, channel, platform, payload['base_url'], secret, hint, Jsonb(payload['options']), actor))
-        return {'channel': channel, 'platform': platform, 'id': config_id, 'configured': secret is not None}
+        await conn.execute('INSERT INTO provider_configs(id,channel,platform,account,name,base_url,sealed_secret,key_hint,options,operator_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                           (config_id, channel, platform, account, name, payload['base_url'], secret, hint, Jsonb(payload['options']), actor))
+        return {'channel': channel, 'platform': platform, 'account': account, 'provider_id': channel_provider_id(channel, platform, account), 'id': config_id, 'configured': secret is not None}
 
-    async def save_provider_config(self, principal, channel, platform, base_url, key, clear, options, reason, op_key):
+    async def save_provider_config(self, principal, channel, platform, base_url, key, clear, options, reason, op_key, *, account='', name=''):
+        """account None adds a new connection; '' is the platform's original one."""
         if channel not in CHANNELS or platform not in PLATFORMS[channel] or type(clear) is not bool or (clear and key is not None):
             raise PlatformError(422, 'console_provider_invalid')
+        creating, name = account is None, clean_name(name)
+        if creating:
+            if clear or not name:
+                raise PlatformError(422, 'console_provider_invalid')
+            # Derived from the request key, so a retried submission lands on the same connection.
+            account = hashlib.sha256(str(op_key).encode()).hexdigest()[:8]
+        if not isinstance(account, str) or not re.fullmatch(r'(?:[a-f0-9]{8})?', account):
+            raise PlatformError(422, 'console_provider_invalid')
         base_url = clean_base_url(base_url)
-        payload = {'channel': channel, 'platform': platform, 'base_url': base_url, 'options': clean_options(channel, platform, options), 'clear': clear, 'key_fingerprint': None}
+        payload = {'channel': channel, 'platform': platform, 'account': account, 'creating': creating, 'name': name, 'base_url': base_url, 'options': clean_options(channel, platform, options), 'clear': clear, 'key_fingerprint': None}
         sealed = None
         if key is not None:
             key = clean_key(key, parts=2 if spec_of(channel, platform).get('second_key') else 1)
@@ -392,8 +437,8 @@ class ConsoleCatalog:
                 raise PlatformError(503, 'console_provider_key_unconfigured')
             # Retries must match without keeping the key: the sealed text differs every time.
             payload['key_fingerprint'] = hashlib.sha256(key.encode()).hexdigest()
-            sealed = (seal(self.public_key, seal_scope(channel, platform), base_url, key), key[-4:])
-        return await self._command(principal, 'provider.config', 'provider', channel + '/' + platform, payload, reason, op_key, ('providers:manage',), sealed=sealed)
+            sealed = (seal(self.public_key, seal_scope(channel, platform, account), base_url, key), key[-4:])
+        return await self._command(principal, 'provider.config', 'provider', channel + '/' + platform + ('/' + account if account else ''), payload, reason, op_key, ('providers:manage',), sealed=sealed)
 
     async def create_managed_model(self, principal, model, name, capability, provider_id, upstream_model, prices, reason, key):
         payload = {'name': text(name, 128), 'capability': text(capability, 64), 'provider_id': text(provider_id, 64),

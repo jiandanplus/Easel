@@ -79,13 +79,16 @@ def spec_of(channel, platform):
         raise invalid() from None
 
 
-def provider_id(channel, platform=GATEWAY):
-    return "console-" + channel if platform == GATEWAY else "console-" + channel + "-" + platform
+def provider_id(channel, platform=GATEWAY, account=""):
+    """The first connection of a platform keeps its short id; further ones add their account."""
+    base = "console-" + channel if platform == GATEWAY and not account else "console-" + channel + "-" + platform
+    return base + "-" + account if account else base
 
 
-def seal_scope(channel, platform=GATEWAY):
+def seal_scope(channel, platform=GATEWAY, account=""):
     """What a key is sealed for. A gateway key keeps the page name alone."""
-    return channel if platform == GATEWAY else channel + "/" + platform
+    base = channel if platform == GATEWAY and not account else channel + "/" + platform
+    return base + "/" + account if account else base
 
 
 def public_platforms(channel):
@@ -187,6 +190,12 @@ def _version(value):
 _CLEAN = {"voices": _voices, "download_origins": _origins, "download_path_prefixes": _prefixes, "group_id": _group, "poll_url": _poll, "auth_header": _header, "api_version": _version}
 
 
+def clean_name(value):
+    if not isinstance(value, str) or len(value.strip()) > 64 or any(ord(c) < 32 or ord(c) == 127 for c in value):
+        raise invalid()
+    return value.strip()
+
+
 def clean_options(channel, platform, value):
     fields = spec_of(channel, platform).get("fields", [])
     if not isinstance(value, dict) or set(value) != {field["key"] for field in fields}:
@@ -223,8 +232,8 @@ def build_provider(channel, platform, base_url, secret, options, *, preflight=Tr
                          managed_models=True, client_correlation=True, **extra)
 
 
-def clone_provider_id(channel, platform):
-    return provider_id(channel, platform) + "-clone"
+def clone_provider_id(channel, platform, account=""):
+    return provider_id(channel, platform, account) + "-clone"
 
 
 def build_clone_provider(channel, platform, base_url, secret, options):

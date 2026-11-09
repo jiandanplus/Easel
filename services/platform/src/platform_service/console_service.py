@@ -9,7 +9,7 @@ MONEY = {'issued','available','held','spent','expired','refunded','amount','actu
          'spendable_available','frozen_available','unposted_expired_available',
          'experience_issued','experience_held','experience_spent'}
 from .model_templates import public_templates
-from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, public_platforms
+from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, provider_id, public_platforms
 
 SNAPSHOT_NOTE = '只读余额快照；账面剩余包含尚未过账的过期额度。冻结与未过账过期可能重叠，不可相加。'
 
@@ -438,27 +438,34 @@ class ConsoleQueries:
 
     async def provider_configs(self, principal):
         async with self._snapshot(principal) as conn:
-            configs = await (await conn.execute("""SELECT DISTINCT ON (channel,platform) id,channel,platform,base_url,key_hint,options,created_at
-                FROM provider_configs ORDER BY channel,platform,created_at DESC,id DESC""")).fetchall()
-            status = await (await conn.execute('SELECT channel,platform,config_id,state,models,checked_at FROM provider_config_status')).fetchall()
+            configs = await (await conn.execute("""SELECT DISTINCT ON (channel,platform,account) id,channel,platform,account,name,base_url,key_hint,options,created_at,
+                min(created_at) OVER (PARTITION BY channel,platform,account) AS first_at
+                FROM provider_configs ORDER BY channel,platform,account,created_at DESC,id DESC""")).fetchall()
+            status = await (await conn.execute('SELECT channel,platform,account,config_id,state,models,checked_at FROM provider_config_status')).fetchall()
             catalog = await (await conn.execute("SELECT kind,provider_id,base_url,capabilities FROM provider_catalog WHERE provider_id NOT LIKE 'console-%'")).fetchall()
-        saved, states = {(r['channel'], r['platform']): r for r in configs}, {(r['channel'], r['platform']): r for r in status}
+        states = {(r['channel'], r['platform'], r['account']): r for r in status}
         def server_address(name):
             spec = CHANNELS[name]
             for row in catalog:
                 if row['kind'] == spec['kind'] and row['base_url'] and (spec['kind'] == 'execution' or any(CAPABILITY_CHANNEL.get(c) == name for c in row['capabilities'])):
                     return row['base_url']
             return None
+        def report(key, config_id):
+            state = states.get(key)
+            if state is None or state['config_id'] != config_id:
+                return None
+            return {'state': state['state'], 'models': state['models'], 'checked_at': state['checked_at'].isoformat()}
         channels = []
         for name in CHANNELS:
-            platforms = []
-            for item in public_platforms(name):
-                row, state = saved.get((name, item['id'])), states.get((name, item['id']))
-                own_key = bool(row and row['key_hint'])
-                live = state if state and (state['config_id'] == row['id'] if own_key else state['config_id'] == 'server-file') else None
-                platforms.append({**item, 'config': None if row is None else {'id': row['id'], 'base_url': row['base_url'], 'key_hint': row['key_hint'], 'options': row['options'], 'updated_at': row['created_at'].isoformat()},
-                                  'status': None if live is None else {'state': live['state'], 'models': live['models'], 'checked_at': live['checked_at'].isoformat()}})
-            channels.append({'channel': name, 'server_base_url': server_address(name), 'platforms': platforms})
+            # A row without a key is a connection that was removed.
+            rows = sorted((r for r in configs if r['channel'] == name and r['key_hint']), key=lambda r: (r['first_at'], r['id']))
+            connections = [{'id': r['id'], 'platform': r['platform'], 'account': r['account'], 'name': r['name'], 'provider_id': provider_id(name, r['platform'], r['account']),
+                            'base_url': r['base_url'], 'key_hint': r['key_hint'], 'options': r['options'], 'updated_at': r['created_at'].isoformat(),
+                            'status': report((name, r['platform'], r['account']), r['id'])} for r in rows]
+            address = server_address(name)
+            overridden = any(r['platform'] == 'gateway' and not r['account'] for r in rows)
+            channels.append({'channel': name, 'server_base_url': address, 'platforms': public_platforms(name), 'connections': connections,
+                             'server': {'base_url': address, 'status': report((name, 'gateway', ''), 'server-file')} if address and not overridden else None})
         return {'channels': channels, 'sealing_ready': self.sealing_ready}
 
     async def providers(self, principal, limit=25, offset=0, q=''):

@@ -57,30 +57,30 @@ class ManagedBindings:
         if self.keys is None:
             return []
         rows = await (await conn.execute(
-            """SELECT DISTINCT ON (c.channel,c.platform) c.id,c.channel,c.platform,c.base_url,c.sealed_secret,c.options,s.config_id AS status_config,s.state
-            FROM provider_configs c LEFT JOIN provider_config_status s ON s.channel=c.channel AND s.platform=c.platform
-            WHERE c.channel=ANY(%s) ORDER BY c.channel,c.platform,c.created_at DESC,c.id DESC""", (sorted(self._channels),))).fetchall()
+            """SELECT DISTINCT ON (c.channel,c.platform,c.account) c.id,c.channel,c.platform,c.account,c.base_url,c.sealed_secret,c.options,s.config_id AS status_config,s.state
+            FROM provider_configs c LEFT JOIN provider_config_status s ON s.channel=c.channel AND s.platform=c.platform AND s.account=c.account
+            WHERE c.channel=ANY(%s) ORDER BY c.channel,c.platform,c.account,c.created_at DESC,c.id DESC""", (sorted(self._channels),))).fetchall()
         return [row for row in rows if row["sealed_secret"] is not None]
 
     def _connection(self, providers, row, invalid):
-        channel, platform, base_url = row["channel"], row["platform"], row["base_url"]
-        secret = self.keys.open(row["sealed_secret"], seal_scope(channel, platform), base_url)
+        channel, platform, account, base_url = row["channel"], row["platform"], row["account"], row["base_url"]
+        secret = self.keys.open(row["sealed_secret"], seal_scope(channel, platform, account), base_url)
         # A setting that does not validate is reported and skipped, never fatal to the rest.
         try:
             if secret is None:
                 raise ValueError
             current = row["status_config"] == row["id"]
-            changed = {provider_id(channel, platform): build_provider(channel, platform, base_url, secret, row["options"], preflight=not (current and row["state"] == "no_model_list"))}
-            if platform == GATEWAY:  # Everything already on this page moves to the saved address and key too.
+            changed = {provider_id(channel, platform, account): build_provider(channel, platform, base_url, secret, row["options"], preflight=not (current and row["state"] == "no_model_list"))}
+            if platform == GATEWAY and not account:  # Everything already on this page moves to the saved address and key too.
                 changed.update({name: apply_connection(item, base_url, secret) for name, item in self.base.providers.items() if channel_of(item) == channel})
             if spec_of(channel, platform).get("clone_adapter"):
-                changed[clone_provider_id(channel, platform)] = build_clone_provider(channel, platform, base_url, secret, row["options"])
+                changed[clone_provider_id(channel, platform, account)] = build_clone_provider(channel, platform, base_url, secret, row["options"])
             dataclasses.replace(self.base, providers=changed)
         except (ValueError, TypeError, KeyError, PlatformError):
             invalid.append(row)
             return
         providers.update(changed)
-        self._targets[(channel, platform)] = (row["id"], base_url, secret, row["options"].get("auth_header"))
+        self._targets[(channel, platform, account)] = (row["id"], base_url, secret, row["options"].get("auth_header"))
 
     def _add_server_targets(self):
         """Pages still on the server files can list their models too."""
@@ -88,9 +88,9 @@ class ManagedBindings:
             return
         for name, item in self.base.providers.items():
             channel = channel_of(item)
-            if channel is not None and (channel, GATEWAY) not in self._targets:
+            if channel is not None and (channel, GATEWAY, "") not in self._targets:
                 base = item.base_url.rstrip("/") if self.kind == "media" else re.sub(r"/(?:responses|chat/completions|messages)$", "", item.endpoint)
-                self._targets[(channel, GATEWAY)] = (SERVER_FILE, base, item.secret, None)
+                self._targets[(channel, GATEWAY, "")] = (SERVER_FILE, base, item.secret, None)
 
     async def refresh(self):
         if self.base.mode == "disabled" or time.monotonic() < self._checked:
@@ -117,7 +117,7 @@ class ManagedBindings:
                     providers[name] = dataclasses.replace(providers[name], models={**providers[name].models, model: upstream})
             await self._publish(providers)
             for row in invalid:
-                await self._report(row["channel"], row["platform"], row["id"], "invalid", [])
+                await self._report(row["channel"], row["platform"], row["account"], row["id"], "invalid", [])
             self.settings = dataclasses.replace(self.base, providers=providers)
             self.bindings, self._seen = self.settings.bindings, seen
         self._start_probes()
@@ -136,7 +136,7 @@ class ManagedBindings:
     async def probe_due(self):
         for key, (config_id, base_url, secret, custom_header) in list(self._targets.items()):
             if self._due(key, config_id):
-                state, names = await self._try(None if custom_header else spec_of(*key)["probe"], base_url, secret)
+                state, names = await self._try(None if custom_header else spec_of(*key[:2])["probe"], base_url, secret)
                 await self._report(*key, config_id, state, names)
                 self._probed[key] = (config_id, time.monotonic() + PROBE_SECONDS)
 
@@ -165,13 +165,13 @@ class ManagedBindings:
         ids = (item.get("id") or str(item.get("name") or "").removeprefix("models/") for item in data if isinstance(item, dict))
         return "ok", sorted({name for name in ids if isinstance(name, str) and 0 < len(name) <= 128})[:MAX_LISTED_MODELS]
 
-    async def _report(self, channel, platform, config_id, state, names):
+    async def _report(self, channel, platform, account, config_id, state, names):
         async with self.db.connection() as c:
             await c.execute(
-                """INSERT INTO provider_config_status(channel,platform,config_id,state,models) VALUES (%s,%s,%s,%s,%s::jsonb)
-                ON CONFLICT (channel,platform) DO UPDATE SET config_id=EXCLUDED.config_id,state=EXCLUDED.state,checked_at=clock_timestamp(),
+                """INSERT INTO provider_config_status(channel,platform,account,config_id,state,models) VALUES (%s,%s,%s,%s,%s,%s::jsonb)
+                ON CONFLICT (channel,platform,account) DO UPDATE SET config_id=EXCLUDED.config_id,state=EXCLUDED.state,checked_at=clock_timestamp(),
                 models=CASE WHEN EXCLUDED.state='unreachable' AND provider_config_status.config_id=EXCLUDED.config_id THEN provider_config_status.models ELSE EXCLUDED.models END""",
-                (channel, platform, config_id, state, json.dumps(names)))
+                (channel, platform, account, config_id, state, json.dumps(names)))
 
     async def close(self):
         if self._probe_task is not None and not self._probe_task.done():

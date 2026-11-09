@@ -36,9 +36,13 @@ async def admin_catalog(console, console_role, role="admin"):
     return catalog, queries, principal, rest
 
 
-def page(listing, channel, platform="gateway"):
+def page(listing, channel, platform="gateway", account=""):
     row = next(c for c in listing["channels"] if c["channel"] == channel)
-    return next(p for p in row["platforms"] if p["id"] == platform)
+    return next((c for c in row["connections"] if (c["platform"], c["account"]) == (platform, account)), None)
+
+
+def server_entry(listing, channel):
+    return next(c for c in listing["channels"] if c["channel"] == channel)["server"]
 
 
 def exec_settings(**extra):
@@ -114,6 +118,8 @@ def test_every_platform_builds_a_provider_the_server_accepts(channel, platform, 
 def test_only_platforms_with_a_model_list_are_probed_and_named():
     assert provider_id("video") == "console-video" and provider_id("video", "kling") == "console-video-kling"
     assert seal_scope("video") == "video" and seal_scope("video", "kling") == "video/kling"
+    assert provider_id("video", "kling", "abcd1234") == "console-video-kling-abcd1234" and provider_id("video", "gateway", "abcd1234") == "console-video-gateway-abcd1234"
+    assert seal_scope("video", "kling", "abcd1234") == "video/kling/abcd1234" and clone_provider_id("speech", "minimax", "abcd1234") == "console-speech-minimax-abcd1234-clone"
     assert {p["id"]: p["second_key"] for p in public_platforms("video")}["kling"] == "Secret Key"
     with pytest.raises(PlatformError):
         clean_key("only-one", parts=2)
@@ -137,7 +143,7 @@ async def test_saved_key_is_sealed_write_only_and_needs_admin(db, console, conso
     result = await catalog.save_provider_config(principal, "chat", "gateway", URL + "/", SECRET, False, {}, "接入", "cfg-1")
     assert result["configured"] is True
     state = page(await queries.provider_configs(principal), "chat")
-    assert state["config"]["base_url"] == URL and state["config"]["key_hint"] == "1234" and state["status"] is None
+    assert state["base_url"] == URL and state["key_hint"] == "1234" and state["status"] is None
     assert SECRET not in json.dumps(state)
     async with db.connection() as c:
         for table, column in (("provider_configs", "sealed_secret"), ("console_operations", "result"), ("console_audit_events", "reason")):
@@ -177,8 +183,7 @@ async def test_moving_an_address_needs_the_key_again_and_keep_or_clear_work(db, 
     assert kept["configured"] is True
     cleared = await catalog.save_provider_config(principal, "video", "gateway", URL, None, True, {}, "停用", "k4")
     assert cleared["configured"] is False
-    state = page(await queries.provider_configs(principal), "video")
-    assert state["config"]["key_hint"] is None
+    assert page(await queries.provider_configs(principal), "video") is None
     with pytest.raises(PlatformError):
         await catalog.save_provider_config(principal, "nope", "gateway", URL, SECRET, False, {}, "x", "k5")
     catalog.public_key = None
@@ -299,8 +304,9 @@ async def test_platforms_on_one_page_stay_separate_and_leave_server_models_alone
     await catalog.save_provider_config(principal, "video", "kling", "https://api.klingai.com", "access|secret-key", False, {"download_origins": []}, "接入", "p1")
     await catalog.save_provider_config(principal, "video", "dashscope", "https://dashscope.aliyuncs.com/api/v1", SECRET, False, {"download_origins": []}, "接入", "p2")
     listing = await queries.provider_configs(principal)
-    assert page(listing, "video", "kling")["config"]["key_hint"] == "-key" and page(listing, "video", "dashscope")["config"]["key_hint"] == "1234"
-    assert page(listing, "video")["config"] is None and page(listing, "video", "kling")["lists_models"] is False
+    assert page(listing, "video", "kling")["key_hint"] == "-key" and page(listing, "video", "dashscope")["key_hint"] == "1234"
+    video = next(c for c in listing["channels"] if c["channel"] == "video")
+    assert page(listing, "video") is None and next(p for p in video["platforms"] if p["id"] == "kling")["lists_models"] is False
     with pytest.raises(PlatformError):
         await catalog.save_provider_config(principal, "video", "kling", "https://api.klingai.com", "missing-second", False, {"download_origins": []}, "x", "p3")
     with pytest.raises(PlatformError):
@@ -344,18 +350,177 @@ async def test_a_page_on_server_files_can_list_its_models_and_a_blip_keeps_the_l
     await binder._probe_task
     assert seen == [("https://old.example/v1/models", "Bearer old-secret")]
     _, queries, principal, _ = await admin_catalog(console, console_role)
-    state = page(await queries.provider_configs(principal), "chat")
-    assert state["config"] is None and state["status"]["models"] == ["m1", "m2"]
+    state = server_entry(await queries.provider_configs(principal), "chat")
+    assert state["base_url"] == "https://old.example/v1" and state["status"]["models"] == ["m1", "m2"]
 
     failing.append(True)
     binder._probed.clear()
     await binder.probe_due()
     assert len(seen) == 1 + module.PROBE_ATTEMPTS
-    state = page(await queries.provider_configs(principal), "chat")
+    state = server_entry(await queries.provider_configs(principal), "chat")
     assert state["status"]["state"] == "unreachable" and state["status"]["models"] == ["m1", "m2"]
 
     failing.clear()
     binder._probed.clear()
     await binder.probe_due()
-    assert page(await queries.provider_configs(principal), "chat")["status"]["state"] == "ok"
+    assert server_entry(await queries.provider_configs(principal), "chat")["status"]["state"] == "ok"
     await client.aclose()
+
+
+VOICES = {"voices": ["alloy"], "group_id": ""}
+MINIMAX = "https://api.minimax.chat"
+
+
+async def two_accounts(catalog, principal):
+    first = await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, "first-key-1111", False, VOICES, "接入", "acct-1", account=None, name="主账号")
+    second = await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, "second-key-2222", False, VOICES, "接入", "acct-2", account=None, name="备用账号")
+    return first, second
+
+
+@pytest.mark.asyncio
+async def test_one_platform_can_hold_several_accounts_with_their_own_keys(db, console, console_role, tmp_path):
+    await seed(db)
+    catalog, queries, principal, _ = await admin_catalog(console, console_role)
+    first, second = await two_accounts(catalog, principal)
+    assert first["account"] != second["account"] and first["provider_id"] != second["provider_id"]
+    assert await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, "first-key-1111", False, VOICES, "接入", "acct-1", account=None, name="主账号") == first
+
+    listing = await queries.provider_configs(principal)
+    assert [(c["name"], c["key_hint"]) for c in next(c for c in listing["channels"] if c["channel"] == "speech")["connections"]] == [("主账号", "1111"), ("备用账号", "2222")]
+
+    binder = ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS)
+    settings, _ = await binder.refresh()
+    assert settings.providers[first["provider_id"]].secret == "first-key-1111" and settings.providers[second["provider_id"]].secret == "second-key-2222"
+    assert settings.providers[second["provider_id"] + "-clone"].secret == "second-key-2222"
+    assert settings.providers["file_images"].secret == "old-secret"
+    async with db.connection() as c:
+        await c.execute("INSERT INTO managed_model_bindings(kind,model_id,provider_id,upstream_model,operator_id) VALUES ('media','voice-a','%s','speech-hd','op'),('media','voice-b','%s','speech-hd','op')" % (first["provider_id"], second["provider_id"]))
+    binder._checked = 0
+    settings, bindings = await binder.refresh()
+    assert bindings["voice-a"]["provider_id"] == first["provider_id"] and bindings["voice-b"]["provider_id"] == second["provider_id"]
+
+
+@pytest.mark.asyncio
+async def test_a_key_cannot_move_between_accounts_of_one_platform(db, console, console_role):
+    await seed(db)
+    catalog, _, principal, _ = await admin_catalog(console, console_role)
+    first, _ = await two_accounts(catalog, principal)
+    async with db.connection() as c:
+        sealed = (await (await c.execute("SELECT sealed_secret FROM provider_configs WHERE account=%s", (first["account"],))).fetchone())["sealed_secret"]
+    assert KEYS.open(sealed, seal_scope("speech", "minimax", first["account"]), MINIMAX) == "first-key-1111"
+    assert KEYS.open(sealed, seal_scope("speech", "minimax", "00000000"), MINIMAX) is None
+    assert KEYS.open(sealed, seal_scope("speech", "minimax"), MINIMAX) is None
+
+
+@pytest.mark.asyncio
+async def test_each_account_is_tried_and_reported_on_its_own(db, console, console_role, tmp_path):
+    await seed(db)
+    catalog, queries, principal, _ = await admin_catalog(console, console_role)
+    url = "https://api.openai-like.example/v1"
+    first = await catalog.save_provider_config(principal, "transcribe", "siliconflow", url, "aaaa-key", False, {}, "接入", "t1", account=None, name="甲")
+    second = await catalog.save_provider_config(principal, "transcribe", "siliconflow", url, "bbbb-key", False, {}, "接入", "t2", account=None, name="乙")
+
+    def handler(request):
+        return httpx.Response(200, json={"data": [{"id": "a-model"}]}) if request.headers["authorization"] == "Bearer aaaa-key" else httpx.Response(401, json={})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    binder = ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS, client=client)
+    await binder.refresh()
+    await binder._probe_task
+    listing = await queries.provider_configs(principal)
+    one, two = page(listing, "transcribe", "siliconflow", first["account"]), page(listing, "transcribe", "siliconflow", second["account"])
+    assert (one["status"]["state"], one["status"]["models"]) == ("ok", ["a-model"]) and two["status"]["state"] == "auth_failed"
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_new_gateway_connections_leave_the_server_models_alone(db, console, console_role):
+    await seed(db)
+    catalog, _, principal, _ = await admin_catalog(console, console_role)
+    extra = await catalog.save_provider_config(principal, "chat", "gateway", URL, SECRET, False, {}, "接入", "g1", account=None, name="第二个网关")
+    binder = ManagedBindings(db, "execution", exec_settings(), TEXT, keys=KEYS)
+    settings, _ = await binder.refresh()
+    assert settings.providers["file"].secret == "old-secret" and settings.providers[extra["provider_id"]].secret == SECRET
+    assert extra["provider_id"] == "console-chat-gateway-" + extra["account"]
+
+
+@pytest.mark.asyncio
+async def test_names_are_required_new_and_unique_and_edits_keep_the_key(db, console, console_role):
+    await seed(db)
+    catalog, queries, principal, _ = await admin_catalog(console, console_role)
+    first, second = await two_accounts(catalog, principal)
+    for name, code in (("", "console_provider_invalid"), ("主账号", "console_provider_name_taken"), ("主\n账号", "console_provider_invalid")):
+        with pytest.raises(PlatformError) as error:
+            await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, "third-key-3333", False, VOICES, "接入", "bad-" + str(len(name)) + code, account=None, name=name)
+        assert error.value.code == code
+    # Another platform on the page cannot take the name either.
+    with pytest.raises(PlatformError) as error:
+        await catalog.save_provider_config(principal, "speech", "fish", "https://api.fish.audio", "fish-key-4444", False, {"voices": ["v"]}, "接入", "bad-fish", account=None, name="备用账号")
+    assert error.value.code == "console_provider_name_taken"
+
+    renamed = await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, None, False, VOICES, "改名", "edit-1", account=second["account"], name="备用二号")
+    state = page(await queries.provider_configs(principal), "speech", "minimax", second["account"])
+    assert renamed["account"] == second["account"] and state["name"] == "备用二号" and state["key_hint"] == "2222"
+    with pytest.raises(PlatformError) as error:
+        await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, None, False, VOICES, "改名", "edit-2", account="00000000", name="不存在")
+    assert error.value.code == "console_provider_not_found"
+    with pytest.raises(PlatformError) as error:
+        await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, None, False, VOICES, "x", "edit-3", account="NOT-HEX!", name="x")
+    assert error.value.code == "console_provider_invalid"
+
+
+@pytest.mark.asyncio
+async def test_a_connection_with_enabled_models_cannot_be_removed(db, console, console_role, tmp_path):
+    await seed(db)
+    catalog, queries, principal, _ = await admin_catalog(console, console_role)
+    _, second = await two_accounts(catalog, principal)
+    binder = ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS)
+    await binder.refresh()
+    prices = {"unicode_scalar": "1"}
+    result = await catalog.import_models(principal, "audio.speech", second["provider_id"], ["speech-hd"], prices, True, "添加", "imp-1")
+    model = result["added"][0]
+    with pytest.raises(PlatformError) as error:
+        await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, None, True, VOICES, "删除", "del-1", account=second["account"])
+    assert error.value.code == "console_provider_in_use"
+    await catalog.set_media_state(principal, model, False, "停用", "off-1")
+    assert (await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, None, True, VOICES, "删除", "del-2", account=second["account"]))["configured"] is False
+    assert page(await queries.provider_configs(principal), "speech", "minimax", second["account"]) is None
+    with pytest.raises(PlatformError) as error:
+        await catalog.save_provider_config(principal, "speech", "minimax", MINIMAX, None, False, VOICES, "复活", "del-3", account=second["account"], name="x")
+    assert error.value.code == "console_provider_not_found"
+    binder._checked = 0
+    settings, _ = await binder.refresh()
+    assert second["provider_id"] not in settings.providers
+
+
+@pytest.mark.asyncio
+async def test_the_same_model_on_two_accounts_is_told_apart_by_name(db, console, console_role, tmp_path):
+    await seed(db)
+    catalog, queries, principal, _ = await admin_catalog(console, console_role)
+    first, second = await two_accounts(catalog, principal)
+    await ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS).refresh()
+    prices = {"unicode_scalar": "1"}
+    one = await catalog.import_models(principal, "audio.speech", first["provider_id"], ["speech-hd"], prices, True, "添加", "twin-1")
+    two = await catalog.import_models(principal, "audio.speech", second["provider_id"], ["speech-hd"], prices, True, "添加", "twin-2")
+    names = {row["id"]: row["name"] for row in (await queries.model_catalog(principal))["items"]}
+    assert one["added"] == ["speech-hd"] and names["speech-hd"] == "speech-hd"
+    assert two["added"][0].startswith(second["provider_id"] + ":") and names[two["added"][0]] == "speech-hd（备用账号）"
+
+
+@pytest.mark.asyncio
+async def test_the_desktop_never_gets_more_models_than_it_accepts(monkeypatch):
+    import types
+
+    import platform_service.media_runtime as module
+
+    async def catalog(scope, mode, bindings):
+        return {"models": [{"id": f"m{i}", "capability": "image.generate"} for i in range(101)]}
+
+    async def sync():
+        return None
+
+    runtime = module.MediaRuntime.__new__(module.MediaRuntime)
+    runtime.service, runtime.settings, runtime.bindings = types.SimpleNamespace(catalog=catalog), types.SimpleNamespace(mode="live", providers={}), {}
+    runtime._sync, runtime._provider = sync, lambda model, capability: types.SimpleNamespace(adapter="x")
+    monkeypatch.setattr(module, "supported_metering", lambda row, provider: True)
+    assert len((await runtime.catalog({}))["models"]) == module.MAX_PUBLISHED_MODELS == 100
