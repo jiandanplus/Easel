@@ -441,7 +441,7 @@ class ConsoleQueries:
             configs = await (await conn.execute("""SELECT DISTINCT ON (channel,platform,account) id,channel,platform,account,name,base_url,key_hint,options,created_at,
                 min(created_at) OVER (PARTITION BY channel,platform,account) AS first_at
                 FROM provider_configs ORDER BY channel,platform,account,created_at DESC,id DESC""")).fetchall()
-            status = await (await conn.execute('SELECT channel,platform,account,config_id,state,models,checked_at FROM provider_config_status')).fetchall()
+            status = await (await conn.execute('SELECT channel,platform,account,config_id,state,models,voices,checked_at FROM provider_config_status')).fetchall()
             catalog = await (await conn.execute("SELECT kind,provider_id,base_url,capabilities FROM provider_catalog WHERE provider_id NOT LIKE 'console-%'")).fetchall()
         states = {(r['channel'], r['platform'], r['account']): r for r in status}
         def server_address(name):
@@ -454,7 +454,7 @@ class ConsoleQueries:
             state = states.get(key)
             if state is None or state['config_id'] != config_id:
                 return None
-            return {'state': state['state'], 'models': state['models'], 'checked_at': state['checked_at'].isoformat()}
+            return {'state': state['state'], 'models': state['models'], 'voices': state['voices'], 'checked_at': state['checked_at'].isoformat()}
         channels = []
         for name in CHANNELS:
             # A row without a key is a connection that was removed.

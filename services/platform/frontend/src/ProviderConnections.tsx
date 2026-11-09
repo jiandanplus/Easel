@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ConsoleError, formatDate, Submission, validReason } from './core';
 import type { ConsoleClient } from './core';
 import { Modal } from './views';
-import { buildOptions, connectionLabel, CHANNELS, isSameInterface, joinKey, platformOf, statusBadge } from './providerChannels';
+import { buildOptions, chosenVoices, connectionLabel, CHANNELS, isSameInterface, joinKey, needsVoices, platformOf, statusBadge } from './providerChannels';
 import type { ChannelState, Connection, PlatformSpec } from './providerChannels';
 
 export type ConnectionMode = { kind: 'create' } | { kind: 'server' } | { kind: 'edit' | 'delete'; connection: Connection };
@@ -76,7 +76,7 @@ export function ConnectionDialog({ client, channel, mode, sealingReady, onClose,
   </div><div className="dialog-actions"><button type="button" className="button" disabled={busy} onClick={onClose}>取消</button><button type="submit" className={`button ${removing ? 'danger' : 'primary'}`} disabled={busy || submission.conflict}>{busy ? '提交中…' : removing ? '确认删除' : '保存'}</button></div></form></Modal>;
 }
 
-export function ConnectionList({ channel, items, canAddModels, onOpen, onPull, onAdd }: { channel: ChannelState; items: { provider_id: string }[]; canAddModels: boolean; onOpen: (mode: ConnectionMode) => void; onPull: (source: string | null) => void; onAdd: (base: string) => void }) {
+export function ConnectionList({ channel, items, canAddModels, onOpen, onPull, onAdd, onVoices }: { channel: ChannelState; items: { provider_id: string }[]; canAddModels: boolean; onOpen: (mode: ConnectionMode) => void; onPull: (source: string | null) => void; onAdd: (base: string) => void; onVoices: (providerId: string) => void }) {
   const page = CHANNELS.find(c => c.id === channel.channel)!, count = channel.connections.length + (channel.server ? 1 : 0);
   return <section className="panel connections"><div className="models-head"><h2 className="panel-title">{page.label}接入{count > 0 && <span className="muted"> · {count} 条</span>}</h2><button className="button primary" onClick={() => onOpen({ kind: 'create' })}>新建接入</button></div>
     {count === 0 && <div className="empty-state"><strong>还没有接入</strong><p className="muted">点“新建接入”，选平台并填写地址和 Key。同一个平台可以接入多个账号。</p></div>}
@@ -87,8 +87,8 @@ export function ConnectionList({ channel, items, canAddModels, onOpen, onPull, o
       </article>; })()}
       {channel.connections.map(item => { const spec = platformOf(channel, item.platform), [badge, text] = statusBadge(item.status), added = items.filter(row => isSameInterface(row.provider_id, item.provider_id)).length; return <article className="connection-row" key={item.provider_id}>
         <div className="connection-main"><div className="connection-title"><strong>{connectionLabel(channel, item)}</strong><span className={`badge ${badge}`}>{text}</span></div>
-          <small className="muted">{spec?.label} · {item.base_url} · Key ····{item.key_hint} · 已添加模型 {added} 个 · 更新于 {formatDate(item.updated_at)}</small></div>
-        <div className="row-actions">{canAddModels && (spec?.lists_models ? <button className="text-button" onClick={() => onPull(item.provider_id)}>拉取模型</button> : <button className="text-button" onClick={() => onAdd(item.provider_id)}>添加模型</button>)}<button className="text-button" onClick={() => onOpen({ kind: 'edit', connection: item })}>编辑</button><button className="text-button" onClick={() => onOpen({ kind: 'delete', connection: item })}>删除</button></div>
+          <small className="muted">{spec?.label} · {item.base_url} · Key ····{item.key_hint}{channel.channel === 'speech' && ` · 已选音色 ${chosenVoices(item).length} 个`} · 已添加模型 {added} 个 · 更新于 {formatDate(item.updated_at)}</small>{needsVoices(channel, item) && <small className="connection-todo">还没有选音色，选好后才能添加模型。</small>}</div>
+        <div className="row-actions">{spec?.lists_voices && <button className="text-button" onClick={() => onVoices(item.provider_id)}>拉取音色</button>}{canAddModels && !needsVoices(channel, item) && (spec?.lists_models ? <button className="text-button" onClick={() => onPull(item.provider_id)}>拉取模型</button> : <button className="text-button" onClick={() => onAdd(item.provider_id)}>添加模型</button>)}<button className="text-button" onClick={() => onOpen({ kind: 'edit', connection: item })}>编辑</button><button className="text-button" onClick={() => onOpen({ kind: 'delete', connection: item })}>删除</button></div>
       </article>; })}
     </div></section>;
 }

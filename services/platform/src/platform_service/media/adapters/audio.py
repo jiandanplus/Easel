@@ -20,6 +20,7 @@ from ..rates import unicode_scalars, seconds_to_milliseconds
 from ..references import http_reference
 from .base import MediaAdapter, PreparedRequest
 from .openai_images import bounded_response
+from ...voice_catalogs import VOICE_ID
 
 CLIENT_NAMESPACE = 'easel_client_request_v1'
 _HTTP_ID = re.compile(r'req_[A-Za-z0-9_-]{1,192}\Z', re.ASCII)
@@ -52,7 +53,7 @@ class AudioProfile:
 
     def __post_init__(self):
         if (not isinstance(self.voices,tuple) or len(self.voices)>64
-                or any(not isinstance(v,str) or not re.fullmatch('[A-Za-z0-9_-]{1,64}',v,re.ASCII) for v in self.voices)
+                or any(not isinstance(v,str) or not re.fullmatch(VOICE_ID,v,re.ASCII) for v in self.voices)
                 or len(set(self.voices))!=len(self.voices)
                 or type(self.instructions) is not bool or type(self.transcription_video) is not bool
                 or self.transcription_usage not in {'none','tokens','duration'}

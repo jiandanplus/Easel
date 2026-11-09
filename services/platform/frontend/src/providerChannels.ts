@@ -11,9 +11,10 @@ export const CHANNELS: { id: ChannelId; label: string; capabilities: string[] }[
 ];
 export const channelOf = (capability: string): ChannelId | undefined => CHANNELS.find(c => c.capabilities.includes(capability))?.id;
 
-export type Field = { key: string; label: string; required: boolean; list: boolean; placeholder: string };
-export type PlatformSpec = { id: string; label: string; default_url: string; hint: string; key_label: string; second_key: string | null; fields: Field[]; lists_models: boolean };
-export type Probe = { state: string; models: string[]; checked_at: string };
+export type Field = { key: string; label: string; required: boolean; list: boolean; placeholder: string; lines?: boolean };
+export type PlatformSpec = { id: string; label: string; default_url: string; hint: string; key_label: string; second_key: string | null; fields: Field[]; lists_models: boolean; lists_voices?: boolean; voice_search?: boolean };
+export type VoiceItem = { id: string; name: string; kind: string };
+export type Probe = { state: string; models: string[]; voices?: VoiceItem[]; checked_at: string };
 export type Connection = { id: string; platform: string; account: string; name: string; provider_id: string; base_url: string; key_hint: string; options: RecordData; updated_at: string; status: Probe | null };
 export type ChannelState = { channel: ChannelId; server_base_url: string | null; platforms: PlatformSpec[]; connections: Connection[]; server: { base_url: string; status: Probe | null } | null };
 
@@ -26,6 +27,7 @@ const STATES: Record<string, [string, string]> = {
 };
 export function statusBadge(status: Probe | null): [string, string] {
   if (!status) return ['neutral', '检测中…'];
+  if (status.state === 'no_model_list' && status.voices?.length) return ['positive', `连接正常 · 可选音色 ${status.voices.length} 个`];
   const found = STATES[status.state] ?? ['neutral', status.state];
   return status.state === 'ok' ? [found[0], `${found[1]} · 可用模型 ${status.models.length} 个`] : found;
 }
@@ -46,10 +48,13 @@ export function knownModels(channel: ChannelState | undefined): string[] {
 export function parseList(text: string): string[] {
   return [...new Set(text.split(/[\s,，、]+/).map(v => v.trim()).filter(Boolean))];
 }
+export function parseLines(text: string): string[] {
+  return [...new Set(text.split(/[\n,，、]+/).map(v => v.trim()).filter(Boolean))];
+}
 export function buildOptions(fields: Field[], draft: Record<string, string>): RecordData {
   const options: RecordData = {};
   for (const field of fields) {
-    const value = field.list ? parseList(draft[field.key] ?? '') : (draft[field.key] ?? '').trim();
+    const value = field.list ? (field.lines ? parseLines : parseList)(draft[field.key] ?? '') : (draft[field.key] ?? '').trim();
     if (field.required && !value.length) throw new Error(`请填写${field.label}`);
     options[field.key] = value;
   }
@@ -61,4 +66,16 @@ export function joinKey(first: string, second: string, needsSecond: boolean): st
   if (!a && !b) return null;
   if (!a || !b) throw new Error('两个 Key 都要填写');
   return `${a}|${b}`;
+}
+
+export const VOICE_KINDS: Record<string, string> = { mine: '我的', public: '公开', system: '系统', cloned: '复刻', generated: '设计', manual: '手动填写' };
+export const chosenVoices = (item: Connection): string[] => Array.isArray(item.options?.voices) ? item.options.voices as string[] : [];
+export const needsVoices = (channel: ChannelState, item: Connection) => channel.channel === 'speech' && chosenVoices(item).length === 0;
+export function voiceRows(listed: VoiceItem[], chosen: string[]): VoiceItem[] {
+  const known = new Set(listed.map(v => v.id));
+  return [...chosen.filter(id => !known.has(id)).map(id => ({ id, name: id, kind: 'manual' })), ...listed];
+}
+export function matchVoices(rows: VoiceItem[], query: string): VoiceItem[] {
+  const needle = query.trim().toLowerCase();
+  return needle ? rows.filter(v => v.name.toLowerCase().includes(needle) || v.id.toLowerCase().includes(needle)) : rows;
 }

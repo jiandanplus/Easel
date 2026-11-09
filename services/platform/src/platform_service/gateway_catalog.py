@@ -9,6 +9,7 @@ import httpx
 
 from .errors import PlatformError
 from .pricing import catalog_ready
+from .voice_catalogs import list_voices
 from .provider_channels import CHANNELS, GATEWAY, apply_connection, build_clone_provider, build_provider, channel_of, clone_provider_id, provider_id, seal_scope, spec_of
 
 REFRESH_SECONDS = 5
@@ -69,6 +70,11 @@ class ManagedBindings:
         try:
             if secret is None:
                 raise ValueError
+            target = (row["id"], base_url, secret, row["options"].get("auth_header"), row["options"])
+            if channel == "speech" and not row["options"].get("voices"):
+                # Nothing to serve until voices are picked, but the supplier can be asked for its list.
+                self._targets[(channel, platform, account)] = target
+                return
             current = row["status_config"] == row["id"]
             changed = {provider_id(channel, platform, account): build_provider(channel, platform, base_url, secret, row["options"], preflight=not (current and row["state"] == "no_model_list"))}
             if platform == GATEWAY and not account:  # Everything already on this page moves to the saved address and key too.
@@ -80,7 +86,7 @@ class ManagedBindings:
             invalid.append(row)
             return
         providers.update(changed)
-        self._targets[(channel, platform, account)] = (row["id"], base_url, secret, row["options"].get("auth_header"))
+        self._targets[(channel, platform, account)] = target
 
     def _add_server_targets(self):
         """Pages still on the server files can list their models too."""
@@ -90,7 +96,7 @@ class ManagedBindings:
             channel = channel_of(item)
             if channel is not None and (channel, GATEWAY, "") not in self._targets:
                 base = item.base_url.rstrip("/") if self.kind == "media" else re.sub(r"/(?:responses|chat/completions|messages)$", "", item.endpoint)
-                self._targets[(channel, GATEWAY, "")] = (SERVER_FILE, base, item.secret, None)
+                self._targets[(channel, GATEWAY, "")] = (SERVER_FILE, base, item.secret, None, {})
 
     async def refresh(self):
         if self.base.mode == "disabled" or time.monotonic() < self._checked:
@@ -134,10 +140,14 @@ class ManagedBindings:
         return last is None or last[0] != config_id or time.monotonic() >= last[1]
 
     async def probe_due(self):
-        for key, (config_id, base_url, secret, custom_header) in list(self._targets.items()):
+        for key, (config_id, base_url, secret, custom_header, options) in list(self._targets.items()):
             if self._due(key, config_id):
-                state, names = await self._try(None if custom_header else spec_of(*key[:2])["probe"], base_url, secret)
-                await self._report(*key, config_id, state, names)
+                spec, voices = spec_of(*key[:2]), []
+                state, names = await self._try(None if custom_header else spec["probe"], base_url, secret)
+                if spec.get("voice_list"):
+                    failure, voices = await list_voices(self.client, spec["voice_list"], base_url, secret, options)
+                    state = failure or state
+                await self._report(*key, config_id, state, names, voices)
                 self._probed[key] = (config_id, time.monotonic() + PROBE_SECONDS)
 
     async def _try(self, probe, base_url, secret):
@@ -165,13 +175,14 @@ class ManagedBindings:
         ids = (item.get("id") or str(item.get("name") or "").removeprefix("models/") for item in data if isinstance(item, dict))
         return "ok", sorted({name for name in ids if isinstance(name, str) and 0 < len(name) <= 128})[:MAX_LISTED_MODELS]
 
-    async def _report(self, channel, platform, account, config_id, state, names):
+    async def _report(self, channel, platform, account, config_id, state, names, voices=()):
         async with self.db.connection() as c:
             await c.execute(
-                """INSERT INTO provider_config_status(channel,platform,account,config_id,state,models) VALUES (%s,%s,%s,%s,%s,%s::jsonb)
+                """INSERT INTO provider_config_status(channel,platform,account,config_id,state,models,voices) VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb)
                 ON CONFLICT (channel,platform,account) DO UPDATE SET config_id=EXCLUDED.config_id,state=EXCLUDED.state,checked_at=clock_timestamp(),
-                models=CASE WHEN EXCLUDED.state='unreachable' AND provider_config_status.config_id=EXCLUDED.config_id THEN provider_config_status.models ELSE EXCLUDED.models END""",
-                (channel, platform, account, config_id, state, json.dumps(names)))
+                models=CASE WHEN EXCLUDED.state='unreachable' AND provider_config_status.config_id=EXCLUDED.config_id THEN provider_config_status.models ELSE EXCLUDED.models END,
+                voices=CASE WHEN EXCLUDED.state='unreachable' AND provider_config_status.config_id=EXCLUDED.config_id THEN provider_config_status.voices ELSE EXCLUDED.voices END""",
+                (channel, platform, account, config_id, state, json.dumps(names), json.dumps(list(voices))))
 
     async def close(self):
         if self._probe_task is not None and not self._probe_task.done():

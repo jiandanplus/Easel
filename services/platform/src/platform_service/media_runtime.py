@@ -54,6 +54,18 @@ def digest(value):
 # The desktop refuses a longer list outright, which would take away every media tool.
 MAX_PUBLISHED_MODELS = 100
 
+
+def _with_voices(row, provider):
+    """Name the voices this model accepts, so the agent chooses one instead of guessing."""
+    voice = row["parameters"]["properties"].get("voice") if row["capability"] == "audio.speech" else None
+    if voice is None or "enum" in voice:  # A model with its own list keeps it.
+        return row
+    voices = provider.audio_profile.get("voices") if isinstance(provider.audio_profile, dict) else None
+    if not voices:
+        return row
+    properties = {**row["parameters"]["properties"], "voice": {**voice, "enum": list(voices)}}
+    return {**row, "parameters": {**row["parameters"], "properties": properties}}
+
 class MediaRuntime:
     def __init__(self, db, identity, settings, *, service=None, transport=None, maintenance=None, control_lock=None, source_root=None, provider_keys=None):
         if service is None:
@@ -175,7 +187,7 @@ class MediaRuntime:
             try: provider = self._provider(row["id"], row["capability"])
             except (PlatformError, KeyError): continue
             if provider.adapter in AV_ADAPTERS and not av_ready:continue
-            if supported_metering(row, provider): rows.append(row)
+            if supported_metering(row, provider): rows.append(_with_voices(row, provider))
         return {"models": rows[:MAX_PUBLISHED_MODELS]}
 
     async def _model(self, scope, model):

@@ -10,11 +10,13 @@ from urllib.parse import urlsplit
 from .errors import PlatformError
 from .execution_config import ExecutionProvider
 from .media_config import MediaProvider, origin
+from .voice_catalogs import VOICE_ID
 
 PROVIDER_VERSION = "console-1"
 GATEWAY = "gateway"
 
 _VOICES = {"key": "voices", "label": "可选音色", "required": True, "list": True, "placeholder": "一行一个或用逗号分隔"}
+_VOICES_LISTED = {**_VOICES, "required": False, "lines": True, "placeholder": "可以留空，保存后点“拉取音色”；也可以一行填一个"}
 _ORIGINS = {"key": "download_origins", "label": "结果下载域名", "required": False, "list": True, "placeholder": "接口返回下载链接时填写，例如 https://cdn.example.com"}
 _ORIGINS_REQUIRED = {**_ORIGINS, "required": True, "placeholder": "例如 https://cdn.example.com"}
 _PREFIXES = {"key": "download_path_prefixes", "label": "下载路径前缀", "required": True, "list": True, "placeholder": "例如 /audio/"}
@@ -45,9 +47,9 @@ PLATFORMS = {
     },
     "speech": {
         GATEWAY: {"label": "OpenAI 兼容 / New API", "url": "", "adapter": "openai_speech_v1", "probe": "bearer", "fields": [_VOICES], "hint": "调用 /audio/speech。"},
-        "dashscope": {"label": "阿里 CosyVoice", "url": "https://dashscope.aliyuncs.com", "adapter": "dashscope_speech_v1", "clone_adapter": "newapi_dashscope_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "fields": [_VOICES], "hint": "音色要和模型版本匹配，例如 cosyvoice-v2 用 longxiaochun_v2。支持声音复刻。"},
-        "minimax": {"label": "MiniMax", "url": "https://api.minimax.chat", "adapter": "minimax_speech_v1", "clone_adapter": "newapi_minimax_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "fields": [_VOICES, {"key": "group_id", "label": "Group ID", "required": False, "list": False, "placeholder": "账号需要时填写"}], "hint": "调用 /v1/t2a_v2。支持声音复刻。"},
-        "fish": {"label": "Fish Audio", "url": "https://api.fish.audio", "adapter": "fish_speech_v1", "probe": None, "fields": [{**_VOICES, "label": "声音模型 ID"}], "hint": "调用 /v1/tts。可以直接上传参考音频。"},
+        "dashscope": {"label": "阿里 CosyVoice", "url": "https://dashscope.aliyuncs.com", "adapter": "dashscope_speech_v1", "clone_adapter": "newapi_dashscope_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "voice_list": "dashscope", "fields": [_VOICES_LISTED], "hint": "音色要和模型版本匹配，例如 cosyvoice-v2 用 longxiaochun_v2。支持声音复刻。"},
+        "minimax": {"label": "MiniMax", "url": "https://api.minimax.chat", "adapter": "minimax_speech_v1", "clone_adapter": "newapi_minimax_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "voice_list": "minimax", "fields": [_VOICES_LISTED, {"key": "group_id", "label": "Group ID", "required": False, "list": False, "placeholder": "账号需要时填写"}], "hint": "调用 /v1/t2a_v2。支持声音复刻。"},
+        "fish": {"label": "Fish Audio", "url": "https://api.fish.audio", "adapter": "fish_speech_v1", "probe": None, "voice_list": "fish", "voice_search": True, "fields": [{**_VOICES_LISTED, "label": "声音模型 ID"}], "hint": "调用 /v1/tts。可以直接上传参考音频。"},
         "gemini": {"label": "Google Gemini TTS", "url": "https://generativelanguage.googleapis.com/v1beta", "adapter": "gemini_speech_v1", "probe": "gemini", "fields": [{**_VOICES, "placeholder": "例如 Kore"}], "hint": "只输出 WAV。"},
     },
     "image": {
@@ -96,7 +98,8 @@ def public_platforms(channel):
     for platform, spec in PLATFORMS[channel].items():
         result.append({"id": platform, "label": spec["label"], "default_url": spec["url"], "hint": spec["hint"],
                        "key_label": spec.get("key_label", "API Key"), "second_key": spec.get("second_key"),
-                       "fields": spec.get("fields", []), "lists_models": spec["probe"] is not None})
+                       "fields": spec.get("fields", []), "lists_models": spec["probe"] is not None,
+                       "lists_voices": "voice_list" in spec, "voice_search": bool(spec.get("voice_search"))})
     return result
 
 
@@ -151,7 +154,7 @@ def _origins(values):
 
 def _voices(values):
     if (not isinstance(values, list) or len(values) > 64 or len(set(values)) != len(values)
-            or any(not isinstance(v, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", v, re.ASCII) for v in values)):
+            or any(not isinstance(v, str) or not re.fullmatch(VOICE_ID, v, re.ASCII) for v in values)):
         raise invalid()
     return values
 
@@ -197,10 +200,14 @@ def clean_name(value):
 
 
 def clean_options(channel, platform, value):
-    fields = spec_of(channel, platform).get("fields", [])
-    if not isinstance(value, dict) or set(value) != {field["key"] for field in fields}:
+    spec, value = spec_of(channel, platform), dict(value) if isinstance(value, dict) else None
+    fields = spec.get("fields", [])
+    query = value.pop("voice_query", "") if value is not None and spec.get("voice_search") else ""
+    if value is None or set(value) != {field["key"] for field in fields}:
         raise invalid()
-    result = {}
+    if not isinstance(query, str) or len(query.strip()) > 64 or any(ord(c) < 32 or ord(c) == 127 for c in query):
+        raise invalid()
+    result = {"voice_query": query.strip()} if query.strip() else {}
     for field in fields:
         item = _CLEAN[field["key"]](value[field["key"]])
         if field["required"] and not item:

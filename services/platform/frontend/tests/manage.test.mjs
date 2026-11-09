@@ -97,3 +97,15 @@ test('pulling models picks the right interface and hides what is already added',
   client.setSession({admin:{id:'a',role:'admin',permissions:['console:read','execution:publish']},csrf_token:'csrf'});
   assert.ok(client.operation('/api/catalog/import',{},'execution:publish'));
 });
+test('voices keep spaces in their ids and picked ones never vanish from the list',()=>{
+  const p=load('providerChannels.ts');
+  assert.equal(JSON.stringify(p.parseLines('Chinese (Mandarin)_Lady\na，b')),'["Chinese (Mandarin)_Lady","a","b"]');
+  const fields=[{key:'voices',label:'音色',required:false,list:true,lines:true}];
+  assert.equal(JSON.stringify(p.buildOptions(fields,{voices:''})),'{"voices":[]}');
+  assert.equal(JSON.stringify(p.buildOptions(fields,{voices:'A (B)_C'})),'{"voices":["A (B)_C"]}');
+  const listed=[{id:'v1',name:'温柔女声',kind:'mine'}];
+  assert.equal(p.voiceRows(listed,['v1','old']).map(v=>v.id+':'+v.kind).join(),'old:manual,v1:mine');
+  assert.equal(p.matchVoices(listed,'温柔').length,1);assert.equal(p.matchVoices(listed,'V1').length,1);assert.equal(p.matchVoices(listed,'x').length,0);
+  assert.equal(p.statusBadge({state:'no_model_list',models:[],voices:listed})[1],'连接正常 · 可选音色 1 个');
+  const page={channel:'speech'};assert.equal(p.needsVoices(page,{options:{voices:[]}}),true);assert.equal(p.needsVoices(page,{options:{voices:['a']}}),false);assert.equal(p.needsVoices({channel:'chat'},{options:{}}),false);
+});

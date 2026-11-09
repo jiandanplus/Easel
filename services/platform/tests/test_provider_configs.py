@@ -14,6 +14,7 @@ from platform_service.gateway_catalog import ManagedBindings
 from platform_service.media_config import MediaProvider, MediaSettings
 from platform_service.provider_channels import CHANNELS, PLATFORMS, build_clone_provider, build_provider, clone_provider_id, clean_base_url, clean_key, clean_options, provider_id, public_platforms, seal_scope
 from platform_service.provider_secrets import ProviderKeys, generate, seal
+from platform_service.voice_catalogs import MAX_VOICES, list_voices
 from test_console_auth import console  # noqa: F401 (fixture)
 from test_console_owner_allowance import low_catalog
 from test_console_permissions import console_role  # noqa: F401 (fixture)
@@ -127,7 +128,7 @@ def test_only_platforms_with_a_model_list_are_probed_and_named():
 
 
 def test_page_options_are_strict():
-    for channel, platform, bad in (("speech", "gateway", {}), ("speech", "gateway", {"voices": []}), ("speech", "gateway", {"voices": ["bad voice"]}), ("chat", "gateway", {"x": 1}),
+    for channel, platform, bad in (("speech", "gateway", {}), ("speech", "gateway", {"voices": []}), ("speech", "gateway", {"voices": ["bad/voice"]}), ("chat", "gateway", {"x": 1}),
                                    ("music", "gateway", {"download_origins": [], "download_path_prefixes": ["/a/"]}),
                                    ("music", "gateway", {"download_origins": ["https://c.example"], "download_path_prefixes": ["/"]}),
                                    ("image", "gateway", {"download_origins": ["ftp://x"]}), ("speech", "minimax", {"voices": ["a"], "group_id": "bad id"}),
@@ -524,3 +525,127 @@ async def test_the_desktop_never_gets_more_models_than_it_accepts(monkeypatch):
     runtime._sync, runtime._provider = sync, lambda model, capability: types.SimpleNamespace(adapter="x")
     monkeypatch.setattr(module, "supported_metering", lambda row, provider: True)
     assert len((await runtime.catalog({}))["models"]) == module.MAX_PUBLISHED_MODELS == 100
+
+
+def test_voices_may_wait_for_a_pull_only_where_a_supplier_can_list_them():
+    assert clean_options("speech", "fish", {"voices": []}) == {"voices": []}
+    assert clean_options("speech", "minimax", {"voices": ["Chinese (Mandarin)_Reliable_Executive"], "group_id": ""})["voices"] == ["Chinese (Mandarin)_Reliable_Executive"]
+    assert clean_options("speech", "fish", {"voices": [], "voice_query": " 旁白 "}) == {"voice_query": "旁白", "voices": []}
+    for platform, bad in (("gateway", {"voices": []}), ("gemini", {"voices": []}), ("minimax", {"voices": [], "group_id": "", "voice_query": "x"}), ("fish", {"voices": [], "voice_query": "x" * 65}), ("fish", {"voices": [], "voice_query": 1}), ("fish", {"voices": [" a"]})):
+        with pytest.raises(PlatformError):
+            clean_options("speech", platform, bad)
+    assert {p["id"]: (p["lists_voices"], p["voice_search"]) for p in public_platforms("speech")} == {"gateway": (False, False), "dashscope": (True, False), "minimax": (True, False), "fish": (True, True), "gemini": (False, False)}
+
+
+def voice_client(handler):
+    return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+@pytest.mark.asyncio
+async def test_fish_lists_own_voices_page_by_page_and_public_ones_only_when_searched():
+    seen = []
+
+    def handler(request):
+        params = dict(request.url.params)
+        seen.append(params)
+        assert request.headers["authorization"] == "Bearer k"
+        if "title" in params:
+            return httpx.Response(200, json={"items": [{"_id": "pub1", "title": "公开旁白", "state": "trained"}, {"_id": "abc", "title": "重复"}], "has_more": False})
+        page = int(params["page_number"])
+        return httpx.Response(200, json={"items": [{"_id": f"own{page}", "title": f"声音{page}", "state": "trained"}, {"_id": "abc", "title": "训练中", "state": "training"}, {"_id": "bad/id", "title": "x"}], "has_more": page == 1})
+
+    async with voice_client(handler) as client:
+        failure, voices = await list_voices(client, "fish", "https://api.fish.audio", "k", {})
+        assert failure is None and [(v["id"], v["name"], v["kind"]) for v in voices] == [("own1", "声音1", "mine"), ("own2", "声音2", "mine")]
+        assert all(p["self"] == "true" for p in seen)
+        seen.clear()
+        _, voices = await list_voices(client, "fish", "https://api.fish.audio", "k", {"voice_query": "旁白"})
+    assert [v["kind"] for v in voices] == ["mine", "mine", "public", "public"] and seen[-1]["title"] == "旁白" and "self" not in seen[-1]
+
+
+@pytest.mark.asyncio
+async def test_minimax_lists_every_kind_and_a_bad_key_says_so():
+    def handler(request):
+        assert request.method == "POST" and json.loads(request.content) == {"voice_type": "all"} and request.url.params["GroupId"] == "g1"
+        return httpx.Response(200, json={"base_resp": {"status_code": 0}, "system_voice": [{"voice_id": "Chinese (Mandarin)_Lady", "voice_name": "知性女声"}], "voice_cloning": [{"voice_id": "my-clone"}], "voice_generation": []})
+
+    async with voice_client(handler) as client:
+        failure, voices = await list_voices(client, "minimax", "https://api.minimax.chat", "k", {"group_id": "g1"})
+    assert failure is None and [(v["id"], v["name"], v["kind"]) for v in voices] == [("my-clone", "my-clone", "cloned"), ("Chinese (Mandarin)_Lady", "知性女声", "system")]
+    async with voice_client(lambda request: httpx.Response(200, json={"base_resp": {"status_code": 2049}})) as client:
+        assert await list_voices(client, "minimax", "https://api.minimax.chat", "k", {}) == ("auth_failed", [])
+
+
+@pytest.mark.asyncio
+async def test_dashscope_lists_finished_clones_and_supplier_failures_are_named():
+    def handler(request):
+        body = json.loads(request.content)
+        assert str(request.url) == "https://dashscope.aliyuncs.com/api/v1/services/audio/tts/customization" and body["input"]["action"] == "list_voice"
+        return httpx.Response(200, json={"output": {"voice_list": [{"voice_id": "ready", "status": "OK"}, {"voice_id": "busy", "status": "DEPLOYING"}]}})
+
+    async with voice_client(handler) as client:
+        assert (await list_voices(client, "dashscope", "https://dashscope.aliyuncs.com", "k", {}))[1] == [{"id": "ready", "name": "ready", "kind": "cloned"}]
+    async with voice_client(lambda request: httpx.Response(401, json={})) as client:
+        assert await list_voices(client, "fish", "https://api.fish.audio", "k", {}) == ("auth_failed", [])
+    async with voice_client(lambda request: httpx.Response(500, text="oops")) as client:
+        assert await list_voices(client, "dashscope", "https://dashscope.aliyuncs.com", "k", {}) == (None, [])
+
+    def down(request):
+        raise httpx.ConnectError("down")
+
+    async with voice_client(down) as client:
+        assert await list_voices(client, "minimax", "https://api.minimax.chat", "k", {}) == ("unreachable", [])
+    big = {"base_resp": {"status_code": 0}, "system_voice": [{"voice_id": f"v{i}"} for i in range(MAX_VOICES + 5)]}
+    async with voice_client(lambda request: httpx.Response(200, json=big)) as client:
+        assert len((await list_voices(client, "minimax", "https://api.minimax.chat", "k", {}))[1]) == MAX_VOICES
+
+
+@pytest.mark.asyncio
+async def test_a_connection_can_be_saved_without_voices_then_picked_from_the_pulled_list(db, console, console_role, tmp_path):
+    await seed(db)
+    catalog, queries, principal, _ = await admin_catalog(console, console_role)
+    url = "https://api.fish.audio"
+    created = await catalog.save_provider_config(principal, "speech", "fish", url, "fish-key-1234", False, {"voices": []}, "接入", "v1", account=None, name="Fish test")
+    down = []
+
+    def handler(request):
+        if down:
+            raise httpx.ConnectError("down")
+        return httpx.Response(200, json={"items": [{"_id": "voice1", "title": "温柔女声", "state": "trained"}], "has_more": False})
+
+    client = voice_client(handler)
+    binder = ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS, client=client)
+    settings, _ = await binder.refresh()
+    assert created["provider_id"] not in settings.providers
+    await binder._probe_task
+    state = page(await queries.provider_configs(principal), "speech", "fish", created["account"])
+    assert state["status"]["state"] == "no_model_list" and state["status"]["voices"] == [{"id": "voice1", "name": "温柔女声", "kind": "mine"}]
+
+    down.append(True)
+    binder._probed.clear()
+    await binder.probe_due()
+    state = page(await queries.provider_configs(principal), "speech", "fish", created["account"])
+    assert state["status"]["state"] == "unreachable" and [v["id"] for v in state["status"]["voices"]] == ["voice1"]
+
+    await catalog.save_provider_config(principal, "speech", "fish", url, None, False, {"voices": ["voice1"]}, "选择音色", "v2", account=created["account"], name="Fish test")
+    binder._checked = 0
+    settings, _ = await binder.refresh()
+    assert settings.providers[created["provider_id"]].audio_profile["voices"] == ["voice1"] and settings.providers[created["provider_id"]].secret == "fish-key-1234"
+    await client.aclose()
+
+
+def test_the_agent_is_told_which_voices_a_model_accepts():
+    import types
+
+    import platform_service.media_runtime as module
+
+    parameters = {"type": "object", "required": ["voice"], "additionalProperties": False, "properties": {"voice": {"type": "string", "maxLength": 128}}}
+    speech = {"capability": "audio.speech", "parameters": parameters}
+    provider = types.SimpleNamespace(audio_profile={"voices": ["a", "b"]}, adapter="fish_speech_v1", capabilities=("audio.speech",))
+    assert module._with_voices(speech, provider)["parameters"]["properties"]["voice"] == {"type": "string", "maxLength": 128, "enum": ["a", "b"]}
+    assert parameters["properties"]["voice"] == {"type": "string", "maxLength": 128}
+    other = {"capability": "image.generate", "parameters": {"properties": {}}}
+    assert module._with_voices(other, provider) is other
+    fixed = {"capability": "audio.speech", "parameters": {"properties": {"voice": {"type": "string", "enum": ["narrator"]}}}}
+    assert module._with_voices(fixed, provider) is fixed
+    assert module._with_voices(speech, types.SimpleNamespace(audio_profile=None)) is speech

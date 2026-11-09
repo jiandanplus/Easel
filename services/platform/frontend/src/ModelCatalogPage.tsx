@@ -4,6 +4,7 @@ import type { ConsoleClient, LoadState, RecordData } from './core';
 import { Loading, Modal } from './views';
 import { ModelImportDialog, providerFor, sourceOf } from './ModelImportDialog';
 import { ConnectionDialog, ConnectionList } from './ProviderConnections';
+import { VoicePullDialog } from './VoicePullDialog';
 import type { ConnectionMode } from './ProviderConnections';
 import { CHANNELS, channelOf, knownModels, providerLabel } from './providerChannels';
 import type { ChannelId, ChannelState } from './providerChannels';
@@ -86,7 +87,7 @@ function Dialog({ client, action, data, channel, onClose, onFailure, onDone }: {
 }
 
 export function ModelCatalogPage({ client, permissions, onFailure }: { client: ConsoleClient; permissions: string[]; onFailure: (e: unknown) => string }) {
-  const [state, setState] = useState<LoadState<Catalog>>({ kind: 'loading' }), [revision, setRevision] = useState(0), [action, setAction] = useState<Action | null>(null), [notice, setNotice] = useState(''), [channel, setChannel] = useState<ChannelId>('chat'), [importing, setImporting] = useState<{ id: string | null } | null>(null), [dialog, setDialog] = useState<ConnectionMode | null>(null);
+  const [state, setState] = useState<LoadState<Catalog>>({ kind: 'loading' }), [revision, setRevision] = useState(0), [action, setAction] = useState<Action | null>(null), [notice, setNotice] = useState(''), [channel, setChannel] = useState<ChannelId>('chat'), [importing, setImporting] = useState<{ id: string | null } | null>(null), [dialog, setDialog] = useState<ConnectionMode | null>(null), [voicesOf, setVoicesOf] = useState<string | null>(null);
   const gate = useRef(new RequestGate()), polls = useRef(0), canWrite = permissions.includes('execution:publish'), canConfigure = permissions.includes('providers:manage');
   useEffect(() => {
     const request = gate.current.begin();
@@ -108,7 +109,7 @@ export function ModelCatalogPage({ client, permissions, onFailure }: { client: C
   const done = (message: string) => { polls.current = 0; setNotice(message); setRevision(x => x + 1); };
   return <>{heading}{notice && <div className="notice" role="status">{notice}</div>}
     <div className="page-tabs channel-tabs" role="tablist">{CHANNELS.map(c => <button key={c.id} role="tab" aria-selected={c.id === channel} className={c.id === channel ? 'active' : ''} onClick={() => { setChannel(c.id); setNotice(''); }}>{c.label}</button>)}</div>
-    {current && <ConnectionList channel={current} items={items} canAddModels={canWrite} onOpen={setDialog} onPull={id => setImporting({ id })} onAdd={base => setAction({ kind: 'add', base })} />}
+    {current && <ConnectionList channel={current} items={items} canAddModels={canWrite} onOpen={setDialog} onPull={id => setImporting({ id })} onAdd={base => setAction({ kind: 'add', base })} onVoices={setVoicesOf} />}
     <section className="panel"><div className="models-head"><h2 className="panel-title">这一类的模型</h2></div>{items.length === 0 ? <div className="empty-state"><strong>还没有模型</strong></div> : <div className="table-scroll"><table><thead><tr><th>模型</th><th>类型</th><th>接口</th><th>单价（点）</th><th>状态</th><th>真实调用</th><th>操作</th></tr></thead><tbody>
       {items.map(row => { const template = templates.find(t => t.capability === row.capability); return <tr key={row.kind + row.id}>
         <td><div className="person"><strong>{row.name}</strong><small>{row.id}</small></div></td><td>{template?.label ?? row.capability}</td>
@@ -119,6 +120,7 @@ export function ModelCatalogPage({ client, permissions, onFailure }: { client: C
     </tbody></table></div>}</section>
     <p className="caption">更新于 {formatDate(new Date().toISOString())}。</p>
     {source && current && <ModelImportDialog client={client} channel={current} source={source} data={state.data} onFailure={onFailure} onClose={() => setImporting(null)} onRefresh={() => { polls.current = 0; setRevision(x => x + 1); }} onDone={m => { setImporting(null); done(m); }} />}
+    {voicesOf && current && current.connections.some(c => c.provider_id === voicesOf) && <VoicePullDialog client={client} channel={current} item={current.connections.find(c => c.provider_id === voicesOf)!} onFailure={onFailure} onClose={() => setVoicesOf(null)} onRefresh={() => { polls.current = 0; setRevision(x => x + 1); }} onDone={m => { setVoicesOf(null); done(m); }} />}
     {dialog && current && <ConnectionDialog client={client} channel={current} mode={dialog} sealingReady={sealingReady} onFailure={onFailure} onClose={() => setDialog(null)} onDone={m => { setDialog(null); done(m); }} />}
     {action && <Dialog client={client} action={action} data={state.data} channel={channel} onClose={() => setAction(null)} onFailure={onFailure} onDone={m => { setAction(null); done(m); }} />}
   </>;
