@@ -61,7 +61,7 @@ export class ConsoleClient {
   }
   get sessionRevision() { return this.epoch; }
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    if (!/^\/api\/(?:session|overview|stats|catalog|redemptions|admins|admin-requests|users|products|plans|wallets|orders|offers|models|providers|executions|audits|reconciliation-cases)(?:[/?]|$)/.test(path) && path !== '/auth/logout') throw new ConsoleError(400, 'invalid_path');
+    if (!/^\/api\/(?:session|overview|stats|catalog|provider-configs|redemptions|admins|admin-requests|users|products|plans|wallets|orders|offers|models|providers|executions|audits|reconciliation-cases)(?:[/?]|$)/.test(path) && path !== '/auth/logout') throw new ConsoleError(400, 'invalid_path');
     const epoch = this.epoch;
     let response: Response;
     try { response = await this.fetcher(path, { ...init, headers: new Headers(init.headers), credentials: 'same-origin', cache: 'no-store', redirect: 'error' }); }
@@ -98,7 +98,7 @@ export class ConsoleClient {
   operation(path: string, value: unknown, permission: string) {
     if (!this.session?.admin.permissions.includes(permission)) throw new ConsoleError(403, 'permission_denied');
     const session = this.session, epoch = this.epoch, key = this.newKey(), body = JSON.stringify(value);
-    if (!/^\/api\/(?:(?:plans|offers|models)(?:\/[A-Za-z0-9%_.~-]+\/(?:withdraw|state))?|wallets\/[A-Za-z0-9%_.~-]+\/(?:allowance|plans)|users\/[A-Za-z0-9%_.~-]+\/(?:status|logout|note)|redemptions(?:\/[A-Za-z0-9%_.~-]+\/disable)?|admin-requests\/[A-Za-z0-9%_.~-]+\/approve|admins\/[A-Za-z0-9%_.~-]+\/disable|catalog\/models|catalog\/(?:execution|media)\/[A-Za-z0-9%_.~:-]+\/(?:price|trial)|catalog\/media\/[A-Za-z0-9%_.~:-]+\/state)$/.test(path)) throw new ConsoleError(400, 'invalid_operation');
+    if (!/^\/api\/(?:(?:plans|offers|models)(?:\/[A-Za-z0-9%_.~-]+\/(?:withdraw|state))?|wallets\/[A-Za-z0-9%_.~-]+\/(?:allowance|plans)|users\/[A-Za-z0-9%_.~-]+\/(?:status|logout|note)|redemptions(?:\/[A-Za-z0-9%_.~-]+\/disable)?|admin-requests\/[A-Za-z0-9%_.~-]+\/approve|admins\/[A-Za-z0-9%_.~-]+\/disable|provider-configs\/(?:chat|transcribe|speech|image|video|music)|catalog\/models|catalog\/(?:execution|media)\/[A-Za-z0-9%_.~:-]+\/(?:price|trial)|catalog\/media\/[A-Za-z0-9%_.~:-]+\/state)$/.test(path)) throw new ConsoleError(400, 'invalid_operation');
     return { key, send: async () => {
       if (this.epoch !== epoch || this.session !== session) throw new ConsoleError(401, 'session_changed');
       return this.request<RecordData>(path, { method: 'POST', body, headers: { 'Content-Type': 'application/json', 'X-Console-CSRF': session.csrf_token, 'Idempotency-Key': key } });

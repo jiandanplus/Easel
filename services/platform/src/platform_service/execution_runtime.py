@@ -35,7 +35,7 @@ def _failure_code(exc):
 
 
 class ExecutionRuntime:
-    def __init__(self, db, identity, settings, *, service=None, transport=None):
+    def __init__(self, db, identity, settings, *, service=None, transport=None, provider_keys=None):
         if service is None:
             from .execution.core import ExecutionService
 
@@ -43,7 +43,7 @@ class ExecutionRuntime:
         self.service, self.settings = service, settings
         self.bindings = settings.bindings
         self._managed = None if db is None else ManagedBindings(
-            db, "execution", settings, lambda provider: (None, None, ("text",)))
+            db, "execution", settings, lambda provider: (None, None, ("text",)), keys=provider_keys)
         self._semaphore = asyncio.Semaphore(settings.concurrency)
         self._client = httpx.AsyncClient(
             transport=transport,
@@ -56,6 +56,8 @@ class ExecutionRuntime:
             ),
         )
         self._preflight = GatewayPreflight(self._client, "model_channel_unavailable")
+        if self._managed is not None:
+            self._managed.client = self._client
 
     async def _sync(self):
         if self._managed is not None:
@@ -120,6 +122,7 @@ class ExecutionRuntime:
     async def run_forever(self):
         while True:
             try:
+                await self._sync()
                 await self.run_once()
             except asyncio.CancelledError:
                 raise
@@ -130,6 +133,8 @@ class ExecutionRuntime:
             await asyncio.sleep(self.settings.recovery_seconds)
 
     async def close(self):
+        if self._managed is not None:
+            await self._managed.close()
         await self._client.aclose()
 
     async def _heartbeat(self, job):
@@ -231,7 +236,7 @@ class ExecutionRuntime:
             value["model"] = provider.models[context["model"]]
             if provider.preflight_models:
                 await self._preflight.check(
-                    re.sub(r"/v1/.*$", "/v1/models", provider.endpoint), provider.secret, value["model"])
+                    provider.models_url or re.sub(r"/v1/.*$", "/v1/models", provider.endpoint), provider.secret, value["model"])
             payload = encode(value)
             await self._semaphore.acquire()
             acquired = True

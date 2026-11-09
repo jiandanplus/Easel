@@ -155,6 +155,7 @@ async def test_prepare_only_real_http_auth_and_zero_provider_calls(test_dsn, run
             "025_console_user_management.sql",
             "026_redemption_codes.sql",
             "027_subscription_catalog.sql",
+            "028_provider_configs.sql",
         ]
         assert receipt["no_payment_rows"] == {
             "billing_orders": 0,

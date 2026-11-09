@@ -95,7 +95,7 @@ class VoiceStages:
                 raise PlatformError(503,'media_unavailable')
             invocation=await (await c.execute('SELECT expires_at FROM media_invocations WHERE id=%s',(job['invocation_id'],))).fetchone()
             if invocation['expires_at']<=now():raise PlatformError(410,'invocation_expired')
-            await self.media._entitlement(c,scope,job['funding_mode'],job['model_definition']['feature'])
+            await self.media._entitlement(c,scope,job['funding_mode'],job['model_definition'])
             steps=await self._steps(c,job_id)
             if any(step['protocol']!=protocol for step in steps):raise PlatformError(409,'voice_stage_scope_mismatch')
             expected=await self._refs(c,job,steps,protocol,stage,previous_step_id)

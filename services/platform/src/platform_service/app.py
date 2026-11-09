@@ -26,6 +26,7 @@ from .payment_web import create_payment_router
 from .media_config import MediaSettings
 from .media_runtime import MediaRuntime
 from .media_web import create_media_router
+from .provider_secrets import ProviderKeys
 
 
 def create_app(settings: Settings | None = None, *, database=None, identity=None, payment_runtime=None, execution_runtime=None, media_runtime=None):
@@ -35,8 +36,9 @@ def create_app(settings: Settings | None = None, *, database=None, identity=None
     memberships, ledger = MembershipService(db), CreditLedger(db)
     redemptions = RedemptionService(db)
     payments = payment_runtime or PaymentRuntime(db, PaymentSettings.from_env(settings))
-    executions = execution_runtime or ExecutionRuntime(db, accounts, ExecutionSettings.from_env(settings))
-    media = media_runtime or MediaRuntime(db, accounts, MediaSettings.from_env(settings))
+    provider_keys = ProviderKeys.from_env() if execution_runtime is None or media_runtime is None else None
+    executions = execution_runtime or ExecutionRuntime(db, accounts, ExecutionSettings.from_env(settings), provider_keys=provider_keys)
+    media = media_runtime or MediaRuntime(db, accounts, MediaSettings.from_env(settings), provider_keys=provider_keys)
 
     @asynccontextmanager
     async def lifespan(app):

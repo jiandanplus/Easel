@@ -13,6 +13,7 @@ SELECT_TABLES = frozenset({
     "billing_offers", "billing_offer_withdrawals",
     "execution_models", "execution_model_states", "redemption_batches", "redemption_codes",
     "media_models", "media_model_states", "provider_catalog", "managed_model_bindings", "model_prices", "model_trial_access",
+    "provider_configs", "provider_config_status",
 })
 SELECT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),
@@ -35,7 +36,7 @@ SELECT_COLUMNS = {
 }
 INSERT_TABLES = frozenset({"console_login_transactions","console_login_requests","console_sessions",
     "console_operations","console_audit_events","console_user_notes","plans","billing_offers",
-    "media_models","media_model_states","managed_model_bindings","model_prices","model_trial_access","billing_offer_withdrawals",
+    "media_models","media_model_states","managed_model_bindings","model_prices","model_trial_access","provider_configs","billing_offer_withdrawals",
     "execution_models","execution_model_states"})
 INSERT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),

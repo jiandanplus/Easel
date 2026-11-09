@@ -36,10 +36,10 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
         provider_ids = provider_registry()
     if queries is None:
         from .console_service import ConsoleQueries
-        queries = ConsoleQueries(db, auth, provider_ids=provider_ids, payments_mode=payments_mode)
+        queries = ConsoleQueries(db, auth, provider_ids=provider_ids, payments_mode=payments_mode, sealing_ready=bool(settings.provider_public_key))
     if catalog is None:
         from .console_catalog import ConsoleCatalog
-        catalog = ConsoleCatalog(db, auth, provider_ids=provider_ids)
+        catalog = ConsoleCatalog(db, auth, provider_ids=provider_ids, public_key=settings.provider_public_key)
     if reconciliation is None:
         from .console_reconciliation import ConsoleReconciliation
         reconciliation = ConsoleReconciliation(db, auth)
@@ -284,6 +284,16 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
     @app.get("/api/catalog")
     async def model_catalog(request: Request):
         return await queries.model_catalog(await principal(request))
+
+    @app.get("/api/provider-configs")
+    async def provider_configs(request: Request):
+        return await queries.provider_configs(await principal(request, "providers:manage"))
+
+    @app.post("/api/provider-configs/{channel}")
+    async def provider_config_save(request: Request, channel: str):
+        actor = await principal(request, "providers:manage", write=True)
+        value, key = await command(request, ("base_url", "key", "clear", "options", "reason"))
+        return await catalog.save_provider_config(actor, channel, value["base_url"], value["key"], value["clear"], value["options"], value["reason"], key)
 
     @app.post("/api/catalog/models")
     async def catalog_create(request: Request):

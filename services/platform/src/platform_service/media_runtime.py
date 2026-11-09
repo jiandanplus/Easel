@@ -52,7 +52,7 @@ def digest(value):
 
 
 class MediaRuntime:
-    def __init__(self, db, identity, settings, *, service=None, transport=None, maintenance=None, control_lock=None, source_root=None):
+    def __init__(self, db, identity, settings, *, service=None, transport=None, maintenance=None, control_lock=None, source_root=None, provider_keys=None):
         if service is None:
             from .media.core import MediaService
             service = MediaService(db, identity)
@@ -61,11 +61,13 @@ class MediaRuntime:
         if source_root is not None and type(source_root) is not SourceRoot:raise MaintenanceError()
         self.maintenance,self._control_lock,self._source_root=maintenance,control_lock,source_root
         self.service, self.settings, self.bindings = service, settings, settings.bindings
-        self._managed = None if db is None else ManagedBindings(db, 'media', settings, lambda provider: (provider.adapter, provider.protocol_version, provider.capabilities))
+        self._managed = None if db is None else ManagedBindings(db, 'media', settings, lambda provider: (provider.adapter, provider.protocol_version, provider.capabilities), keys=provider_keys)
         self.store = ArtifactStore(settings.storage_root, max_bytes=settings.max_asset_bytes, max_pixels=settings.max_pixels) if settings.storage_root is not None else None
         self._semaphore, self._uploads = asyncio.Semaphore(settings.concurrency), asyncio.Semaphore(1)
         self.tasks = set()
-        self.async_queue = MediaAsyncStore(service) if any(p.adapter in {*ASYNC_CAPABILITIES, *VOICE_CAPABILITIES} for p in settings.providers.values()) else None
+        # Video and music interfaces can arrive from the console after start.
+        self._console_interfaces = provider_keys is not None
+        self.async_queue = MediaAsyncStore(service) if self._console_interfaces or any(p.adapter in {*ASYNC_CAPABILITIES, *VOICE_CAPABILITIES} for p in settings.providers.values()) else None
         from .media.voices import OwnedVoices
         from .media.voice_execution import VoiceExecution
         has_voice=any(p.adapter in VOICE_CAPABILITIES for p in settings.providers.values())
@@ -76,6 +78,7 @@ class MediaRuntime:
             limits=httpx.Limits(max_connections=settings.concurrency + 1, max_keepalive_connections=settings.concurrency + 1))
         self._get_client = httpx.AsyncClient(transport=transport,trust_env=False,follow_redirects=False,timeout=httpx.Timeout(90,connect=10),limits=httpx.Limits(max_connections=settings.download_concurrency,max_keepalive_connections=settings.download_concurrency))
         self._preflight = GatewayPreflight(self._get_client, 'media_channel_unavailable')
+        if self._managed is not None:self._managed.client=self._get_client
         self.worker = MediaWorker(self.async_queue,self.store,self._get_client,settings,self._frozen_async_provider) if self.async_queue is not None else None
 
     @runtime_lifecycle('start')
@@ -96,7 +99,7 @@ class MediaRuntime:
             # The ordinary text API/read surface stays available. Every media
             # writer below still requires a successfully registered generation.
             return
-        has_audio=any(p.adapter in AUDIO_CAPABILITIES for p in self.settings.providers.values())
+        has_audio=self._console_interfaces or any(p.adapter in AUDIO_CAPABILITIES for p in self.settings.providers.values())
         if self.settings.mode=='disabled' or self.async_queue is None and not has_audio:return
         # Runtime never migrates. The owner installs 018 for async media and
         # 017/019 for voice/audio, with the exact runtime DML grants.
@@ -538,6 +541,7 @@ class MediaRuntime:
         tasks = list(self.tasks)
         for task in tasks: task.cancel()
         if tasks: await asyncio.gather(*tasks, return_exceptions=True)
+        if self._managed is not None: await self._managed.close()
         await self._client.aclose()
         await self._get_client.aclose()
         if self.maintenance is not None and self.maintenance._started:

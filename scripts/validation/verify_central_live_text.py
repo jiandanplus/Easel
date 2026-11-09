@@ -61,6 +61,7 @@ REQUIRED_MIGRATIONS = [
     "025_console_user_management.sql",
     "026_redemption_codes.sql",
     "027_subscription_catalog.sql",
+    "028_provider_configs.sql",
 ]
 ACCEPTANCE_CREDITS = 100_000_000
 ACCEPTANCE_RATE = {

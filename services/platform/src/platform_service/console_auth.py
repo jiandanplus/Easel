@@ -16,7 +16,7 @@ from .identity.oidc import OIDC, digest
 
 OPERATOR_PERMISSIONS = frozenset({"console:read","plans:publish","billing:publish","execution:publish","execution:review","users:manage"})
 # Issuing points is admin-only (decisions 0011, 0012).
-PERMISSIONS = OPERATOR_PERMISSIONS | {"owner:allowance","plans:issue","redemption:manage","admins:manage"}
+PERMISSIONS = OPERATOR_PERMISSIONS | {"owner:allowance","plans:issue","redemption:manage","admins:manage","providers:manage"}
 ROLES = {"admin": PERMISSIONS, "operator": OPERATOR_PERMISSIONS, "viewer": frozenset({"console:read"})}
 
 

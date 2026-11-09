@@ -43,6 +43,9 @@ class Db:
                 db.statements.append(sql)
 
                 class Result:
+                    async def fetchone(self):
+                        return {"ready": True}
+
                     async def fetchall(self):
                         return db.rows
                 return Result()

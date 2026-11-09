@@ -9,6 +9,7 @@ MONEY = {'issued','available','held','spent','expired','refunded','amount','actu
          'spendable_available','frozen_available','unposted_expired_available',
          'experience_issued','experience_held','experience_spent'}
 from .model_templates import public_templates
+from .provider_channels import CAPABILITY_CHANNEL, CHANNELS
 
 SNAPSHOT_NOTE = '只读余额快照；账面剩余包含尚未过账的过期额度。冻结与未过账过期可能重叠，不可相加。'
 
@@ -105,11 +106,12 @@ def offer_snapshot(definition):
 
 
 class ConsoleQueries:
-    def __init__(self, db, auth, *, provider_ids=(), payments_mode='disabled'):
+    def __init__(self, db, auth, *, provider_ids=(), payments_mode='disabled', sealing_ready=False):
         if payments_mode not in {'disabled','test','live'}:
             raise ValueError('invalid_console_payments_mode')
         self.db, self.auth, self.payments_mode = db, auth, payments_mode
         self.registry = provider_registry(provider_ids)
+        self.sealing_ready = sealing_ready
 
     @asynccontextmanager
     async def _snapshot(self, principal):
@@ -433,6 +435,28 @@ class ConsoleQueries:
                       'upstream_model':r['upstream_model'],'rate':r['price'] or r['definition']['rate'],'custom_price':r['price'] is not None,
                       'trial_wallets':r['trial_wallets'],'settled_calls':r['settled_calls']} for r in rows]
             return {'items':items,'providers':[projected(r) for r in providers],'templates':public_templates()}
+
+    async def provider_configs(self, principal):
+        async with self._snapshot(principal) as conn:
+            configs = await (await conn.execute("""SELECT DISTINCT ON (channel) id,channel,base_url,key_hint,options,operator_id,created_at
+                FROM provider_configs ORDER BY channel,created_at DESC,id DESC""")).fetchall()
+            status = await (await conn.execute('SELECT channel,config_id,state,models,checked_at FROM provider_config_status')).fetchall()
+            catalog = await (await conn.execute("SELECT kind,provider_id,base_url,capabilities FROM provider_catalog WHERE provider_id NOT LIKE 'console-%'")).fetchall()
+        by_channel, states = {r['channel']: r for r in configs}, {r['channel']: r for r in status}
+        def server_address(name):
+            spec = CHANNELS[name]
+            for row in catalog:
+                if row['kind'] == spec['kind'] and row['base_url'] and (spec['kind'] == 'execution' or any(CAPABILITY_CHANNEL.get(c) == name for c in row['capabilities'])):
+                    return row['base_url']
+            return None
+        channels = []
+        for name in CHANNELS:
+            row, state = by_channel.get(name), states.get(name)
+            live = state if row and state and state['config_id'] == row['id'] else None
+            channels.append({'channel': name, 'server_base_url': server_address(name),
+                'config': None if row is None else {'id': row['id'], 'base_url': row['base_url'], 'key_hint': row['key_hint'], 'options': row['options'], 'updated_at': row['created_at'].isoformat()},
+                'status': None if live is None else {'state': live['state'], 'models': live['models'], 'checked_at': live['checked_at'].isoformat()}})
+        return {'channels': channels, 'sealing_ready': self.sealing_ready}
 
     async def providers(self, principal, limit=25, offset=0, q=''):
         page_args(limit,offset,q)

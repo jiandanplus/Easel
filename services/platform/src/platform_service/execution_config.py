@@ -20,6 +20,7 @@ class ExecutionProvider:
     models: dict[str, str] = field(default_factory=dict)
     preflight_models: bool = False
     managed_models: bool = False
+    models_url: str | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)

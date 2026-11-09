@@ -45,3 +45,28 @@ test('model catalog shows prices in points',()=>{
   const row={capability:'text',rate:{input:{numerator:'1',denominator:'2'},output:{numerator:'3',denominator:'2'}}};
   assert.equal(JSON.stringify(m.pricesOf(row)),'[["每百万输入 token","0.5"],["每百万输出 token","1.5"]]');
 });
+test('interface pages show the saved state and never need the key back',()=>{
+  const p=load('ProviderConfigForm.tsx');
+  assert.equal(p.CHANNELS.map(c=>c.label).join(),'对话与脚本,语音转写,配音,生图,视频,音乐');
+  assert.equal(p.channelOf('text'),'chat');assert.equal(p.channelOf('audio.transcribe'),'transcribe');assert.equal(p.channelOf('image.edit'),'image');
+  const base={channel:'video',server_base_url:null,config:null,status:null};
+  assert.equal(p.statusBadge(base)[1],'未配置');
+  assert.equal(p.statusBadge({...base,server_base_url:'https://g/v1'})[1],'使用服务器配置');
+  const saved={...base,config:{id:'x',base_url:'https://g/v1',key_hint:'abcd',options:{},updated_at:'t'}};
+  assert.equal(p.statusBadge(saved)[1],'检测中…');
+  assert.equal(p.statusBadge({...saved,status:{state:'ok',models:['a','b'],checked_at:'t'}})[1],'连接正常 · 可用模型 2 个');
+  assert.equal(p.statusBadge({...saved,status:{state:'auth_failed',models:[],checked_at:'t'}})[1],'Key 无效或没有权限');
+});
+test('interface options match what the server requires for each page',()=>{
+  const p=load('ProviderConfigForm.tsx'),d={mode:'gateway',voices:'',origins:'',prefixes:''};
+  assert.equal(JSON.stringify(p.parseList('a, b，a\nc')),'["a","b","c"]');
+  assert.equal(JSON.stringify(p.buildOptions('chat',d)),'{}');
+  assert.throws(()=>p.buildOptions('speech',d));assert.throws(()=>p.buildOptions('music',d));
+  assert.equal(JSON.stringify(p.buildOptions('speech',{...d,voices:'alloy echo'})),'{"voices":["alloy","echo"]}');
+  assert.equal(JSON.stringify(p.buildOptions('image',d)),'{"mode":"gateway","download_origins":[]}');
+  assert.equal(JSON.stringify(p.buildOptions('music',{...d,origins:'https://c.example',prefixes:'/a/'})),'{"download_origins":["https://c.example"],"download_path_prefixes":["/a/"]}');
+  const client=new (load('core.ts').ConsoleClient)(async()=>new Response('{}'),()=> 'key-12345678');
+  client.setSession({admin:{id:'a',role:'admin',permissions:['console:read','providers:manage']},csrf_token:'csrf'});
+  assert.ok(client.operation('/api/provider-configs/video',{},'providers:manage'));
+  assert.throws(()=>client.operation('/api/provider-configs/other',{},'providers:manage'));
+});

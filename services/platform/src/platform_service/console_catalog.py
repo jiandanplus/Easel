@@ -19,6 +19,8 @@ from .execution.rates import cost as cost_text, normalize as normalize_text_rate
 from .media.contracts import MAX_BUDGET as MEDIA_BUDGET, validate_definition as validate_media_definition
 from .media.rates import cost as cost_media, normalize as normalize_media_rate
 from .model_templates import MEDIA, TEXT, build_rate
+from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, clean_base_url, clean_key, clean_options
+from .provider_secrets import seal, valid_public_key
 
 
 class BoundDatabase:
@@ -87,8 +89,9 @@ def tags(values):
 
 
 class ConsoleCatalog:
-    def __init__(self, db, auth, *, provider_ids=()):
+    def __init__(self, db, auth, *, provider_ids=(), public_key=None):
         self.db, self.auth = db, auth
+        self.public_key = public_key if public_key and valid_public_key(public_key) else None
         self.providers = provider_registry(provider_ids)
 
     def _verified_model(self, definition):
@@ -101,7 +104,7 @@ class ConsoleCatalog:
             raise PlatformError(409, 'console_provider_not_preverified')
         return d
 
-    async def _command(self, principal, action, target_type, target_id, payload, reason, key, permissions, secret=None):
+    async def _command(self, principal, action, target_type, target_id, payload, reason, key, permissions, secret=None, sealed=None):
         reason, key = text(reason, 512), text(key, 128)
         target_id = text(target_id, 255)
         try:
@@ -191,6 +194,8 @@ class ConsoleCatalog:
                 result = await self._set_trial(conn, actor, target_id, payload)
             elif action == 'media.state':
                 result = await self._set_media_state(conn, actor, target_id, payload)
+            elif action == 'provider.config':
+                result = await self._save_provider(conn, actor, target_id, payload, sealed)
             elif action == 'user.note':
                 if not await (await conn.execute('SELECT 1 FROM users WHERE id=%s', (target_id,))).fetchone():
                     raise PlatformError(404, 'console_user_not_found')
@@ -317,6 +322,50 @@ class ConsoleCatalog:
         if not row:
             raise PlatformError(404, 'model_not_found')
         return {'id': model, 'enabled': row['enabled'], 'updated_at': row['updated_at'].isoformat()}
+
+    @staticmethod
+    async def _running_calls(conn, channel):
+        spec = CHANNELS[channel]
+        table, models = ('execution_jobs', 'execution_models') if spec['kind'] == 'execution' else ('media_jobs', 'media_models')
+        capabilities = [capability for capability, name in CAPABILITY_CHANNEL.items() if name == channel]
+        row = await (await conn.execute('SELECT count(*) AS total FROM ' + table + ' j JOIN ' + models + " m ON m.id=j.model WHERE j.status IN ('reserved','dispatched') AND m.definition->>'capability'=ANY(%s)", (capabilities,))).fetchone()
+        return row['total']
+
+    async def _save_provider(self, conn, actor, channel, payload, sealed):
+        await conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))', ('provider-config:' + channel,))
+        previous = await (await conn.execute('SELECT base_url,sealed_secret,key_hint FROM provider_configs WHERE channel=%s ORDER BY created_at DESC,id DESC LIMIT 1', (channel,))).fetchone()
+        had_key = bool(previous and previous['sealed_secret'])
+        if payload['clear']:
+            secret, hint = None, None
+        elif sealed:
+            secret, hint = sealed
+        elif had_key and previous['base_url'] == payload['base_url']:
+            secret, hint = previous['sealed_secret'], previous['key_hint']
+        else:
+            # A sealed key is bound to its address, so moving it needs the key again.
+            raise PlatformError(409, 'console_provider_key_required')
+        connection_changed = not had_key or secret != previous['sealed_secret'] or previous['base_url'] != payload['base_url']
+        if had_key and connection_changed and await self._running_calls(conn, channel):
+            raise PlatformError(409, 'console_provider_busy')
+        config_id = uuid4().hex
+        await conn.execute('INSERT INTO provider_configs(id,channel,base_url,sealed_secret,key_hint,options,operator_id) VALUES (%s,%s,%s,%s,%s,%s,%s)',
+                           (config_id, channel, payload['base_url'], secret, hint, Jsonb(payload['options']), actor))
+        return {'channel': channel, 'id': config_id, 'configured': secret is not None}
+
+    async def save_provider_config(self, principal, channel, base_url, key, clear, options, reason, op_key):
+        if channel not in CHANNELS or type(clear) is not bool or (clear and key is not None):
+            raise PlatformError(422, 'console_provider_invalid')
+        base_url = clean_base_url(base_url)
+        payload = {'base_url': base_url, 'options': clean_options(channel, options), 'clear': clear, 'key_fingerprint': None}
+        sealed = None
+        if key is not None:
+            key = clean_key(key)
+            if self.public_key is None:
+                raise PlatformError(503, 'console_provider_key_unconfigured')
+            # Retries must match without keeping the key: the sealed text differs every time.
+            payload['key_fingerprint'] = hashlib.sha256(key.encode()).hexdigest()
+            sealed = (seal(self.public_key, channel, base_url, key), key[-4:])
+        return await self._command(principal, 'provider.config', 'provider', channel, payload, reason, op_key, ('providers:manage',), sealed=sealed)
 
     async def create_managed_model(self, principal, model, name, capability, provider_id, upstream_model, prices, reason, key):
         payload = {'name': text(name, 128), 'capability': text(capability, 64), 'provider_id': text(provider_id, 64),
