@@ -542,25 +542,25 @@ def voice_client(handler):
 
 
 @pytest.mark.asyncio
-async def test_fish_lists_own_voices_page_by_page_and_public_ones_only_when_searched():
+async def test_fish_lists_own_voices_page_by_page_then_chinese_or_searched_public_ones():
     seen = []
 
     def handler(request):
         params = dict(request.url.params)
         seen.append(params)
         assert request.headers["authorization"] == "Bearer k"
-        if "title" in params:
+        if "self" not in params:
             return httpx.Response(200, json={"items": [{"_id": "pub1", "title": "公开旁白", "state": "trained"}, {"_id": "abc", "title": "重复"}], "has_more": False})
         page = int(params["page_number"])
         return httpx.Response(200, json={"items": [{"_id": f"own{page}", "title": f"声音{page}", "state": "trained"}, {"_id": "abc", "title": "训练中", "state": "training"}, {"_id": "bad/id", "title": "x"}], "has_more": page == 1})
 
     async with voice_client(handler) as client:
         failure, voices = await list_voices(client, "fish", "https://api.fish.audio", "k", {})
-        assert failure is None and [(v["id"], v["name"], v["kind"]) for v in voices] == [("own1", "声音1", "mine"), ("own2", "声音2", "mine")]
-        assert all(p["self"] == "true" for p in seen)
+        assert failure is None and [(v["id"], v["name"], v["kind"]) for v in voices] == [("own1", "声音1", "mine"), ("own2", "声音2", "mine"), ("pub1", "公开旁白", "public"), ("abc", "重复", "public")]
+        assert [p.get("self") for p in seen] == ["true", "true", None] and seen[-1]["language"] == "zh" and "title" not in seen[-1]
         seen.clear()
         _, voices = await list_voices(client, "fish", "https://api.fish.audio", "k", {"voice_query": "旁白"})
-    assert [v["kind"] for v in voices] == ["mine", "mine", "public", "public"] and seen[-1]["title"] == "旁白" and "self" not in seen[-1]
+    assert [v["kind"] for v in voices] == ["mine", "mine", "public", "public"] and seen[-1]["title"] == "旁白" and "self" not in seen[-1] and "language" not in seen[-1]
 
 
 @pytest.mark.asyncio
@@ -611,7 +611,7 @@ async def test_a_connection_can_be_saved_without_voices_then_picked_from_the_pul
     def handler(request):
         if down:
             raise httpx.ConnectError("down")
-        return httpx.Response(200, json={"items": [{"_id": "voice1", "title": "温柔女声", "state": "trained"}], "has_more": False})
+        return httpx.Response(200, json={"items": [{"_id": "voice1", "title": "温柔女声", "state": "trained"}] if "self" in request.url.params else [], "has_more": False})
 
     client = voice_client(handler)
     binder = ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS, client=client)

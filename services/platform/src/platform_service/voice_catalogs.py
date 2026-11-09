@@ -55,10 +55,11 @@ async def _fish(client, base_url, secret, options):
         found += usable(items, "mine")
         if not body.get("has_more"):
             break
-    if options.get("voice_query"):
-        body = await _call(client, "GET", base_url + "/model", headers=headers, params={"title": options["voice_query"], "page_size": 100})
-        if isinstance(body.get("items"), list):
-            found += usable(body["items"], "public")
+    # A new account owns no voices, so the list also offers popular Chinese ones unless a search says otherwise.
+    public = {"title": options["voice_query"]} if options.get("voice_query") else {"language": "zh"}
+    body = await _call(client, "GET", base_url + "/model", headers=headers, params={**public, "page_size": 100})
+    if isinstance(body.get("items"), list):
+        found += usable(body["items"], "public")
     return found
 
 
