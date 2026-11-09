@@ -15,6 +15,8 @@ REFRESH_SECONDS = 5
 PREFLIGHT_SECONDS = 30
 PROBE_SECONDS = 300
 MAX_LISTED_MODELS = 500
+SERVER_FILE = "server-file"
+PROBE_ATTEMPTS = 3
 
 
 class ManagedBindings:
@@ -80,6 +82,16 @@ class ManagedBindings:
         providers.update(changed)
         self._targets[(channel, platform)] = (row["id"], base_url, secret, row["options"].get("auth_header"))
 
+    def _add_server_targets(self):
+        """Pages still on the server files can list their models too."""
+        if self.keys is None:
+            return
+        for name, item in self.base.providers.items():
+            channel = channel_of(item)
+            if channel is not None and (channel, GATEWAY) not in self._targets:
+                base = item.base_url.rstrip("/") if self.kind == "media" else re.sub(r"/(?:responses|chat/completions|messages)$", "", item.endpoint)
+                self._targets[(channel, GATEWAY)] = (SERVER_FILE, base, item.secret, None)
+
     async def refresh(self):
         if self.base.mode == "disabled" or time.monotonic() < self._checked:
             return self.settings, self.bindings
@@ -98,6 +110,7 @@ class ManagedBindings:
             self._targets = {}
             for row in configs:
                 self._connection(providers, row, invalid)
+            self._add_server_targets()
             fixed = {model for provider in self.base.providers.values() for model in provider.models}
             for model, name, upstream in seen[0]:
                 if model not in fixed and name in providers:
@@ -133,10 +146,13 @@ class ManagedBindings:
             return "no_model_list", []
         headers = {"bearer": {"Authorization": "Bearer " + secret}, "anthropic": {"x-api-key": secret, "anthropic-version": "2023-06-01"},
                    "gemini": {"x-goog-api-key": secret}}[probe]
-        try:
-            response = await self.client.get(base_url + "/models", headers=headers, timeout=10)
-        except httpx.HTTPError:
-            return "unreachable", []
+        for attempt in range(PROBE_ATTEMPTS):
+            try:
+                response = await self.client.get(base_url + "/models", headers=headers, timeout=10)
+                break
+            except httpx.HTTPError:
+                if attempt == PROBE_ATTEMPTS - 1:
+                    return "unreachable", []
         if response.status_code in (401, 403):
             return "auth_failed", []
         try:
@@ -153,7 +169,8 @@ class ManagedBindings:
         async with self.db.connection() as c:
             await c.execute(
                 """INSERT INTO provider_config_status(channel,platform,config_id,state,models) VALUES (%s,%s,%s,%s,%s::jsonb)
-                ON CONFLICT (channel,platform) DO UPDATE SET config_id=EXCLUDED.config_id,state=EXCLUDED.state,models=EXCLUDED.models,checked_at=clock_timestamp()""",
+                ON CONFLICT (channel,platform) DO UPDATE SET config_id=EXCLUDED.config_id,state=EXCLUDED.state,checked_at=clock_timestamp(),
+                models=CASE WHEN EXCLUDED.state='unreachable' AND provider_config_status.config_id=EXCLUDED.config_id THEN provider_config_status.models ELSE EXCLUDED.models END""",
                 (channel, platform, config_id, state, json.dumps(names)))
 
     async def close(self):

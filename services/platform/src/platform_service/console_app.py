@@ -295,6 +295,12 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
         value, key = await command(request, ("platform", "base_url", "key", "clear", "options", "reason"))
         return await catalog.save_provider_config(actor, channel, value["platform"], value["base_url"], value["key"], value["clear"], value["options"], value["reason"], key)
 
+    @app.post("/api/catalog/import")
+    async def catalog_import(request: Request):
+        actor = await principal(request, "execution:publish", write=True)
+        value, key = await command(request, ("capability", "provider_id", "upstream_models", "prices", "enabled", "reason"))
+        return await catalog.import_models(actor, value["capability"], value["provider_id"], value["upstream_models"], value["prices"], value["enabled"], value["reason"], key)
+
     @app.post("/api/catalog/models")
     async def catalog_create(request: Request):
         actor = await principal(request, "execution:publish", write=True)

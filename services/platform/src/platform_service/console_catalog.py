@@ -157,10 +157,7 @@ class ConsoleCatalog:
                     raise PlatformError(409, 'console_model_state_conflict')
                 if payload['enabled']:
                     managed = await (await conn.execute("SELECT 1 FROM managed_model_bindings WHERE kind='execution' AND model_id=%s", (target_id,))).fetchone()
-                    if managed:
-                        if not await self._has_real_call(conn, 'execution', target_id):
-                            raise PlatformError(409, 'console_model_needs_trial')
-                    else:
+                    if not managed:
                         self._verified_model(row['definition'])
                 result = await ExecutionService(bound, None).set_enabled(target_id, payload['enabled'], operator)
                 state = await (await conn.execute('SELECT updated_at FROM execution_model_states WHERE model_id=%s', (target_id,))).fetchone()
@@ -190,6 +187,8 @@ class ConsoleCatalog:
                 result = await self._create_managed(conn, actor, target_id, payload)
             elif action == 'model.price':
                 result = await self._set_price(conn, actor, target_id, payload, reason)
+            elif action == 'model.import':
+                result = await self._import_models(conn, actor, operator, bound, payload)
             elif action == 'model.trial':
                 result = await self._set_trial(conn, actor, target_id, payload)
             elif action == 'media.state':
@@ -280,6 +279,33 @@ class ConsoleCatalog:
                            (kind, model, payload['provider_id'], payload['upstream_model'], actor))
         return {'id': model, 'kind': kind, 'enabled': False}
 
+    @staticmethod
+    async def _model_taken(conn, model):
+        return bool(await (await conn.execute('SELECT 1 FROM execution_models WHERE id=%s UNION ALL SELECT 1 FROM media_models WHERE id=%s', (model, model))).fetchone())
+
+    async def _import_models(self, conn, actor, operator, bound, payload):
+        kind = 'execution' if payload['capability'] == 'text' else 'media'
+        added, skipped = [], []
+        for upstream in payload['upstream_models']:
+            if await (await conn.execute('SELECT 1 FROM managed_model_bindings WHERE kind=%s AND provider_id=%s AND upstream_model=%s', (kind, payload['provider_id'], upstream))).fetchone():
+                skipped.append(upstream)
+                continue
+            model = re.sub(r'[^A-Za-z0-9_.:-]', '-', upstream).lstrip('-_.:')[:128]
+            if not model:
+                raise PlatformError(422, 'invalid_console_command')
+            if await self._model_taken(conn, model):
+                model = (re.sub(r'[^A-Za-z0-9_.:-]', '-', payload['provider_id']) + ':' + model)[:128]
+                if await self._model_taken(conn, model):
+                    skipped.append(upstream)
+                    continue
+            await self._create_managed(conn, actor, model, {'name': upstream, 'capability': payload['capability'], 'provider_id': payload['provider_id'], 'upstream_model': upstream, 'prices': payload['prices']})
+            if payload['enabled'] and kind == 'execution':
+                await ExecutionService(bound, None).set_enabled(model, True, operator)
+            elif payload['enabled']:
+                await self._set_media_state(conn, actor, model, {'enabled': True})
+            added.append(model)
+        return {'added': added, 'skipped': skipped, 'enabled': payload['enabled']}
+
     async def _model(self, conn, kind, model):
         table = 'execution_models' if kind == 'execution' else 'media_models'
         row = await (await conn.execute('SELECT definition FROM ' + table + ' WHERE id=%s', (model,))).fetchone()
@@ -317,15 +343,7 @@ class ConsoleCatalog:
             (payload['kind'], model, wallet, actor, payload['active']))
         return {'id': model, 'wallet': wallet, 'active': payload['active']}
 
-    @staticmethod
-    async def _has_real_call(conn, kind, model):
-        table = 'execution_jobs' if kind == 'execution' else 'media_jobs'
-        return bool(await (await conn.execute('SELECT 1 FROM ' + table + " WHERE model=%s AND status='settled' LIMIT 1", (model,))).fetchone())
-
     async def _set_media_state(self, conn, actor, model, payload):
-        managed = await (await conn.execute("SELECT 1 FROM managed_model_bindings WHERE kind='media' AND model_id=%s", (model,))).fetchone()
-        if payload['enabled'] and managed and not await self._has_real_call(conn, 'media', model):
-            raise PlatformError(409, 'console_model_needs_trial')
         row = await (await conn.execute('UPDATE media_model_states SET enabled=%s,operator_id=%s,updated_at=clock_timestamp() WHERE model_id=%s RETURNING enabled,updated_at',
                                         (payload['enabled'], actor, model))).fetchone()
         if not row:
@@ -383,6 +401,15 @@ class ConsoleCatalog:
         if not re.fullmatch(r'[A-Za-z0-9_.:/-]{1,128}', model or ''):
             raise PlatformError(422, 'invalid_console_command')
         return await self._command(principal, 'model.managed', 'model', model, payload, reason, key, ('execution:publish',))
+
+    async def import_models(self, principal, capability, provider_id, upstream_models, prices, enabled, reason, key):
+        if (not isinstance(upstream_models, list) or not 1 <= len(upstream_models) <= 100 or len(set(map(str, upstream_models))) != len(upstream_models)
+                or type(enabled) is not bool):
+            raise PlatformError(422, 'invalid_console_command')
+        payload = {'capability': text(capability, 64), 'provider_id': text(provider_id, 64), 'upstream_models': [text(name, 128) for name in upstream_models], 'prices': prices, 'enabled': enabled}
+        if any(any(ord(c) < 33 for c in name) for name in upstream_models):
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'model.import', 'model', 'import:' + provider_id, payload, reason, key, ('execution:publish',))
 
     async def set_model_price(self, principal, kind, model, prices, reason, key):
         if kind not in ('execution', 'media'):

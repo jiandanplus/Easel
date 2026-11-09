@@ -454,7 +454,8 @@ class ConsoleQueries:
             platforms = []
             for item in public_platforms(name):
                 row, state = saved.get((name, item['id'])), states.get((name, item['id']))
-                live = state if row and state and state['config_id'] == row['id'] else None
+                own_key = bool(row and row['key_hint'])
+                live = state if state and (state['config_id'] == row['id'] if own_key else state['config_id'] == 'server-file') else None
                 platforms.append({**item, 'config': None if row is None else {'id': row['id'], 'base_url': row['base_url'], 'key_hint': row['key_hint'], 'options': row['options'], 'updated_at': row['created_at'].isoformat()},
                                   'status': None if live is None else {'state': live['state'], 'models': live['models'], 'checked_at': live['checked_at'].isoformat()}})
             channels.append({'channel': name, 'server_base_url': server_address(name), 'platforms': platforms})

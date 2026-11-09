@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ConsoleError, formatDate, RequestGate, Submission, validReason } from './core';
 import type { ConsoleClient, LoadState, RecordData } from './core';
 import { Loading, Modal } from './views';
+import { ModelImportDialog } from './ModelImportDialog';
 import { CHANNELS, channelOf, initialPlatform, providerLabel, ProviderConfigForm } from './ProviderConfigForm';
 import type { ChannelId, ChannelState } from './ProviderConfigForm';
 
@@ -41,7 +42,7 @@ function Dialog({ client, action, data, channel, onClose, onFailure, onDone }: {
       let path = '/api/catalog/models', body: RecordData, done = '';
       if (action.kind === 'add') {
         if (!name.trim() || !/^[A-Za-z0-9_.:/-]{1,128}$/.test(id) || !upstream.trim() || !provider) throw new Error('请填写名称、模型编号、网关模型名并选择接口');
-        body = { id, name: name.trim(), capability, provider_id: provider, upstream_model: upstream.trim(), prices: priced(), reason: why }; done = '模型已添加。先加入试用名单，真实调用成功后才能正式启用。';
+        body = { id, name: name.trim(), capability, provider_id: provider, upstream_model: upstream.trim(), prices: priced(), reason: why }; done = '模型已添加，点“启用”后用户就能使用。';
       } else if (action.kind === 'price') {
         path = `/api/catalog/${action.row.kind}/${encode(action.row.id)}/price`; body = { prices: priced(), reason: why }; done = '新价格已生效，只影响之后的调用。';
       } else if (action.kind === 'trial') {
@@ -56,8 +57,7 @@ function Dialog({ client, action, data, channel, onClose, onFailure, onDone }: {
       await submission.send(client, path, body, 'execution:publish');
       onDone(done);
     } catch (cause) {
-      const code = cause instanceof ConsoleError ? cause.code : '';
-      setError(code === 'console_model_needs_trial' ? '这个模型还没有成功的真实调用。请先加入试用名单，并用试用账号实际调用一次。' : cause instanceof ConsoleError ? onFailure(cause) : cause instanceof Error ? cause.message : '操作失败');
+      setError(cause instanceof ConsoleError ? onFailure(cause) : cause instanceof Error ? cause.message : '操作失败');
     } finally { setBusy(false); }
   };
   const title = action.kind === 'add' ? '添加模型' : action.kind === 'price' ? `设置单价 · ${action.row.name}` : action.kind === 'trial' ? `试用名单 · ${action.row.name}` : `${action.row.enabled ? '停用' : '启用'} · ${action.row.name}`;
@@ -82,7 +82,7 @@ function Dialog({ client, action, data, channel, onClose, onFailure, onDone }: {
 }
 
 export function ModelCatalogPage({ client, permissions, onFailure }: { client: ConsoleClient; permissions: string[]; onFailure: (e: unknown) => string }) {
-  const [state, setState] = useState<LoadState<Catalog>>({ kind: 'loading' }), [revision, setRevision] = useState(0), [action, setAction] = useState<Action | null>(null), [notice, setNotice] = useState(''), [channel, setChannel] = useState<ChannelId>('chat'), [chosen, setChosen] = useState<Partial<Record<ChannelId, string>>>({});
+  const [state, setState] = useState<LoadState<Catalog>>({ kind: 'loading' }), [revision, setRevision] = useState(0), [action, setAction] = useState<Action | null>(null), [notice, setNotice] = useState(''), [channel, setChannel] = useState<ChannelId>('chat'), [chosen, setChosen] = useState<Partial<Record<ChannelId, string>>>({}), [importing, setImporting] = useState(false);
   const gate = useRef(new RequestGate()), polls = useRef(0), canWrite = permissions.includes('execution:publish'), canConfigure = permissions.includes('providers:manage');
   useEffect(() => {
     const request = gate.current.begin();
@@ -105,7 +105,7 @@ export function ModelCatalogPage({ client, permissions, onFailure }: { client: C
   return <>{heading}{notice && <div className="notice" role="status">{notice}</div>}
     <div className="page-tabs channel-tabs" role="tablist">{CHANNELS.map(c => <button key={c.id} role="tab" aria-selected={c.id === channel} className={c.id === channel ? 'active' : ''} onClick={() => { setChannel(c.id); setNotice(''); }}>{c.label}</button>)}</div>
     {current && platform && <ProviderConfigForm key={`${channel}:${platform.id}:${platform.config?.id ?? ''}`} client={client} channel={current} item={platform} sealingReady={sealingReady} onPlatform={id => setChosen({ ...chosen, [channel]: id })} onFailure={onFailure} onDone={done} />}
-    <section className="panel"><h2 className="panel-title">这一类的模型</h2>{items.length === 0 ? <div className="empty-state"><strong>还没有模型</strong></div> : <div className="table-scroll"><table><thead><tr><th>模型</th><th>类型</th><th>接口</th><th>单价（点）</th><th>状态</th><th>真实调用</th><th>操作</th></tr></thead><tbody>
+    <section className="panel"><div className="models-head"><h2 className="panel-title">这一类的模型</h2>{canWrite && canConfigure && platform && <button className="button" onClick={() => setImporting(true)}>拉取模型</button>}</div>{items.length === 0 ? <div className="empty-state"><strong>还没有模型</strong></div> : <div className="table-scroll"><table><thead><tr><th>模型</th><th>类型</th><th>接口</th><th>单价（点）</th><th>状态</th><th>真实调用</th><th>操作</th></tr></thead><tbody>
       {items.map(row => { const template = templates.find(t => t.capability === row.capability); return <tr key={row.kind + row.id}>
         <td><div className="person"><strong>{row.name}</strong><small>{row.id}</small></div></td><td>{template?.label ?? row.capability}</td>
         <td><div className="person"><span>{row.provider_id.startsWith('console-') ? providerLabel(current, row.provider_id) : row.provider_id}</span><small>{row.upstream_model ?? '服务器配置'}</small></div></td>
@@ -114,6 +114,7 @@ export function ModelCatalogPage({ client, permissions, onFailure }: { client: C
         <td>{canWrite ? <div className="row-actions"><button className="text-button" onClick={() => setAction({ kind: 'price', row })}>改价</button><button className="text-button" onClick={() => setAction({ kind: 'trial', row })}>试用</button><button className="text-button" onClick={() => setAction({ kind: 'state', row })}>{row.enabled ? '停用' : '启用'}</button></div> : '—'}</td></tr>; })}
     </tbody></table></div>}</section>
     <p className="caption">更新于 {formatDate(new Date().toISOString())}。</p>
+    {importing && current && platform && <ModelImportDialog client={client} channel={current} platform={platform} data={state.data} onFailure={onFailure} onClose={() => setImporting(false)} onRefresh={() => { polls.current = 0; setRevision(x => x + 1); }} onDone={m => { setImporting(false); done(m); }} />}
     {action && <Dialog client={client} action={action} data={state.data} channel={channel} onClose={() => setAction(null)} onFailure={onFailure} onDone={m => { setAction(null); done(m); }} />}
   </>;
 }

@@ -83,3 +83,17 @@ test('interface options follow the fields the server asks for',()=>{
   assert.ok(client.operation('/api/provider-configs/video',{},'providers:manage'));
   assert.throws(()=>client.operation('/api/provider-configs/other',{},'providers:manage'));
 });
+test('pulling models picks the right interface and hides what is already added',()=>{
+  const p=load('ModelImportDialog.tsx',{'./views':{Modal:()=>null}});
+  const providers=[{kind:'execution',provider_id:'file-a',capabilities:[]},{kind:'execution',provider_id:'console-chat-anthropic',capabilities:[]},{kind:'media',provider_id:'console-speech-minimax',capabilities:['audio.speech']},{kind:'media',provider_id:'console-speech-minimax-clone',capabilities:['voice.enroll']}];
+  assert.equal(p.providerFor(providers,'chat','anthropic',{kind:'execution',capability:'text'}),'console-chat-anthropic');
+  assert.equal(p.providerFor(providers,'chat','gateway',{kind:'execution',capability:'text'}),'file-a');
+  assert.equal(p.providerFor(providers,'chat','openai',{kind:'execution',capability:'text'}),'');
+  assert.equal(p.providerFor(providers,'speech','minimax',{kind:'media',capability:'voice.enroll'}),'console-speech-minimax-clone');
+  assert.equal(p.providerFor(providers,'speech','minimax',{kind:'media',capability:'audio.speech'}),'console-speech-minimax');
+  assert.equal(p.matchNames(['DeepSeek-V3','glm-4'],'deep').join(),'DeepSeek-V3');assert.equal(p.matchNames(['a','b'],' ').length,2);
+  assert.deepEqual([...p.addedNames([{provider_id:'x',upstream_model:'a'},{provider_id:'y',upstream_model:'b'},{provider_id:'x',upstream_model:null}],'x')],['a']);
+  const client=new (load('core.ts').ConsoleClient)(async()=>new Response('{}'),()=> 'key-12345678');
+  client.setSession({admin:{id:'a',role:'admin',permissions:['console:read','execution:publish']},csrf_token:'csrf'});
+  assert.ok(client.operation('/api/catalog/import',{},'execution:publish'));
+});

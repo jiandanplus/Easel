@@ -29,7 +29,7 @@ def test_prices_are_entered_in_points_and_stored_exactly():
 
 
 @pytest.mark.asyncio
-async def test_operator_adds_models_sets_prices_and_needs_a_real_call_to_enable(db, console, console_role):
+async def test_operator_adds_models_sets_prices_and_enables_them(db, console, console_role):
     await seed(db)
     await providers(db)
     catalog, queries, principal, _ = await low_catalog(console, console_role, "operator")
@@ -45,12 +45,8 @@ async def test_operator_adds_models_sets_prices_and_needs_a_real_call_to_enable(
     rows = {row["id"]: row for row in (await queries.model_catalog(principal))["items"]}
     assert rows["my-text"]["custom_price"] is True and rows["my-text"]["rate"]["input"]["numerator"] == "8000000"
     updated = rows["my-text"]["updated_at"]
-    with pytest.raises(PlatformError) as error:
-        await catalog.set_model_state(principal, "my-text", True, "上线", "e1", updated)
-    assert error.value.code == "console_model_needs_trial"
-    with pytest.raises(PlatformError) as error:
-        await catalog.set_media_state(principal, "my-image", True, "上线", "e2")
-    assert error.value.code == "console_model_needs_trial"
+    assert (await catalog.set_model_state(principal, "my-text", True, "上线", "e1", updated))["enabled"] is True
+    assert (await catalog.set_media_state(principal, "my-image", True, "上线", "e2"))["enabled"] is True
     trial = await catalog.set_model_trial(principal, "execution", "my-text", "u", True, "内测", "t1")
     assert trial["wallet"] == "wallet"
     rows = {row["id"]: row for row in (await queries.model_catalog(principal))["items"]}
@@ -76,3 +72,40 @@ async def test_plan_with_model_access_and_multiplier_publishes_and_lists(db, con
     with pytest.raises(PlatformError) as error:
         await catalog.publish_plan(principal, {**base, "id": "pro-v2", "name": "x", "models": ["ghost"]}, "发布", "plan-2")
     assert error.value.code == "console_plan_model_unknown"
+
+
+@pytest.mark.asyncio
+async def test_pulled_models_are_added_and_enabled_in_one_step(db, console, console_role):
+    await seed(db)
+    await providers(db)
+    catalog, queries, principal, _ = await low_catalog(console, console_role, "admin")
+    result = await catalog.import_models(principal, "text", "gateway", ["vendor/model-a", "model b"[:5] + "b"], TEXT_PRICES, True, "拉取", "i1")
+    assert result == {"added": ["vendor-model-a", "modelb"], "skipped": [], "enabled": True}
+    rows = {row["id"]: row for row in (await queries.model_catalog(principal))["items"]}
+    assert rows["vendor-model-a"]["enabled"] is True and rows["vendor-model-a"]["upstream_model"] == "vendor/model-a" and rows["modelb"]["name"] == "modelb"
+    assert await catalog.import_models(principal, "text", "gateway", ["vendor/model-a", "modelb"][:2], TEXT_PRICES, True, "拉取", "i1b") == {"added": [], "skipped": ["vendor/model-a", "modelb"], "enabled": True}
+
+    media = await catalog.import_models(principal, "image.generate", "images", ["vendor/model-a"], {"image": "2"}, False, "拉取", "i2")
+    assert media["added"] == ["images:vendor-model-a"]  # The id was taken by the text model.
+    rows = {row["id"]: row for row in (await queries.model_catalog(principal))["items"]}
+    assert rows["images:vendor-model-a"]["enabled"] is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("names", [[], ["a"] * 2, ["has space"], [f"m{i}" for i in range(101)]])
+async def test_pulled_model_lists_are_checked(db, console, console_role, names):
+    await seed(db)
+    await providers(db)
+    catalog, _, principal, _ = await low_catalog(console, console_role, "admin")
+    with pytest.raises(PlatformError):
+        await catalog.import_models(principal, "text", "gateway", names, TEXT_PRICES, True, "拉取", "bad-1")
+
+
+@pytest.mark.asyncio
+async def test_one_bad_model_leaves_nothing_behind(db, console, console_role):
+    await seed(db)
+    await providers(db)
+    catalog, queries, principal, _ = await low_catalog(console, console_role, "admin")
+    with pytest.raises(PlatformError):
+        await catalog.import_models(principal, "image.edit", "images", ["a", "b"], {"image": "2"}, True, "拉取", "bad-2")  # This interface cannot edit.
+    assert not [row for row in (await queries.model_catalog(principal))["items"] if row["managed"]]

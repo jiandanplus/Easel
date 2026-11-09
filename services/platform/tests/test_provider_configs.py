@@ -260,7 +260,7 @@ async def test_saved_interface_is_tried_with_the_free_model_list(db, response, s
     await save_row(db, "chat")
     await binder.refresh()
     await binder._probe_task
-    assert seen == [(URL + "/models", "Bearer " + SECRET)]
+    assert seen == [(URL + "/models", "Bearer " + SECRET)] * (3 if response is None else 1)
     async with db.connection() as c:
         row = await (await c.execute("SELECT config_id,state,models FROM provider_config_status WHERE channel='chat'")).fetchone()
     assert (row["config_id"], row["state"], row["models"]) == ("a" * 32, state, models)
@@ -319,8 +319,43 @@ async def test_a_native_platform_adds_models_without_touching_the_file_provider(
     settings, bindings = await binder.refresh()
     assert bindings["my-kling"]["adapter"] == "kling_video_v1" and settings.providers["file_images"].secret == "old-secret"
     await binder._probe_task
-    assert seen == []  # Kling has no model list to ask.
+    assert not any("klingai" in url for url in seen)  # Kling has no model list to ask.
     async with db.connection() as c:
         row = await (await c.execute("SELECT channel,platform,state FROM provider_config_status")).fetchone()
     assert (row["channel"], row["platform"], row["state"]) == ("video", "kling", "no_model_list")
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_a_page_on_server_files_can_list_its_models_and_a_blip_keeps_the_list(db, console, console_role, monkeypatch):
+    import platform_service.gateway_catalog as module
+    await seed(db)
+    seen, failing = [], []
+
+    def handler(request):
+        seen.append((str(request.url), request.headers["authorization"]))
+        if failing:
+            raise httpx.ConnectError("down")
+        return httpx.Response(200, json={"data": [{"id": "m2"}, {"id": "m1"}]})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    binder = ManagedBindings(db, "execution", exec_settings(), TEXT, keys=KEYS, client=client)
+    await binder.refresh()
+    await binder._probe_task
+    assert seen == [("https://old.example/v1/models", "Bearer old-secret")]
+    _, queries, principal, _ = await admin_catalog(console, console_role)
+    state = page(await queries.provider_configs(principal), "chat")
+    assert state["config"] is None and state["status"]["models"] == ["m1", "m2"]
+
+    failing.append(True)
+    binder._probed.clear()
+    await binder.probe_due()
+    assert len(seen) == 1 + module.PROBE_ATTEMPTS
+    state = page(await queries.provider_configs(principal), "chat")
+    assert state["status"]["state"] == "unreachable" and state["status"]["models"] == ["m1", "m2"]
+
+    failing.clear()
+    binder._probed.clear()
+    await binder.probe_due()
+    assert page(await queries.provider_configs(principal), "chat")["status"]["state"] == "ok"
     await client.aclose()
