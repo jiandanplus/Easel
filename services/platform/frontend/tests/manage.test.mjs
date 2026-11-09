@@ -109,3 +109,10 @@ test('voices keep spaces in their ids and picked ones never vanish from the list
   assert.equal(p.statusBadge({state:'no_model_list',models:[],voices:listed})[1],'连接正常 · 可选音色 1 个');
   const page={channel:'speech'};assert.equal(p.needsVoices(page,{options:{voices:[]}}),true);assert.equal(p.needsVoices(page,{options:{voices:['a']}}),false);assert.equal(p.needsVoices({channel:'chat'},{options:{}}),false);
 });
+test('speech platforms without a model api offer the models their documentation lists',()=>{
+  const p=load('ModelImportDialog.tsx',{'./views':{Modal:()=>null}});
+  assert.equal(p.pullableNames({known_models:['s2.1-pro','s2-pro']},{models:['ignored']}).join(),'s2.1-pro,s2-pro');
+  assert.equal(p.pullableNames({known_models:['a']},null).join(),'a');
+  assert.equal(p.pullableNames({known_models:[]},{models:['m']}).join(),'m');
+  assert.equal(p.pullableNames({},null).length,0);
+});

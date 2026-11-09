@@ -535,6 +535,10 @@ def test_voices_may_wait_for_a_pull_only_where_a_supplier_can_list_them():
         with pytest.raises(PlatformError):
             clean_options("speech", platform, bad)
     assert {p["id"]: (p["lists_voices"], p["voice_search"]) for p in public_platforms("speech")} == {"gateway": (False, False), "dashscope": (True, False), "minimax": (True, False), "fish": (True, True), "gemini": (False, False)}
+    known = {p["id"]: p for p in public_platforms("speech")}
+    assert known["fish"]["known_models"][0] == "s2.1-pro" and "s1" not in known["fish"]["known_models"] and "speech-2.8-hd" in known["minimax"]["known_models"] and "cosyvoice-v2" in known["dashscope"]["known_models"]
+    assert all(known[name]["lists_models"] for name in known) and known["gateway"]["known_models"] == []
+    assert {p["id"]: p["lists_models"] for p in public_platforms("video")}["kling"] is False
 
 
 def voice_client(handler):

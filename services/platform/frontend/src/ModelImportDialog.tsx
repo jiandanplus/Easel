@@ -21,6 +21,7 @@ export function providerFor(providers: RecordData[], base: string | null, templa
   if (base === null) return usable.find(id => !id.startsWith('console-')) ?? '';
   return usable.find(id => id === base || id === `${base}-clone`) ?? '';
 }
+export const pullableNames = (spec: PlatformSpec, status: Probe | null): string[] => spec.known_models?.length ? spec.known_models : status?.models ?? [];
 export function matchNames(names: string[], query: string): string[] {
   const needle = query.trim().toLowerCase();
   return needle ? names.filter(name => name.toLowerCase().includes(needle)) : names;
@@ -31,7 +32,7 @@ export function addedNames(items: CatalogRow[], providerId: string): Set<string>
 const validPrice = (value: string) => /^\d+(\.\d{1,6})?$/.test(value.trim()) && Number(value) > 0;
 
 export function ModelImportDialog({ client, channel, source, data, onClose, onFailure, onDone, onRefresh }: { client: ConsoleClient; channel: ChannelState; source: ImportSource; data: Data; onClose: () => void; onFailure: (e: unknown) => string; onDone: (m: string) => void; onRefresh: () => void }) {
-  const templates = data.templates.filter(t => channelOf(t.capability) === channel.channel);
+  const pageTemplates = data.templates.filter(t => channelOf(t.capability) === channel.channel), served = pageTemplates.filter(t => providerFor(data.providers, source.base, t)), templates = served.length ? served : pageTemplates;
   const [capability, setCapability] = useState(templates[0]?.capability ?? ''), [filter, setFilter] = useState(''), [selected, setSelected] = useState<string[]>([]);
   const [prices, setPrices] = useState<Record<string, string>>({}), [enabled, setEnabled] = useState(true), [reason, setReason] = useState('拉取并添加模型');
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [pulling, setPulling] = useState(false);
@@ -39,7 +40,7 @@ export function ModelImportDialog({ client, channel, source, data, onClose, onFa
   const template = templates.find(t => t.capability === capability);
   const provider = providerFor(data.providers, source.base, template), { spec, status, connection } = source;
   const added = useMemo(() => addedNames(data.items, provider), [data.items, provider]);
-  const names = status?.models ?? [], shown = matchNames(names, filter), choosable = shown.filter(name => !added.has(name));
+  const fixedList = Boolean(spec.known_models?.length), names = pullableNames(spec, status), shown = matchNames(names, filter), choosable = shown.filter(name => !added.has(name));
   const toggle = (name: string) => setSelected(current => current.includes(name) ? current.filter(item => item !== name) : [...current, name]);
   const allShown = choosable.length > 0 && choosable.every(name => selected.includes(name));
   const toggleAll = () => setSelected(current => allShown ? current.filter(name => !choosable.includes(name)) : [...new Set([...current, ...choosable])]);
@@ -70,7 +71,8 @@ export function ModelImportDialog({ client, channel, source, data, onClose, onFa
   };
   return <Modal title={`拉取模型 · ${source.title}`} onClose={onClose} busy={busy} wide><form onSubmit={e => { e.preventDefault(); void submit(); }}><div className="dialog-content">
     {!spec.lists_models ? <p className="notice">这个平台不提供模型列表，请用“添加模型”手动填写。</p> : <>
-      <div className="pull-toolbar"><input value={filter} disabled={busy} onChange={e => setFilter(e.target.value)} placeholder={`搜索模型，共 ${names.length} 个`} /><button type="button" className="button" disabled={busy || pulling} onClick={() => void refresh()}>{pulling ? '拉取中…' : '重新拉取'}</button></div>
+      <div className="pull-toolbar"><input value={filter} disabled={busy} onChange={e => setFilter(e.target.value)} placeholder={`搜索模型，共 ${names.length} 个`} />{!fixedList && <button type="button" className="button" disabled={busy || pulling} onClick={() => void refresh()}>{pulling ? '拉取中…' : '重新拉取'}</button>}</div>
+      {fixedList && <p className="muted">这个平台没有模型列表接口，下面是官方文档列出的模型。有新模型时可以用右上角的“添加模型”手动填写。</p>}
       {names.length === 0 ? <div className="empty-state"><strong>{status ? '接口没有返回模型' : '还没有拉取到模型'}</strong><p className="muted">检测需要几秒钟，请稍后点“重新拉取”。</p></div> : <>
         <label className="check pull-all"><input type="checkbox" checked={allShown} disabled={busy || !choosable.length} onChange={toggleAll} /> 全选当前列表（已选 {selected.length} 个）</label>
         <div className="pull-list">{shown.map(name => <label key={name} className={`check pull-row ${added.has(name) ? 'muted' : ''}`}><input type="checkbox" checked={added.has(name) || selected.includes(name)} disabled={busy || added.has(name)} onChange={() => toggle(name)} /> <span>{name}</span>{added.has(name) && <small>已添加</small>}</label>)}</div>

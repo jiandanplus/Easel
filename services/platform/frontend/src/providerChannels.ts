@@ -12,7 +12,7 @@ export const CHANNELS: { id: ChannelId; label: string; capabilities: string[] }[
 export const channelOf = (capability: string): ChannelId | undefined => CHANNELS.find(c => c.capabilities.includes(capability))?.id;
 
 export type Field = { key: string; label: string; required: boolean; list: boolean; placeholder: string; lines?: boolean };
-export type PlatformSpec = { id: string; label: string; default_url: string; hint: string; key_label: string; second_key: string | null; fields: Field[]; lists_models: boolean; lists_voices?: boolean; voice_search?: boolean };
+export type PlatformSpec = { id: string; label: string; default_url: string; hint: string; key_label: string; second_key: string | null; fields: Field[]; lists_models: boolean; lists_voices?: boolean; voice_search?: boolean; known_models?: string[] };
 export type VoiceItem = { id: string; name: string; kind: string };
 export type Probe = { state: string; models: string[]; voices?: VoiceItem[]; checked_at: string };
 export type Connection = { id: string; platform: string; account: string; name: string; provider_id: string; base_url: string; key_hint: string; options: RecordData; updated_at: string; status: Probe | null };

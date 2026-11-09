@@ -33,6 +33,7 @@ CAPABILITY_CHANNEL = {
     capability: name for name, spec in CHANNELS.items() for capability in spec["capabilities"]
 } | {"voice.enroll": "speech", "voice.synthesize": "speech", "image.variation": "image"}
 
+# Speech engines come from each supplier's documentation: only their voices can be listed through an API.
 PLATFORMS = {
     "chat": {
         GATEWAY: {"label": "OpenAI Responses / New API", "url": "", "protocol": "responses", "probe": "bearer", "hint": "地址要支持 OpenAI Responses 接口（/responses）。"},
@@ -47,10 +48,10 @@ PLATFORMS = {
     },
     "speech": {
         GATEWAY: {"label": "OpenAI 兼容 / New API", "url": "", "adapter": "openai_speech_v1", "probe": "bearer", "fields": [_VOICES], "hint": "调用 /audio/speech。"},
-        "dashscope": {"label": "阿里 CosyVoice", "url": "https://dashscope.aliyuncs.com", "adapter": "dashscope_speech_v1", "clone_adapter": "newapi_dashscope_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "voice_list": "dashscope", "fields": [_VOICES_LISTED], "hint": "音色要和模型版本匹配，例如 cosyvoice-v2 用 longxiaochun_v2。支持声音复刻。"},
-        "minimax": {"label": "MiniMax", "url": "https://api.minimax.chat", "adapter": "minimax_speech_v1", "clone_adapter": "newapi_minimax_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "voice_list": "minimax", "fields": [_VOICES_LISTED, {"key": "group_id", "label": "Group ID", "required": False, "list": False, "placeholder": "账号需要时填写"}], "hint": "调用 /v1/t2a_v2。支持声音复刻。"},
-        "fish": {"label": "Fish Audio", "url": "https://api.fish.audio", "adapter": "fish_speech_v1", "probe": None, "voice_list": "fish", "voice_search": True, "fields": [{**_VOICES_LISTED, "label": "声音模型 ID"}], "hint": "调用 /v1/tts。可以直接上传参考音频。"},
-        "gemini": {"label": "Google Gemini TTS", "url": "https://generativelanguage.googleapis.com/v1beta", "adapter": "gemini_speech_v1", "probe": "gemini", "fields": [{**_VOICES, "placeholder": "例如 Kore"}], "hint": "只输出 WAV。"},
+        "dashscope": {"label": "阿里 CosyVoice", "url": "https://dashscope.aliyuncs.com", "adapter": "dashscope_speech_v1", "clone_adapter": "newapi_dashscope_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "voice_list": "dashscope", "known_models": ("cosyvoice-v3.5-plus", "cosyvoice-v3.5-flash", "cosyvoice-v3-plus", "cosyvoice-v3-flash", "cosyvoice-v2"), "fields": [_VOICES_LISTED], "hint": "音色要和模型版本匹配，例如 cosyvoice-v2 用 longxiaochun_v2。支持声音复刻。"},
+        "minimax": {"label": "MiniMax", "url": "https://api.minimax.chat", "adapter": "minimax_speech_v1", "clone_adapter": "newapi_minimax_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "voice_list": "minimax", "known_models": ("speech-2.8-hd", "speech-2.8-turbo", "speech-2.6-hd", "speech-2.6-turbo", "speech-02-hd", "speech-02-turbo"), "fields": [_VOICES_LISTED, {"key": "group_id", "label": "Group ID", "required": False, "list": False, "placeholder": "账号需要时填写"}], "hint": "调用 /v1/t2a_v2。支持声音复刻。"},
+        "fish": {"label": "Fish Audio", "url": "https://api.fish.audio", "adapter": "fish_speech_v1", "probe": None, "voice_list": "fish", "voice_search": True, "known_models": ("s2.1-pro", "s2.1-pro-free", "s2-pro", "drama-3"), "fields": [{**_VOICES_LISTED, "label": "声音模型 ID"}], "hint": "调用 /v1/tts。可以直接上传参考音频。"},
+        "gemini": {"label": "Google Gemini TTS", "url": "https://generativelanguage.googleapis.com/v1beta", "adapter": "gemini_speech_v1", "probe": "gemini", "known_models": ("gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts"), "fields": [{**_VOICES, "placeholder": "例如 Kore"}], "hint": "只输出 WAV。"},
     },
     "image": {
         GATEWAY: {"label": "New API 网关（只生图）", "url": "", "adapter": "openai_images_v1", "probe": "bearer", "capabilities": ("image.generate",), "response_profile": "newapi_images_v1", "fields": [_ORIGINS], "hint": "调用 /images/generations。"},
@@ -98,7 +99,7 @@ def public_platforms(channel):
     for platform, spec in PLATFORMS[channel].items():
         result.append({"id": platform, "label": spec["label"], "default_url": spec["url"], "hint": spec["hint"],
                        "key_label": spec.get("key_label", "API Key"), "second_key": spec.get("second_key"),
-                       "fields": spec.get("fields", []), "lists_models": spec["probe"] is not None,
+                       "fields": spec.get("fields", []), "lists_models": spec["probe"] is not None or "known_models" in spec, "known_models": list(spec.get("known_models", ())),
                        "lists_voices": "voice_list" in spec, "voice_search": bool(spec.get("voice_search"))})
     return result
 
