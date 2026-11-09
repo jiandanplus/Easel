@@ -1,8 +1,10 @@
 """Interface settings entered in the console, through the low Console role on a real PostgreSQL."""
 import dataclasses
+import importlib.util
 import json
 import os
 import stat
+from pathlib import Path
 
 import httpx
 import pytest
@@ -15,6 +17,9 @@ from platform_service.media_config import MediaProvider, MediaSettings
 from platform_service.provider_channels import CHANNELS, PLATFORMS, build_clone_provider, build_provider, clone_provider_id, clean_base_url, clean_key, clean_options, provider_id, public_platforms, seal_scope
 from platform_service.provider_secrets import ProviderKeys, generate, seal
 from platform_service.voice_catalogs import MAX_VOICES, list_voices
+from platform_service.media.adapters.direct_async import DIRECT_ASYNC
+from platform_service.media.adapters.openai_images import OpenAIImagesAdapter
+from platform_service.model_templates import APIMART_SIZES
 from test_console_auth import console  # noqa: F401 (fixture)
 from test_console_owner_allowance import low_catalog
 from test_console_permissions import console_role  # noqa: F401 (fixture)
@@ -653,3 +658,96 @@ def test_the_agent_is_told_which_voices_a_model_accepts():
     fixed = {"capability": "audio.speech", "parameters": {"properties": {"voice": {"type": "string", "enum": ["narrator"]}}}}
     assert module._with_voices(fixed, provider) is fixed
     assert module._with_voices(speech, types.SimpleNamespace(audio_profile=None)) is speech
+
+
+def apimart():
+    provider = build_provider("image", "apimart", "https://api.apimart.ai/v1", "k", {"download_origins": []})
+    return provider, DIRECT_ASYNC["apimart_image_v1"](dataclasses.replace(provider, models={"m": "gpt-image-2"}), "live", {"model": "m"})
+
+
+def test_apimart_is_its_own_platform_and_turns_pixels_into_its_ratios():
+    provider, adapter = apimart()
+    assert provider.adapter == "apimart_image_v1" and provider.capabilities == ("image.generate", "image.edit")
+    assert "apimart" not in PLATFORMS["image"]["openai"]["label"]
+    body = json.loads(adapter.prepare({"capability": "image.generate", "model": "m", "prompt": "猫", "parameters": {"n": 1, "size": "864x1536"}}, []).payload)
+    assert body == {"model": "gpt-image-2", "prompt": "猫", "n": 1, "size": "9:16", "resolution": "1k"}
+    edited = json.loads(adapter.prepare({"capability": "image.edit", "model": "m", "prompt": "改", "parameters": {"n": 1, "size": "1024x1024"}}, [{"mime": "image/png", "raw": b"x"}]).payload)
+    assert edited["image_urls"] == ["data:image/png;base64,eA=="]
+    assert adapter.url_source("https://upload.apimart.ai/f/image/a.png").location.endswith("a.png")
+    for request, assets in (({"capability": "image.generate", "model": "m", "prompt": "猫", "parameters": {"n": 1, "size": "7x7"}}, []),
+                            ({"capability": "image.generate", "model": "m", "prompt": "猫", "parameters": {"n": 2, "size": "1024x1024"}}, []),
+                            ({"capability": "image.generate", "model": "m", "prompt": "猫", "parameters": {"n": 1, "size": "1024x1024"}}, [{"mime": "image/png", "raw": b"x"}]),
+                            ({"capability": "image.edit", "model": "m", "prompt": "改", "parameters": {"n": 1, "size": "1024x1024"}}, []),
+                            ({"capability": "image.edit", "model": "m", "prompt": "改", "parameters": {"n": 1, "size": "1024x1024"}}, [{"mime": "audio/wav", "raw": b"x"}])):
+        with pytest.raises(PlatformError):
+            adapter.prepare(request, assets)
+
+
+@pytest.mark.parametrize("status,state", [("pending", "queued"), ("submitted", "queued"), ("processing", "running"), ("in_progress", "running"), ("failed", "failed"), ("cancelled", "cancelled")])
+def test_apimart_status_words_are_all_understood(status, state):
+    assert apimart()[1].observe({"code": 200, "data": {"status": status}}, "s", "t").state == state
+
+
+@pytest.mark.parametrize("value", [{"code": 500, "data": {"status": "completed"}}, {"code": 200, "data": {"status": "odd"}}, {"code": 200}, {"code": 200, "data": {"status": "completed", "result": {"images": []}}}, {"code": 200, "data": {"status": "completed", "result": {"images": [{"url": ["https://evil.example/a.png"]}]}}}])
+def test_a_broken_or_foreign_apimart_answer_is_refused(value):
+    with pytest.raises(PlatformError):
+        apimart()[1].observe(value, "s", "t")
+
+
+def test_the_desktop_accepts_every_size_the_console_can_offer():
+    spec = importlib.util.spec_from_file_location("desktop_media_contracts", Path(__file__).resolve().parents[3] / "easel/platform/media_contracts.py")
+    desktop = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(desktop)
+    from platform_service.model_templates import MEDIA, OPENAI_IMAGE_SIZES, build_rate
+
+    template = MEDIA["image.generate"]
+
+    def row(sizes):
+        parameters = {**template["parameters"], "properties": {**template["parameters"]["properties"], "size": {"type": "string", "enum": sizes}}}
+        return {"id": "m", "version": "1", "name": "图", "capability": "image.generate", "test_only": False, "readiness": "live", "rate": build_rate("image.generate", "1", {"image": "2"}),
+                "limits": {**template["limits"], "max_units": {"image": 1}, "output_media": {"mime_types": ["image/png", "image/jpeg", "image/webp"], "max_files": 1, "max_pixels": 16777216}}, "parameters": parameters}
+
+    for sizes in (["1024x1024"], OPENAI_IMAGE_SIZES, list(APIMART_SIZES)):
+        assert desktop.public_definition(row(sizes))["parameters"]["properties"]["size"]["enum"] == sizes
+    for sizes in (["9999x9999"], ["1536x1024"], []):
+        with pytest.raises((ValueError, KeyError)):
+            desktop.public_definition(row(sizes))
+
+
+@pytest.mark.asyncio
+async def test_models_added_on_apimart_offer_its_ratios_and_a_checked_image_output(db, console, console_role, tmp_path):
+    await seed(db)
+    catalog, queries, principal, _ = await admin_catalog(console, console_role)
+    await catalog.save_provider_config(principal, "image", "apimart", "https://api.apimart.ai/v1", SECRET, False, {"download_origins": []}, "接入", "ap-1", account=None, name="apimart")
+    listed = []
+    client = httpx.AsyncClient(transport=httpx.MockTransport(lambda request: listed.append(str(request.url)) or httpx.Response(200, json={"success": True, "object": "list", "data": [{"id": "gpt-image-2"}]})))
+    binder = ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS, client=client)
+    await binder.refresh()
+    await binder._probe_task
+    assert "https://api.apimart.ai/v1/models?expand=category&category=image" in listed
+    connection = next(c for c in (await queries.provider_configs(principal))["channels"] if c["channel"] == "image")["connections"][0]
+    assert connection["status"]["models"] == ["gpt-image-2"]
+    added = await catalog.import_models(principal, "image.generate", connection["provider_id"], ["gpt-image-2"], {"image": "2"}, True, "添加", "ap-2")
+    async with db.connection() as c:
+        definition = (await (await c.execute("SELECT definition FROM media_models WHERE id=%s", (added["added"][0],))).fetchone())["definition"]
+    assert definition["adapter"] == "apimart_image_v1" and definition["parameters"]["properties"]["size"]["enum"] == list(APIMART_SIZES)
+    assert definition["limits"]["output_media"]["mime_types"] == ["image/png", "image/jpeg", "image/webp"]
+    binder._checked = 0
+    _, bindings = await binder.refresh()
+    assert bindings[added["added"][0]]["adapter"] == "apimart_image_v1"
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_only_platforms_that_can_take_them_offer_larger_sizes(db, console, console_role, tmp_path):
+    await seed(db)
+    catalog, _, principal, _ = await admin_catalog(console, console_role)
+    url = "https://images.example/v1"
+    openai = await catalog.save_provider_config(principal, "image", "openai", url, SECRET, False, {"download_origins": [], "auth_header": "", "api_version": ""}, "接入", "sz-1", account=None, name="兼容")
+    gateway = await catalog.save_provider_config(principal, "image", "gateway", url, SECRET, False, {"download_origins": []}, "接入", "sz-2", account=None, name="网关")
+    await ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS).refresh()
+    wide = await catalog.import_models(principal, "image.generate", openai["provider_id"], ["wide"], {"image": "2"}, False, "添加", "sz-3")
+    fixed = await catalog.import_models(principal, "image.generate", gateway["provider_id"], ["fixed"], {"image": "2"}, False, "添加", "sz-4")
+    async with db.connection() as c:
+        sizes = {row["id"]: row["definition"]["parameters"]["properties"]["size"]["enum"] for row in await (await c.execute("SELECT id,definition FROM media_models WHERE id = ANY(%s)", (wide["added"] + fixed["added"],))).fetchall()}
+    assert sizes == {"wide": ["1024x1024", "1536x1024", "1024x1536"], "fixed": ["1024x1024"]}

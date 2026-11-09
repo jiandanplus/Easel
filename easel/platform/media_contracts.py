@@ -2,6 +2,7 @@
 from copy import deepcopy
 import re
 
+IMAGE_SIZES=frozenset({'1024x1024','1536x1024','1024x1536','1152x864','864x1152','1536x864','864x1536'})
 CAPABILITIES=frozenset({'image.generate','image.edit','image.variation','video.generate','music.generate','audio.transcribe','audio.speech','voice.enroll','voice.synthesize'})
 MAX_MEDIA=64*1024*1024
 MIMES={'image/png':'PNG','image/jpeg':'JPEG','image/webp':'WEBP','video/mp4':'MP4','audio/mpeg':'MP3','audio/wav':'WAV','audio/ogg':'OGG','audio/mp4':'MP4'}
@@ -114,7 +115,9 @@ def public_definition(row):
     if capability.startswith('image.'):
         # Existing single-image safety boundary remains in every image bucket.
         if limits['max_units'].get('image')!=1 or limits['max_artifact_bytes']>20*1024*1024:raise ValueError
-        if schema['properties'].get('n')!={'type':'integer','minimum':1,'maximum':1} or schema['properties'].get('size')!={'type':'string','enum':['1024x1024']}:raise ValueError
+        if schema['properties'].get('n')!={'type':'integer','minimum':1,'maximum':1}:raise ValueError
+        size=schema['properties'].get('size')
+        if not isinstance(size,dict) or set(size)!={'type','enum'} or size['type']!='string' or '1024x1024' not in size['enum'] or set(size['enum'])-IMAGE_SIZES:raise ValueError
     public_rate = {'version': rate['version'], 'meters': [
         {key: meter[key] for key in ('unit', 'basis', 'numerator', 'denominator')}
         for meter in meters]}

@@ -8,6 +8,7 @@ from urllib.parse import quote, urlsplit
 
 from ...errors import PlatformError
 from ...media_config import origin
+from ...model_templates import APIMART_SIZES
 from ..async_contracts import ArtifactSource, Observation
 from .base import PreparedRequest
 from .newapi_async import AsyncAdapter, NewAPIDashScopeMusicBase, bounded, encode, job_id
@@ -318,5 +319,58 @@ class SunoDirect(DirectMusic):
         return Observation(known, "running", (), {}, None, sha)
 
 
-DIRECT_ASYNC = {"dashscope_video_v1": DashScopeVideo, "ark_video_v1": ArkVideo, "kling_video_v1": KlingVideo, "agnes_video_v1": AgnesVideo, "xhs_video_v1": XhsVideo,
+class ApimartImage(DirectAsync):
+    """apimart answers image requests with a task; there is no synchronous mode."""
+    suffixes = (".apimart.ai",)
+    default_mime = "image/png"
+    output_mimes = frozenset({"image/png", "image/jpeg", "image/webp"})
+
+    def prepare(self, request, assets):
+        self.capability = request.get("capability") if request.get("capability") in ("image.generate", "image.edit") else None
+        model, parameters, text = self.check(request, assets, {"n", "size"})
+        if parameters.get("n", 1) != 1 or parameters.get("size") not in APIMART_SIZES:
+            raise PlatformError(422, "invalid_media_parameters")
+        if (not assets) == (self.capability == "image.edit") or len(assets) > 1:
+            raise PlatformError(422, "invalid_media_assets")
+        references = []
+        for item in assets:
+            if item.get("mime") not in self.output_mimes or not isinstance(item.get("raw"), bytes) or not 0 < len(item["raw"]) <= 20 * 1024 * 1024:
+                raise PlatformError(422, "invalid_media_assets")
+            references.append("data:" + item["mime"] + ";base64," + base64.b64encode(item["raw"]).decode("ascii"))
+        value = {"model": model, "prompt": text, "n": 1, "size": APIMART_SIZES[parameters["size"]], "resolution": "1k", **({"image_urls": references} if references else {})}
+        return PreparedRequest(self._base() + "/images/generations", encode(value), "application/json", model)
+
+    def _job_id(self, value, *, submit):
+        rows = value.get("data")
+        return job_id(rows[0].get("task_id") if isinstance(rows, list) and rows and isinstance(rows[0], dict) else None)
+
+    def _submission_observation(self, value, sha, known):
+        return None
+
+    def query_url(self, known):
+        return self._base() + "/tasks/" + job_id(known)
+
+    async def query(self, client, provider_job_id, *, max_bytes):
+        known = job_id(provider_job_id)
+        value, sha = await self._json(client, "GET", self.query_url(known), maximum=max_bytes)
+        return self.observe(value, sha, known)
+
+    def observe(self, value, sha, known):
+        data = value.get("data")
+        if value.get("code") not in (None, 200) or not isinstance(data, dict):
+            raise _bad()
+        state = {"pending": "queued", "submitted": "queued", "processing": "running", "in_progress": "running",
+                 "completed": "completed", "failed": "failed", "cancelled": "cancelled"}.get(data.get("status"))
+        if state is None:
+            raise _bad()
+        sources = ()
+        if state == "completed":
+            result = data.get("result")
+            images = result.get("images") if isinstance(result, dict) else None
+            first = images[0].get("url") if isinstance(images, list) and images and isinstance(images[0], dict) else None
+            sources = (self.url_source(first[0] if isinstance(first, list) and first else first),)
+        return Observation(known, state, sources, {}, None, sha)
+
+
+DIRECT_ASYNC = {"apimart_image_v1": ApimartImage, "dashscope_video_v1": DashScopeVideo, "ark_video_v1": ArkVideo, "kling_video_v1": KlingVideo, "agnes_video_v1": AgnesVideo, "xhs_video_v1": XhsVideo,
                 "dashscope_music_v1": DashScopeMusic, "suno_direct_v1": SunoDirect}

@@ -10,7 +10,7 @@ import stat
 from urllib.parse import urlsplit
 
 
-ASYNC_CAPABILITIES = {"newapi_videos_v1": ("video.generate",), "newapi_suno_v1": ("music.generate",), "newapi_dashscope_music_v1": ("music.generate",), "newapi_incho_v1": ("music.generate",),
+ASYNC_CAPABILITIES = {"apimart_image_v1": ("image.generate", "image.edit"), "newapi_videos_v1": ("video.generate",), "newapi_suno_v1": ("music.generate",), "newapi_dashscope_music_v1": ("music.generate",), "newapi_incho_v1": ("music.generate",),
                       "dashscope_video_v1": ("video.generate",), "ark_video_v1": ("video.generate",), "kling_video_v1": ("video.generate",), "agnes_video_v1": ("video.generate",), "xhs_video_v1": ("video.generate",),
                       "dashscope_music_v1": ("music.generate",), "suno_direct_v1": ("music.generate",)}
 

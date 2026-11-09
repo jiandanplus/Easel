@@ -55,9 +55,10 @@ PLATFORMS = {
     },
     "image": {
         GATEWAY: {"label": "New API 网关（只生图）", "url": "", "adapter": "openai_images_v1", "probe": "bearer", "capabilities": ("image.generate",), "response_profile": "newapi_images_v1", "fields": [_ORIGINS], "hint": "调用 /images/generations。"},
-        "openai": {"label": "OpenAI 兼容 / apimart / 小红书 MaaS（生图和改图）", "url": "https://api.openai.com/v1", "adapter": "openai_images_v1", "probe": "bearer",
+        "openai": {"label": "OpenAI 兼容 / 小红书 MaaS（生图和改图）", "url": "https://api.openai.com/v1", "adapter": "openai_images_v1", "probe": "bearer",
                    "fields": [_ORIGINS, {"key": "auth_header", "label": "鉴权头名", "required": False, "list": False, "placeholder": "默认 Authorization，小红书 MaaS 填 api-key"},
                               {"key": "api_version", "label": "api-version", "required": False, "list": False, "placeholder": "Azure 等需要时填写"}], "hint": "调用 /images/generations 和 /images/edits。"},
+        "apimart": {"label": "apimart（异步，生图和改图）", "url": "https://api.apimart.ai/v1", "adapter": "apimart_image_v1", "probe": "bearer", "models_query": "?expand=category&category=image", "fields": [_ORIGINS], "hint": "提交任务后轮询结果，结果在 apimart 存储上，一般不用填下载域名。支持 7 种常用比例。"},
     },
     "video": {
         GATEWAY: {"label": "OpenAI 兼容 / New API", "url": "", "adapter": "newapi_videos_v1", "probe": "bearer", "hint": "调用 /videos。"},

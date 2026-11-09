@@ -1,10 +1,12 @@
 """A native supplier through the real runtime on the current schema: points held, evidence kept, settled once."""
 import copy
+import io
 import json
 from uuid import uuid4
 
 import httpx
 import pytest
+from PIL import Image
 
 from platform_service.execution_config import ExecutionProvider, ExecutionSettings
 from platform_service.execution_runtime import ExecutionRuntime
@@ -334,5 +336,49 @@ async def test_a_voice_belongs_to_the_account_that_registered_it(db, tmp_path, f
         with pytest.raises(PlatformError):
             await runtime.submit(token, "speak-1", {"model": "fixture-synth", "capability": "voice.synthesize", "prompt": "你好", "assets": [], "parameters": {"response_format": "wav"}, "voice_id": str(uuid4())})
         assert (await ledger.summary(scope))["spent"] == "0"
+    finally:
+        await runtime.close()
+
+
+IMAGE_LIMITS = {"max_units": {"image": 1}, "max_assets": 0, "output_media": {"mime_types": ["image/png", "image/jpeg", "image/webp"], "max_files": 1, "max_pixels": 16777216}}
+IMAGE_PARAMETERS = {"type": "object", "properties": {"n": {"type": "integer", "minimum": 1, "maximum": 1}, "size": {"type": "string", "enum": ["1536x864"]}}, "required": ["n", "size"], "additionalProperties": False}
+
+
+def png():
+    buffer = io.BytesIO()
+    Image.new("RGB", (32, 18), (20, 90, 200)).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_apimart_image_task_is_polled_checked_and_charged_once(db, tmp_path, files, monkeypatch):
+    raw, seen = png(), []
+
+    def handler(request):
+        seen.append((request.method, request.url.path))
+        if request.method == "POST":
+            assert json.loads(request.content) == {"model": "upstream", "prompt": "合成", "n": 1, "size": "16:9", "resolution": "1k"} and request.headers["authorization"] == "Bearer supplier-key"
+            return httpx.Response(200, json={"code": 200, "data": [{"status": "submitted", "task_id": "task_01ABC"}]})
+        if request.url.path == "/f/image/a.png":
+            assert "authorization" not in request.headers
+            return httpx.Response(200, content=raw, headers={"content-type": "image/png"})
+        assert request.url.path == "/v1/tasks/task_01ABC"
+        return httpx.Response(200, json={"code": 200, "data": {"id": "task_01ABC", "status": "completed", "result": {"images": [{"url": ["http://127.0.0.1:19992/f/image/a.png"], "expires_at": 1}]}}})
+
+    runtime, ledger, scope, token, request = await build(
+        db, tmp_path, files, monkeypatch, handler, adapter="apimart_image_v1", capability="image.generate",
+        rate={"unit": "image", "basis": "verified_delivery_v1", "numerator": "250", "denominator": "1"}, limits=IMAGE_LIMITS, parameters=IMAGE_PARAMETERS,
+        provider_extra={"download_origins": ("http://127.0.0.1:19992",)}, request_parameters={"n": 1, "size": "1536x864"})
+    try:
+        first = await runtime.submit(token, "one", request)
+        assert first["actual"] is None and (await ledger.summary(scope))["spent"] == "0"
+        async with db.connection() as c:
+            await c.execute("UPDATE media_work SET due_at=clock_timestamp()-interval '1 second'")
+        await runtime.run_once()
+        value = await runtime._view(scope, first["id"])
+        assert value["financial_state"] == "settled" and value["actual"] == "250"
+        artifact, *_ = await runtime.artifact(scope, value["artifacts"][0]["id"], content=True)
+        assert artifact == raw and value["artifacts"][0]["properties"]["width"] == 32
+        assert [item for item in seen if item[0] == "POST"] == [("POST", "/v1/images/generations")]
     finally:
         await runtime.close()

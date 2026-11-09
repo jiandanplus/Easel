@@ -30,6 +30,7 @@ def allowed_meters(provider, capability=None):
         meters={("unicode_scalar","verified_input_v1"),("audio_ms","verified_delivery_v1")}
         if provider.adapter == "newapi_minimax_voice_v1": meters.add(("audio_ms","provider_usage_v1"))
         return frozenset(meters)
+    if provider.adapter == 'apimart_image_v1':return frozenset({('image','verified_delivery_v1')})
     if provider.adapter in {'newapi_videos_v1','dashscope_video_v1','ark_video_v1','kling_video_v1','agnes_video_v1','xhs_video_v1'}:return frozenset({('video_ms','verified_delivery_v1')})
     if provider.adapter in {'newapi_suno_v1','newapi_incho_v1','dashscope_music_v1','suno_direct_v1'}:return frozenset({('audio_ms','verified_delivery_v1'),('audio_clip','verified_delivery_v1')})
     if provider.adapter == 'newapi_dashscope_music_v1':return frozenset({('audio_ms','provider_usage_v1'),('audio_ms','verified_delivery_v1')})

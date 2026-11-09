@@ -143,14 +143,14 @@ class ManagedBindings:
         for key, (config_id, base_url, secret, custom_header, options) in list(self._targets.items()):
             if self._due(key, config_id):
                 spec, voices = spec_of(*key[:2]), []
-                state, names = await self._try(None if custom_header else spec["probe"], base_url, secret)
+                state, names = await self._try(None if custom_header else spec["probe"], base_url, secret, spec.get("models_query", ""))
                 if spec.get("voice_list"):
                     failure, voices = await list_voices(self.client, spec["voice_list"], base_url, secret, options)
                     state = failure or state
                 await self._report(*key, config_id, state, names, voices)
                 self._probed[key] = (config_id, time.monotonic() + PROBE_SECONDS)
 
-    async def _try(self, probe, base_url, secret):
+    async def _try(self, probe, base_url, secret, query=""):
         """List models, which costs nothing at the supplier, and say what happened."""
         if probe is None:  # This supplier has no list to ask; the first real call decides.
             return "no_model_list", []
@@ -158,7 +158,7 @@ class ManagedBindings:
                    "gemini": {"x-goog-api-key": secret}}[probe]
         for attempt in range(PROBE_ATTEMPTS):
             try:
-                response = await self.client.get(base_url + "/models", headers=headers, timeout=10)
+                response = await self.client.get(base_url + "/models" + query, headers=headers, timeout=10)
                 break
             except httpx.HTTPError:
                 if attempt == PROBE_ATTEMPTS - 1:

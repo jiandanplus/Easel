@@ -18,7 +18,7 @@ from .redemptions import code_hash, new_code
 from .execution.rates import cost as cost_text, normalize as normalize_text_rate
 from .media.contracts import MAX_BUDGET as MEDIA_BUDGET, validate_definition as validate_media_definition
 from .media.rates import cost as cost_media, normalize as normalize_media_rate
-from .model_templates import MEDIA, TEXT, build_rate
+from .model_templates import APIMART_SIZES, MEDIA, OPENAI_IMAGE_SIZES, TEXT, build_rate
 from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, PLATFORMS, clean_base_url, clean_key, clean_name, clean_options, provider_id as channel_provider_id, seal_scope, spec_of
 from .provider_secrets import seal, valid_public_key
 
@@ -267,6 +267,11 @@ class ConsoleCatalog:
             if provider['adapter'] == 'fish_speech_v1' and capability == 'audio.speech':  # Fish takes a reference recording in the request.
                 limits = {**limits, 'max_input_bytes': 10485760, 'max_assets': 1, 'input_media': {'mime_types': ['audio/mpeg', 'audio/wav', 'audio/mp4'], 'max_files': 1, 'max_duration_ms': 300000, 'max_channels': 2, 'max_sample_rate': 48000, 'require_audio': True}}
                 parameters = {**parameters, 'required': ['response_format'], 'properties': {**parameters['properties'], 'reference_text': {'type': 'string', 'maxLength': 2000}}}
+            if provider['adapter'] == 'apimart_image_v1':  # A task whose result is fetched and checked like video.
+                limits = {**limits, 'output_media': {'mime_types': ['image/png', 'image/jpeg', 'image/webp'], 'max_files': 1, 'max_pixels': 16777216}}
+                parameters = {**parameters, 'properties': {**parameters['properties'], 'size': {'type': 'string', 'enum': list(APIMART_SIZES)}}}
+            if capability in ('image.generate', 'image.edit') and provider['provider_id'].startswith('console-image-openai'):
+                parameters = {**parameters, 'properties': {**parameters['properties'], 'size': {'type': 'string', 'enum': OPENAI_IMAGE_SIZES}}}
             if provider['adapter'] == 'gemini_speech_v1':  # Gemini only returns raw audio, delivered as WAV.
                 limits = {**limits, 'output_media': {**limits['output_media'], 'mime_types': ['audio/wav']}}
                 parameters = {**parameters, 'properties': {**parameters['properties'], 'response_format': {'type': 'string', 'enum': ['wav']}}}

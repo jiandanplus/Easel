@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 from contextlib import suppress
 from .adapters.newapi_async import make_async_adapter
 from .async_contracts import ArtifactSource
+from .artifacts import inspect_image
 from .av_artifacts import inspect_av
 from .contracts import digest,media_resources_ready
 from ..errors import PlatformError
@@ -141,8 +142,10 @@ class MediaWorker:
                         if descriptor.kind=='url' and provider.download_path_prefixes:check_download_path(provider,descriptor.location)
                         raw,mime=await adapter.retrieve(self.client,descriptor,max_bytes=ceiling)
                         if mime not in spec['mime_types']:raise PlatformError(502,'media_output_mime_denied')
-                        info=await physical_call(inspect_av,raw,kind='video'if job['capability']=='video.generate'else'audio',mime=mime,
-                            max_bytes=ceiling,max_duration_ms=spec['max_duration_ms'],max_pixels=min(spec.get('max_pixels',self.settings.max_pixels),self.settings.max_pixels),
+                        pixels=min(spec.get('max_pixels',self.settings.max_pixels),self.settings.max_pixels)
+                        if job['capability'].startswith('image.'):info=await physical_call(inspect_image,raw,max_bytes=ceiling,max_pixels=pixels,mime=mime)
+                        else:info=await physical_call(inspect_av,raw,kind='video'if job['capability']=='video.generate'else'audio',mime=mime,
+                            max_bytes=ceiling,max_duration_ms=spec['max_duration_ms'],max_pixels=pixels,
                             require_audio=spec['require_audio'],max_channels=spec['max_channels'],max_sample_rate=spec['max_sample_rate'],tools=self.settings.av_tools)
                         if total+info['size']>ceiling:raise PlatformError(502,'media_output_limit')
                         stored=await self.queue.stage_source(claim,source['source_id'],info)
@@ -160,7 +163,8 @@ class MediaWorker:
             await self.service.record_provider_association(job['id'],job['attempt_id'],provider_response_id=claim['provider_job_id'])
             measured={'video_ms':sum(a['properties']['duration_ms'] for a in artifacts if a['mime'].startswith('video/')),
                       'audio_ms':sum(a['properties']['duration_ms'] for a in artifacts if a['mime'].startswith('audio/')),
-                      'audio_clip':sum(a['mime'].startswith('audio/')for a in artifacts)}
+                      'audio_clip':sum(a['mime'].startswith('audio/')for a in artifacts),
+                      'image':sum(a['mime'].startswith('image/')for a in artifacts)}
             quantities={};bases={}
             for meter in job['model_definition']['rate']['meters']:
                 unit,basis=meter['unit'],meter['basis']
