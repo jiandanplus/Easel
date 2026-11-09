@@ -12,7 +12,7 @@ from platform_service.errors import PlatformError
 from platform_service.execution_config import ExecutionProvider, ExecutionSettings
 from platform_service.gateway_catalog import ManagedBindings
 from platform_service.media_config import MediaProvider, MediaSettings
-from platform_service.provider_channels import CHANNELS, PLATFORMS, build_provider, clean_base_url, clean_key, clean_options, provider_id, public_platforms, seal_scope
+from platform_service.provider_channels import CHANNELS, PLATFORMS, build_clone_provider, build_provider, clone_provider_id, clean_base_url, clean_key, clean_options, provider_id, public_platforms, seal_scope
 from platform_service.provider_secrets import ProviderKeys, generate, seal
 from test_console_auth import console  # noqa: F401 (fixture)
 from test_console_owner_allowance import low_catalog
@@ -83,7 +83,7 @@ def test_trailing_slash_is_normalized():
     assert clean_base_url(URL + "/") == URL
 
 
-FIELD_VALUES = {"voices": ["alloy"], "download_origins": ["https://cdn.example"], "download_path_prefixes": ["/audio/"], "group_id": "g1", "poll_url": ""}
+FIELD_VALUES = {"voices": ["alloy"], "download_origins": ["https://cdn.example"], "download_path_prefixes": ["/audio/"], "group_id": "g1", "poll_url": "", "auth_header": "api-key", "api_version": "2025-01-01"}
 ALL_PLATFORMS = [(channel, platform) for channel, table in PLATFORMS.items() for platform in table]
 
 
@@ -103,8 +103,12 @@ def test_every_platform_builds_a_provider_the_server_accepts(channel, platform, 
         models = dataclasses.replace(provider, models={"m": "u"})
         assert dataclasses.replace(settings, providers={provider_id(channel, platform): models}).bindings["m"]["provider_version"] == "console-1"
         assert provider.client_correlation is True
-    if PLATFORMS[channel][platform]["probe"] != "bearer":
+    if PLATFORMS[channel][platform]["probe"] != "bearer" or options_for(channel, platform).get("auth_header"):
         assert provider.preflight_models is False
+    if PLATFORMS[channel][platform].get("clone_adapter"):
+        clone = build_clone_provider(channel, platform, URL, SECRET, options_for(channel, platform))
+        MediaSettings(mode="live", providers={clone_provider_id(channel, platform): dataclasses.replace(clone, models={"c": "up"})}, storage_root=tmp_path)
+        assert clone.capabilities == ("voice.enroll",) and clone_provider_id(channel, platform).endswith("-clone")
 
 
 def test_only_platforms_with_a_model_list_are_probed_and_named():

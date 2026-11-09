@@ -36,6 +36,8 @@ PLATFORMS = {
         GATEWAY: {"label": "OpenAI Responses / New API", "url": "", "protocol": "responses", "probe": "bearer", "hint": "地址要支持 OpenAI Responses 接口（/responses）。"},
         "openai": {"label": "OpenAI 兼容（DeepSeek、中转站等）", "url": "https://api.deepseek.com/v1", "protocol": "chat", "probe": "bearer", "hint": "调用 /chat/completions，由中央服务转换成统一格式。"},
         "anthropic": {"label": "Anthropic", "url": "https://api.anthropic.com/v1", "protocol": "anthropic", "probe": "anthropic", "hint": "调用 /messages，由中央服务转换成统一格式。"},
+        "relay": {"label": "中转站（Anthropic 协议）", "url": "", "protocol": "anthropic", "probe": "anthropic", "hint": "调用 /messages。"},
+        "custom": {"label": "自定义（OpenAI 兼容）", "url": "", "protocol": "chat", "probe": "bearer", "hint": "需要第二家 OpenAI 兼容接口时用这一项。"},
     },
     "transcribe": {
         GATEWAY: {"label": "OpenAI 兼容 / New API", "url": "", "adapter": "openai_transcriptions_v1", "probe": "bearer", "hint": "调用 /audio/transcriptions。"},
@@ -43,20 +45,23 @@ PLATFORMS = {
     },
     "speech": {
         GATEWAY: {"label": "OpenAI 兼容 / New API", "url": "", "adapter": "openai_speech_v1", "probe": "bearer", "fields": [_VOICES], "hint": "调用 /audio/speech。"},
-        "dashscope": {"label": "阿里 CosyVoice", "url": "https://dashscope.aliyuncs.com", "adapter": "dashscope_speech_v1", "probe": None, "fields": [_VOICES], "hint": "音色要和模型版本匹配，例如 cosyvoice-v2 用 longxiaochun_v2。"},
-        "minimax": {"label": "MiniMax", "url": "https://api.minimax.chat", "adapter": "minimax_speech_v1", "probe": None, "fields": [_VOICES, {"key": "group_id", "label": "Group ID", "required": False, "list": False, "placeholder": "账号需要时填写"}], "hint": "调用 /v1/t2a_v2。"},
-        "fish": {"label": "Fish Audio", "url": "https://api.fish.audio", "adapter": "fish_speech_v1", "probe": None, "fields": [{**_VOICES, "label": "声音模型 ID"}], "hint": "调用 /v1/tts。"},
+        "dashscope": {"label": "阿里 CosyVoice", "url": "https://dashscope.aliyuncs.com", "adapter": "dashscope_speech_v1", "clone_adapter": "newapi_dashscope_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "fields": [_VOICES], "hint": "音色要和模型版本匹配，例如 cosyvoice-v2 用 longxiaochun_v2。支持声音复刻。"},
+        "minimax": {"label": "MiniMax", "url": "https://api.minimax.chat", "adapter": "minimax_speech_v1", "clone_adapter": "newapi_minimax_voice_v1", "probe": None, "capabilities": ("audio.speech", "voice.synthesize"), "fields": [_VOICES, {"key": "group_id", "label": "Group ID", "required": False, "list": False, "placeholder": "账号需要时填写"}], "hint": "调用 /v1/t2a_v2。支持声音复刻。"},
+        "fish": {"label": "Fish Audio", "url": "https://api.fish.audio", "adapter": "fish_speech_v1", "probe": None, "fields": [{**_VOICES, "label": "声音模型 ID"}], "hint": "调用 /v1/tts。可以直接上传参考音频。"},
         "gemini": {"label": "Google Gemini TTS", "url": "https://generativelanguage.googleapis.com/v1beta", "adapter": "gemini_speech_v1", "probe": "gemini", "fields": [{**_VOICES, "placeholder": "例如 Kore"}], "hint": "只输出 WAV。"},
     },
     "image": {
         GATEWAY: {"label": "New API 网关（只生图）", "url": "", "adapter": "openai_images_v1", "probe": "bearer", "capabilities": ("image.generate",), "response_profile": "newapi_images_v1", "fields": [_ORIGINS], "hint": "调用 /images/generations。"},
-        "openai": {"label": "OpenAI 兼容 / apimart（生图和改图）", "url": "https://api.openai.com/v1", "adapter": "openai_images_v1", "probe": "bearer", "fields": [_ORIGINS], "hint": "调用 /images/generations 和 /images/edits。"},
+        "openai": {"label": "OpenAI 兼容 / apimart / 小红书 MaaS（生图和改图）", "url": "https://api.openai.com/v1", "adapter": "openai_images_v1", "probe": "bearer",
+                   "fields": [_ORIGINS, {"key": "auth_header", "label": "鉴权头名", "required": False, "list": False, "placeholder": "默认 Authorization，小红书 MaaS 填 api-key"},
+                              {"key": "api_version", "label": "api-version", "required": False, "list": False, "placeholder": "Azure 等需要时填写"}], "hint": "调用 /images/generations 和 /images/edits。"},
     },
     "video": {
         GATEWAY: {"label": "OpenAI 兼容 / New API", "url": "", "adapter": "newapi_videos_v1", "probe": "bearer", "hint": "调用 /videos。"},
         "dashscope": {"label": "阿里通义万相 Wan", "url": "https://dashscope.aliyuncs.com/api/v1", "adapter": "dashscope_video_v1", "probe": None, "fields": [_ORIGINS], "hint": "结果在阿里云存储上，一般不用填下载域名。"},
         "ark": {"label": "火山引擎 Seedance", "url": "https://ark.cn-beijing.volces.com/api/v3", "adapter": "ark_video_v1", "probe": "bearer", "fields": [_ORIGINS], "hint": "结果在火山存储上，一般不用填下载域名。"},
         "kling": {"label": "快手可灵", "url": "https://api.klingai.com", "adapter": "kling_video_v1", "probe": None, "key_label": "Access Key", "second_key": "Secret Key", "fields": [_ORIGINS], "hint": "时长只支持 5 秒或 10 秒。"},
+        "xhs": {"label": "小红书 MaaS（happyhorse）", "url": "https://maas.devops.xiaohongshu.com/openai/openai/qwen/v1", "adapter": "xhs_video_v1", "probe": None, "key_label": "MaaS api-key", "fields": [_ORIGINS], "hint": "这是内网地址，只有服务器能访问小红书内网时才能用。"},
         "agnes": {"label": "Agnes Video", "url": "https://apihub.agnes-ai.com/v1", "adapter": "agnes_video_v1", "probe": None, "fields": [_ORIGINS, {"key": "poll_url", "label": "轮询地址", "required": False, "list": False, "placeholder": "默认 https://apihub.agnes-ai.com/agnesapi"}], "hint": "时长支持 4 到 12 秒。"},
     },
     "music": {
@@ -167,7 +172,19 @@ def _poll(value):
     return clean_base_url(value) if value else value
 
 
-_CLEAN = {"voices": _voices, "download_origins": _origins, "download_path_prefixes": _prefixes, "group_id": _group, "poll_url": _poll}
+def _header(value):
+    if not isinstance(value, str) or (value and not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]{0,63}", value, re.ASCII)):
+        raise invalid()
+    return value
+
+
+def _version(value):
+    if not isinstance(value, str) or (value and not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", value, re.ASCII)):
+        raise invalid()
+    return value
+
+
+_CLEAN = {"voices": _voices, "download_origins": _origins, "download_path_prefixes": _prefixes, "group_id": _group, "poll_url": _poll, "auth_header": _header, "api_version": _version}
 
 
 def clean_options(channel, platform, value):
@@ -185,7 +202,7 @@ def clean_options(channel, platform, value):
 
 def build_provider(channel, platform, base_url, secret, options, *, preflight=True):
     spec = spec_of(channel, platform)
-    preflight = preflight and spec["probe"] == "bearer"
+    preflight = preflight and spec["probe"] == "bearer" and not options.get("auth_header")
     if CHANNELS[channel]["kind"] == "execution":
         path = {"responses": "/responses", "chat": "/chat/completions", "anthropic": "/messages"}[spec["protocol"]]
         return ExecutionProvider(version=PROVIDER_VERSION, endpoint=base_url + path, secret=secret, models_url=base_url + "/models",
@@ -199,11 +216,23 @@ def build_provider(channel, platform, base_url, secret, options, *, preflight=Tr
         extra["download_path_prefixes"] = tuple(options["download_path_prefixes"])
     if spec.get("response_profile"):
         extra["response_profile"] = spec["response_profile"]
-    private = {key: options[key] for key in ("group_id", "poll_url") if options.get(key)}
+    private = {key: options[key] for key in ("group_id", "poll_url", "auth_header", "api_version") if options.get(key)}
     if private:
         extra["platform_options"] = private
     return MediaProvider(version=PROVIDER_VERSION, base_url=base_url, secret=secret, adapter=spec["adapter"], preflight_models=preflight,
                          managed_models=True, client_correlation=True, **extra)
+
+
+def clone_provider_id(channel, platform):
+    return provider_id(channel, platform) + "-clone"
+
+
+def build_clone_provider(channel, platform, base_url, secret, options):
+    """Voice registration runs through the audited stages, under its own provider entry."""
+    spec = spec_of(channel, platform)
+    private = {key: options[key] for key in ("group_id",) if options.get(key)}
+    return MediaProvider(version=PROVIDER_VERSION, base_url=base_url, secret=secret, adapter=spec["clone_adapter"], capabilities=("voice.enroll",), voice_profile={},
+                         managed_models=True, client_correlation=True, **({"platform_options": private} if private else {}))
 
 
 def apply_connection(provider, base_url, secret):

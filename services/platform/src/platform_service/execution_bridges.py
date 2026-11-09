@@ -34,20 +34,55 @@ def _output_text(value):
     return value if isinstance(value, str) else _text(value)
 
 
+SEPARATOR = "__"
+_CUSTOM_SCHEMA = {"type": "object", "properties": {"input": {"type": "string"}}, "required": ["input"]}
+
+
+def _as_function(tool, name):
+    if tool.get("type") == "custom":
+        return {"type": "function", "name": name, "description": tool.get("description", ""), "parameters": _CUSTOM_SCHEMA}
+    return {**tool, "name": name}
+
+
 def _functions(value):
     tools = []
     for tool in value.get("tools", []):
-        if tool.get("type") != "function":
-            raise _reject()
-        tools.append(tool)
+        if tool.get("type") == "namespace":
+            tools.extend(_as_function(child, tool["name"] + SEPARATOR + child["name"]) for child in tool["tools"])
+        else:
+            tools.append(_as_function(tool, tool["name"]))
     return tools
+
+
+def tool_kinds(value):
+    """How a name the supplier calls maps back to what the client declared."""
+    kinds = {}
+    for tool in value.get("tools", []):
+        if tool.get("type") == "namespace":
+            for child in tool["tools"]:
+                kinds[tool["name"] + SEPARATOR + child["name"]] = {"name": child["name"], "namespace": tool["name"], "custom": child.get("type") == "custom"}
+        else:
+            kinds[tool["name"]] = {"name": tool["name"], "namespace": None, "custom": tool.get("type") == "custom"}
+    return kinds
+
+
+def _flatten(item):
+    """Custom tool calls and namespaced calls in the history, as plain function calls."""
+    kind = item.get("type", "message") if isinstance(item, dict) else None
+    if kind == "custom_tool_call":
+        return {"type": "function_call", "call_id": item["call_id"], "name": item["name"], "arguments": json.dumps({"input": item.get("input", "")}, ensure_ascii=False)}
+    if kind == "custom_tool_call_output":
+        return {**item, "type": "function_call_output"}
+    if kind == "function_call" and item.get("namespace"):
+        return {**item, "name": item["namespace"] + SEPARATOR + item["name"]}
+    return item
 
 
 def _items(value):
     source = value.get("input", "")
     if isinstance(source, str):
         return [{"type": "message", "role": "user", "content": source}]
-    return source
+    return [_flatten(item) for item in source]
 
 
 def _max_tokens(value):
@@ -151,8 +186,8 @@ def _sse(kind, **fields):
 class ResponseBuilder:
     """Assemble one Responses object while emitting its streaming events."""
 
-    def __init__(self, model):
-        self.id, self.model, self.output, self.open = "resp_" + uuid4().hex, model, [], None
+    def __init__(self, model, tools=None):
+        self.id, self.model, self.output, self.open, self.tools = "resp_" + uuid4().hex, model, [], None, tools or {}
 
     def _object(self, status, usage=None):
         value = {"id": self.id, "object": "response", "model": self.model, "status": status, "error": None, "output": self.output}
@@ -176,6 +211,13 @@ class ResponseBuilder:
             return [_sse("response.output_text.done", item_id=item["id"], output_index=index, content_index=0, text=part["text"]),
                     _sse("response.content_part.done", item_id=item["id"], output_index=index, content_index=0, part=part),
                     _sse("response.output_item.done", output_index=index, item=item)]
+        if item["type"] == "custom_tool_call":
+            try:
+                item["input"] = json.loads(item.pop("buffer") or "{}")["input"]
+            except (ValueError, KeyError, TypeError):
+                raise PlatformError(502, "invalid_upstream_response") from None
+            return [_sse("response.custom_tool_call_input.done", item_id=item["id"], output_index=index, input=item["input"]),
+                    _sse("response.output_item.done", output_index=index, item=item)]
         return [_sse("response.function_call_arguments.done", item_id=item["id"], output_index=index, arguments=item["arguments"]),
                 _sse("response.output_item.done", output_index=index, item=item)]
 
@@ -194,13 +236,22 @@ class ResponseBuilder:
 
     def tool_start(self, call_id, name):
         events = self.close()
-        self.open = {"id": "fc_" + uuid4().hex, "type": "function_call", "status": "completed", "call_id": call_id, "name": name, "arguments": ""}
-        events.append(_sse("response.output_item.added", output_index=len(self.output), item={**self.open, "status": "in_progress"}))
+        kind = self.tools.get(name, {"name": name, "namespace": None, "custom": False})
+        common = {"id": "fc_" + uuid4().hex, "status": "completed", "call_id": call_id, "name": kind["name"]}
+        if kind["custom"]:
+            self.open = {**common, "type": "custom_tool_call", "input": "", "buffer": ""}
+        else:
+            self.open = {**common, "type": "function_call", "arguments": "", **({"namespace": kind["namespace"]} if kind["namespace"] else {})}
+        public = {key: value for key, value in self.open.items() if key != "buffer"}
+        events.append(_sse("response.output_item.added", output_index=len(self.output), item={**public, "status": "in_progress"}))
         return events
 
     def tool_arguments(self, delta):
-        if self.open is None or self.open["type"] != "function_call":
+        if self.open is None or self.open["type"] == "message":
             raise PlatformError(502, "invalid_upstream_response")
+        if self.open["type"] == "custom_tool_call":
+            self.open["buffer"] += delta
+            return []
         self.open["arguments"] += delta
         return [_sse("response.function_call_arguments.delta", item_id=self.open["id"], output_index=len(self.output), delta=delta)]
 
@@ -248,8 +299,8 @@ class ChatBridge:
         return {"Authorization": "Bearer " + secret}
 
     @staticmethod
-    async def stream(chunks, model):
-        builder, usage, reason, tools = ResponseBuilder(model), None, None, {}
+    async def stream(chunks, model, kinds=None):
+        builder, usage, reason, tools = ResponseBuilder(model, kinds), None, None, {}
         for event in builder.start():
             yield event
         async for data in _server_events(chunks):
@@ -281,8 +332,8 @@ class ChatBridge:
             yield event
 
     @staticmethod
-    def response(value, model):
-        builder = ResponseBuilder(model)
+    def response(value, model, kinds=None):
+        builder = ResponseBuilder(model, kinds)
         choice = (value.get("choices") or [None])[0]
         if not isinstance(choice, dict):
             raise PlatformError(502, "invalid_upstream_response")
@@ -314,8 +365,8 @@ class AnthropicBridge:
         return usage["input_tokens"] + sum(usage.get(key) or 0 for key in ("cache_read_input_tokens", "cache_creation_input_tokens"))
 
     @classmethod
-    async def stream(cls, chunks, model):
-        builder, input_tokens, output_tokens, reason = ResponseBuilder(model), None, None, None
+    async def stream(cls, chunks, model, kinds=None):
+        builder, input_tokens, output_tokens, reason = ResponseBuilder(model, kinds), None, None, None
         for event in builder.start():
             yield event
         async for data in _server_events(chunks):
@@ -354,8 +405,8 @@ class AnthropicBridge:
             yield event
 
     @classmethod
-    def response(cls, value, model):
-        builder = ResponseBuilder(model)
+    def response(cls, value, model, kinds=None):
+        builder = ResponseBuilder(model, kinds)
         for block in value.get("content") or ():
             if block.get("type") == "text":
                 builder.text(block["text"])

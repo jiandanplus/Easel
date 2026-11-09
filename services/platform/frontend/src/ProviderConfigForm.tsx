@@ -41,8 +41,9 @@ export const isConfigured = (item: PlatformState) => Boolean(item.config?.key_hi
 export const initialPlatform = (channel: ChannelState) => (channel.platforms.find(isConfigured) ?? channel.platforms[0]).id;
 export function providerLabel(channel: ChannelState | undefined, providerId: string): string {
   if (!providerId.startsWith('console-')) return `服务器配置 · ${providerId}`;
-  const suffix = channel ? providerId.slice(`console-${channel.channel}`.length + 1) : '';
-  return `后台配置 · ${channel?.platforms.find(p => p.id === (suffix || GATEWAY))?.label ?? providerId}`;
+  const raw = channel ? providerId.slice(`console-${channel.channel}`.length + 1) : '';
+  const clone = raw.endsWith('-clone'), suffix = clone ? raw.slice(0, -6) : raw;
+  return `后台配置 · ${channel?.platforms.find(p => p.id === (suffix || GATEWAY))?.label ?? providerId}${clone ? ' · 声音复刻' : ''}`;
 }
 
 export function parseList(text: string): string[] {

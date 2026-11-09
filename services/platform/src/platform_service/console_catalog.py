@@ -263,6 +263,11 @@ class ConsoleCatalog:
             if capability not in provider['capabilities']:
                 raise PlatformError(422, 'console_provider_capability')
             limits, parameters = template['limits'], template['parameters']
+            if capability == 'voice.enroll':  # Must name the same model that will speak with this voice.
+                parameters = {**parameters, 'properties': {**parameters['properties'], 'target_model': {'type': 'string', 'enum': [payload['upstream_model']]}}}
+            if provider['adapter'] == 'fish_speech_v1' and capability == 'audio.speech':  # Fish takes a reference recording in the request.
+                limits = {**limits, 'max_input_bytes': 10485760, 'max_assets': 1, 'input_media': {'mime_types': ['audio/mpeg', 'audio/wav', 'audio/mp4'], 'max_files': 1, 'max_duration_ms': 300000, 'max_channels': 2, 'max_sample_rate': 48000, 'require_audio': True}}
+                parameters = {**parameters, 'required': ['response_format'], 'properties': {**parameters['properties'], 'reference_text': {'type': 'string', 'maxLength': 2000}}}
             if provider['adapter'] == 'gemini_speech_v1':  # Gemini only returns raw audio, delivered as WAV.
                 limits = {**limits, 'output_media': {**limits['output_media'], 'mime_types': ['audio/wav']}}
                 parameters = {**parameters, 'properties': {**parameters['properties'], 'response_format': {'type': 'string', 'enum': ['wav']}}}

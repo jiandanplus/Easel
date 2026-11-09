@@ -65,9 +65,20 @@ class DirectVideo(DirectAsync):
     def video(self, request, assets):
         model, parameters, text = self.check(request, assets, {"seconds", "size"})
         seconds, size = parameters.get("seconds"), parameters.get("size")
-        if assets or type(seconds) is not int or not 1 <= seconds <= 900 or size not in _RATIOS:
+        if len(assets) > 1 or type(seconds) is not int or not 1 <= seconds <= 900 or size not in _RATIOS:
             raise PlatformError(422, "invalid_media_parameters")
         return model, text, seconds, size, *_RATIOS[size]
+
+    @staticmethod
+    def _image(assets):
+        """Base64 of the one starting frame and its data URI, or (None, None)."""
+        if not assets:
+            return None, None
+        item = assets[0]
+        if item.get("mime") not in ("image/png", "image/jpeg", "image/webp") or not isinstance(item.get("raw"), bytes) or not 0 < len(item["raw"]) <= 10 * 1024 * 1024:
+            raise PlatformError(422, "invalid_media_assets")
+        encoded = base64.b64encode(item["raw"]).decode("ascii")
+        return encoded, "data:" + item["mime"] + ";base64," + encoded
 
 
 class DashScopeVideo(DirectVideo):
@@ -78,8 +89,10 @@ class DashScopeVideo(DirectVideo):
         model, text, seconds, size, ratio, resolution = self.video(request, assets)
         # wan2.7 replaced size with resolution and ratio.
         parameters = {"duration": seconds, **({"resolution": resolution, "ratio": ratio} if model.startswith("wan2.7") else {"size": size.replace("x", "*")})}
+        _, frame = self._image(assets)
+        block = {"prompt": text, **({} if not frame else {"media": [{"type": "first_frame", "url": frame}]} if model.startswith("wan2.7") else {"img_url": frame})}
         return PreparedRequest(self._base() + "/services/aigc/video-generation/video-synthesis",
-                               encode({"model": model, "input": {"prompt": text}, "parameters": parameters}), "application/json", model)
+                               encode({"model": model, "input": block, "parameters": parameters}), "application/json", model)
 
     def _job_id(self, value, *, submit):
         output = value.get("output")
@@ -103,8 +116,10 @@ class ArkVideo(DirectVideo):
 
     def prepare(self, request, assets):
         model, text, seconds, _, ratio, _ = self.video(request, assets)
+        _, frame = self._image(assets)
+        content = [{"type": "text", "text": text}, *([{"type": "image_url", "image_url": {"url": frame}}] if frame else [])]
         return PreparedRequest(self._base() + "/contents/generations/tasks",
-                               encode({"model": model, "content": [{"type": "text", "text": text}], "ratio": ratio, "duration": seconds}), "application/json", model)
+                               encode({"model": model, "content": content, "ratio": ratio, "duration": seconds}), "application/json", model)
 
     def _job_id(self, value, *, submit):
         return job_id(value.get("id"))
@@ -140,8 +155,9 @@ class KlingVideo(DirectVideo):
         model, text, seconds, _, ratio, _ = self.video(request, assets)
         if seconds not in (5, 10):
             raise PlatformError(422, "invalid_media_parameters")
-        return PreparedRequest(self._base() + "/v1/videos/text2video",
-                               encode({"model_name": model, "prompt": text, "duration": str(seconds), "aspect_ratio": ratio}), "application/json", model)
+        encoded, _ = self._image(assets)
+        value = {"model_name": model, "prompt": text, "duration": str(seconds), "aspect_ratio": ratio, **({"image": encoded} if encoded else {})}
+        return PreparedRequest(self._base() + "/v1/videos/" + ("image2video" if encoded else "text2video"), encode(value), "application/json", model)
 
     def _job_id(self, value, *, submit):
         data = value.get("data")
@@ -151,7 +167,8 @@ class KlingVideo(DirectVideo):
         return None
 
     def query_url(self, known):
-        return self._base() + "/v1/videos/text2video/" + job_id(known)
+        kind = "image2video" if self.job and (self.job.get("request") or {}).get("assets") else "text2video"
+        return self._base() + "/v1/videos/" + kind + "/" + job_id(known)
 
     def observe(self, value, sha, known):
         data = value.get("data")
@@ -176,8 +193,9 @@ class AgnesVideo(DirectVideo):
         model, text, seconds, _, ratio, _ = self.video(request, assets)
         if not 4 <= seconds <= 12:
             raise PlatformError(422, "invalid_media_parameters")
-        return PreparedRequest(self._base() + "/videos",
-                               encode({"model": model, "prompt": text, "seconds": str(seconds), "size": "720P", "aspect_ratio": ratio, "mode": "text"}), "application/json", model)
+        _, frame = self._image(assets)
+        value = {"model": model, "prompt": text, "seconds": str(seconds), "size": "720P", "aspect_ratio": ratio, "mode": "keyframe" if frame else "text", **({"first_frame": frame} if frame else {})}
+        return PreparedRequest(self._base() + "/videos", encode(value), "application/json", model)
 
     def _job_id(self, value, *, submit):
         return job_id(value.get("video_id") or value.get("id") or value.get("task_id"))
@@ -202,6 +220,28 @@ class AgnesVideo(DirectVideo):
         if state is None:
             raise _bad()
         return Observation(known, state, (self.url_source(value.get("url")),) if state == "completed" else (), {}, None, sha)
+
+
+class XhsVideo(DashScopeVideo):
+    """Xiaohongshu's internal MaaS: DashScope-style tasks, an api-key header, and a body on GET."""
+    suffixes = (".xiaohongshu.com",)
+    submit_headers = {}
+
+    def _auth(self):
+        return {"api-key": self.provider.secret}
+
+    def prepare(self, request, assets):
+        model, text, seconds, _, ratio, resolution = self.video(request, assets)
+        _, frame = self._image(assets)
+        block = {"prompt": text, **({"media": [{"type": "first_frame", "url": frame}]} if frame else {})}
+        return PreparedRequest(self._base() + "/services/aigc/video-generation/video-synthesis",
+                               encode({"model": model, "input": block, "parameters": {"resolution": resolution, "ratio": ratio, "duration": seconds}}), "application/json", model)
+
+    async def query(self, client, provider_job_id, *, max_bytes):
+        known = job_id(provider_job_id)
+        body = PreparedRequest(self.query_url(known), encode({"model": self.provider.models[self.job["model"]]}), "application/json", "")
+        value, sha = await self._json(client, "GET", body.url, maximum=max_bytes, prepared=body)
+        return self.observe(value, sha, known)
 
 
 class DirectMusic(DirectAsync):
@@ -278,5 +318,5 @@ class SunoDirect(DirectMusic):
         return Observation(known, "running", (), {}, None, sha)
 
 
-DIRECT_ASYNC = {"dashscope_video_v1": DashScopeVideo, "ark_video_v1": ArkVideo, "kling_video_v1": KlingVideo, "agnes_video_v1": AgnesVideo,
+DIRECT_ASYNC = {"dashscope_video_v1": DashScopeVideo, "ark_video_v1": ArkVideo, "kling_video_v1": KlingVideo, "agnes_video_v1": AgnesVideo, "xhs_video_v1": XhsVideo,
                 "dashscope_music_v1": DashScopeMusic, "suno_direct_v1": SunoDirect}

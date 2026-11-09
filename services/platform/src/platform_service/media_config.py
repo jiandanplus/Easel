@@ -11,11 +11,12 @@ from urllib.parse import urlsplit
 
 
 ASYNC_CAPABILITIES = {"newapi_videos_v1": ("video.generate",), "newapi_suno_v1": ("music.generate",), "newapi_dashscope_music_v1": ("music.generate",), "newapi_incho_v1": ("music.generate",),
-                      "dashscope_video_v1": ("video.generate",), "ark_video_v1": ("video.generate",), "kling_video_v1": ("video.generate",), "agnes_video_v1": ("video.generate",),
+                      "dashscope_video_v1": ("video.generate",), "ark_video_v1": ("video.generate",), "kling_video_v1": ("video.generate",), "agnes_video_v1": ("video.generate",), "xhs_video_v1": ("video.generate",),
                       "dashscope_music_v1": ("music.generate",), "suno_direct_v1": ("music.generate",)}
 
 SPEECH_ADAPTERS = ('openai_speech_v1', 'minimax_speech_v1', 'dashscope_speech_v1', 'fish_speech_v1', 'gemini_speech_v1')
-AUDIO_CAPABILITIES = {**{name: ('audio.speech',) for name in SPEECH_ADAPTERS}, 'openai_transcriptions_v1': ('audio.transcribe',)}
+AUDIO_CAPABILITIES = {'openai_speech_v1': ('audio.speech',), 'fish_speech_v1': ('audio.speech',), 'gemini_speech_v1': ('audio.speech',),
+                      'minimax_speech_v1': ('audio.speech', 'voice.synthesize'), 'dashscope_speech_v1': ('audio.speech', 'voice.synthesize'), 'openai_transcriptions_v1': ('audio.transcribe',)}
 
 VOICE_CAPABILITIES = {'newapi_minimax_voice_v1': ('voice.enroll','voice.synthesize'), 'newapi_dashscope_voice_v1': ('voice.enroll','voice.synthesize'), 'newapi_fish_voice_v1': ('audio.speech',)}
 AV_ADAPTERS = {*ASYNC_CAPABILITIES, *AUDIO_CAPABILITIES, *VOICE_CAPABILITIES}
@@ -136,7 +137,7 @@ class MediaSettings:
                     profile=voice_profile(provider)
                     from .media.adapters.newapi_voice import MiniMaxVoiceAdapter,DashScopeVoiceAdapter,FishVoiceAdapter
                     targets={'newapi_minimax_voice_v1':MiniMaxVoiceAdapter.targets,'newapi_dashscope_voice_v1':DashScopeVoiceAdapter.targets,'newapi_fish_voice_v1':FishVoiceAdapter.targets}[provider.adapter]
-                    if not profile.target_models or not set(profile.target_models)<=targets or any(value not in profile.target_models for value in provider.models.values()):raise ValueError
+                    if not provider.client_correlation and (not profile.target_models or not set(profile.target_models)<=targets or any(value not in profile.target_models for value in provider.models.values())):raise ValueError
                 except Exception: raise ValueError("invalid_media_configuration") from None
                 if provider.response_profile is not None or provider.response_format is not None or provider.legacy_variations:
                     raise ValueError("invalid_media_configuration")

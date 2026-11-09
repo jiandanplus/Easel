@@ -174,7 +174,7 @@ class MediaService(StorageLifecycle):
         if size>definition['limits']['max_input_bytes']:raise PlatformError(413,'media_input_too_large')
         if request.get('voice_id'):
             voice=await (await c.execute('SELECT * FROM media_voices WHERE id=%s',(request['voice_id'],))).fetchone()
-            if not voice or not same_owner(scope_of(voice['scope']),scope_of(invocation['scope'])) or voice['revoked_at'] or voice['expires_at']<=now() or (voice['provider_id'],voice['provider_version'])!=(definition['provider_id'],definition['provider_version']):raise PlatformError(404,'media_voice_unavailable')
+            if not voice or not same_owner(scope_of(voice['scope']),scope_of(invocation['scope'])) or voice['revoked_at'] or voice['expires_at']<=now() or voice['provider_id'] not in (definition['provider_id'],definition['provider_id']+'-clone') or voice['provider_version']!=definition['provider_version']:raise PlatformError(404,'media_voice_unavailable')
         elif definition['capability']=='voice.synthesize':raise PlatformError(422,'media_voice_required')
         for meter in definition['rate']['meters']:
             if meter['basis']=='verified_input_v1' and units[meter['unit']]>definition['limits']['max_units'][meter['unit']]:raise PlatformError(422,'media_input_limit_exceeded')

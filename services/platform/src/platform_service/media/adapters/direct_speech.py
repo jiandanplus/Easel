@@ -13,6 +13,7 @@ from ...errors import PlatformError
 from ..rates import unicode_scalars
 from .audio import CLIENT_NAMESPACE, AudioResult, HttpCorrelation, PreparedAudioRequest, _FORMAT_MIME, _OpenAIAudio, _encode, _text
 from .newapi_async import bounded
+from .newapi_voice import _sample
 
 
 def _bad():
@@ -44,18 +45,34 @@ class DirectSpeech(_OpenAIAudio):
     def _base(self):
         return self.provider.base_url.rstrip("/")
 
-    def prepare(self, request, assets):
-        model = self._model(request)
-        if assets or request.get("assets", []):
+    def _model(self, request):
+        capability = request.get("capability") if isinstance(request, dict) else None
+        if capability not in ("audio.speech", "voice.synthesize") or capability not in self.provider.capabilities:
+            raise PlatformError(503, "audio_capability_closed")
+        model = self.provider.models.get(request.get("model"))
+        if not isinstance(model, str):
+            raise PlatformError(503, "audio_capability_closed")
+        return model
+
+    def _reference_sample(self, request, assets, parameters):
+        if assets or request.get("assets", []) or "reference_text" in parameters:
             raise PlatformError(422, "invalid_audio_assets")
+        return None
+
+    def prepare(self, request, assets, *, owned_voice=None):
+        model = self._model(request)
         prompt = _text(request.get("prompt"), self.max_characters)
         parameters = request.get("parameters", {})
-        if not isinstance(parameters, dict) or set(parameters) - {"voice", "response_format", "speed_percent"}:
+        if not isinstance(parameters, dict) or set(parameters) - {"voice", "response_format", "speed_percent", "reference_text"}:
             raise PlatformError(422, "invalid_audio_parameters")
-        voice, output, speed = parameters.get("voice"), parameters.get("response_format", self.formats[0]), parameters.get("speed_percent", 100)
-        if voice not in self.profile.voices or output not in self.formats or type(speed) is not int or not 50 <= speed <= 200:
+        sample = self._reference_sample(request, assets, parameters)
+        voice, output, speed = owned_voice or parameters.get("voice"), parameters.get("response_format", self.formats[0]), parameters.get("speed_percent", 100)
+        if (owned_voice is None and sample is None and voice not in self.profile.voices) or output not in self.formats or type(speed) is not int or not 50 <= speed <= 200:
             raise PlatformError(422, "invalid_audio_parameters")
-        return PreparedAudioRequest(self.url(model), _encode(self.body(model, prompt, voice, output, speed)), "application/json", model, output, {"unicode_scalar": unicode_scalars(prompt)})
+        value = self.body(model, prompt, voice, output, speed)
+        if sample is not None:
+            value = self.with_sample(value, sample)
+        return PreparedAudioRequest(self.url(model), _encode(value), "application/json", model, output, {"unicode_scalar": unicode_scalars(prompt)})
 
     async def submit(self, client, prepared, *, request_id, max_bytes, on_headers):
         headers = {**self._auth(), **self._extra_headers(prepared), "Content-Type": prepared.content_type, "Accept": "*/*", "Accept-Encoding": "identity"}
@@ -125,7 +142,20 @@ class FishSpeech(DirectSpeech):
         return {"model": prepared.upstream_model}
 
     def body(self, model, prompt, voice, output, speed):
-        return {"text": prompt, "format": output, "reference_id": voice, "prosody": {"speed": speed / 100}}
+        return {"text": prompt, "format": output, **({"reference_id": voice} if voice else {}), "prosody": {"speed": speed / 100}}
+
+    def _reference_sample(self, request, assets, parameters):
+        if not assets:
+            return None
+        if len(assets) != 1 or request.get("assets") != [assets[0].get("id")] or parameters.get("voice") is not None:
+            raise PlatformError(422, "invalid_audio_assets")
+        text = parameters.get("reference_text", "")
+        if not isinstance(text, str):
+            raise PlatformError(422, "invalid_audio_parameters")
+        return base64.b64encode(_sample(assets[0], limit=10 * 1024 * 1024)).decode("ascii"), text
+
+    def with_sample(self, value, sample):
+        return {**value, "references": [{"audio": sample[0], "text": sample[1]}]}
 
     async def decode(self, client, raw, prepared, max_bytes):
         return raw

@@ -19,4 +19,4 @@
 | [0013](0013-redemption-codes.md) | 兑换码（一次一码、只存摘要、每批每钱包一次）和网页审批运营者（迁移 026） |
 | [0014](0014-subscription-catalog.md) | 中央统一管理模型，套餐决定模型权限、总点数和倍率（迁移 027） |
 | [0015](0015-console-provider-configs.md) | 六类接口都在后台配置，Key 加密保存（迁移 028） |
-| [0016](0016-console-supplier-platforms.md) | 后台每一类接口可选第三方平台（迁移 029） |
+| [0016](0016-console-supplier-platforms.md) | 后台每一类接口可选第三方平台（迁移 029、030） |

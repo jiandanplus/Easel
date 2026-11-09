@@ -82,6 +82,7 @@ class BridgeVoiceResult:
     descriptor: dict | None = field(default=None,repr=False)
     quantities: dict[str,int] = field(default_factory=dict)
     reported_facts: dict = field(default_factory=dict,repr=False)
+    provider_voice_id: str | None = field(default=None,repr=False)
 
 
 def _encode(value):

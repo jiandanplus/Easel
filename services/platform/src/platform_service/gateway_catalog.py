@@ -9,7 +9,7 @@ import httpx
 
 from .errors import PlatformError
 from .pricing import catalog_ready
-from .provider_channels import CHANNELS, GATEWAY, apply_connection, build_provider, channel_of, provider_id, seal_scope, spec_of
+from .provider_channels import CHANNELS, GATEWAY, apply_connection, build_clone_provider, build_provider, channel_of, clone_provider_id, provider_id, seal_scope, spec_of
 
 REFRESH_SECONDS = 5
 PREFLIGHT_SECONDS = 30
@@ -71,12 +71,14 @@ class ManagedBindings:
             changed = {provider_id(channel, platform): build_provider(channel, platform, base_url, secret, row["options"], preflight=not (current and row["state"] == "no_model_list"))}
             if platform == GATEWAY:  # Everything already on this page moves to the saved address and key too.
                 changed.update({name: apply_connection(item, base_url, secret) for name, item in self.base.providers.items() if channel_of(item) == channel})
+            if spec_of(channel, platform).get("clone_adapter"):
+                changed[clone_provider_id(channel, platform)] = build_clone_provider(channel, platform, base_url, secret, row["options"])
             dataclasses.replace(self.base, providers=changed)
         except (ValueError, TypeError, KeyError, PlatformError):
             invalid.append(row)
             return
         providers.update(changed)
-        self._targets[(channel, platform)] = (row["id"], base_url, secret)
+        self._targets[(channel, platform)] = (row["id"], base_url, secret, row["options"].get("auth_header"))
 
     async def refresh(self):
         if self.base.mode == "disabled" or time.monotonic() < self._checked:
@@ -119,9 +121,9 @@ class ManagedBindings:
         return last is None or last[0] != config_id or time.monotonic() >= last[1]
 
     async def probe_due(self):
-        for key, (config_id, base_url, secret) in list(self._targets.items()):
+        for key, (config_id, base_url, secret, custom_header) in list(self._targets.items()):
             if self._due(key, config_id):
-                state, names = await self._try(spec_of(*key)["probe"], base_url, secret)
+                state, names = await self._try(None if custom_header else spec_of(*key)["probe"], base_url, secret)
                 await self._report(*key, config_id, state, names)
                 self._probed[key] = (config_id, time.monotonic() + PROBE_SECONDS)
 

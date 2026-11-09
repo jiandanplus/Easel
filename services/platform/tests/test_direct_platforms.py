@@ -232,8 +232,6 @@ def test_chat_request_keeps_the_conversation_order():
     assert value["messages"][2]["content"] == "好的" and value["messages"][2]["tool_calls"][0]["function"]["name"] == "get"
     assert value["max_tokens"] == 100 and value["stream_options"] == {"include_usage": True} and value["tool_choice"] == "required"
     assert value["tools"][0]["function"]["parameters"] == {"type": "object", "properties": {}}
-    with pytest.raises(PlatformError):
-        chat_request({**TEXT, "tools": [{"type": "custom", "name": "x"}]})
 
 
 def test_anthropic_request_merges_turns_and_maps_tools():
@@ -312,3 +310,85 @@ def test_plain_json_replies_convert_too():
     assert claude["output"][0]["content"][0]["text"] == "好"
     with pytest.raises(PlatformError):
         ChatBridge.response({"choices": [{"message": {"content": "好"}}]}, "m")
+
+
+PNG = {"id": "a1", "mime": "image/png", "raw": b"png-bytes"}
+FRAME = {**VIDEO, "assets": ["a1"]}
+
+
+def test_image_to_video_on_each_platform():
+    wan = make_async_adapter(provider("dashscope_video_v1", "https://d.aliyuncs.com/api/v1"), "live", {"model": "m"})
+    assert body(wan.prepare(FRAME, [PNG]))["input"]["img_url"].startswith("data:image/png;base64,")
+    new = DIRECT_ASYNC["dashscope_video_v1"](MediaProvider(version="1", base_url="https://d.aliyuncs.com/api/v1", secret="k", models={"m": "wan2.7-i2v"}, adapter="dashscope_video_v1", capabilities=("video.generate",)), "live")
+    assert body(new.prepare(FRAME, [PNG]))["input"]["media"][0]["type"] == "first_frame"
+    ark = DIRECT_ASYNC["ark_video_v1"](provider("ark_video_v1", "https://a.volces.com/api/v3"), "live")
+    assert body(ark.prepare(FRAME, [PNG]))["content"][1]["type"] == "image_url"
+    kling = make_async_adapter(provider("kling_video_v1", "https://api.klingai.com", secret="a|b"), "live", {"model": "m", "request": {"assets": ["a1"]}})
+    prepared = kling.prepare(FRAME, [PNG])
+    assert prepared.url.endswith("/v1/videos/image2video") and body(prepared)["image"] == base64.b64encode(b"png-bytes").decode() and kling.query_url("9").endswith("/image2video/9")
+    agnes = make_async_adapter(provider("agnes_video_v1", "https://a.agnes-ai.com/v1"), "live", {"model": "m"})
+    assert body(agnes.prepare(FRAME, [PNG]))["mode"] == "keyframe"
+    with pytest.raises(PlatformError):
+        ark.prepare(FRAME, [{**PNG, "mime": "text/plain"}])
+    with pytest.raises(PlatformError):
+        ark.prepare({**FRAME, "assets": ["a1", "a2"]}, [PNG, {**PNG, "id": "a2"}])
+
+
+@pytest.mark.asyncio
+async def test_xiaohongshu_maas_uses_its_key_header_and_a_body_on_polling():
+    adapter = make_async_adapter(provider("xhs_video_v1", "https://maas.devops.xiaohongshu.com/openai/openai/qwen/v1"), "live", {"model": "m"})
+    assert adapter._auth() == {"api-key": "key-1"} and body(adapter.prepare(VIDEO, []))["parameters"]["resolution"] == "720P"
+
+    def handler(request):
+        assert request.method == "GET" and request.headers["api-key"] == "key-1" and json.loads(request.content) == {"model": "upstream"}
+        return httpx.Response(200, json={"output": {"task_status": "RUNNING"}})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        assert (await adapter.query(client, "t1", max_bytes=1000)).state == "running"
+
+
+@pytest.mark.asyncio
+async def test_image_platform_can_use_another_key_header_and_api_version():
+    from platform_service.media.adapters.openai_images import OpenAIImagesAdapter
+    settings = MediaProvider(version="1", base_url="https://azure.example/v1", secret="key-1", models={"m": "u"}, capabilities=("image.generate",), client_correlation=True, platform_options={"auth_header": "api-key", "api_version": "2025-01-01"})
+    adapter = OpenAIImagesAdapter(settings, "live")
+    prepared = adapter.prepare({"capability": "image.generate", "model": "m", "prompt": "猫", "parameters": {"n": 1, "size": "1024x1024"}}, [])
+    assert prepared.url.endswith("/images/generations?api-version=2025-01-01")
+
+    def handler(request):
+        assert request.headers["api-key"] == "key-1" and "authorization" not in request.headers
+        return httpx.Response(200, json={"data": [{"b64_json": "eA=="}]})
+
+    async def on_headers(**values):
+        pass
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await adapter.submit(client, prepared, request_id="local-1", max_bytes=1000, on_headers=on_headers)
+    assert result.response_id == "local-1"
+
+
+CODEX = {"model": "up", "stream": True, "max_output_tokens": 100,
+         "input": [{"type": "custom_tool_call", "call_id": "c1", "name": "apply_patch", "input": "patch text"}, {"type": "custom_tool_call_output", "call_id": "c1", "output": "ok"},
+                   {"type": "function_call", "call_id": "c2", "name": "search", "namespace": "docs", "arguments": "{}"}, {"type": "function_call_output", "call_id": "c2", "output": "found"}],
+         "tools": [{"type": "custom", "name": "apply_patch", "description": "edit"}, {"type": "namespace", "name": "docs", "tools": [{"type": "function", "name": "search", "parameters": {"type": "object", "properties": {}}}]}]}
+
+
+def test_codex_tools_flatten_for_suppliers():
+    value = chat_request(CODEX)
+    assert [t["function"]["name"] for t in value["tools"]] == ["apply_patch", "docs__search"]
+    assert value["tools"][0]["function"]["parameters"]["required"] == ["input"]
+    calls = [c for m in value["messages"] for c in m.get("tool_calls", [])]
+    assert json.loads(calls[0]["function"]["arguments"]) == {"input": "patch text"} and calls[1]["function"]["name"] == "docs__search"
+
+
+@pytest.mark.asyncio
+async def test_codex_tool_calls_return_in_their_original_shape():
+    from platform_service.execution_bridges import tool_kinds
+    events = await collect(ChatBridge.stream(chunks([
+        line({"choices": [{"delta": {"tool_calls": [{"index": 0, "id": "c1", "function": {"name": "apply_patch", "arguments": "{\"input\":\"*** Begin"}}]}}]}),
+        line({"choices": [{"delta": {"tool_calls": [{"index": 0, "function": {"arguments": " Patch\"}"}}]}}]}),
+        line({"choices": [{"delta": {"tool_calls": [{"index": 1, "id": "c2", "function": {"name": "docs__search", "arguments": "{}"}}]}, "finish_reason": "tool_calls"}], "usage": {"prompt_tokens": 1, "completion_tokens": 1}})]), "m", tool_kinds(CODEX)))
+    output = events[-1]["response"]["output"]
+    assert output[0] == {"id": output[0]["id"], "status": "completed", "call_id": "c1", "name": "apply_patch", "type": "custom_tool_call", "input": "*** Begin Patch"}
+    assert output[1]["type"] == "function_call" and output[1]["name"] == "search" and output[1]["namespace"] == "docs"
+    assert "buffer" not in json.dumps(events)

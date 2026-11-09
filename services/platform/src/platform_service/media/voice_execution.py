@@ -18,7 +18,8 @@ def provider_scope(provider):
 
 
 def make_voice_adapter(provider,mode,*,binding_hash,voice_boundary_hash=None):
-    cls={'newapi_minimax_voice_v1':MiniMaxVoiceAdapter,'newapi_dashscope_voice_v1':DashScopeVoiceAdapter,'newapi_fish_voice_v1':FishVoiceAdapter}.get(provider.adapter)
+    from .adapters.direct_voice import DIRECT_VOICE
+    cls=DIRECT_VOICE.get(provider.adapter) if provider.client_correlation else {'newapi_minimax_voice_v1':MiniMaxVoiceAdapter,'newapi_dashscope_voice_v1':DashScopeVoiceAdapter,'newapi_fish_voice_v1':FishVoiceAdapter}.get(provider.adapter)
     if cls is None:raise PlatformError(503,'media_capability_closed')
     return cls(provider,mode,voice_profile(provider),binding_hash=binding_hash,provider_scope_hash=provider_scope(provider),voice_boundary_hash=voice_boundary_hash)
 
@@ -30,6 +31,22 @@ async def owned(runtime,scope,request,provider):
         binding_hash=binding['binding_hash'],provider_scope_hash=provider_scope(provider),voice_boundary_hash=boundary,
         provider_id=binding['provider_id'],provider_version=provider.version)
     return result,boundary
+
+
+async def owned_direct(runtime,scope,request,provider):
+    """The supplier's id for a voice this account registered through the sibling clone entry."""
+    from .adapters.direct_voice import minimax_voice_id
+    name=runtime.bindings[request['model']]['provider_id']+'-clone'
+    clone=runtime.settings.providers.get(name)
+    if clone is None:raise PlatformError(503,'media_capability_closed')
+    target=provider.models[request['model']];scope_hash=provider_scope(clone)
+    voice=await runtime.voices.resolve(scope,request['voice_id'],protocol=clone.adapter,target_model=target,binding_hash=runtime.bindings[request['model']]['binding_hash'],
+        provider_scope_hash=scope_hash,voice_boundary_hash=voice_boundary(runtime.settings,name,clone,target),provider_id=name,provider_version=clone.version)
+    if clone.adapter=='newapi_minimax_voice_v1':return minimax_voice_id(voice.provider_reference)
+    async with runtime.service.db.connection() as c:
+        row=await(await c.execute('SELECT provider_voice_id FROM provider_voice_aliases WHERE provider_scope_hash=%s AND reference=%s',(scope_hash,voice.provider_reference))).fetchone()
+    if row is None:raise PlatformError(503,'voice_binding_mismatch')
+    return row['provider_voice_id']
 
 
 class VoiceExecution:
@@ -73,6 +90,10 @@ class VoiceExecution:
         try:
             async with self.post_chain_budget(job):
                 result=await adapter.submit(self.runtime._client,prepared,request_id=permit['request_id'],max_bytes=1048576,on_headers=received,on_task=task_known)
+                if getattr(result,'provider_voice_id',None):
+                    async with self.runtime.service.db.connection() as c:
+                        await c.execute('INSERT INTO provider_voice_aliases(provider_scope_hash,reference,provider_voice_id) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING',
+                            (provider_scope(adapter.provider),result.reference.task_id,result.provider_voice_id))
                 await self.stages.observe(permit['id'],key='post-result',state=result.state,**headers,
                     provider_task_id=result.reference.task_id,response_hash=result.evidence_hash,facts=result.facts)
                 return permit,result,headers
@@ -84,6 +105,8 @@ class VoiceExecution:
     async def enroll(self,context,job,adapter,prepared,assets):
         request=job['request'];target=prepared.target_model
         first,result,_=await self.stage(job,adapter,prepared,{'asset_id':assets[0]['id'],'asset_sha256':assets[0]['sha256'],'target_model':target})
+        if adapter.adapter_id=='newapi_dashscope_voice_v1' and adapter.provider.client_correlation:
+            await self.finish(job,await self.verify(job,adapter),_);return
         if adapter.adapter_id!='newapi_minimax_voice_v1':raise PlatformError(503,'voice_sample_publication_unavailable')
         registration=adapter.prepare_register(request,{'file_task_id':result.reference.task_id,'target_model':target})
         _,result,headers=await self.stage(job,adapter,registration,{'file_task_id':result.reference.task_id,'target_model':target},first['id'])
@@ -114,6 +137,7 @@ class VoiceExecution:
                     'completed',latest['response_hash'],latest['facts'])
             if len(steps)>=9:raise PlatformError(409,'voice_stage_limit')
             refs={'voice_task_id':first['provider_task_id'],'target_model':steps[0]['refs']['target_model']}
+            await asyncio.sleep(getattr(adapter,'verify_interval',0))
             prepared=adapter.prepare_verify(job['request'],refs)
             await self.stage(job,adapter,prepared,refs,steps[-1]['id'],key='verify-'+str(len(steps)))
 

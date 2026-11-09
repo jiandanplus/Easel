@@ -30,7 +30,7 @@ def allowed_meters(provider, capability=None):
         meters={("unicode_scalar","verified_input_v1"),("audio_ms","verified_delivery_v1")}
         if provider.adapter == "newapi_minimax_voice_v1": meters.add(("audio_ms","provider_usage_v1"))
         return frozenset(meters)
-    if provider.adapter in {'newapi_videos_v1','dashscope_video_v1','ark_video_v1','kling_video_v1','agnes_video_v1'}:return frozenset({('video_ms','verified_delivery_v1')})
+    if provider.adapter in {'newapi_videos_v1','dashscope_video_v1','ark_video_v1','kling_video_v1','agnes_video_v1','xhs_video_v1'}:return frozenset({('video_ms','verified_delivery_v1')})
     if provider.adapter in {'newapi_suno_v1','newapi_incho_v1','dashscope_music_v1','suno_direct_v1'}:return frozenset({('audio_ms','verified_delivery_v1'),('audio_clip','verified_delivery_v1')})
     if provider.adapter == 'newapi_dashscope_music_v1':return frozenset({('audio_ms','provider_usage_v1'),('audio_ms','verified_delivery_v1')})
     if provider.adapter in AUDIO_CAPABILITIES:
@@ -70,7 +70,7 @@ class MediaRuntime:
         self.async_queue = MediaAsyncStore(service) if self._console_interfaces or any(p.adapter in {*ASYNC_CAPABILITIES, *VOICE_CAPABILITIES} for p in settings.providers.values()) else None
         from .media.voices import OwnedVoices
         from .media.voice_execution import VoiceExecution
-        has_voice=any(p.adapter in VOICE_CAPABILITIES for p in settings.providers.values())
+        has_voice=self._console_interfaces or any(p.adapter in VOICE_CAPABILITIES for p in settings.providers.values())
         self.voices = OwnedVoices(service.db, service.identity, service) if has_voice else None
         self.voice_execution = VoiceExecution(self) if has_voice else None
         self._client = httpx.AsyncClient(transport=transport, trust_env=False, follow_redirects=False,
@@ -154,7 +154,7 @@ class MediaRuntime:
                 or provider.adapter in AV_ADAPTERS and (self.settings.av_tools is None or not self.settings.worker_enabled)
                 or provider.adapter in {'newapi_suno_v1','newapi_dashscope_music_v1','newapi_incho_v1'} and (not provider.download_origins or not provider.download_path_prefixes)):
             raise PlatformError(503, "media_capability_closed")
-        if provider.adapter=='newapi_dashscope_voice_v1' and capability=='voice.enroll':
+        if provider.adapter=='newapi_dashscope_voice_v1' and capability=='voice.enroll' and not provider.client_correlation:
             raise PlatformError(503,'voice_sample_publication_unavailable')
         return provider
 
@@ -196,7 +196,7 @@ class MediaRuntime:
             if provider is None:continue
             if provider.adapter in AV_ADAPTERS and not av_ready:continue
             for capability in provider.capabilities:
-                if provider.adapter=='newapi_dashscope_voice_v1' and capability=='voice.enroll':continue
+                if provider.adapter=='newapi_dashscope_voice_v1' and capability=='voice.enroll' and not provider.client_correlation:continue
                 meters = allowed_meters(provider, capability)
                 group = groups.setdefault(meters, {"bindings": {}, "capabilities": {}})
                 group["bindings"][model] = binding
@@ -318,8 +318,8 @@ class MediaRuntime:
             metadata = {identifier: await self.service.get_asset(context, identifier) for identifier in assets}
             provider = self._provider(body['model'],body['capability'])
             if body['capability']=='voice.synthesize':
-                from .media.voice_execution import owned
-                await owned(self,context['scope'],body,provider)
+                from .media.voice_execution import owned, owned_direct
+                await (owned_direct if provider.adapter in AUDIO_CAPABILITIES else owned)(self,context['scope'],body,provider)
             verified = {identifier: {field: row[field] for field in ("sha256", "size", "mime", "properties")} for identifier, row in metadata.items()}
             job = await self.service.admit(context, key=key, request=body, bindings=self.bindings, verified_inputs=verified)
             if job.get("replay"): return await self._view(context["scope"], job["id"])
@@ -361,6 +361,9 @@ class MediaRuntime:
                         if request['capability']=='voice.enroll':prepared=adapter.prepare_upload(request,assets)
                         elif reference is not None:prepared=adapter.prepare(request,assets,owned_voice=reference)
                         else:prepared=adapter.prepare(request,assets)
+                    elif is_audio and request['capability']=='voice.synthesize':
+                        from .media.voice_execution import owned_direct
+                        prepared=adapter.prepare(request,assets,owned_voice=await owned_direct(self,context['scope'],request,provider))
                     else: prepared = adapter.prepare(request, assets)
                     await physical_call(self.store.check_capacity,job["model_definition"]["limits"]["max_artifact_bytes"])
                     if len(prepared.payload) > 64 * 1024 * 1024: raise PlatformError(413, "media_input_too_large")

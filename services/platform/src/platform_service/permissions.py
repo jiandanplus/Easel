@@ -152,7 +152,7 @@ CONSOLE_FUNCTIONS = (
 )
 # The one SECURITY DEFINER entry point the product runtime may call (migration 026).
 RUNTIME_FUNCTIONS = ("redeem_code(text,text,text)",)
-RUNTIME_CATALOG_TABLES = ("provider_catalog", "managed_model_bindings", "model_prices", "model_trial_access", "provider_configs", "provider_config_status")
+RUNTIME_CATALOG_TABLES = ("provider_catalog", "managed_model_bindings", "model_prices", "model_trial_access", "provider_configs", "provider_config_status", "provider_voice_aliases")
 
 
 async def can_issue_allowance(conn, role, schema):
@@ -389,6 +389,8 @@ async def grant_runtime_permissions(conn, role: str):
     if "provider_config_status" in catalog:  # 028: the service reports what it found; it never edits a setting.
         await conn.execute(sql.SQL("GRANT UPDATE (base_url) ON {}.provider_catalog TO {}").format(namespace, ident))
         await conn.execute(sql.SQL("GRANT INSERT, UPDATE ON {}.provider_config_status TO {}").format(namespace, ident))
+    if "provider_voice_aliases" in catalog:  # 030: the runtime records supplier voice ids it was given.
+        await conn.execute(sql.SQL("GRANT INSERT ON {}.provider_voice_aliases TO {}").format(namespace, ident))
     for function in RUNTIME_FUNCTIONS:
         present = await (await conn.execute("SELECT to_regprocedure(current_schema()||'.'||%s) IS NOT NULL AS present", (function,))).fetchone()
         if present["present"]:

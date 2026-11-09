@@ -21,7 +21,8 @@ MEDIA = {
             "size": {"type": "string", "enum": ["1024x1024"]}}}},
     "video.generate": {
         "label": "视频", "feature": "video", "unit": "video_ms", "basis": "verified_delivery_v1", "per": 1000, "meter_label": "每秒",
-        "max_units": 15000, "limits": {"max_input_bytes": 65536, "max_assets": 0, "max_artifact_bytes": 67108864,
+        "max_units": 15000, "limits": {"max_input_bytes": 10485760, "max_assets": 1, "max_artifact_bytes": 67108864,
+                                        "input_media": {"mime_types": ["image/png", "image/jpeg", "image/webp"], "max_files": 1, "max_pixels": 16777216},
                                         "output_media": {"mime_types": ["video/mp4"], "max_files": 1, "max_duration_ms": 16000, "max_pixels": 921600,
                                                          "max_channels": 2, "max_sample_rate": 48000, "require_audio": False}},
         "parameters": {"type": "object", "required": ["seconds", "size"], "additionalProperties": False, "properties": {
@@ -42,6 +43,21 @@ MEDIA = {
                                                          "max_channels": 2, "max_sample_rate": 48000, "require_audio": True}},
         "parameters": {"type": "object", "required": ["voice", "response_format"], "additionalProperties": False, "properties": {
             "voice": {"type": "string", "maxLength": 128},
+            "response_format": {"type": "string", "enum": ["mp3", "wav"]},
+            "speed_percent": {"type": "integer", "minimum": 50, "maximum": 200}}}},
+    "voice.enroll": {
+        "label": "声音复刻", "feature": "voice", "unit": "registration", "basis": "verified_delivery_v1", "per": 1, "meter_label": "每次",
+        "max_units": 1, "limits": {"max_input_bytes": 20971520, "max_assets": 1, "max_artifact_bytes": 1048576,
+                                    "input_media": {"mime_types": ["audio/mpeg", "audio/wav", "audio/mp4"], "max_files": 1, "max_duration_ms": 300000,
+                                                    "max_channels": 2, "max_sample_rate": 48000, "require_audio": True}},
+        "parameters": {"type": "object", "required": ["target_model"], "additionalProperties": False, "properties": {
+            "target_model": {"type": "string", "maxLength": 128}}}},
+    "voice.synthesize": {
+        "label": "用复刻声音合成", "feature": "voice", "unit": "unicode_scalar", "basis": "verified_input_v1", "per": 10000, "meter_label": "每万字",
+        "max_units": 10000, "limits": {"max_input_bytes": 131072, "max_assets": 0, "max_artifact_bytes": 67108864,
+                                        "output_media": {"mime_types": ["audio/mpeg", "audio/wav"], "max_files": 1, "max_duration_ms": 900000,
+                                                         "max_channels": 2, "max_sample_rate": 48000, "require_audio": True}},
+        "parameters": {"type": "object", "required": ["response_format"], "additionalProperties": False, "properties": {
             "response_format": {"type": "string", "enum": ["mp3", "wav"]},
             "speed_percent": {"type": "integer", "minimum": 50, "maximum": 200}}}},
     "audio.transcribe": {

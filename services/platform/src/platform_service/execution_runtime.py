@@ -13,7 +13,7 @@ from starlette.responses import Response, StreamingResponse
 
 from .errors import PlatformError
 from .execution_evidence import correlation_id
-from .execution_bridges import BRIDGES
+from .execution_bridges import BRIDGES, tool_kinds
 from .gateway_catalog import GatewayPreflight, ManagedBindings
 from .execution_protocol import (
     MAX_JSON,
@@ -309,7 +309,7 @@ class ExecutionRuntime:
                         raw.extend(chunk)
                     result = bytes(raw)
                     if bridge:
-                        result = encode(bridge.response(parse_json(result, upstream=True), context["model"]))
+                        result = encode(bridge.response(parse_json(result, upstream=True), context["model"], tool_kinds(value)))
                     await finish(
                         result, "application/json", parse_json(result, upstream=True)
                     )
@@ -324,7 +324,7 @@ class ExecutionRuntime:
                 parser, captured = SSEParser(), bytearray()
                 try:
                     async with asyncio.timeout_at(deadline):
-                        source = bridge.stream(upstream.aiter_bytes(), context["model"]) if bridge else upstream.aiter_bytes()
+                        source = bridge.stream(upstream.aiter_bytes(), context["model"], tool_kinds(value)) if bridge else upstream.aiter_bytes()
                         async for chunk in source:
                             if len(captured) + len(chunk) > MAX_RESULT:
                                 raise PlatformError(502, "upstream_response_too_large")

@@ -67,6 +67,7 @@ test('each page opens on a configured platform and names its interfaces',()=>{
   assert.equal(p.providerLabel(channel,'console-video-kling'),'后台配置 · 可灵');
   assert.equal(p.providerLabel(channel,'console-video'),'后台配置 · 网关');
   assert.equal(p.providerLabel(channel,'newapi'),'服务器配置 · newapi');
+  assert.equal(p.providerLabel(channel,'console-video-kling-clone'),'后台配置 · 可灵 · 声音复刻');
 });
 test('interface options follow the fields the server asks for',()=>{
   const p=load('ProviderConfigForm.tsx');

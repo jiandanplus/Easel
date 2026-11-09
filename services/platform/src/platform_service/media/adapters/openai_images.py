@@ -42,6 +42,10 @@ class OpenAIImagesAdapter(MediaAdapter):
     def __init__(self, provider, mode):
         self.provider, self.mode = provider, mode
 
+    def _auth(self):
+        header = (self.provider.platform_options or {}).get("auth_header")
+        return {header: self.provider.secret} if header else {"Authorization": "Bearer " + self.provider.secret}
+
     def prepare(self, request, assets):
         cap = request.get("capability")
         if cap not in self.provider.capabilities or cap not in PATHS:
@@ -60,7 +64,8 @@ class OpenAIImagesAdapter(MediaAdapter):
         fields = {"model": model, **params}
         prompt = request.get("prompt", "")
         if cap != "image.variation": fields["prompt"] = prompt
-        url = self.provider.base_url.rstrip("/") + PATHS[cap]
+        options = self.provider.platform_options or {}
+        url = self.provider.base_url.rstrip("/") + PATHS[cap] + ("?api-version=" + options["api_version"] if options.get("api_version") else "")
         if cap == "image.generate":
             if assets or mask_id or not prompt.strip(): raise PlatformError(422, "invalid_media_assets")
             return PreparedRequest(url, encode(fields), "application/json", model)
@@ -94,7 +99,7 @@ class OpenAIImagesAdapter(MediaAdapter):
 
     async def submit(self, client, prepared, *, request_id, max_bytes, on_headers):
         async with client.stream("POST", prepared.url, content=prepared.payload,
-                                 headers={"Authorization": "Bearer " + self.provider.secret,
+                                 headers={**self._auth(),
                                           "Content-Type": prepared.content_type, "Accept": "application/json",
                                           "Accept-Encoding": "identity", "X-Request-ID": request_id}) as response:
             gateway = self.provider.response_profile == "newapi_images_v1"
