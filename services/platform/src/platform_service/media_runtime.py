@@ -10,7 +10,7 @@ import httpx
 from .errors import PlatformError
 from .media.artifacts import ArtifactStore, public_artifact
 from .media.adapters.openai_images import OpenAIImagesAdapter
-from .media_config import IMAGE_CAPABILITIES, ASYNC_CAPABILITIES, AUDIO_CAPABILITIES, VOICE_CAPABILITIES, AV_ADAPTERS, audio_profile
+from .media_config import IMAGE_CAPABILITIES, ASYNC_CAPABILITIES, AUDIO_CAPABILITIES, VOICE_CAPABILITIES, AV_ADAPTERS, SPEECH_ADAPTERS, audio_profile
 from .gateway_catalog import GatewayPreflight, ManagedBindings
 from .media.async_store import MediaAsyncStore
 from .media.adapters.newapi_async import make_async_adapter
@@ -30,12 +30,12 @@ def allowed_meters(provider, capability=None):
         meters={("unicode_scalar","verified_input_v1"),("audio_ms","verified_delivery_v1")}
         if provider.adapter == "newapi_minimax_voice_v1": meters.add(("audio_ms","provider_usage_v1"))
         return frozenset(meters)
-    if provider.adapter == 'newapi_videos_v1':return frozenset({('video_ms','verified_delivery_v1')})
-    if provider.adapter in {'newapi_suno_v1','newapi_incho_v1'}:return frozenset({('audio_ms','verified_delivery_v1'),('audio_clip','verified_delivery_v1')})
+    if provider.adapter in {'newapi_videos_v1','dashscope_video_v1','ark_video_v1','kling_video_v1','agnes_video_v1'}:return frozenset({('video_ms','verified_delivery_v1')})
+    if provider.adapter in {'newapi_suno_v1','newapi_incho_v1','dashscope_music_v1','suno_direct_v1'}:return frozenset({('audio_ms','verified_delivery_v1'),('audio_clip','verified_delivery_v1')})
     if provider.adapter == 'newapi_dashscope_music_v1':return frozenset({('audio_ms','provider_usage_v1'),('audio_ms','verified_delivery_v1')})
     if provider.adapter in AUDIO_CAPABILITIES:
         from .media.adapters.audio import OpenAISpeechAdapter
-        if provider.adapter == 'openai_speech_v1': return OpenAISpeechAdapter.supported_meters
+        if provider.adapter in SPEECH_ADAPTERS: return OpenAISpeechAdapter.supported_meters
         usage = audio_profile(provider).transcription_usage
         return frozenset({('audio_ms','verified_input_v1')} | ({('input_token','provider_usage_v1'),('output_token','provider_usage_v1')} if usage=='tokens' else {('audio_ms','provider_usage_v1')} if usage=='duration' else set()))
     return frozenset({("image", "verified_delivery_v1")}) if provider.response_profile == "newapi_images_v1" else SUPPORTED_METERS

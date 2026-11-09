@@ -62,6 +62,7 @@ REQUIRED_MIGRATIONS = [
     "026_redemption_codes.sql",
     "027_subscription_catalog.sql",
     "028_provider_configs.sql",
+    "029_provider_platforms.sql",
 ]
 ACCEPTANCE_CREDITS = 100_000_000
 ACCEPTANCE_RATE = {

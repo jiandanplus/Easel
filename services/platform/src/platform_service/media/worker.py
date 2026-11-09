@@ -138,7 +138,7 @@ class MediaWorker:
                             else:stored=None
                     if stored is None:
                         descriptor=ArtifactSource(source['source_id'],source['kind'],source['location'],source['mime'])
-                        if descriptor.kind=='url':check_download_path(provider,descriptor.location)
+                        if descriptor.kind=='url' and provider.download_path_prefixes:check_download_path(provider,descriptor.location)
                         raw,mime=await adapter.retrieve(self.client,descriptor,max_bytes=ceiling)
                         if mime not in spec['mime_types']:raise PlatformError(502,'media_output_mime_denied')
                         info=await physical_call(inspect_av,raw,kind='video'if job['capability']=='video.generate'else'audio',mime=mime,

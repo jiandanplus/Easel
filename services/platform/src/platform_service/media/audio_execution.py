@@ -10,7 +10,8 @@ from .contracts import digest
 
 
 def make_audio_adapter(provider, mode):
-    cls = {'openai_speech_v1': OpenAISpeechAdapter, 'openai_transcriptions_v1': OpenAITranscriptionsAdapter}.get(provider.adapter)
+    from .adapters.direct_speech import DIRECT_SPEECH
+    cls = {'openai_speech_v1': OpenAISpeechAdapter, 'openai_transcriptions_v1': OpenAITranscriptionsAdapter, **DIRECT_SPEECH}.get(provider.adapter)
     if cls is None: raise PlatformError(503, 'media_capability_closed')
     return cls(provider, mode, audio_profile(provider))
 

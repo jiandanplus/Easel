@@ -42,7 +42,9 @@ async def bounded(response,maximum,*,statuses=(200,)):
 
 class AsyncAdapter:
     capability=None
-    def __init__(self,provider,mode):self.provider,self.mode=provider,mode
+    submit_headers={}
+    def __init__(self,provider,mode,job=None):self.provider,self.mode,self.job=provider,mode,job
+    def _auth(self):return {'Authorization':'Bearer '+self.provider.secret}
 
     def check(self,request,assets,allowed):
         if request.get('capability')!=self.capability or self.capability not in self.provider.capabilities:
@@ -54,8 +56,8 @@ class AsyncAdapter:
         return model,parameters,prompt(request)
 
     async def _json(self,client,method,url,*,maximum,prepared=None,request_id=None,on_headers=None):
-        headers={'Authorization':'Bearer '+self.provider.secret,'Accept':'application/json','Accept-Encoding':'identity'}
-        if prepared is not None:headers['Content-Type']=prepared.content_type
+        headers={**self._auth(),'Accept':'application/json','Accept-Encoding':'identity'}
+        if prepared is not None:headers.update({'Content-Type':prepared.content_type,**self.submit_headers})
         if request_id is not None:headers['X-Easel-Request-Id']=request_id
         async with client.stream(method,url,headers=headers,content=prepared.payload if prepared else None)as response:
             if on_headers is not None:
@@ -116,6 +118,8 @@ def make_async_adapter(provider,mode,job=None):
         from .voice_async import VoiceRecoveryAdapter
         if job is None:raise PlatformError(503,'media_binding_unavailable')
         return VoiceRecoveryAdapter(provider,mode,job)
+    from .direct_async import DIRECT_ASYNC
+    if provider.adapter in DIRECT_ASYNC:return DIRECT_ASYNC[provider.adapter](provider,mode,job)
     from .newapi_videos import NewAPIVideos
     from .newapi_music import NewAPISuno,NewAPIDashScopeMusic
     if provider.adapter=='newapi_incho_v1':
@@ -124,3 +128,11 @@ def make_async_adapter(provider,mode,job=None):
     kind={'newapi_videos_v1':NewAPIVideos,'newapi_suno_v1':NewAPISuno,'newapi_dashscope_music_v1':NewAPIDashScopeMusic}.get(provider.adapter)
     if kind is None:raise PlatformError(503,'media_capability_closed')
     return kind(provider,mode)
+
+
+def __getattr__(name):
+    # direct_async reuses the DashScope music envelope without a circular import.
+    if name=='NewAPIDashScopeMusicBase':
+        from .newapi_music import NewAPIDashScopeMusic
+        return NewAPIDashScopeMusic
+    raise AttributeError(name)

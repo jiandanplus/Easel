@@ -31,6 +31,10 @@ def hash_value(value):
     return value
 
 
+ASYNC_ADAPTERS=('newapi_videos_v1','newapi_suno_v1','newapi_dashscope_music_v1','newapi_incho_v1','newapi_minimax_voice_v1','newapi_dashscope_voice_v1','newapi_fish_voice_v1',
+    'dashscope_video_v1','ark_video_v1','kling_video_v1','agnes_video_v1','dashscope_music_v1','suno_direct_v1')
+
+
 def identifier(value):
     if not isinstance(value,str) or not re.fullmatch('[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}',value,re.ASCII):
         raise PlatformError(422,'invalid_media_identifier')

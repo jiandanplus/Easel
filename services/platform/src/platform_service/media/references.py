@@ -5,6 +5,7 @@ from ..errors import PlatformError
 HTTP_REFERENCE_PATTERNS = {
     "openai_x_request_id_v1": re.compile(r"req_[A-Za-z0-9_-]{1,192}\Z", re.ASCII),
     "newapi_x_oneapi_request_id_v1": re.compile(r"[0-9]{23}[A-Za-z0-9]{16}\Z", re.ASCII),
+    "easel_client_request_v1": re.compile(r"[A-Za-z0-9_.:-]{1,128}\Z", re.ASCII),
 }
 
 

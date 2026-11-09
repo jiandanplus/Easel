@@ -118,7 +118,7 @@ class OpenAIImagesAdapter(MediaAdapter):
                     raise ValueError
                 response_id = None
             else:
-                response_id = correlation(value.get("id")) or http_id
+                response_id = correlation(value.get("id")) or http_id or (request_id if self.provider.client_correlation else None)
                 if response_id is None: raise ValueError
             images = []
             for row in value["data"]:

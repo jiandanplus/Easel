@@ -10,9 +10,12 @@ import stat
 from urllib.parse import urlsplit
 
 
-ASYNC_CAPABILITIES = {"newapi_videos_v1": ("video.generate",), "newapi_suno_v1": ("music.generate",), "newapi_dashscope_music_v1": ("music.generate",), "newapi_incho_v1": ("music.generate",)}
+ASYNC_CAPABILITIES = {"newapi_videos_v1": ("video.generate",), "newapi_suno_v1": ("music.generate",), "newapi_dashscope_music_v1": ("music.generate",), "newapi_incho_v1": ("music.generate",),
+                      "dashscope_video_v1": ("video.generate",), "ark_video_v1": ("video.generate",), "kling_video_v1": ("video.generate",), "agnes_video_v1": ("video.generate",),
+                      "dashscope_music_v1": ("music.generate",), "suno_direct_v1": ("music.generate",)}
 
-AUDIO_CAPABILITIES = {'openai_speech_v1': ('audio.speech',), 'openai_transcriptions_v1': ('audio.transcribe',)}
+SPEECH_ADAPTERS = ('openai_speech_v1', 'minimax_speech_v1', 'dashscope_speech_v1', 'fish_speech_v1', 'gemini_speech_v1')
+AUDIO_CAPABILITIES = {**{name: ('audio.speech',) for name in SPEECH_ADAPTERS}, 'openai_transcriptions_v1': ('audio.transcribe',)}
 
 VOICE_CAPABILITIES = {'newapi_minimax_voice_v1': ('voice.enroll','voice.synthesize'), 'newapi_dashscope_voice_v1': ('voice.enroll','voice.synthesize'), 'newapi_fish_voice_v1': ('audio.speech',)}
 AV_ADAPTERS = {*ASYNC_CAPABILITIES, *AUDIO_CAPABILITIES, *VOICE_CAPABILITIES}
@@ -57,6 +60,8 @@ class MediaProvider:
     voice_profile: dict | None = field(default=None, repr=False)
     preflight_models: bool = False
     managed_models: bool = False
+    platform_options: dict | None = None
+    client_correlation: bool = False
 
 
 @dataclass(frozen=True)
@@ -120,7 +125,7 @@ class MediaSettings:
             if provider.adapter in AUDIO_CAPABILITIES:
                 try:
                     profile=audio_profile(provider)
-                    if provider.adapter=='openai_speech_v1' and not profile.voices:raise ValueError
+                    if provider.adapter in SPEECH_ADAPTERS and not profile.voices:raise ValueError
                 except Exception: raise ValueError("invalid_media_configuration") from None
                 if provider.response_profile is not None or provider.response_format is not None or provider.legacy_variations:
                     raise ValueError("invalid_media_configuration")
@@ -180,6 +185,8 @@ class MediaSettings:
                 # gateway interpretation becomes part of the immutable binding.
                 if provider.response_profile is not None:
                     frozen.append(provider.response_profile)
+                if provider.platform_options:
+                    frozen.append({"platform_options": provider.platform_options})
                 if provider.adapter in AUDIO_CAPABILITIES:
                     frozen.append({"audio_profile": provider.audio_profile})
                 if provider.adapter in VOICE_CAPABILITIES:

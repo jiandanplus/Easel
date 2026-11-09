@@ -9,7 +9,7 @@ MONEY = {'issued','available','held','spent','expired','refunded','amount','actu
          'spendable_available','frozen_available','unposted_expired_available',
          'experience_issued','experience_held','experience_spent'}
 from .model_templates import public_templates
-from .provider_channels import CAPABILITY_CHANNEL, CHANNELS
+from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, public_platforms
 
 SNAPSHOT_NOTE = '只读余额快照；账面剩余包含尚未过账的过期额度。冻结与未过账过期可能重叠，不可相加。'
 
@@ -438,11 +438,11 @@ class ConsoleQueries:
 
     async def provider_configs(self, principal):
         async with self._snapshot(principal) as conn:
-            configs = await (await conn.execute("""SELECT DISTINCT ON (channel) id,channel,base_url,key_hint,options,operator_id,created_at
-                FROM provider_configs ORDER BY channel,created_at DESC,id DESC""")).fetchall()
-            status = await (await conn.execute('SELECT channel,config_id,state,models,checked_at FROM provider_config_status')).fetchall()
+            configs = await (await conn.execute("""SELECT DISTINCT ON (channel,platform) id,channel,platform,base_url,key_hint,options,created_at
+                FROM provider_configs ORDER BY channel,platform,created_at DESC,id DESC""")).fetchall()
+            status = await (await conn.execute('SELECT channel,platform,config_id,state,models,checked_at FROM provider_config_status')).fetchall()
             catalog = await (await conn.execute("SELECT kind,provider_id,base_url,capabilities FROM provider_catalog WHERE provider_id NOT LIKE 'console-%'")).fetchall()
-        by_channel, states = {r['channel']: r for r in configs}, {r['channel']: r for r in status}
+        saved, states = {(r['channel'], r['platform']): r for r in configs}, {(r['channel'], r['platform']): r for r in status}
         def server_address(name):
             spec = CHANNELS[name]
             for row in catalog:
@@ -451,11 +451,13 @@ class ConsoleQueries:
             return None
         channels = []
         for name in CHANNELS:
-            row, state = by_channel.get(name), states.get(name)
-            live = state if row and state and state['config_id'] == row['id'] else None
-            channels.append({'channel': name, 'server_base_url': server_address(name),
-                'config': None if row is None else {'id': row['id'], 'base_url': row['base_url'], 'key_hint': row['key_hint'], 'options': row['options'], 'updated_at': row['created_at'].isoformat()},
-                'status': None if live is None else {'state': live['state'], 'models': live['models'], 'checked_at': live['checked_at'].isoformat()}})
+            platforms = []
+            for item in public_platforms(name):
+                row, state = saved.get((name, item['id'])), states.get((name, item['id']))
+                live = state if row and state and state['config_id'] == row['id'] else None
+                platforms.append({**item, 'config': None if row is None else {'id': row['id'], 'base_url': row['base_url'], 'key_hint': row['key_hint'], 'options': row['options'], 'updated_at': row['created_at'].isoformat()},
+                                  'status': None if live is None else {'state': live['state'], 'models': live['models'], 'checked_at': live['checked_at'].isoformat()}})
+            channels.append({'channel': name, 'server_base_url': server_address(name), 'platforms': platforms})
         return {'channels': channels, 'sealing_ready': self.sealing_ready}
 
     async def providers(self, principal, limit=25, offset=0, q=''):

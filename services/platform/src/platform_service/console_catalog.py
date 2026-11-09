@@ -19,7 +19,7 @@ from .execution.rates import cost as cost_text, normalize as normalize_text_rate
 from .media.contracts import MAX_BUDGET as MEDIA_BUDGET, validate_definition as validate_media_definition
 from .media.rates import cost as cost_media, normalize as normalize_media_rate
 from .model_templates import MEDIA, TEXT, build_rate
-from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, clean_base_url, clean_key, clean_options
+from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, PLATFORMS, clean_base_url, clean_key, clean_options, seal_scope, spec_of
 from .provider_secrets import seal, valid_public_key
 
 
@@ -262,9 +262,13 @@ class ConsoleCatalog:
             provider = await self._provider(conn, kind, payload['provider_id'])
             if capability not in provider['capabilities']:
                 raise PlatformError(422, 'console_provider_capability')
+            limits, parameters = template['limits'], template['parameters']
+            if provider['adapter'] == 'gemini_speech_v1':  # Gemini only returns raw audio, delivered as WAV.
+                limits = {**limits, 'output_media': {**limits['output_media'], 'mime_types': ['audio/wav']}}
+                parameters = {**parameters, 'properties': {**parameters['properties'], 'response_format': {'type': 'string', 'enum': ['wav']}}}
             definition = validate_media_definition({**common, 'feature': template['feature'], 'provider_id': provider['provider_id'],
                 'provider_version': provider['provider_version'], 'adapter': provider['adapter'], 'protocol_version': provider['protocol_version'],
-                'limits': {**template['limits'], 'max_units': {template['unit']: template['max_units']}}, 'parameters': template['parameters']})
+                'limits': {**limits, 'max_units': {template['unit']: template['max_units']}}, 'parameters': parameters})
             await conn.execute('INSERT INTO media_models(id,definition,operator_id) VALUES (%s,%s,%s)', (model, Jsonb(definition), actor))
             await conn.execute('INSERT INTO media_model_states(model_id,operator_id) VALUES (%s,%s)', (model, actor))
         await conn.execute('INSERT INTO managed_model_bindings(kind,model_id,provider_id,upstream_model,operator_id) VALUES (%s,%s,%s,%s,%s)',
@@ -331,9 +335,10 @@ class ConsoleCatalog:
         row = await (await conn.execute('SELECT count(*) AS total FROM ' + table + ' j JOIN ' + models + " m ON m.id=j.model WHERE j.status IN ('reserved','dispatched') AND m.definition->>'capability'=ANY(%s)", (capabilities,))).fetchone()
         return row['total']
 
-    async def _save_provider(self, conn, actor, channel, payload, sealed):
-        await conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))', ('provider-config:' + channel,))
-        previous = await (await conn.execute('SELECT base_url,sealed_secret,key_hint FROM provider_configs WHERE channel=%s ORDER BY created_at DESC,id DESC LIMIT 1', (channel,))).fetchone()
+    async def _save_provider(self, conn, actor, target, payload, sealed):
+        channel, platform = payload['channel'], payload['platform']
+        await conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))', ('provider-config:' + target,))
+        previous = await (await conn.execute('SELECT base_url,sealed_secret,key_hint FROM provider_configs WHERE channel=%s AND platform=%s ORDER BY created_at DESC,id DESC LIMIT 1', (channel, platform))).fetchone()
         had_key = bool(previous and previous['sealed_secret'])
         if payload['clear']:
             secret, hint = None, None
@@ -348,24 +353,24 @@ class ConsoleCatalog:
         if had_key and connection_changed and await self._running_calls(conn, channel):
             raise PlatformError(409, 'console_provider_busy')
         config_id = uuid4().hex
-        await conn.execute('INSERT INTO provider_configs(id,channel,base_url,sealed_secret,key_hint,options,operator_id) VALUES (%s,%s,%s,%s,%s,%s,%s)',
-                           (config_id, channel, payload['base_url'], secret, hint, Jsonb(payload['options']), actor))
-        return {'channel': channel, 'id': config_id, 'configured': secret is not None}
+        await conn.execute('INSERT INTO provider_configs(id,channel,platform,base_url,sealed_secret,key_hint,options,operator_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)',
+                           (config_id, channel, platform, payload['base_url'], secret, hint, Jsonb(payload['options']), actor))
+        return {'channel': channel, 'platform': platform, 'id': config_id, 'configured': secret is not None}
 
-    async def save_provider_config(self, principal, channel, base_url, key, clear, options, reason, op_key):
-        if channel not in CHANNELS or type(clear) is not bool or (clear and key is not None):
+    async def save_provider_config(self, principal, channel, platform, base_url, key, clear, options, reason, op_key):
+        if channel not in CHANNELS or platform not in PLATFORMS[channel] or type(clear) is not bool or (clear and key is not None):
             raise PlatformError(422, 'console_provider_invalid')
         base_url = clean_base_url(base_url)
-        payload = {'base_url': base_url, 'options': clean_options(channel, options), 'clear': clear, 'key_fingerprint': None}
+        payload = {'channel': channel, 'platform': platform, 'base_url': base_url, 'options': clean_options(channel, platform, options), 'clear': clear, 'key_fingerprint': None}
         sealed = None
         if key is not None:
-            key = clean_key(key)
+            key = clean_key(key, parts=2 if spec_of(channel, platform).get('second_key') else 1)
             if self.public_key is None:
                 raise PlatformError(503, 'console_provider_key_unconfigured')
             # Retries must match without keeping the key: the sealed text differs every time.
             payload['key_fingerprint'] = hashlib.sha256(key.encode()).hexdigest()
-            sealed = (seal(self.public_key, channel, base_url, key), key[-4:])
-        return await self._command(principal, 'provider.config', 'provider', channel, payload, reason, op_key, ('providers:manage',), sealed=sealed)
+            sealed = (seal(self.public_key, seal_scope(channel, platform), base_url, key), key[-4:])
+        return await self._command(principal, 'provider.config', 'provider', channel + '/' + platform, payload, reason, op_key, ('providers:manage',), sealed=sealed)
 
     async def create_managed_model(self, principal, model, name, capability, provider_id, upstream_model, prices, reason, key):
         payload = {'name': text(name, 128), 'capability': text(capability, 64), 'provider_id': text(provider_id, 64),

@@ -9,7 +9,7 @@ import httpx
 
 from .errors import PlatformError
 from .pricing import catalog_ready
-from .provider_channels import CHANNELS, PROVIDER_VERSION, apply_connection, build_provider, channel_of, provider_id
+from .provider_channels import CHANNELS, GATEWAY, apply_connection, build_provider, channel_of, provider_id, seal_scope, spec_of
 
 REFRESH_SECONDS = 5
 PREFLIGHT_SECONDS = 30
@@ -31,7 +31,7 @@ class ManagedBindings:
         """Tell the console what this service can reach. Addresses only, never keys."""
         def row(name, provider):
             adapter, protocol, capabilities = self.describe(provider)
-            base = None if self.keys is None else provider.base_url if self.kind == "media" else re.sub(r"/responses$", "", provider.endpoint)
+            base = None if self.keys is None else provider.base_url if self.kind == "media" else re.sub(r"/(?:responses|chat/completions|messages)$", "", provider.endpoint)
             return (self.kind, name, provider.version, adapter, protocol, json.dumps(list(capabilities)), base)
         rows = [row(name, provider) for name, provider in providers.items()]
         if rows == self._published:
@@ -55,28 +55,28 @@ class ManagedBindings:
         if self.keys is None:
             return []
         rows = await (await conn.execute(
-            """SELECT DISTINCT ON (c.channel) c.id,c.channel,c.base_url,c.sealed_secret,c.options,s.config_id AS status_config,s.state
-            FROM provider_configs c LEFT JOIN provider_config_status s ON s.channel=c.channel
-            WHERE c.channel=ANY(%s) ORDER BY c.channel,c.created_at DESC,c.id DESC""", (sorted(self._channels),))).fetchall()
+            """SELECT DISTINCT ON (c.channel,c.platform) c.id,c.channel,c.platform,c.base_url,c.sealed_secret,c.options,s.config_id AS status_config,s.state
+            FROM provider_configs c LEFT JOIN provider_config_status s ON s.channel=c.channel AND s.platform=c.platform
+            WHERE c.channel=ANY(%s) ORDER BY c.channel,c.platform,c.created_at DESC,c.id DESC""", (sorted(self._channels),))).fetchall()
         return [row for row in rows if row["sealed_secret"] is not None]
 
     def _connection(self, providers, row, invalid):
-        channel, base_url = row["channel"], row["base_url"]
-        secret = self.keys.open(row["sealed_secret"], channel, base_url)
+        channel, platform, base_url = row["channel"], row["platform"], row["base_url"]
+        secret = self.keys.open(row["sealed_secret"], seal_scope(channel, platform), base_url)
         # A setting that does not validate is reported and skipped, never fatal to the rest.
         try:
             if secret is None:
                 raise ValueError
             current = row["status_config"] == row["id"]
-            changed = {provider_id(channel): build_provider(channel, base_url, secret, row["options"], preflight=not (current and row["state"] == "no_model_list"))}
-            # Everything already on this page moves to the saved address and key too.
-            changed.update({name: apply_connection(item, base_url, secret) for name, item in self.base.providers.items() if channel_of(item) == channel})
+            changed = {provider_id(channel, platform): build_provider(channel, platform, base_url, secret, row["options"], preflight=not (current and row["state"] == "no_model_list"))}
+            if platform == GATEWAY:  # Everything already on this page moves to the saved address and key too.
+                changed.update({name: apply_connection(item, base_url, secret) for name, item in self.base.providers.items() if channel_of(item) == channel})
             dataclasses.replace(self.base, providers=changed)
         except (ValueError, TypeError, KeyError, PlatformError):
             invalid.append(row)
             return
         providers.update(changed)
-        self._targets[channel] = (row["id"], base_url, secret)
+        self._targets[(channel, platform)] = (row["id"], base_url, secret)
 
     async def refresh(self):
         if self.base.mode == "disabled" or time.monotonic() < self._checked:
@@ -102,7 +102,7 @@ class ManagedBindings:
                     providers[name] = dataclasses.replace(providers[name], models={**providers[name].models, model: upstream})
             await self._publish(providers)
             for row in invalid:
-                await self._report(row["channel"], row["id"], "invalid", [])
+                await self._report(row["channel"], row["platform"], row["id"], "invalid", [])
             self.settings = dataclasses.replace(self.base, providers=providers)
             self.bindings, self._seen = self.settings.bindings, seen
         self._start_probes()
@@ -111,43 +111,48 @@ class ManagedBindings:
     def _start_probes(self):
         if self.client is None or not self._targets or (self._probe_task is not None and not self._probe_task.done()):
             return
-        if any(self._due(channel, target[0]) for channel, target in self._targets.items()):
+        if any(self._due(key, target[0]) for key, target in self._targets.items()):
             self._probe_task = asyncio.create_task(self.probe_due())
 
-    def _due(self, channel, config_id):
-        last = self._probed.get(channel)
+    def _due(self, key, config_id):
+        last = self._probed.get(key)
         return last is None or last[0] != config_id or time.monotonic() >= last[1]
 
     async def probe_due(self):
-        for channel, (config_id, base_url, secret) in list(self._targets.items()):
-            if self._due(channel, config_id):
-                state, names = await self._try(base_url, secret)
-                await self._report(channel, config_id, state, names)
-                self._probed[channel] = (config_id, time.monotonic() + PROBE_SECONDS)
+        for key, (config_id, base_url, secret) in list(self._targets.items()):
+            if self._due(key, config_id):
+                state, names = await self._try(spec_of(*key)["probe"], base_url, secret)
+                await self._report(*key, config_id, state, names)
+                self._probed[key] = (config_id, time.monotonic() + PROBE_SECONDS)
 
-    async def _try(self, base_url, secret):
+    async def _try(self, probe, base_url, secret):
         """List models, which costs nothing at the supplier, and say what happened."""
+        if probe is None:  # This supplier has no list to ask; the first real call decides.
+            return "no_model_list", []
+        headers = {"bearer": {"Authorization": "Bearer " + secret}, "anthropic": {"x-api-key": secret, "anthropic-version": "2023-06-01"},
+                   "gemini": {"x-goog-api-key": secret}}[probe]
         try:
-            response = await self.client.get(base_url + "/models", headers={"Authorization": "Bearer " + secret}, timeout=10)
+            response = await self.client.get(base_url + "/models", headers=headers, timeout=10)
         except httpx.HTTPError:
             return "unreachable", []
         if response.status_code in (401, 403):
             return "auth_failed", []
         try:
-            data = response.json().get("data") if response.status_code == 200 else None
-        except (ValueError, AttributeError):
+            body = response.json() if response.status_code == 200 else None
+            data = body.get("data", body.get("models")) if isinstance(body, dict) else None
+        except ValueError:
             data = None
         if not isinstance(data, list):
             return "no_model_list", []
-        names = sorted({item["id"] for item in data if isinstance(item, dict) and isinstance(item.get("id"), str) and len(item["id"]) <= 128})
-        return "ok", names[:MAX_LISTED_MODELS]
+        ids = (item.get("id") or str(item.get("name") or "").removeprefix("models/") for item in data if isinstance(item, dict))
+        return "ok", sorted({name for name in ids if isinstance(name, str) and 0 < len(name) <= 128})[:MAX_LISTED_MODELS]
 
-    async def _report(self, channel, config_id, state, names):
+    async def _report(self, channel, platform, config_id, state, names):
         async with self.db.connection() as c:
             await c.execute(
-                """INSERT INTO provider_config_status(channel,config_id,state,models) VALUES (%s,%s,%s,%s::jsonb)
-                ON CONFLICT (channel) DO UPDATE SET config_id=EXCLUDED.config_id,state=EXCLUDED.state,models=EXCLUDED.models,checked_at=clock_timestamp()""",
-                (channel, config_id, state, json.dumps(names)))
+                """INSERT INTO provider_config_status(channel,platform,config_id,state,models) VALUES (%s,%s,%s,%s,%s::jsonb)
+                ON CONFLICT (channel,platform) DO UPDATE SET config_id=EXCLUDED.config_id,state=EXCLUDED.state,models=EXCLUDED.models,checked_at=clock_timestamp()""",
+                (channel, platform, config_id, state, json.dumps(names)))
 
     async def close(self):
         if self._probe_task is not None and not self._probe_task.done():

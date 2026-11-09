@@ -13,6 +13,7 @@ from starlette.responses import Response, StreamingResponse
 
 from .errors import PlatformError
 from .execution_evidence import correlation_id
+from .execution_bridges import BRIDGES
 from .gateway_catalog import GatewayPreflight, ManagedBindings
 from .execution_protocol import (
     MAX_JSON,
@@ -237,7 +238,8 @@ class ExecutionRuntime:
             if provider.preflight_models:
                 await self._preflight.check(
                     provider.models_url or re.sub(r"/v1/.*$", "/v1/models", provider.endpoint), provider.secret, value["model"])
-            payload = encode(value)
+            bridge = BRIDGES.get(provider.protocol)
+            payload = encode(bridge.request(value) if bridge else value)
             await self._semaphore.acquire()
             acquired = True
             request_id = str(uuid4())
@@ -257,7 +259,7 @@ class ExecutionRuntime:
                         provider.endpoint,
                         content=payload,
                         headers={
-                            "Authorization": "Bearer " + provider.secret,
+                            **(bridge.headers(provider.secret) if bridge else {"Authorization": "Bearer " + provider.secret}),
                             "Content-Type": "application/json",
                             "X-Request-ID": request_id,
                             "Accept-Encoding": "identity",
@@ -306,6 +308,8 @@ class ExecutionRuntime:
                             raise PlatformError(502, "upstream_response_too_large")
                         raw.extend(chunk)
                     result = bytes(raw)
+                    if bridge:
+                        result = encode(bridge.response(parse_json(result, upstream=True), context["model"]))
                     await finish(
                         result, "application/json", parse_json(result, upstream=True)
                     )
@@ -320,7 +324,8 @@ class ExecutionRuntime:
                 parser, captured = SSEParser(), bytearray()
                 try:
                     async with asyncio.timeout_at(deadline):
-                        async for chunk in upstream.aiter_bytes():
+                        source = bridge.stream(upstream.aiter_bytes(), context["model"]) if bridge else upstream.aiter_bytes()
+                        async for chunk in source:
                             if len(captured) + len(chunk) > MAX_RESULT:
                                 raise PlatformError(502, "upstream_response_too_large")
                             for event, item in parser.feed(chunk):

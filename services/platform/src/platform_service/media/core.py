@@ -15,7 +15,7 @@ from ..contracts import Scope, OperatorIdentity
 from ..credits import CreditLedger, authorize, active_plans, bounded, integer
 from ..errors import PlatformError
 from ..identity import now, opaque
-from .contracts import validate_definition, validate_request, live_feature_allowed, digest, canonical, identifier, hash_value, MAX_OPERATIONS, MAX_BUDGET
+from .contracts import ASYNC_ADAPTERS,validate_definition, validate_request, live_feature_allowed, digest, canonical, identifier, hash_value, MAX_OPERATIONS, MAX_BUDGET
 from .rates import cost, quantities as rate_quantities, unicode_scalars
 from .storage import StorageLifecycle
 from .references import http_reference
@@ -230,7 +230,7 @@ class MediaService(StorageLifecycle):
 
     async def _work_fence(self,c,row,claim):
         # Lock ordering is wallet -> invocation -> job/reservation -> work.
-        if row['capability']=='voice.enroll' or row['model_definition']['adapter'] not in {'newapi_videos_v1','newapi_suno_v1','newapi_dashscope_music_v1','newapi_incho_v1','newapi_minimax_voice_v1','newapi_dashscope_voice_v1','newapi_fish_voice_v1'}:return
+        if row['capability']=='voice.enroll' or row['model_definition']['adapter'] not in ASYNC_ADAPTERS:return
         work=await(await c.execute('SELECT * FROM media_work WHERE job_id=%s FOR UPDATE',(row['id'],))).fetchone()
         if (not work or not claim or work['phase']!='settle' or work['lease_token']!=claim.get('lease_token')
             or work['lease_until'] is None or work['lease_until']<=now() or work['deadline']<=now()
@@ -503,7 +503,7 @@ class MediaService(StorageLifecycle):
         if not 1<=integer(limit,positive=True)<=1000:raise PlatformError(422,'invalid_limit')
         scan=current_permit();only=scan.binding.subject_id if scan.binding.kind=='job' else None
         async with self.db.connection() as c:
-            rows=await (await c.execute("SELECT j.id,j.attempt_id,e.job_id evidence FROM media_jobs j LEFT JOIN media_terminal_evidence e ON e.job_id=j.id WHERE NOT (e.job_id IS NOT NULL AND j.capability<>'voice.enroll' AND j.model_definition->>'adapter' IN ('newapi_videos_v1','newapi_suno_v1','newapi_dashscope_music_v1','newapi_incho_v1','newapi_minimax_voice_v1','newapi_dashscope_voice_v1','newapi_fish_voice_v1')) AND j.status IN ('reserved','dispatched','pending_reconciliation') AND (e.job_id IS NOT NULL OR j.lease_until<clock_timestamp()) AND (%s::text IS NULL OR j.id=%s) ORDER BY j.lease_until,j.id LIMIT %s",(only,only,limit))).fetchall()
+            rows=await (await c.execute("SELECT j.id,j.attempt_id,e.job_id evidence FROM media_jobs j LEFT JOIN media_terminal_evidence e ON e.job_id=j.id WHERE NOT (e.job_id IS NOT NULL AND j.capability<>'voice.enroll' AND j.model_definition->>'adapter' IN "+repr(ASYNC_ADAPTERS)+") AND j.status IN ('reserved','dispatched','pending_reconciliation') AND (e.job_id IS NOT NULL OR j.lease_until<clock_timestamp()) AND (%s::text IS NULL OR j.id=%s) ORDER BY j.lease_until,j.id LIMIT %s",(only,only,limit))).fetchall()
         result=[]
         for candidate in rows:
             try:
@@ -516,7 +516,7 @@ class MediaService(StorageLifecycle):
                         if row['lease_until']>now():continue
                         if row['status']=='reserved':result.append(public(await self._release(c,row,scope,reservation)))
                         elif row['status']=='dispatched':
-                            if row['capability']!='voice.enroll' and row['model_definition']['adapter'] in {'newapi_videos_v1','newapi_suno_v1','newapi_dashscope_music_v1','newapi_incho_v1','newapi_minimax_voice_v1','newapi_dashscope_voice_v1','newapi_fish_voice_v1'}:
+                            if row['capability']!='voice.enroll' and row['model_definition']['adapter'] in ASYNC_ADAPTERS:
                                 # A durable original-ID query remains admitted between
                                 # successful polls and across a worker restart. Explicit
                                 # GET failures already move it to pending atomically.

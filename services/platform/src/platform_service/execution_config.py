@@ -21,6 +21,7 @@ class ExecutionProvider:
     preflight_models: bool = False
     managed_models: bool = False
     models_url: str | None = field(default=None, repr=False)
+    protocol: str = "responses"
 
 
 @dataclass(frozen=True)

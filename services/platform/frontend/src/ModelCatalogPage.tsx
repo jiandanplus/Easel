@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ConsoleError, formatDate, RequestGate, Submission, validReason } from './core';
 import type { ConsoleClient, LoadState, RecordData } from './core';
 import { Loading, Modal } from './views';
-import { CHANNELS, channelOf, ProviderConfigForm } from './ProviderConfigForm';
+import { CHANNELS, channelOf, initialPlatform, providerLabel, ProviderConfigForm } from './ProviderConfigForm';
 import type { ChannelId, ChannelState } from './ProviderConfigForm';
 
 export type Template = { capability: string; label: string; feature: string; kind: string; meters: { key: string; label: string; per: number }[] };
@@ -27,7 +27,8 @@ function Dialog({ client, action, data, channel, onClose, onFailure, onDone }: {
   const row = action.kind === 'add' ? null : action.row;
   const templates = data.templates.filter(t => channelOf(t.capability) === channel);
   const [capability, setCapability] = useState(row?.capability ?? templates[0]?.capability ?? 'text'), [name, setName] = useState(''), [id, setId] = useState(''), [upstream, setUpstream] = useState(''), [provider, setProvider] = useState('');
-  const suggestions = data.channels.find(c => c.channel === channel)?.status?.models ?? [];
+  const channelState = data.channels.find(c => c.channel === channel);
+  const suggestions = [...new Set((channelState?.platforms ?? []).flatMap(p => p.status?.models ?? []))];
   const [prices, setPrices] = useState<Record<string, string>>({}), [user, setUser] = useState(''), [trialOff, setTrialOff] = useState(false), [reason, setReason] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const [submission] = useState(() => new Submission());
   const template = data.templates.find(t => t.capability === capability);
@@ -64,7 +65,7 @@ function Dialog({ client, action, data, channel, onClose, onFailure, onDone }: {
   return <Modal title={title} onClose={onClose} busy={busy}><form onSubmit={e => { e.preventDefault(); void submit(); }}><div className="dialog-content">
     {action.kind === 'add' && <>
       <label className="reason-field">类型<select value={capability} disabled={busy} onChange={e => { setCapability(e.target.value); setPrices({}); setProvider(''); }}>{templates.map(t => <option key={t.capability} value={t.capability}>{t.label}</option>)}</select></label>
-      <label className="reason-field">接口<select value={provider} disabled={busy} onChange={e => setProvider(e.target.value)}><option value="">请选择</option>{providers.map(p => <option key={String(p.provider_id)} value={String(p.provider_id)}>{String(p.provider_id).startsWith('console-') ? '后台配置的接口' : `服务器配置 · ${String(p.provider_id)}`}</option>)}</select>{providers.length === 0 && <span className="muted">这一页还没有可用的接口，请先在上面保存 API 地址和 Key。</span>}</label>
+      <label className="reason-field">接口<select value={provider} disabled={busy} onChange={e => setProvider(e.target.value)}><option value="">请选择</option>{providers.map(p => <option key={String(p.provider_id)} value={String(p.provider_id)}>{providerLabel(channelState, String(p.provider_id))}</option>)}</select>{providers.length === 0 && <span className="muted">这一页还没有可用的接口，请先在上面保存 API 地址和 Key。</span>}</label>
       <label className="reason-field">显示名称<input value={name} maxLength={128} disabled={busy} onChange={e => setName(e.target.value)} placeholder="用户看到的名字" /></label>
       <label className="reason-field">模型编号<input value={id} maxLength={128} disabled={busy} onChange={e => setId(e.target.value)} placeholder="例如 youchuang-image-v1，添加后不能修改" /></label>
       <label className="reason-field">接口里的模型名<input list="upstream-models" value={upstream} maxLength={128} disabled={busy} onChange={e => setUpstream(e.target.value)} placeholder="和接口返回的模型名完全一致" /><datalist id="upstream-models">{suggestions.map(v => <option key={v} value={v} />)}</datalist></label>
@@ -81,7 +82,7 @@ function Dialog({ client, action, data, channel, onClose, onFailure, onDone }: {
 }
 
 export function ModelCatalogPage({ client, permissions, onFailure }: { client: ConsoleClient; permissions: string[]; onFailure: (e: unknown) => string }) {
-  const [state, setState] = useState<LoadState<Catalog>>({ kind: 'loading' }), [revision, setRevision] = useState(0), [action, setAction] = useState<Action | null>(null), [notice, setNotice] = useState(''), [channel, setChannel] = useState<ChannelId>('chat');
+  const [state, setState] = useState<LoadState<Catalog>>({ kind: 'loading' }), [revision, setRevision] = useState(0), [action, setAction] = useState<Action | null>(null), [notice, setNotice] = useState(''), [channel, setChannel] = useState<ChannelId>('chat'), [chosen, setChosen] = useState<Partial<Record<ChannelId, string>>>({});
   const gate = useRef(new RequestGate()), polls = useRef(0), canWrite = permissions.includes('execution:publish'), canConfigure = permissions.includes('providers:manage');
   useEffect(() => {
     const request = gate.current.begin();
@@ -90,24 +91,24 @@ export function ModelCatalogPage({ client, permissions, onFailure }: { client: C
     void Promise.all([client.read<Catalog>('/api/catalog', request.signal), configs]).then(([catalog, extra]) => { if (request.current()) setState({ kind: 'ready', data: { ...catalog, ...extra } }); }).catch(e => { if (request.current()) setState({ kind: 'error', message: onFailure(e) }); });
     return () => gate.current.cancel();
   }, [client, revision, onFailure, canConfigure]);
-  const waiting = state.kind === 'ready' && state.data.channels.some(c => c.config?.key_hint && !c.status);
+  const waiting = state.kind === 'ready' && state.data.channels.some(c => c.platforms.some(p => p.config?.key_hint && !p.status));
   useEffect(() => {
     if (!waiting || polls.current >= 12) return;
     const timer = setTimeout(() => { polls.current += 1; setRevision(x => x + 1); }, 5000);
     return () => clearTimeout(timer);
   }, [waiting, revision]);
-  const heading = <div className="page-heading"><div><h1>接口与模型</h1><p>和桌面端一样分六类。每一类填好接口地址和 Key，再添加模型并设置每次消耗的点数，开通订阅的用户就能直接使用。</p></div>{canWrite && state.kind === 'ready' && <button className="button primary" onClick={() => setAction({ kind: 'add' })}>添加模型</button>}</div>;
+  const heading = <div className="page-heading"><div><h1>接口与模型</h1><p>和桌面端一样分六类，每一类可以配置多个平台。选好平台，填地址和 Key，再添加模型并设置每次消耗的点数，开通订阅的用户就能直接使用。</p></div>{canWrite && state.kind === 'ready' && <button className="button primary" onClick={() => setAction({ kind: 'add' })}>添加模型</button>}</div>;
   if (state.kind !== 'ready') return <>{heading}<Loading state={state} onRetry={() => setRevision(x => x + 1)} /></>;
   const { templates, channels, sealing_ready: sealingReady } = state.data;
-  const items = state.data.items.filter(row => (channelOf(row.capability) ?? 'chat') === channel), current = channels.find(c => c.channel === channel);
+  const items = state.data.items.filter(row => (channelOf(row.capability) ?? 'chat') === channel), current = channels.find(c => c.channel === channel), platform = current?.platforms.find(p => p.id === (chosen[channel] ?? initialPlatform(current)));
   const done = (message: string) => { polls.current = 0; setNotice(message); setRevision(x => x + 1); };
   return <>{heading}{notice && <div className="notice" role="status">{notice}</div>}
     <div className="page-tabs channel-tabs" role="tablist">{CHANNELS.map(c => <button key={c.id} role="tab" aria-selected={c.id === channel} className={c.id === channel ? 'active' : ''} onClick={() => { setChannel(c.id); setNotice(''); }}>{c.label}</button>)}</div>
-    {current && <ProviderConfigForm key={`${channel}:${current.config?.id ?? ''}`} client={client} item={current} sealingReady={sealingReady} onFailure={onFailure} onDone={done} />}
+    {current && platform && <ProviderConfigForm key={`${channel}:${platform.id}:${platform.config?.id ?? ''}`} client={client} channel={current} item={platform} sealingReady={sealingReady} onPlatform={id => setChosen({ ...chosen, [channel]: id })} onFailure={onFailure} onDone={done} />}
     <section className="panel"><h2 className="panel-title">这一类的模型</h2>{items.length === 0 ? <div className="empty-state"><strong>还没有模型</strong></div> : <div className="table-scroll"><table><thead><tr><th>模型</th><th>类型</th><th>接口</th><th>单价（点）</th><th>状态</th><th>真实调用</th><th>操作</th></tr></thead><tbody>
       {items.map(row => { const template = templates.find(t => t.capability === row.capability); return <tr key={row.kind + row.id}>
         <td><div className="person"><strong>{row.name}</strong><small>{row.id}</small></div></td><td>{template?.label ?? row.capability}</td>
-        <td><div className="person"><span>{row.provider_id.startsWith('console-') ? '后台配置' : row.provider_id}</span><small>{row.upstream_model ?? '服务器配置'}</small></div></td>
+        <td><div className="person"><span>{row.provider_id.startsWith('console-') ? providerLabel(current, row.provider_id) : row.provider_id}</span><small>{row.upstream_model ?? '服务器配置'}</small></div></td>
         <td>{pricesOf(row, template).map(([label, value]) => <div key={label} className="price-line"><span className="muted">{label}</span> {value}</div>)}{row.custom_price && <small className="muted">已单独定价</small>}</td>
         <td>{row.enabled ? <span className="badge positive">已启用</span> : row.trial_wallets > 0 ? <span className="badge warning">试用中 · {row.trial_wallets}</span> : <span className="badge neutral">未启用</span>}</td><td>{row.settled_calls}</td>
         <td>{canWrite ? <div className="row-actions"><button className="text-button" onClick={() => setAction({ kind: 'price', row })}>改价</button><button className="text-button" onClick={() => setAction({ kind: 'trial', row })}>试用</button><button className="text-button" onClick={() => setAction({ kind: 'state', row })}>{row.enabled ? '停用' : '启用'}</button></div> : '—'}</td></tr>; })}

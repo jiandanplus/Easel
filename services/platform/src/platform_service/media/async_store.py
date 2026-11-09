@@ -19,7 +19,7 @@ from .async_contracts import Observation
 from .contracts import hash_value,identifier
 
 
-ASYNC_ADAPTERS=('newapi_videos_v1','newapi_suno_v1','newapi_dashscope_music_v1','newapi_incho_v1','newapi_minimax_voice_v1','newapi_dashscope_voice_v1','newapi_fish_voice_v1')
+from .contracts import ASYNC_ADAPTERS
 
 
 class MediaAsyncStore:

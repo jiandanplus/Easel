@@ -17,9 +17,11 @@ from ...errors import PlatformError
 from ...execution_protocol import _unique
 from ...media_config import origin
 from ..rates import unicode_scalars, seconds_to_milliseconds
+from ..references import http_reference
 from .base import MediaAdapter, PreparedRequest
 from .openai_images import bounded_response
 
+CLIENT_NAMESPACE = 'easel_client_request_v1'
 _HTTP_ID = re.compile(r'req_[A-Za-z0-9_-]{1,192}\Z', re.ASCII)
 _INTERNAL_ID = re.compile(r'[A-Za-z0-9_.:-]{1,128}\Z', re.ASCII)
 _FORMAT_MIME = {'mp3':'audio/mpeg','wav':'audio/wav'}
@@ -34,8 +36,8 @@ class HttpCorrelation:
     value: str
 
     def __post_init__(self):
-        if self.namespace!='openai_x_request_id_v1' or not isinstance(self.value,str) or not _HTTP_ID.fullmatch(self.value):
-            raise PlatformError(502,'audio_response_uncorrelated')
+        try:http_reference(self.namespace,self.value)
+        except PlatformError:raise PlatformError(502,'audio_response_uncorrelated') from None
 
 
 @dataclass(frozen=True)
@@ -129,6 +131,8 @@ class _OpenAIAudio(MediaAdapter):
                                               'Accept':accept,'Accept-Encoding':'identity','X-Client-Request-Id':request_id}) as response:
                 raw_id=response.headers.get('x-request-id')
                 correlation=HttpCorrelation('openai_x_request_id_v1',raw_id) if isinstance(raw_id,str) and _HTTP_ID.fullmatch(raw_id) else None
+                # Only OpenAI itself issues req_ ids; others are tied to the id sent with the call.
+                if correlation is None and getattr(self.provider,'client_correlation',False):correlation=HttpCorrelation(CLIENT_NAMESPACE,request_id)
                 await on_headers(http_status=response.status_code,**({'http_request_id':correlation.value} if correlation else {}))
                 raw=await bounded_response(response,max_bytes,json_type=json_type)
                 mime=response.headers.get('content-type','').split(';',1)[0].strip().lower()
@@ -156,7 +160,8 @@ class OpenAISpeechAdapter(_OpenAIAudio):
         voice=parameters.get('voice')
         output=parameters.get('response_format','mp3')
         if voice not in self.profile.voices or output not in self.profile.speech_formats:raise PlatformError(422,'invalid_audio_parameters')
-        value={'model':model,'input':prompt,'voice':voice,'response_format':output,'stream_format':'audio'}
+        value={'model':model,'input':prompt,'voice':voice,'response_format':output}
+        if not getattr(self.provider,'client_correlation',False):value['stream_format']='audio'
         if 'instructions' in parameters:
             if not self.profile.instructions:raise PlatformError(422,'invalid_audio_parameters')
             value['instructions']=_text(parameters['instructions'],4096)
@@ -170,8 +175,10 @@ class OpenAISpeechAdapter(_OpenAIAudio):
     async def submit(self,client,prepared,*,request_id,max_bytes,on_headers):
         raw,mime,correlation=await self._submit(client,prepared,request_id=request_id,max_bytes=max_bytes,on_headers=on_headers,
                                               accept=_FORMAT_MIME[prepared.response_format])
-        if mime!=_FORMAT_MIME[prepared.response_format]:raise PlatformError(502,'invalid_audio_response')
-        return AudioResult(correlation,raw,mime,{}, {},None,hashlib.sha256(raw).hexdigest())
+        expected=_FORMAT_MIME[prepared.response_format]
+        lenient=getattr(self.provider,'client_correlation',False) and mime in {'audio/mp3','audio/x-wav','audio/wave','application/octet-stream'}
+        if mime!=expected and not lenient:raise PlatformError(502,'invalid_audio_response')
+        return AudioResult(correlation,raw,expected,{}, {},None,hashlib.sha256(raw).hexdigest())
 
 
 class OpenAITranscriptionsAdapter(_OpenAIAudio):
