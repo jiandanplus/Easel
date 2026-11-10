@@ -9,6 +9,8 @@ import re
 import stat
 from urllib.parse import urlsplit
 
+from .model_names import upstream_model_ok
+
 
 ASYNC_CAPABILITIES = {"apimart_image_v1": ("image.generate", "image.edit"), "newapi_videos_v1": ("video.generate",), "newapi_suno_v1": ("music.generate",), "newapi_dashscope_music_v1": ("music.generate",), "newapi_incho_v1": ("music.generate",),
                       "dashscope_video_v1": ("video.generate",), "ark_video_v1": ("video.generate",), "kling_video_v1": ("video.generate",), "agnes_video_v1": ("video.generate",), "xhs_video_v1": ("video.generate",),
@@ -169,8 +171,7 @@ class MediaSettings:
                     raise ValueError('invalid_media_configuration')
             for public, upstream in provider.models.items():
                 if (not isinstance(public, str) or not re.fullmatch(r"[A-Za-z0-9_.:/-]{1,128}", public) or public in models
-                        or not isinstance(upstream, str) or not 1 <= len(upstream) <= 128
-                        or any(ord(c) < 33 or ord(c) == 127 for c in upstream)):
+                        or not upstream_model_ok(upstream)):
                     raise ValueError("invalid_media_configuration")
                 models.add(public)
 

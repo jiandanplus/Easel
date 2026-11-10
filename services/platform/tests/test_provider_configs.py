@@ -751,3 +751,24 @@ async def test_only_platforms_that_can_take_them_offer_larger_sizes(db, console,
     async with db.connection() as c:
         sizes = {row["id"]: row["definition"]["parameters"]["properties"]["size"]["enum"] for row in await (await c.execute("SELECT id,definition FROM media_models WHERE id = ANY(%s)", (wide["added"] + fixed["added"],))).fetchall()}
     assert sizes == {"wide": ["1024x1024", "1536x1024", "1024x1536"], "fixed": ["1024x1024"]}
+
+
+@pytest.mark.asyncio
+async def test_model_names_with_spaces_survive_the_catalog_refresh(db, console, console_role, tmp_path):
+    # Production 2026-11-10: "Midjourney v8.2" was saved, then every media refresh failed its own config check.
+    await seed(db)
+    catalog, _, principal, _ = await admin_catalog(console, console_role)
+    url = "https://images.example/v1"
+    image = await catalog.save_provider_config(principal, "image", "gateway", url, SECRET, False, {"download_origins": []}, "接入", "sp-1", account=None, name="网关")
+    chat = await catalog.save_provider_config(principal, "chat", "gateway", url, SECRET, False, {}, "接入", "sp-2", account=None, name="对话")
+    media = ManagedBindings(db, "media", media_settings(tmp_path), MEDIA, keys=KEYS)
+    text = ManagedBindings(db, "execution", exec_settings(), TEXT, keys=KEYS)
+    await media.refresh()
+    await text.refresh()
+    picture = (await catalog.import_models(principal, "image.generate", image["provider_id"], ["Midjourney v8.2"], {"image": "2"}, True, "添加", "sp-3"))["added"][0]
+    words = (await catalog.import_models(principal, "text", chat["provider_id"], ["Chat Model 1"], {"input": "4", "output": "16"}, True, "添加", "sp-4"))["added"][0]
+    media._checked = text._checked = 0
+    settings, bindings = await media.refresh()
+    assert picture in bindings and settings.providers[image["provider_id"]].models[picture] == "Midjourney v8.2"
+    settings, bindings = await text.refresh()
+    assert words in bindings and settings.providers[chat["provider_id"]].models[words] == "Chat Model 1"

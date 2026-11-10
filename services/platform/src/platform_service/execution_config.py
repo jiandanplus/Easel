@@ -10,6 +10,7 @@ import stat
 from urllib.parse import urlsplit
 
 from .execution_protocol import _unique
+from .model_names import upstream_model_ok
 
 
 @dataclass(frozen=True)
@@ -102,9 +103,7 @@ class ExecutionSettings:
                     not isinstance(public, str)
                     or not re.fullmatch(r"[A-Za-z0-9_.:/-]{1,128}", public)
                     or public in models
-                    or not isinstance(upstream, str)
-                    or not 1 <= len(upstream) <= 128
-                    or any(ord(c) < 33 for c in upstream)
+                    or not upstream_model_ok(upstream)
                 ):
                     raise ValueError("invalid_execution_configuration")
                 models.add(public)

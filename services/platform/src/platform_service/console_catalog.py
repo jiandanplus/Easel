@@ -19,6 +19,7 @@ from .execution.rates import cost as cost_text, normalize as normalize_text_rate
 from .media.contracts import MAX_BUDGET as MEDIA_BUDGET, validate_definition as validate_media_definition
 from .media.rates import cost as cost_media, normalize as normalize_media_rate
 from .model_templates import APIMART_SIZES, MEDIA, OPENAI_IMAGE_SIZES, TEXT, build_rate
+from .model_names import upstream_model_ok
 from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, PLATFORMS, clean_base_url, clean_key, clean_name, clean_options, provider_id as channel_provider_id, seal_scope, spec_of
 from .provider_secrets import seal, valid_public_key
 
@@ -42,7 +43,7 @@ def text(value, maximum):
 
 def upstream_name(value):
     """A supplier's model name. Some contain single spaces ("Midjourney v8.2"); no other whitespace."""
-    if not re.fullmatch(r'\S+(?: \S+)*', text(value, 128)) or any(0x80 <= ord(char) <= 0x9f for char in value):
+    if not upstream_model_ok(text(value, 128)):
         raise PlatformError(422, 'invalid_console_command')
     return value
 

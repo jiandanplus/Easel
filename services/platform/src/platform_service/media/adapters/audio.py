@@ -21,6 +21,7 @@ from ..references import http_reference
 from .base import MediaAdapter, PreparedRequest
 from .openai_images import bounded_response
 from ...voice_catalogs import VOICE_ID
+from ...model_names import upstream_model_ok
 
 CLIENT_NAMESPACE = 'easel_client_request_v1'
 _HTTP_ID = re.compile(r'req_[A-Za-z0-9_-]{1,192}\Z', re.ASCII)
@@ -116,7 +117,7 @@ class _OpenAIAudio(MediaAdapter):
             raise PlatformError(503,'audio_capability_closed')
         if not isinstance(request.get('model'),str):raise PlatformError(422,'invalid_audio_request')
         model=self.provider.models.get(request['model'])
-        if not isinstance(model,str) or not 1<=len(model)<=128 or any(ord(c)<33 or ord(c)==127 for c in model):
+        if not upstream_model_ok(model):
             raise PlatformError(503,'audio_capability_closed')
         if request.get('voice_id') is not None:raise PlatformError(422,'owned_voice_reference_required')
         return model
