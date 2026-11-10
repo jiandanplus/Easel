@@ -50,3 +50,21 @@ test('profile shows a letter when there is no avatar', () => {
   assert.equal(initialOf(''), '优');
   assert.equal(initialOf(null), '优');
 });
+
+test('plan page converts points, prices and periods exactly', () => {
+  const { pointsText, yuan, perMillion, periodOf, sellable } = pick('PlanSettings.tsx', ['pointsText', 'yuan', 'perMillion', 'periodOf', 'sellable']);
+  assert.equal(pointsText('1000000000'), '1,000');
+  assert.equal(pointsText('99970000'), '99.97');
+  assert.equal(pointsText('500000'), '0.5');
+  assert.equal(pointsText(null), '—');
+  assert.equal(yuan('9900'), '99');
+  assert.equal(yuan('1990'), '19.90');
+  assert.equal(perMillion({ numerator: '1', denominator: '2' }), '0.5');
+  assert.equal(perMillion({ numerator: '3', denominator: '2' }), '1.5');
+  assert.equal(perMillion({ numerator: '16', denominator: '1' }), '16');
+  assert.equal(perMillion({ numerator: 'x', denominator: '1' }), '—');
+  assert.deepEqual([periodOf(30), periodOf(31), periodOf(365), periodOf(7)], ['month', 'month', 'year', 'other']);
+  assert.equal(sellable({ id: 'plan-a', test_only: false }), true);
+  assert.equal(sellable({ id: 'easel-owner-allowance-v1', test_only: false }), false);
+  assert.equal(sellable({ id: 'plan-t', test_only: true }), false);
+});

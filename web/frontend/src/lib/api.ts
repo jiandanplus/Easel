@@ -78,6 +78,9 @@ export interface CentralStatus {
 export interface CentralPlan {
   id: string; name: string; version: string; included_products: string[]; features: string[];
   credits: string; days: number; concurrency: number; test_only: boolean;
+  /** Model ids the plan allows; null or absent means every model of its features. */
+  models?: string[] | null;
+  pricing?: { default?: { numerator: string; denominator: string }; models?: Record<string, { numerator: string; denominator: string }> } | null;
 }
 export interface CentralWallet {
   unit: 'microcredit'; microcredits_per_point: '1000000'; available: string; reserved: string;

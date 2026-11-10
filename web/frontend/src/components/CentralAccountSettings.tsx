@@ -24,7 +24,7 @@ const unread = <T,>(): ReadState<T> => ({ data: null, error: '', loading: true }
 const failureMessage = (failure: unknown): string => failure instanceof Error ? failure.message : '暂不可用，请稍后重试。';
 
 /** One code gives one published plan; the server checks validity, expiry and single use. */
-function RedeemSection({ onRedeemed }: { onRedeemed: () => void }) {
+export function RedeemSection({ onRedeemed }: { onRedeemed: () => void }) {
   const [code, setCode] = useState(''), [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState('');
   const submit = async () => {
     const value = code.trim();
