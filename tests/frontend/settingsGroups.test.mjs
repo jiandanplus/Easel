@@ -52,7 +52,7 @@ test('profile shows a letter when there is no avatar', () => {
 });
 
 test('plan page converts points, prices and periods exactly', () => {
-  const { pointsText, yuan, perMillion, periodOf, sellable, ratioOf, yearlySaving } = pick('PlanSettings.tsx', ['pointsText', 'yuan', 'perMillion', 'periodOf', 'sellable', 'ratioOf', 'yearlySaving']);
+  const { pointsText, yuan, perMillion, periodOfOffer, sellable, ratioOf, yearlySaving } = pick('PlanSettings.tsx', ['pointsText', 'yuan', 'perMillion', 'periodOfOffer', 'sellable', 'ratioOf', 'yearlySaving']);
   assert.equal(ratioOf({ credits: '5000000000' }, { credits: '1000000000' }), '5');
   assert.equal(ratioOf({ credits: '2500000000' }, { credits: '1000000000' }), '2.5');
   assert.equal(yearlySaving('19440', '1800'), 10);  // ¥194.4 a year against ¥18 × 12.
@@ -68,8 +68,28 @@ test('plan page converts points, prices and periods exactly', () => {
   assert.equal(perMillion({ numerator: '3', denominator: '2' }), '1.5');
   assert.equal(perMillion({ numerator: '16', denominator: '1' }), '16');
   assert.equal(perMillion({ numerator: 'x', denominator: '1' }), '—');
-  assert.deepEqual(JSON.parse(JSON.stringify([periodOf(30), periodOf(31), periodOf(365), periodOf(7)])), ['month', 'month', 'year', 'once']);
+  assert.deepEqual([periodOfOffer({ period: 'year' }), periodOfOffer({ period: 'month' }), periodOfOffer({})].join(','), 'year,month,once');
   assert.equal(sellable({ id: 'plan-a', test_only: false }), true);
   assert.equal(sellable({ id: 'easel-owner-allowance-v1', test_only: false }), false);
   assert.equal(sellable({ id: 'plan-t', test_only: true }), false);
+});
+
+test('usage page sorts charges into kinds and sums points per day exactly', () => {
+  const u = pick('UsageSettings.tsx', ['kindOf', 'chargedMicro', 'finePoints', 'toDate', 'dayKey', 'dailySpend', 'tokenTone', 'untilText']);
+  assert.equal(u.kindOf({ operation: 'execution' }), 'text');
+  assert.equal(u.kindOf({ operation: 'media', capability: 'image.generate' }), 'image');
+  assert.equal(u.kindOf({ operation: 'media', capability: 'audio.speech' }), 'voice');
+  assert.equal(u.kindOf({ operation: 'media', capability: 'audio.transcribe' }), 'transcribe');
+  assert.equal(u.chargedMicro({ status: 'settled', actual: '1600', amount: '9000' }), 1600n);
+  assert.equal(u.chargedMicro({ status: 'held', actual: null, amount: '9000' }), 9000n);
+  assert.equal(u.chargedMicro({ status: 'waived', actual: '5', amount: '9000' }), 0n);
+  assert.equal(u.finePoints(1600n), '0.0016');
+  assert.equal(u.finePoints(2080000n), '2.08');
+  assert.equal(u.finePoints(50n), '<0.0001');
+  const now = new Date(2026, 10, 10, 12);
+  const days = u.dailySpend([{ created_at: new Date(2026, 10, 9, 9).toISOString(), status: 'settled', actual: '700' }, { created_at: new Date(2026, 10, 9, 20).toISOString(), status: 'settled', actual: '300' }], 3, now);
+  assert.deepEqual(days.map(d => `${d.day}:${d.micro}`).join(','), '2026-11-08:0,2026-11-09:1000,2026-11-10:0');
+  assert.deepEqual([u.tokenTone(1465), u.tokenTone(56754), u.tokenTone(219064)].join(','), 'low,mid,high');
+  assert.equal(u.untilText(new Date(now.getTime() + (2 * 24 + 5) * 3600000).toISOString(), now.getTime()), '2 天 5 小时后到期');
+  assert.equal(u.untilText(new Date(now.getTime() - 1000).toISOString(), now.getTime()), '已到期');
 });

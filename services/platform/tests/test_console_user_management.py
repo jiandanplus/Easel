@@ -194,3 +194,37 @@ async def test_plan_states_cannot_be_rewritten(db, console, console_role):
         with pytest.raises(psycopg.Error):
             async with db.connection() as c:
                 await c.execute(statement)
+
+
+def priced(plan_id, period, amount, stamp):
+    return {'id': f'offer-{plan_id}-{period}-{stamp}', 'plan_id': plan_id, 'version': f'{period}-{stamp}', 'amount_minor': amount, 'currency': 'CNY',
+            'test_only': False, 'period': period, 'terms': {'refund_policy': 'unused_full_only', 'description': '仅全部未使用时支持全额退款。'}}
+
+
+@pytest.mark.asyncio
+async def test_each_plan_has_yearly_monthly_and_one_time_prices(db, console, console_role):
+    """Decision 0019: a yearly price buys twelve periods; a new price replaces the old one of the same kind."""
+    from platform_service.billing import BillingService
+    _, _, _, scope = await seed(db)
+    await MembershipService(db).publish_plan(PUBLISHER, live_plan('std-v1', credits='50000000', days=30))
+    catalog, queries, principal, _ = await low_catalog(console, console_role, 'admin')
+    year = await catalog.publish_offer(principal, priced('std-v1', 'year', '21600', 'a'), '定价', 'price-1')
+    assert (year['credits'], year['days'], year['period']) == ('600000000', 360, 'year')
+    month = await catalog.publish_offer(principal, priced('std-v1', 'month', '2000', 'a'), '定价', 'price-2')
+    assert (month['credits'], month['days']) == ('50000000', 30)
+    await catalog.publish_offer(principal, priced('std-v1', 'once', '2500', 'a'), '定价', 'price-3')
+    await catalog.publish_offer(principal, priced('std-v1', 'month', '1800', 'b'), '降价', 'price-4')
+    rows = {row['id']: row for row in (await queries.offers(principal))['items']}
+    assert rows[month['id']]['withdrawn'] is True and rows['offer-std-v1-month-b']['withdrawn'] is False
+    assert rows[year['id']]['withdrawn'] is False and rows[year['id']]['period'] == 'year'
+
+    # Prices are visible while payments are off, but no order can be placed.
+    closed = BillingService(db, mode='disabled', channels=())
+    shown = await closed.catalog('easel')
+    assert shown['channels'] == [] and sorted((o.get('period'), o['amount_minor']) for o in shown['offers']) == [('month', '1800'), ('once', '2500'), ('year', '21600')]
+    with pytest.raises(PlatformError) as error:
+        await closed.create_order(scope, offer_id=year['id'], channel='wechat', idempotency_key='k')
+    assert error.value.code == 'payments_unavailable'
+
+    with pytest.raises(PlatformError):
+        await catalog.publish_offer(principal, priced('std-v1', 'week', '100', 'c'), '定价', 'price-5')

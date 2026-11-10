@@ -22,3 +22,4 @@
 | [0016](0016-console-supplier-platforms.md) | 后台每一类接口可选第三方平台（迁移 029、030） |
 | [0017](0017-console-provider-accounts.md) | 同一平台可接入多个账号，后台改成新建接入（迁移 032） |
 | [0018](0018-plan-edit-and-retire.md) | 套餐可以编辑（发布新版本）、复制、停用和恢复，不硬删除（迁移 036） |
+| [0019](0019-plan-payment-periods.md) | 每个套餐有按年、按月、一次性三种价格；付款关闭时也展示价格 |

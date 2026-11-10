@@ -180,6 +180,13 @@ class ConsoleCatalog:
             elif action == 'offer.publish':
                 await self._plan_open(conn, payload.get('plan_id'))
                 result = await BillingService(bound).publish_offer(operator, payload)
+                # One live price per plan and way of paying: a new one replaces the old.
+                period = payload.get('period', 'once')
+                for row in await (await conn.execute(
+                        "SELECT o.id FROM billing_offers o WHERE o.plan_id=%s AND o.id<>%s AND coalesce(o.definition->>'period','once')=%s"
+                        " AND NOT EXISTS (SELECT 1 FROM billing_offer_withdrawals w WHERE w.offer_id=o.id)",
+                        (payload.get('plan_id'), result['id'], period))).fetchall():
+                    await BillingService(bound).withdraw_offer(operator, row['id'], reason)
             elif action == 'offer.withdraw':
                 row = await (await conn.execute('SELECT plan_id FROM billing_offers WHERE id=%s', (target_id,))).fetchone()
                 if row:

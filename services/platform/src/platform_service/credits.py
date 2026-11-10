@@ -207,7 +207,20 @@ class CreditLedger:
                     (scope.billing_account_id, scope.product_id),
                 )
             ).fetchall()
-            return [reservation_view(r) for r in rows]
+            views = [reservation_view(r) for r in rows]
+            # The desktop usage page shows which model each charge was for, and tokens for text.
+            details = {}
+            ids = [r["id"] for r in rows]
+            if ids and (await (await c.execute("SELECT to_regclass('execution_jobs') IS NOT NULL AS ok")).fetchone())["ok"]:
+                for row in await (await c.execute(
+                        "SELECT j.reservation_id,j.model,r.input_tokens,r.output_tokens FROM execution_jobs j"
+                        " LEFT JOIN execution_receipts r ON r.job_id=j.id WHERE j.reservation_id=ANY(%s)", (ids,))).fetchall():
+                    details[row["reservation_id"]] = {"model": row["model"], "input_tokens": row["input_tokens"], "output_tokens": row["output_tokens"]}
+            if ids and (await (await c.execute("SELECT to_regclass('media_jobs') IS NOT NULL AS ok")).fetchone())["ok"]:
+                for row in await (await c.execute(
+                        "SELECT reservation_id,model,capability FROM media_jobs WHERE reservation_id=ANY(%s)", (ids,))).fetchall():
+                    details[row["reservation_id"]] = {"model": row["model"], "capability": row["capability"]}
+            return [{**view, **details.get(view["id"], {})} for view in views]
 
     async def reserve(
         self,

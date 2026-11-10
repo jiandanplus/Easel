@@ -276,3 +276,14 @@ async def test_excess_evidence_does_not_starve_later_recoverable_job(db):
     assert (await service.get(scope,over["id"]))["status"]=="pending_reconciliation"
     assert (await service.get(scope,good["id"]))["status"]=="settled"
     assert (await ledger.summary(scope))["spent"]=="700"
+
+
+@pytest.mark.asyncio
+async def test_usage_names_the_model_and_tokens_of_each_charge(db):
+    service, ledger, scope, ctx = await setup(db)
+    job = await admit(service, ctx)
+    await record(service, job)
+    await service.pending(job["id"], job["attempt_id"], "database_unavailable")
+    await service.finish_from_evidence(job["id"], job["attempt_id"])
+    row = (await ledger.usage(scope))[0]
+    assert (row["operation"], row["model"], row["input_tokens"], row["output_tokens"], row["actual"]) == ("execution", "fixture-text", 3, 2, "700")

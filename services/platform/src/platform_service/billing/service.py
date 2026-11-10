@@ -49,6 +49,10 @@ def refund_view(row):
     }
 
 
+
+# How many plan periods each kind of price buys.
+PERIOD_COUNT = {"once": 1, "month": 1, "year": 12}
+
 class BillingService:
     def __init__(self, db, mode="disabled", channels=()):
         if mode not in ("disabled", "test", "live"):
@@ -60,15 +64,12 @@ class BillingService:
 
     async def publish_offer(self, operator, offer):
         require(operator, "billing:publish")
-        if not isinstance(offer, dict) or set(offer) != {
-            "id",
-            "plan_id",
-            "version",
-            "amount_minor",
-            "currency",
-            "test_only",
-            "terms",
-        }:
+        base = {"id", "plan_id", "version", "amount_minor", "currency", "test_only", "terms"}
+        if not isinstance(offer, dict) or set(offer) not in (base, base | {"period"}):
+            raise PlatformError(422, "invalid_offer")
+        # How the plan is paid for (decision 0019). A yearly price buys twelve periods at once;
+        # monthly and one-time prices buy one. Offers without a period are one-time.
+        if offer.get("period", "once") not in PERIOD_COUNT:
             raise PlatformError(422, "invalid_offer")
         for key in ("id", "plan_id", "version"):
             bounded(offer[key])
@@ -109,6 +110,10 @@ class BillingService:
                     )
                 },
             }
+            periods = PERIOD_COUNT[offer.get("period", "once")]
+            if periods != 1:  # The order grants exactly what the snapshot says.
+                snapshot["credits"] = str(int(p["credits"]) * periods)
+                snapshot["days"] = int(p["days"]) * periods
             old = await (
                 await c.execute(
                     "SELECT definition FROM billing_offers WHERE id=%s OR (plan_id=%s AND version=%s)",
@@ -162,16 +167,13 @@ class BillingService:
                     "SELECT definition FROM billing_offers o WHERE NOT EXISTS (SELECT 1 FROM billing_offer_withdrawals w WHERE w.offer_id=o.id) ORDER BY o.created_at,o.id"
                 )
             ).fetchall()
-        offers = (
-            [
-                r["definition"]
-                for r in rows
-                if product_id in r["definition"]["included_products"]
-                and r["definition"]["test_only"] == (self.mode == "test")
-            ]
-            if self.mode != "disabled"
-            else []
-        )
+        # Prices are shown even while payments are off; orders are still refused then.
+        offers = [
+            r["definition"]
+            for r in rows
+            if product_id in r["definition"]["included_products"]
+            and r["definition"]["test_only"] == (self.mode == "test")
+        ]
         channels = (
             [
                 {"id": k, "label": v.get("label", k), "enabled": True}
@@ -183,7 +185,7 @@ class BillingService:
         return {
             "mode": self.mode,
             "channels": channels,
-            "offers": offers if channels else [],
+            "offers": offers if channels or self.mode == "disabled" else [],
         }
 
     async def _view(self, c, row):

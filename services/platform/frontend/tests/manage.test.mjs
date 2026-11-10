@@ -133,3 +133,14 @@ test('speech platforms without a model api offer the models their documentation 
   assert.equal(p.pullableNames({known_models:[]},{models:['m']}).join(),'m');
   assert.equal(p.pullableNames({},null).length,0);
 });
+test('price dialog builds one offer per way of paying and finds the live ones',()=>{
+  const p=load('PriceEditor.tsx');
+  const year=p.buildOffer('plan-a','year','216','','s1');
+  assert.equal(year.amount_minor,'21600');assert.equal(year.period,'year');assert.equal(year.test_only,false);assert.match(year.id,/^offer-plan-a-year-s1$/);
+  assert.equal(p.buildOffer('plan-a','once','19.9','','s1').amount_minor,'1990');
+  assert.throws(()=>p.buildOffer('plan-a','month','abc','','s1'));
+  const offers=[{plan_id:'plan-a',period:'month',amount_minor:'1800',withdrawn:false},{plan_id:'plan-a',period:'month',amount_minor:'2000',withdrawn:false},{plan_id:'plan-a',amount_minor:'2500',withdrawn:false},{plan_id:'plan-a',period:'year',amount_minor:'1',withdrawn:true},{plan_id:'plan-b',period:'year',amount_minor:'9',withdrawn:false}];
+  const live=p.livePrices(offers,'plan-a');
+  assert.equal(live.month.amount_minor,'1800');assert.equal(live.once.amount_minor,'2500');assert.equal(live.year,undefined);
+  assert.equal(p.yuanText('21600'),'216');assert.equal(p.yuanText('1990'),'19.90');assert.equal(p.periodLabel(undefined),'一次性');
+});

@@ -170,3 +170,71 @@
 .plan-prices-intro .desc { margin: 0; }
 .plan-prices .plan-table td:nth-child(2) { color: var(--text-secondary); white-space: nowrap; }
 @media (max-width: 860px) { .plan-prices { grid-template-columns: 1fr; } }
+
+/* 用量：总览、使用情况图表、明细表，参考 LobeHub 的用量页。 */
+.usage-page { display: flex; flex-direction: column; gap: 28px; max-width: 1080px; margin: 0 auto; padding: 4px 0 28px; }
+.usage-block { display: flex; flex-direction: column; border-radius: 16px; background: var(--surface-2); padding: 4px; }
+.usage-block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 12px; }
+.usage-block-head h3 { margin: 0; font-size: 17px; }
+.usage-plan { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.usage-plan span { color: var(--text); }
+.usage-upgrade { margin-left: 6px; border: 0; border-radius: 8px; background: #1f1f1f; color: #fff; font: inherit; font-size: 13px; font-weight: 600; padding: 5px 12px; cursor: pointer; }
+.usage-card { padding: 0; border-radius: 13px; background: var(--bg); }
+.usage-section { padding: 16px 20px 18px; }
+.usage-section + .usage-section { border-top: 1px solid var(--border); }
+.usage-label { margin: 0 0 12px; font-size: 12.5px; color: var(--text-secondary); }
+.usage-limit { max-width: 640px; }
+.usage-limit-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+.usage-progress { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.usage-progress span { display: block; height: 100%; border-radius: 999px; background: var(--green); }
+.usage-progress span.mid { background: var(--amber); }
+.usage-progress span.low { background: var(--red); }
+.usage-limit .desc { margin: 8px 0 0; font-size: 12.5px; }
+.usage-two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+.usage-two .usage-label { grid-column: 1 / -1; }
+.usage-two > div > span { display: block; font-size: 14px; color: var(--text-secondary); margin-bottom: 6px; }
+.usage-two strong { font-size: 18px; font-weight: 650; }
+.usage-store { display: flex; align-items: center; gap: 12px; }
+.usage-store + .usage-store { border-left: 1px solid var(--border); padding-left: 20px; }
+.usage-store span { display: block; font-size: 14px; color: var(--text-secondary); margin-bottom: 2px; }
+.usage-store strong { font-size: 14px; font-weight: 500; }
+.usage-range { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--bg); gap: 2px; }
+.usage-range button { border: 0; background: none; font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 8px; color: var(--text-secondary); cursor: pointer; }
+.usage-range button.active { background: var(--surface-2); color: var(--text); font-weight: 600; }
+.usage-empty { padding: 40px 0; text-align: center; color: var(--text-tertiary); font-size: 13.5px; }
+.usage-chart { position: relative; padding: 18px 20px 10px; }
+.usage-bars { display: flex; align-items: flex-end; height: 160px; }
+.usage-bar-slot { height: 100%; display: flex; align-items: flex-end; justify-content: center; padding: 0 2px; }
+.usage-bar { width: 100%; max-width: 22px; border-radius: 4px 4px 0 0; background: var(--accent-start); opacity: .75; transition: opacity .12s; }
+.usage-bar.on { opacity: 1; }
+.usage-axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-tertiary); padding-top: 6px; border-top: 1px solid var(--border); }
+.usage-tip { position: absolute; top: 6px; transform: translateX(-50%); padding: 4px 8px; border-radius: 8px; background: var(--text); color: var(--bg); font-size: 12px; white-space: nowrap; pointer-events: none; display: flex; gap: 6px; align-items: baseline; }
+.usage-tip span { opacity: .7; }
+.usage-table-card { overflow: hidden; }
+.usage-filters { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 16px; align-items: center; }
+.usage-filters input, .usage-filters select { height: 34px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 13.5px; padding: 0 10px; }
+.usage-search { flex: 1 1 220px; }
+.usage-filters select { flex: 0 0 160px; }
+.usage-dates { display: inline-flex; align-items: center; gap: 6px; color: var(--text-tertiary); }
+.usage-table-scroll { overflow-x: auto; }
+.usage-table { width: 100%; border-collapse: collapse; font-size: 13.5px; white-space: nowrap; }
+.usage-table th { text-align: left; font-weight: 500; font-size: 13px; color: var(--text-secondary); padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.usage-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+.usage-sort { border: 0; background: none; color: var(--text-tertiary); cursor: pointer; font-size: 12px; padding: 0 2px; }
+.usage-sort.on { color: var(--text); }
+.usage-kind { display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: 12px; background: var(--accent-soft); color: var(--accent-end); }
+.usage-kind.k-image, .usage-kind.k-video { background: var(--amber-soft); color: var(--amber); }
+.usage-kind.k-voice, .usage-kind.k-music, .usage-kind.k-transcribe { background: var(--green-soft); color: var(--green); }
+.usage-model { font-weight: 500; }
+.usage-tokens { display: inline-flex; align-items: center; gap: 5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.usage-tokens .tok { padding: 1px 6px; border-radius: 5px; font-weight: 600; }
+.tok.low { background: var(--green-soft); color: var(--green); }
+.tok.mid { background: var(--amber-soft); color: var(--amber); }
+.tok.high { background: var(--red-soft); color: var(--red); }
+.usage-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 13px; color: var(--text-secondary); flex-wrap: wrap; }
+.usage-pager > div { display: flex; align-items: center; gap: 6px; }
+.usage-pager select { height: 30px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; padding: 0 8px; }
+.usage-pager button { min-width: 30px; height: 30px; border: 1px solid transparent; border-radius: 8px; background: none; font: inherit; color: var(--text); cursor: pointer; }
+.usage-pager button.on { border-color: var(--border); background: var(--bg); font-weight: 600; }
+.usage-pager button:disabled { color: var(--text-tertiary); cursor: default; }
+@media (max-width: 760px) { .usage-two { grid-template-columns: 1fr; row-gap: 14px; } .usage-store + .usage-store { border-left: 0; padding-left: 0; } }

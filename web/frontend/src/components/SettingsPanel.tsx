@@ -16,6 +16,7 @@ import type { EnvTool, ModelRow, SelftestResult, LocalAgentInfo, MediaCapability
 import AccountsPage from './AccountsPage';
 import ProfileSettings from './ProfileSettings';
 import PlanSettings from './PlanSettings';
+import UsageSettings from './UsageSettings';
 import { ComingSoon, DeviceSettings, ShortcutSettings, SkillSettings, StatsSettings, StorageSettings, TrashSettings } from './SettingsPages';
 import { NAV_ICONS } from './settingsNavIcons';
 
@@ -737,7 +738,8 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
           <div className="settings-main">
             {sec === 'profile' && <ProfileSettings onOpenPersonas={onOpenPage ? () => onOpenPage('profile') : undefined} onOpenAccounts={() => setSec('accounts')} />}
             {sec === 'plan' && <PlanSettings onOpenBilling={() => setSec('billing')} />}
-            {(sec === 'usage' || sec === 'balance' || sec === 'billing') && <PlatformAccountSettings view={sec} />}
+            {sec === 'usage' && <UsageSettings onOpenPlans={() => setSec('plan')} />}
+            {(sec === 'balance' || sec === 'billing') && <PlatformAccountSettings view={sec} />}
             {sec === 'theme' && <ThemeSettings />}
             {sec === 'shortcuts' && <ShortcutSettings />}
             {sec === 'stats' && <StatsSettings />}

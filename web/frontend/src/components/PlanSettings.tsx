@@ -28,8 +28,9 @@ export function multiplier(value: { numerator: string; denominator: string } | u
   return Number(value.numerator) / Number(value.denominator);
 }
 export type Period = 'year' | 'month' | 'once';
-/** Plans are grouped by how long they last: about a month, about a year, or any other one-off length. */
-export const periodOf = (days: number): Period => days >= 300 ? 'year' : days >= 25 && days <= 62 ? 'month' : 'once';
+export const PERIODS: Period[] = ['year', 'month', 'once'];
+/** Each plan can be bought yearly, monthly or once; an offer without a period is one-time. */
+export const periodOfOffer = (offer: { period?: Period }): Period => offer.period || 'once';
 /** Plans people can buy: not test plans, not the service's own owner and internal plans. */
 export const sellable = (plan: CentralPlan) => !plan.test_only && !plan.id.startsWith('easel-');
 /** "5x": how many times the first plan's points this plan gives, one decimal. */
@@ -74,19 +75,19 @@ function Item({ icon, children, off = false }: { icon: string; children: ReactNo
   return <li className={off ? 'off' : ''}><Icon d={off ? ICONS.cross : icon} /><span>{children}</span></li>;
 }
 
-function PlanCard({ plan, base, previous, offer, saving, current, tone, modelNames, onUpgrade }: {
-  plan: CentralPlan; base: CentralPlan; previous: CentralPlan | null; offer: CentralOffer | null; saving: number | null; current: boolean; tone: number;
+function PlanCard({ plan, base, previous, period, offer, saving, current, tone, modelNames, onUpgrade }: {
+  plan: CentralPlan; base: CentralPlan; previous: CentralPlan | null; period: Period; offer: CentralOffer | null; saving: number | null; current: boolean; tone: number;
   modelNames: (ids: string[]) => string[]; onUpgrade: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const period = periodOf(plan.days), rate = multiplier(plan.pricing?.default), ratio = previous ? ratioOf(plan, base) : null;
+  const rate = multiplier(plan.pricing?.default), ratio = previous ? ratioOf(plan, base) : null;
   const models = Array.isArray(plan.models) ? plan.models : null;
   const added = previous ? plan.features.filter(feature => !previous.features.includes(feature)) : plan.features;
   const price = offer ? yuan(offer.amount_minor) : null;
   const monthly = offer && period === 'year' ? yuan((BigInt(offer.amount_minor) / 12n).toString()) : null;
   const items: ReactNode[] = [
-    <Item key="points" icon={ICONS.points}>{pointsText(plan.credits)} 点额度{previous ? `，「${previous.name}」的 ${ratioOf(plan, previous) ?? '—'} 倍` : ''}</Item>,
-    <Item key="days" icon={ICONS.clock}>{plan.days} 天内有效</Item>,
+    <Item key="points" icon={ICONS.points}>{period === 'year' ? `每月 ${pointsText(plan.credits)} 点，一年共 ${pointsText((BigInt(/^\d+$/.test(plan.credits) ? plan.credits : '0') * 12n).toString())} 点` : `${pointsText(plan.credits)} 点额度`}{previous ? `，「${previous.name}」的 ${ratioOf(plan, previous) ?? '—'} 倍` : ''}</Item>,
+    <Item key="days" icon={ICONS.clock}>{period === 'year' ? `${plan.days * 12} 天内有效（12 个周期）` : `${plan.days} 天内有效`}</Item>,
     <Item key="speed" icon={ICONS.speed}>同时运行 {plan.concurrency} 个任务{previous && plan.concurrency !== previous.concurrency ? `（「${previous.name}」为 ${previous.concurrency} 个）` : ''}</Item>,
     <Item key="models" icon={ICONS.models}>{models ? `可用 ${models.length} 个模型` : '所含功能的全部模型'}{previous && Array.isArray(previous.models) && models && models.length > previous.models.length ? `，比「${previous.name}」多 ${models.length - previous.models.length} 个` : ''}</Item>,
     ...added.map(feature => <Item key={feature} icon={featureIcon(feature)}>{featureLabel(feature)}</Item>),
@@ -97,8 +98,8 @@ function PlanCard({ plan, base, previous, offer, saving, current, tone, modelNam
     <header className="plan-card-head">
       <div className="plan-card-title"><h4>{plan.name}</h4>{current ? <span className="plan-badge">当前套餐</span> : saving ? <span className="plan-badge">优惠 {saving}%</span> : null}</div>
       {price === null ? <div className="plan-price"><strong className="plan-price-none">价格待定</strong></div>
-        : <div className="plan-price"><small>¥</small><strong>{monthly ?? price}</strong><span>/{period === 'once' ? `${plan.days} 天` : '月'}</span></div>}
-      <p className="plan-sub">{price === null ? '运营者设置售卖价格后显示' : period === 'year' ? `¥${price} / 每年` : `${pointsText(plan.credits)} 点 · ${plan.days} 天`}</p>
+        : <div className="plan-price"><small>¥</small><strong>{monthly ?? price}</strong><span>{period === 'once' ? `/${plan.days} 天` : '/月'}</span></div>}
+      <p className="plan-sub">{price === null ? `暂未设置${PERIOD_LABEL[period]}价格` : period === 'year' ? `¥${price} / 每年` : period === 'month' ? `按月付费 · 每月 ${pointsText(plan.credits)} 点` : '一次性付费，不自动续费'}</p>
     </header>
     <div className="plan-card-body">
       <button type="button" className="plan-cta" disabled={current} onClick={onUpgrade}>{current ? '当前套餐' : '升级'}</button>
@@ -134,16 +135,13 @@ export default function PlanSettings({ onOpenBilling }: { onOpenBilling?: () => 
   const reload = useCallback(() => setRevision(value => value + 1), []);
 
   const plans = useMemo(() => (data.plans ?? []).filter(sellable).sort((a, b) => (BigInt(a.credits) < BigInt(b.credits) ? -1 : BigInt(a.credits) > BigInt(b.credits) ? 1 : a.days - b.days)), [data.plans]);
-  const periods = useMemo(() => (['year', 'month', 'once'] as Period[]).filter(value => plans.some(plan => periodOf(plan.days) === value)), [plans]);
-  const shownPeriod = period && periods.includes(period) ? period : periods.includes('month') ? 'month' : periods[0];
-  const shown = plans.filter(plan => periodOf(plan.days) === shownPeriod);
-  const offerFor = (plan: CentralPlan) => data.catalog?.offers.find(offer => offer.plan_id === plan.id) ?? null;
+  const offerFor = (plan: CentralPlan, way: Period) => data.catalog?.offers.find(offer => offer.plan_id === plan.id && periodOfOffer(offer) === way) ?? null;
+  const priced = (way: Period) => plans.some(plan => offerFor(plan, way));
+  const shownPeriod: Period = period ?? (priced('year') ? 'year' : priced('month') ? 'month' : priced('once') ? 'once' : 'month');
+  const shown = plans;
   const savingFor = (plan: CentralPlan) => {
-    const offer = offerFor(plan);
-    if (!offer || periodOf(plan.days) !== 'year') return null;
-    const monthly = plans.find(other => other.name === plan.name && periodOf(other.days) === 'month');
-    const monthlyOffer = monthly ? offerFor(monthly) : null;
-    return monthlyOffer ? yearlySaving(offer.amount_minor, monthlyOffer.amount_minor) : null;
+    const year = offerFor(plan, 'year'), month = offerFor(plan, 'month');
+    return year && month ? yearlySaving(year.amount_minor, month.amount_minor) : null;
   };
   const bestSaving = Math.max(0, ...plans.map(plan => savingFor(plan) ?? 0));
   const currentIds = new Set((data.entitlements?.memberships ?? []).map(item => item.plan_id));
@@ -157,7 +155,7 @@ export default function PlanSettings({ onOpenBilling }: { onOpenBilling?: () => 
   const upgrade = (plan: CentralPlan) => {
     setNotice('');
     if (!authenticated) { setNotice('请先在「个人中心」登录账号，再升级套餐。'); return; }
-    if (!offerFor(plan)) { setNotice(`「${plan.name}」还没有设置售卖价格，暂时不能购买。`); return; }
+    if (!offerFor(plan, shownPeriod)) { setNotice(`「${plan.name}」还没有设置${PERIOD_LABEL[shownPeriod]}价格，暂时不能购买。`); return; }
     if (!payable || !onOpenBilling) { setNotice('在线支付还没有开放，开放后点「升级」就能直接购买。'); return; }
     onOpenBilling();
   };
@@ -174,22 +172,22 @@ export default function PlanSettings({ onOpenBilling }: { onOpenBilling?: () => 
         {currentPlans.length ? <><span>当前</span><strong>{currentPlans.map(plan => plan.name).join('、')}</strong><span>· {date(membership?.expires_at)} 到期</span></> : <span>当前没有生效的套餐</span>}
         {data.wallet && <><span className="sep" /><span>可用</span><strong>{pointsText(data.wallet.available)}</strong><span>点</span></>}
       </div>}
-      {periods.length > 0 && <div className="plan-period" role="tablist" aria-label="计费周期">{periods.map(value => <button key={value} type="button" role="tab" aria-selected={value === shownPeriod} className={value === shownPeriod ? 'active' : ''} onClick={() => setPeriod(value)}>
+      {plans.length > 0 && <div className="plan-period" role="tablist" aria-label="付费方式">{PERIODS.map(value => <button key={value} type="button" role="tab" aria-selected={value === shownPeriod} className={value === shownPeriod ? 'active' : ''} onClick={() => setPeriod(value)}>
         {PERIOD_LABEL[value]}{value === 'year' && bestSaving > 0 && <small>最高优惠 {bestSaving}%</small>}{value === 'once' && <span className="plan-pay-marks" aria-label="支持支付宝和微信支付"><i className="pay alipay">支</i><i className="pay wechat">微</i></span>}
       </button>)}</div>}
     </div>
 
     {notice && <p role="status" className="central-account-notice plan-notice">{notice}</p>}
     {shown.length === 0 ? <div className="settings-card settings-empty"><strong>暂时没有可开通的套餐</strong><p className="desc">运营者发布套餐后会显示在这里。</p></div>
-      : <div className="plan-grid">{shown.map((plan, index) => <PlanCard key={plan.id} plan={plan} base={shown[0]} previous={index > 0 ? shown[index - 1] : null} offer={offerFor(plan)} saving={savingFor(plan)}
+      : <div className="plan-grid">{shown.map((plan, index) => <PlanCard key={plan.id} plan={plan} base={shown[0]} previous={index > 0 ? shown[index - 1] : null} period={shownPeriod} offer={offerFor(plan, shownPeriod)} saving={shownPeriod === 'year' ? savingFor(plan) : null}
           current={currentIds.has(plan.id)} tone={index % 3} modelNames={modelNames} onUpgrade={() => upgrade(plan)} />)}</div>}
 
     {plans.length > 0 && <div className="plan-compare">
       <h3>套餐权益对比</h3>
       <div className="settings-card plan-table-card"><table className="plan-table plan-compare-table">
-        <thead><tr><th>权益</th>{plans.map(plan => <th key={plan.id}>{plan.name}<small>{PERIOD_LABEL[periodOf(plan.days)]}</small></th>)}</tr></thead>
+        <thead><tr><th>权益</th>{plans.map(plan => <th key={plan.id}>{plan.name}</th>)}</tr></thead>
         <tbody>
-          <tr><td>价格</td>{plans.map(plan => { const offer = offerFor(plan); return <td key={plan.id}>{offer ? <b>¥{yuan(offer.amount_minor)}</b> : <span className="muted">待定</span>}</td>; })}</tr>
+          {PERIODS.map(way => <tr key={way}><td>{PERIOD_LABEL[way]}价格</td>{plans.map(plan => { const offer = offerFor(plan, way); return <td key={plan.id}>{offer ? <><b>¥{yuan(offer.amount_minor)}</b><span className="muted">{way === 'year' ? ' / 年' : way === 'month' ? ' / 月' : ''}</span></> : <span className="muted">未设置</span>}</td>; })}</tr>)}
           <tr><td>点数额度</td>{plans.map(plan => <td key={plan.id}><b>{pointsText(plan.credits)}</b> 点</td>)}</tr>
           <tr><td>有效期</td>{plans.map(plan => <td key={plan.id}>{plan.days} 天</td>)}</tr>
           <tr><td>同时运行的任务</td>{plans.map(plan => <td key={plan.id}>{plan.concurrency} 个</td>)}</tr>

@@ -97,6 +97,8 @@ export interface CentralEntitlements {
 export interface CentralUsage {
   id: string; operation: string; product_id: string; amount: string; actual: string | null; status: string;
   rate_version: string; created_at: number | string; updated_at: number | string;
+  /** Added by newer central services: the model charged, tokens for text, capability for media. */
+  model?: string | null; input_tokens?: number | null; output_tokens?: number | null; capability?: string | null;
 }
 export interface CentralDevice { id: string; client_id: string; product_id: string; expires_at: string; current: boolean }
 const centralPost = <T,>(path: string): Promise<T> => request(`/api/platform/central/${path}`, { method: 'POST' });
@@ -195,6 +197,8 @@ export function centralTurnRecoveries(sessionId: string, turnId: string, signal?
 
 export interface CentralOffer extends Omit<CentralPlan, 'id'> {
   id: string; plan_id: string; currency: 'CNY'; amount_minor: string;
+  /** How the plan is paid for; a yearly price buys twelve periods. Absent means one-time. */
+  period?: 'year' | 'month' | 'once';
   terms: { refund_policy: 'unused_full_only'; description: string };
 }
 export interface CentralBillingCatalog { mode: 'disabled' | 'test' | 'live'; channels: { id: 'wechat' | 'alipay'; label: string; enabled: boolean }[]; offers: CentralOffer[] }

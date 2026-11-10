@@ -98,7 +98,7 @@ def identifier(value):
 
 def offer_snapshot(definition):
     allowed=('id','plan_id','version','name','credits','days','concurrency','included_products',
-             'features','amount_minor','currency','test_only')
+             'features','amount_minor','currency','test_only','period')
     result={key:definition[key] for key in allowed if key in definition}
     terms=definition.get('terms',{})
     result['terms']={key:terms[key] for key in ('refund_policy','description') if key in terms}
