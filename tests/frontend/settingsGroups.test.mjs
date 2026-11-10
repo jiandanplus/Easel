@@ -93,3 +93,25 @@ test('usage page sorts charges into kinds and sums points per day exactly', () =
   assert.equal(u.untilText(new Date(now.getTime() + (2 * 24 + 5) * 3600000).toISOString(), now.getTime()), '2 天 5 小时后到期');
   assert.equal(u.untilText(new Date(now.getTime() - 1000).toISOString(), now.getTime()), '已到期');
 });
+
+test('balance page sorts grants into active, used up and expired', () => {
+  const b = pick('BalanceSettings.tsx', ['grantState', 'remainingShare']);
+  const now = Date.parse('2026-11-10T00:00:00Z');
+  const base = { issued: '1000000000', available: '400000000', revoked: false, expires_at: '2026-12-01T00:00:00Z' };
+  assert.equal(b.grantState(base, now), 'active');
+  assert.equal(b.grantState({ ...base, available: '0' }, now), 'used');
+  assert.equal(b.grantState({ ...base, expires_at: '2026-11-01T00:00:00Z' }, now), 'expired');
+  assert.equal(b.grantState({ ...base, revoked: true }, now), 'expired');
+  assert.equal(b.remainingShare(base), 40);
+  assert.equal(b.remainingShare({ ...base, issued: '0' }), 0);
+});
+
+test('billing history shows short order states', () => {
+  const { orderStatus } = pick('BillingPage.tsx', ['orderStatus']);
+  const label = order => orderStatus(order).text;
+  assert.equal(label({ status: 'paid', credit_state: 'granted' }), '已支付');
+  assert.equal(label({ status: 'paid', credit_state: 'pending' }), '入账中');
+  assert.equal(label({ status: 'pending' }), '待支付');
+  assert.equal(label({ status: 'closed' }), '已关闭');
+  assert.equal(label({ status: 'weird' }), '待确认');
+});

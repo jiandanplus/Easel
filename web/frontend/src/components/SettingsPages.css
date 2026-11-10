@@ -238,3 +238,74 @@
 .usage-pager button.on { border-color: var(--border); background: var(--bg); font-weight: 600; }
 .usage-pager button:disabled { color: var(--text-tertiary); cursor: default; }
 @media (max-width: 760px) { .usage-two { grid-template-columns: 1fr; row-gap: 14px; } .usage-store + .usage-store { border-left: 0; padding-left: 0; } }
+
+/* 余额：参考 LobeHub 的余额页——可用点数 + 订阅卡、充值方式、我的充值。 */
+.balance-card { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; padding: 18px 20px; }
+.balance-main { display: flex; flex-direction: column; }
+.balance-main .usage-label { margin-bottom: 6px; }
+.balance-amount { font-size: 26px; font-weight: 700; margin-bottom: 18px; }
+.balance-amount small { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+.balance-main .desc { margin: 8px 0 0; font-size: 12.5px; }
+.balance-links { display: flex; gap: 16px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.balance-links button { border: 0; background: none; padding: 0; font: inherit; font-size: 13.5px; color: var(--accent-end); cursor: pointer; }
+.balance-sub-card { display: flex; flex-direction: column; justify-content: space-between; gap: 18px; padding: 18px 20px; border-radius: 16px; border: 1px solid var(--border); background: linear-gradient(140deg, var(--surface-2), var(--bg)); min-height: 170px; }
+.balance-sub-top { display: flex; justify-content: space-between; font-size: 11.5px; letter-spacing: .06em; color: var(--text-secondary); font-weight: 600; }
+.balance-sub-card strong { font-size: 30px; font-weight: 750; letter-spacing: .02em; }
+.balance-sub-user { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.balance-avatar { width: 34px; height: 34px; border-radius: 8px; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-end); font-weight: 700; }
+.balance-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.usage-block-head .desc { margin: 4px 0 0; font-size: 12.5px; }
+.balance-topup { display: grid; grid-template-columns: 1fr 1fr; }
+.balance-option { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; }
+.balance-option + .balance-option { border-left: 1px solid var(--border); }
+.balance-option strong { font-size: 15px; }
+.balance-option .desc { margin: 4px 0 0; font-size: 12.5px; }
+.balance-redeem { display: block; }
+.balance-redeem .central-account-section { border: 0; padding: 0; margin: 0; }
+.balance-redeem h4 { margin: 0 0 4px; font-size: 15px; }
+.balance-filters { display: flex; gap: 8px; }
+.balance-filters select { height: 32px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; padding: 0 10px; }
+.balance-tabs { display: flex; gap: 4px; padding: 12px 16px 0; border-bottom: 1px solid var(--border); }
+.balance-tabs button { border: 0; background: none; font: inherit; font-size: 13.5px; padding: 8px 12px; color: var(--text-secondary); border-bottom: 2px solid transparent; cursor: pointer; }
+.balance-tabs button.active { color: var(--text); font-weight: 600; border-bottom-color: var(--text); }
+.balance-list { list-style: none; margin: 0; padding: 0 20px; }
+.balance-list li { padding: 14px 0; display: flex; flex-direction: column; gap: 8px; }
+.balance-list li + li { border-top: 1px solid var(--border); }
+.balance-grant-head { display: flex; align-items: center; gap: 8px; }
+.balance-grant-head strong { font-size: 14px; }
+.balance-grant-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; font-size: 13px; color: var(--text-secondary); }
+.balance-list .desc { margin: 0; font-size: 12.5px; }
+.usage-empty strong { display: block; color: var(--text-secondary); font-weight: 500; }
+@media (max-width: 860px) { .balance-card, .balance-topup { grid-template-columns: 1fr; } .balance-option + .balance-option { border-left: 0; border-top: 1px solid var(--border); } }
+
+/* 账单：参考 LobeHub 的账单页——提示条、账单摘要、当前套餐、账单历史。 */
+.billing-banner { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.billing-banner > span { font-size: 20px; color: var(--text-secondary); }
+.billing-banner > div { flex: 1; }
+.billing-banner strong { font-size: 15px; }
+.billing-banner .desc { margin: 2px 0 0; font-size: 12.5px; }
+.billing-summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 18px 20px; gap: 20px; }
+.billing-summary .balance-amount { display: block; margin: 4px 0 8px; }
+.billing-summary .desc { margin: 0; font-size: 12.5px; }
+.billing-info { border-left: 1px dashed var(--border); padding-left: 20px; font-size: 13.5px; }
+.billing-info p { margin: 0 0 6px; }
+.billing-link { border: 0; background: none; padding: 0; margin-left: 6px; font: inherit; font-size: 13px; color: var(--accent-end); cursor: pointer; }
+.billing-info .billing-link { margin-left: 0; }
+.billing-plan { padding: 18px 20px; }
+.billing-plan-head { padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
+.billing-plan-head strong { font-size: 16px; }
+.billing-plan-head .desc { margin: 4px 0 0; font-size: 13px; }
+.billing-features { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-top: 14px; }
+.billing-features ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; font-size: 13.5px; }
+.billing-features li { display: flex; gap: 10px; align-items: flex-start; }
+.billing-features li::before { flex: none; width: 14px; font-weight: 700; }
+.billing-features li.yes::before { content: '✓'; color: var(--green); }
+.billing-features li.no::before { content: '✕'; color: var(--red); }
+.billing-state { display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
+.billing-state.ok { background: var(--green-soft); color: var(--green); }
+.billing-state.wait { background: var(--amber-soft); color: var(--amber); }
+.billing-state.bad { background: var(--red-soft); color: var(--red); }
+.billing-state.muted { background: var(--surface-2); color: var(--text-secondary); }
+.billing-detail td { background: var(--surface); white-space: normal; }
+.billing-buy { padding: 4px 18px 14px; }
+@media (max-width: 760px) { .billing-summary, .billing-features { grid-template-columns: 1fr; } .billing-info { border-left: 0; padding-left: 0; } }

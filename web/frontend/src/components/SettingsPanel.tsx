@@ -3,7 +3,6 @@ import type { Dispatch, SetStateAction } from 'react';
 import EnvBoard from './EnvBoard';
 import ThemeSettings from './ThemeSettings';
 import HarnessSettings from './HarnessSettings';
-import PlatformAccountSettings from './PlatformAccountSettings';
 import MediaGatewaySettings from './MediaGatewaySettings';
 import { OptionsDropdown } from './SettingsSelect';
 import type { JobView } from './EnvBoard';
@@ -17,6 +16,8 @@ import AccountsPage from './AccountsPage';
 import ProfileSettings from './ProfileSettings';
 import PlanSettings from './PlanSettings';
 import UsageSettings from './UsageSettings';
+import BalanceSettings from './BalanceSettings';
+import BillingPage from './BillingPage';
 import { ComingSoon, DeviceSettings, ShortcutSettings, SkillSettings, StatsSettings, StorageSettings, TrashSettings } from './SettingsPages';
 import { NAV_ICONS } from './settingsNavIcons';
 
@@ -739,7 +740,8 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
             {sec === 'profile' && <ProfileSettings onOpenPersonas={onOpenPage ? () => onOpenPage('profile') : undefined} onOpenAccounts={() => setSec('accounts')} />}
             {sec === 'plan' && <PlanSettings onOpenBilling={() => setSec('billing')} />}
             {sec === 'usage' && <UsageSettings onOpenPlans={() => setSec('plan')} />}
-            {(sec === 'balance' || sec === 'billing') && <PlatformAccountSettings view={sec} />}
+            {sec === 'balance' && <BalanceSettings onOpenUsage={() => setSec('usage')} onOpenPlans={() => setSec('plan')} />}
+            {sec === 'billing' && <BillingPage onOpenUsage={() => setSec('usage')} onOpenPlans={() => setSec('plan')} />}
             {sec === 'theme' && <ThemeSettings />}
             {sec === 'shortcuts' && <ShortcutSettings />}
             {sec === 'stats' && <StatsSettings />}

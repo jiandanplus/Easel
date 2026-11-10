@@ -138,6 +138,36 @@ def reservation_view(row):
     }
 
 
+def grant_source(lot):
+    """Where a grant of points came from, in words the desktop can show."""
+    operator = lot.get("operator_id") or ""
+    if lot.get("internal"):
+        return "internal"
+    if lot.get("plan_id") == "easel-owner-allowance-v1":
+        return "owner"
+    if operator == "billing:verified":
+        return "purchase"
+    if operator.startswith("redemption:"):
+        return "redemption"
+    if operator.startswith("console"):
+        return "console"
+    return "test" if lot.get("test_only") else "other"
+
+
+def grant_view(lot):
+    return {
+        "id": lot["id"],
+        "source": grant_source(lot),
+        "plan_id": lot.get("plan_id"),
+        "plan_name": lot.get("plan_name"),
+        **{k: str(lot[k]) for k in ("issued", "available", "spent", "expired", "refunded")},
+        "frozen": lot["frozen"],
+        "revoked": lot["revoked"],
+        "starts_at": lot["starts_at"].isoformat() if lot.get("starts_at") else None,
+        "expires_at": lot["expires_at"].isoformat(),
+    }
+
+
 class CreditLedger:
     def __init__(self, db):
         self.db = db
@@ -178,6 +208,14 @@ class CreditLedger:
                 FROM internal_grants g JOIN credit_lots l ON l.id=g.lot_id
                 WHERE g.billing_account_id=%s""", (scope.billing_account_id,))).fetchone()
             has_test, has_live = row.pop("has_test"), row.pop("has_live")
+            # Every grant of points, newest first, for the desktop 余额 page ("我的充值").
+            lots = await (await c.execute("""SELECT l.id,l.issued,l.available,l.spent,l.expired,l.refunded,l.frozen,l.test_only,l.expires_at,
+                m.plan_id,m.operator_id,m.starts_at,p.name AS plan_name,
+                EXISTS(SELECT 1 FROM membership_revocations r WHERE r.membership_id=l.membership_id) AS revoked,
+                EXISTS(SELECT 1 FROM internal_grants g WHERE g.lot_id=l.id) AS internal
+                FROM credit_lots l LEFT JOIN memberships m ON m.id=l.membership_id LEFT JOIN plans p ON p.id=m.plan_id
+                WHERE l.billing_account_id=%s ORDER BY coalesce(m.starts_at,l.expires_at) DESC,l.id DESC LIMIT 100""",
+                (scope.billing_account_id,))).fetchall()
             return {
                 "unit": "microcredit",
                 "microcredits_per_point": "1000000",
@@ -189,6 +227,7 @@ class CreditLedger:
                 "active_requests": n["active"],
                 "pending_reconciliation_limit": PENDING_RECONCILIATION_LIMIT,
                 "test_only": not has_live,
+                "grants": [grant_view(lot) for lot in lots],
                 "funding_mode": "mixed"
                 if has_test and has_live
                 else "test"

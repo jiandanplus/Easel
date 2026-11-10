@@ -228,3 +228,15 @@ async def test_each_plan_has_yearly_monthly_and_one_time_prices(db, console, con
 
     with pytest.raises(PlatformError):
         await catalog.publish_offer(principal, priced('std-v1', 'week', '100', 'c'), '定价', 'price-5')
+
+
+@pytest.mark.asyncio
+async def test_wallet_lists_each_grant_with_its_source_and_remaining_points(db, console, console_role):
+    _, _, _, scope = await seed(db)
+    await MembershipService(db).publish_plan(PUBLISHER, live_plan('gift-v1'))
+    catalog, _, principal, _ = await low_catalog(console, console_role, 'admin')
+    await catalog.issue_plan(principal, 'wallet', 'gift-v1', '朋友试用', 'grant-1')
+    grants = (await CreditLedger(db).summary(scope))['grants']
+    issued = next(g for g in grants if g['plan_id'] == 'gift-v1')
+    assert (issued['source'], issued['plan_name'], issued['issued'], issued['available'], issued['revoked']) == ('console', '试用 gift-v1', '50000000', '50000000', False)
+    assert issued['expires_at'] and issued['starts_at']

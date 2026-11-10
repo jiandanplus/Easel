@@ -82,11 +82,18 @@ export interface CentralPlan {
   models?: string[] | null;
   pricing?: { default?: { numerator: string; denominator: string }; models?: Record<string, { numerator: string; denominator: string }> } | null;
 }
+/** One grant of points: a plan purchase, a redeemed code, an operator grant or the owner allowance. */
+export interface CentralGrant {
+  id: string; source: 'purchase' | 'redemption' | 'console' | 'owner' | 'internal' | 'test' | 'other';
+  plan_id: string | null; plan_name: string | null; issued: string; available: string; spent: string; expired: string; refunded: string;
+  frozen: boolean; revoked: boolean; starts_at: string | null; expires_at: string;
+}
 export interface CentralWallet {
   unit: 'microcredit'; microcredits_per_point: '1000000'; available: string; reserved: string;
   spent: string; expired: string; issued: string; pending_reconciliation: number; test_only: boolean;
   active_requests?: number; pending_reconciliation_limit?: number;
   frozen?: string; refunded?: string; funding_mode?: 'empty' | 'test' | 'live' | 'mixed'; test_available?: string; live_available?: string;
+  grants?: CentralGrant[];
   experience_available?: string; experience_issued?: string; experience_expires_at?: string | null;
 }
 export interface CentralEntitlements {
