@@ -71,7 +71,7 @@ class _Listener:
 STATUS_BUDGET_SECONDS = 15
 
 
-def create_router(workspace, guard, close_idle=None, *, transport=None, url=None, login_timeout=300):
+def create_router(workspace, guard, close_idle=None, *, transport=None, url=None, login_timeout=300, on_change=None):
     router = APIRouter(prefix="/api/platform/central", dependencies=[Depends(require_local_request)])
     router.platform_changes = 0
     pending = None
@@ -108,6 +108,8 @@ def create_router(workspace, guard, close_idle=None, *, transport=None, url=None
             return await invoke(method, *args, **kwargs)
         finally:
             router.platform_changes -= 1
+            if on_change:  # Sign-out or a redeemed code can change whether a subscription is active.
+                on_change()
 
     async def _close_current(error=None):
         nonlocal pending, login_error
@@ -150,6 +152,8 @@ def create_router(workspace, guard, close_idle=None, *, transport=None, url=None
                         raise HTTPException(409, {"code": "login_expired", "message": "登录已超时，请重试"})
                     await invoke(current["client"].save_auth, auth)
                     committed = True
+                if on_change:
+                    on_change()
                 if close_idle:
                     result = close_idle()
                     if inspect.isawaitable(result):

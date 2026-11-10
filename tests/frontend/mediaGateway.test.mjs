@@ -91,7 +91,7 @@ test('media gateway API uses uncached GET and nested PUT without browser credent
   assert.deepEqual(JSON.parse(calls[1].options.body), JSON.parse(JSON.stringify(payload)));
   assert.equal(calls[1].options.headers.Authorization, undefined);
 });
-test('managed gateway keeps retained provider table editable while selftest stays blocked', () => {
+test('AI 服务商 offers custom providers and the subscription status, not the unified gateway', () => {
   const source = readFileSync(new URL('../../web/frontend/src/components/SettingsPanel.tsx', import.meta.url), 'utf8');
   const parsed = ts.createSourceFile('settings.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'SettingsPanel');
@@ -105,16 +105,9 @@ test('managed gateway keeps retained provider table editable while selftest stay
   });
   const render = () => { cursor = 0; return component({ onClose() {} }); };
   nodes(render(), 'button').find(node => text(node) === '生图').props.onClick();
-  let tree = render();
-  assert.equal(nodes(tree, 'button').find(node => text(node) === '保存配置').props.disabled, false);
-  const value = stored(); value.modes.image = 'new-api'; value.configured.image = true; value.managed.image = true;
-  nodes(tree, 'media-gateway')[0].props.onChange(value); tree = render();
-  assert.match(text(tree), /当前通道使用统一网关.*配置完整/);
-  assert.equal(nodes(tree, 'button').find(node => text(node) === '保存配置').props.disabled, false);
-  assert.equal(nodes(tree, 'button').find(node => text(node) === '全部自测').props.disabled, true);
-  assert.equal(nodes(tree, 'div').some(node => node.props.className === 'board'), true);
-  value.modes.image = 'custom'; value.managed.image = false; nodes(tree, 'media-gateway')[0].props.onChange({ ...value }); tree = render();
-  assert.doesNotMatch(text(tree), /当前通道使用统一网关/);
+  const tree = render();
+  assert.equal(nodes(tree, 'media-gateway').length, 0);  // The AI 服务商 page no longer offers the unified gateway.
+  assert.match(text(tree), /正在确认服务来源/);  // Before engine settings arrive it does not guess.
   assert.equal(nodes(tree, 'button').find(node => text(node) === '保存配置').props.disabled, false);
   assert.equal(nodes(tree, 'div').some(node => node.props.className === 'board'), true);
 });

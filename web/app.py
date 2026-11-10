@@ -645,9 +645,36 @@ def _direct_api_enabled() -> bool:
     return _harness_settings()["runtime"] == "api"
 
 
+_SUBSCRIPTION_STATE = None
+
+
+def _subscription_state():
+    global _SUBSCRIPTION_STATE
+    from easel.subscription_state import SubscriptionState
+    if _SUBSCRIPTION_STATE is None or _SUBSCRIPTION_STATE.root != PROJECT_ROOT:
+        _SUBSCRIPTION_STATE = SubscriptionState(PROJECT_ROOT)
+    return _SUBSCRIPTION_STATE
+
+
+def _effective_source(config: dict) -> str:
+    """With an active central subscription use it; otherwise use the custom providers."""
+    if os.environ.get("EASEL_SUBSCRIPTION_AUTO", "1") == "0":
+        return config["service_source"]
+    from easel.harnesses.capabilities import supports_subscription
+    active = _subscription_state().active()
+    if active is None:  # Not known yet (first seconds after start): keep the saved choice.
+        return config["service_source"]
+    return "subscription" if active and supports_subscription(config["runtime"], "central") else "custom"
+
+
 def _harness_settings() -> dict:
     try:
-        return harness_store.settings(OUTPUTS_DIR, read_settings(ENV_FILE))
+        env = read_settings(ENV_FILE)
+        config = harness_store.settings(OUTPUTS_DIR, env)
+        source = _effective_source(config)
+        if source != config["service_source"] or (source == "subscription" and config["subscription_backend"] != "central"):
+            config = harness_store.settings(OUTPUTS_DIR, env, service_source=source)
+        return config
     except HarnessError as error:
         raise HTTPException(409, str(error)) from error
 
@@ -1846,7 +1873,8 @@ from easel.harnesses.rpc import close_sessions as _close_platform_sessions
 _platform_router = _create_platform_router(lambda: PROJECT_ROOT, _platform_change_guard, _close_platform_sessions)
 app.include_router(_platform_router)
 from easel.platform.central_web import create_router as _create_central_platform_router
-_central_platform_router = _create_central_platform_router(lambda: PROJECT_ROOT, _platform_change_guard, _close_platform_sessions)
+_central_platform_router = _create_central_platform_router(lambda: PROJECT_ROOT, _platform_change_guard, _close_platform_sessions,
+                                                           on_change=lambda: _subscription_state().refresh())
 app.include_router(_central_platform_router)
 
 async def _accept_task_context(req, runtime, config, env=None):

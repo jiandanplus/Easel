@@ -28,21 +28,17 @@ test('Pi built-in custom configuration uses provider form without an install ins
   assert.ok(nodes(tree,'settings-select').some(n=>n.props.label==='工具权限'));
 });
 
-test('Pi central subscription saves while Pi is unavailable for legacy subscriptions', async () => {
+test('Pi with an active subscription saves the default subscription model', async () => {
   const view=setup({runtime:'pi',source:'subscription',backend:'central'});view.render();await settle();view.render();await settle();
   let tree=view.render();
-  const engine=nodes(tree,'settings-select').find(n=>n.props.label==='执行引擎');
-  assert.ok(engine.props.options.some(n=>n.value==='pi'));
+  assert.ok(nodes(tree,'settings-select').find(n=>n.props.label==='执行引擎').props.options.some(n=>n.value==='pi'));
   nodes(tree,'settings-select').find(n=>n.props.label==='订阅模型').props.onChange('central-text');
   tree=view.render();
   assert.equal(nodes(tree,'button').find(n=>text(n)==='保存底座').props.disabled,false);
   nodes(tree,'button').find(n=>text(n)==='保存底座').props.onClick();await settle();
   assert.equal(view.saves[0].runtime,'pi');
+  assert.equal(view.saves[0].route.service_source,'subscription');
   assert.equal(view.saves[0].route.subscription_backend,'central');
-  nodes(view.render(),'settings-select').find(n=>n.props.label==='订阅渠道').props.onChange('legacy');
-  view.render();await settle();tree=view.render();
-  assert.equal(nodes(tree,'button').find(n=>text(n)==='保存底座').props.disabled,true);
-  assert.ok(!nodes(tree,'settings-select').find(n=>n.props.label==='执行引擎').props.options.some(n=>n.value==='pi'));
 });
 
 test('settings defer environment probes and wait for the actual runtime before loading models', () => {
@@ -141,55 +137,25 @@ function setup({ runtime = 'openclaw', locked = false, installed = true, saveErr
   };
 }
 
-test('parent receives persisted service source on read and successful save, never on draft selection', async () => {
-  const view = setup({ runtime: 'codex', origin: 'bundled' }); view.render(); await settle();
-  assert.equal(view.settingsChanges.length, 1);
-  assert.equal(view.settingsChanges[0].service_source, 'custom');
-  nodes(view.render(), 'button').find(node => text(node) === '订阅服务').props.onClick();
-  view.render(); await settle();
-  let tree = view.render();
-  nodes(tree, 'settings-select').find(node => node.props.label === '订阅模型').props.onChange('central-text');
-  tree = view.render();
-  assert.equal(view.settingsChanges.length, 1);
-  nodes(tree, 'button').find(node => text(node) === '保存底座').props.onClick(); await settle();
-  assert.equal(view.settingsChanges.length, 2);
-  assert.equal(view.settingsChanges[1].service_source, 'subscription');
-  assert.equal(view.settingsChanges[1].subscription_backend, 'central');
+test('the service source comes from the server and has no manual switch', async () => {
+  const custom = setup({ runtime: 'codex', origin: 'bundled' }); custom.render(); await settle();
+  let tree = custom.render();
+  assert.equal(custom.settingsChanges[0].service_source, 'custom');
+  for (const label of ['自定义服务', '订阅服务', '云端执行（暂未开放）']) assert.equal(nodes(tree, 'button').some(node => text(node) === label), false);
+  assert.equal(nodes(tree, 'settings-select').some(node => node.props.label === '订阅模型' || node.props.label === '订阅渠道'), false);
+  const subscribed = setup({ runtime: 'codex', source: 'subscription', backend: 'central' }); subscribed.render(); await settle(); subscribed.render(); await settle();
+  tree = subscribed.render();
+  assert.ok(nodes(tree, 'settings-select').some(node => node.props.label === '订阅模型'));
+  assert.equal(nodes(tree, 'settings-select').some(node => node.props.label === '订阅渠道'), false);
 });
 
 test('failed save leaves parent on its persisted service source', async () => {
-  const view = setup({ runtime: 'codex', saveError: 'rejected' }); view.render(); await settle();
-  nodes(view.render(), 'button').find(node => text(node) === '订阅服务').props.onClick();
-  view.render(); await settle();
+  const view = setup({ runtime: 'codex', source: 'subscription', backend: 'central', saveError: 'rejected' }); view.render(); await settle(); view.render(); await settle();
   nodes(view.render(), 'settings-select').find(node => node.props.label === '订阅模型').props.onChange('central-text');
   nodes(view.render(), 'button').find(node => text(node) === '保存底座').props.onClick(); await settle();
   assert.equal(view.settingsChanges.length, 1);
-  assert.equal(view.settingsChanges[0].service_source, 'custom');
+  assert.equal(view.settingsChanges[0].service_source, 'subscription');
   assert.match(text(view.render()), /保存失败/);
-});
-
-test('new explicit subscription selects central while an existing unversioned subscription stays legacy', async () => {
-  const fresh = setup({ runtime: 'codex' }); fresh.render(); await settle();
-  nodes(fresh.render(), 'button').find(node => text(node) === '订阅服务').props.onClick();
-  let tree = fresh.render(); await settle(); tree = fresh.render();
-  let backend = nodes(tree, 'settings-select').find(node => node.props.label === '订阅渠道');
-  assert.equal(backend.props.value, 'central');
-  const models = nodes(tree, 'settings-select').find(node => node.props.label === '订阅模型');
-  assert.ok(models.props.options.some(option => option.value === 'central-text'));
-  models.props.onChange('central-text'); tree = fresh.render();
-  nodes(tree, 'button').find(node => text(node) === '保存底座').props.onClick(); await settle();
-  assert.equal(fresh.saves[0].route.subscription_backend, 'central');
-  const existing = setup({ source: 'subscription', runtime: 'codex' }); existing.render(); await settle(); existing.render(); await settle();
-  backend = nodes(existing.render(), 'settings-select').find(node => node.props.label === '订阅渠道');
-  assert.equal(backend.props.value, 'legacy');
-});
-test('changing subscription backend clears the prior model and does not save until explicit selection', async () => {
-  const view = setup({ source: 'subscription', runtime: 'codex', backend: 'legacy' }); view.render(); await settle(); view.render(); await settle();
-  const backend = nodes(view.render(), 'settings-select').find(node => node.props.label === '订阅渠道');
-  backend.props.onChange('central'); let tree = view.render(); await settle(); tree = view.render();
-  assert.equal(nodes(tree, 'settings-select').find(node => node.props.label === '订阅模型').props.value, '');
-  assert.equal(nodes(tree, 'button').find(node => text(node) === '保存底座').props.disabled, true);
-  assert.equal(view.saves.length, 0);
 });
 
 function nodes(tree, type) {
@@ -424,18 +390,13 @@ test('bundled Codex renders provider configuration and version without native mo
   assert.equal(view.saves[0].model, 'new-model');
 });
 
-test('central subscription preview offers Pi and Codex and restores independent custom model', async()=>{
- const view=setup({runtime:'codex',origin:'bundled'});view.render();await settle();
- nodes(view.render(),'button').find(n=>text(n)==='订阅服务').props.onClick();await settle();
- let tree=view.render();assert.equal(nodes(tree,'bundled-provider').length,0);
+test('with a subscription the custom provider stays configurable as the fallback', async()=>{
+ const view=setup({runtime:'codex',origin:'bundled',source:'subscription',backend:'central'});view.render();await settle();view.render();await settle();
+ const tree=view.render();
+ assert.equal(nodes(tree,'bundled-provider').length,1);
+ assert.match(text(tree),/订阅到期或未开通时使用/);
  assert.ok(nodes(tree,'settings-select').some(n=>n.props.label==='Codex 沙箱'));
- assert.match(text(tree),/云端执行.*暂未开放/);
- assert.ok(nodes(tree,'button').find(n=>text(n)==='云端执行（暂未开放）').props.disabled);
- assert.deepEqual(nodes(tree,'settings-select')[0].props.options.map(x=>x.value),['pi','codex']);
  assert.equal(view.saves.length,0);
- nodes(tree,'button').find(n=>text(n)==='自定义服务').props.onClick();
- tree=view.render();assert.equal(nodes(tree,'bundled-provider').length,1);
- nodes(tree,'button')[0].props.onClick();await settle();assert.equal(view.saves[0].model,'codex-model');
 });
 
 test('subscription unavailable gateway shows human reason and source-aware authentication', async()=>{
@@ -444,13 +405,10 @@ test('subscription unavailable gateway shows human reason and source-aware authe
 });
 
 
-test('leaving pending subscription catalog restores custom native model loading', async () => {
- let resolve; const catalogPromise = new Promise(done => { resolve = done; });
+test('custom source never waits for the subscription catalog', async () => {
+ const catalogPromise = new Promise(() => {});
  const view = setup({runtime:'codex',catalogPromise}); view.render(); await settle();
- nodes(view.render(),'button').find(n=>text(n)==='订阅服务').props.onClick(); view.render();
- nodes(view.render(),'button').find(n=>text(n)==='自定义服务').props.onClick(); view.render();
  assert.equal(nodes(view.render(),'button').find(n=>text(n)==='拉取模型')?.props.disabled,false);
- resolve({models:[],ready:true}); await settle();
  nodes(view.render(),'button').find(n=>text(n)==='拉取模型').props.onClick(); await settle();
  assert.deepEqual(view.modelRequests,['codex']);
 });

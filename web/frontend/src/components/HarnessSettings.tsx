@@ -121,7 +121,7 @@ export default function HarnessSettings({ onChange, onSelect, onSettingsChange }
           <div className="settings-engine-control">
             <SettingsSelect label="执行引擎" value={runtime} disabled={!settings || settingsLoading || busy || settings.locked}
               options={(settings?.agents || [{ id: 'pi', label: '优创内置智能体 · Pi', installed: false }])
-                .filter(agent => source === 'custom' || supportsSubscription(agent as HarnessSettingsResponse['agents'][number])).map((agent) => ({
+                .map((agent) => ({
                 value: agent.id,
                 label: `${agent.label}${agent.installed ? '' : '（未安装 / 未配置）'}`,
               }))}
@@ -144,27 +144,20 @@ export default function HarnessSettings({ onChange, onSelect, onSettingsChange }
           {runtime !== settings?.runtime && <p className="desc">切换待保存</p>}
         </div>
       </div>
-      <fieldset className="platform-source" disabled={!settings || settingsLoading || busy || settings.locked}>
-        <legend>服务来源与执行位置</legend>
-        <div className="platform-actions">
-          <button type="button" className="btn btn-sm" aria-pressed={source === 'custom'} onClick={() => { setSource('custom'); setModelNote(''); }}>自定义服务</button>
-          <button type="button" className="btn btn-sm" aria-pressed={source === 'subscription'} onClick={() => { if (source !== 'subscription' && settings?.service_source !== 'subscription') { setBackend('central'); setSubscriptionModel(''); } setSource('subscription'); }}>订阅服务</button>
-          <button type="button" className="btn btn-sm" aria-pressed={true} disabled>本机执行</button>
-          <button type="button" className="btn btn-sm" disabled>云端执行（暂未开放）</button>
-        </div>
-        {source === 'subscription' && <>
-          <SettingsSelect label="订阅渠道" value={backend} disabled={subscriptionLoading || busy || settings?.locked}
-            options={[{ value: 'central', label: '中央订阅' }, { value: 'legacy', label: '旧版测试订阅' }]}
-            onChange={value => { if (value !== backend) { setBackend(value as SubscriptionBackend); setSubscriptionModel(''); setSubscriptionModels([]); setModelNote(''); } }} />
+      {source === 'subscription' && <div className="settings-field">
+        <span className="settings-field-label">订阅模型</span>
+        <div className="settings-field-body">
           <SettingsSelect label="订阅模型" value={subscriptionModel} disabled={subscriptionLoading || busy || settings?.locked}
             options={[{ value: '', label: '请选择服务端授权模型' }, ...subscriptionModels.map(item => ({ value: item.id, label: `${item.name || item.id}${item.test_only ? '（测试点数）' : ''}` }))]} onChange={setSubscriptionModel} />
-          {!supportsSubscription(selected) && <p role="status">当前引擎不支持此订阅渠道</p>}
+          <p className="desc">已开通订阅，对话默认用这个模型；发消息时也可以在输入框里换模型。</p>
+          {!supportsSubscription(selected) && <p role="status">当前执行引擎不能使用订阅，会改用自定义接口。</p>}
           {modelNote && <p role="status">{modelNote}</p>}
-        </>}
-      </fieldset>
+        </div>
+      </div>}
       {runtime !== 'openclaw' && runtime !== 'api' && (
         <>
-          {source === 'custom' && (bundled ? <BundledProviderSettings disabled={busy || settingsLoading || !selected?.installed}
+          {source === 'subscription' && bundled && <p className="desc settings-fallback-note">下面是自定义接口，订阅到期或未开通时使用。</p>}
+          {(bundled || source === 'custom') && (bundled ? <BundledProviderSettings disabled={busy || settingsLoading || !selected?.installed}
             runtime={runtime} version={selected?.version || ''} onSaved={(value) => {
               setModel(value);
               setCatalogs((previous) => ({ ...previous, [runtime]: [] }));

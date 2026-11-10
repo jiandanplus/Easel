@@ -3,7 +3,6 @@ import type { Dispatch, SetStateAction } from 'react';
 import EnvBoard from './EnvBoard';
 import ThemeSettings from './ThemeSettings';
 import HarnessSettings from './HarnessSettings';
-import MediaGatewaySettings from './MediaGatewaySettings';
 import { OptionsDropdown } from './SettingsSelect';
 import type { JobView } from './EnvBoard';
 import {
@@ -11,7 +10,7 @@ import {
   fetchModelChannels, runChannelSelftest, saveModelConfig,
   fetchLocalAgents, enableLocalAgent, fetchAvailableModels,
 } from '../lib/api';
-import type { EnvTool, ModelRow, SelftestResult, LocalAgentInfo, MediaCapability, MediaGatewaySettings as MediaGatewayState, HarnessSettingsResponse } from '../lib/api';
+import type { EnvTool, ModelRow, SelftestResult, LocalAgentInfo, HarnessSettingsResponse } from '../lib/api';
 import AccountsPage from './AccountsPage';
 import ProfileSettings from './ProfileSettings';
 import PlanSettings from './PlanSettings';
@@ -96,14 +95,6 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
   const setupBanner = banner && usesSubscription
     ? `${subscriptionLabel} · ${harnessSettings.subscription_model ? '模型已保存，请新建对话' : '请选择模型并保存底座'}`
     : banner;
-  const [mediaGateway, setMediaGateway] = useState<MediaGatewayState | null>(null);
-  const [mediaGatewayRevision, setMediaGatewayRevision] = useState(0);
-  const onMediaGatewayChange = useCallback((value: MediaGatewayState) => {
-    setMediaGateway(value);
-    setMediaGatewayRevision(revision => revision + 1);
-  }, []);
-  const mediaCapability: MediaCapability | null = chan === 'speech' ? 'voice' : ['image', 'video', 'music'].includes(chan) ? chan as MediaCapability : null;
-  const usesMediaGateway = !!mediaCapability && mediaGateway?.managed[mediaCapability] === true;
 
   // ── 环境安装（引擎真实数据） ──────────────────────────────
   const [tools, setTools] = useState<EnvTool[]>([]);
@@ -289,10 +280,9 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
       .catch((e) => { if (alive) setModelErr(e instanceof Error ? e.message : '模型配置读取失败'); })
       .finally(() => { if (alive) setModelLoading(false); });
     return () => { alive = false; };
-  }, [harness, selectedHarness, mediaGatewayRevision]);
+  }, [harness, selectedHarness]);
 
   const doSelftest = useCallback(async (channel: string) => {
-    if (usesMediaGateway) return;
     setTesting(true);
     setSelftestNote('');
     try {
@@ -307,7 +297,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
     } finally {
       setTesting(false);
     }
-  }, [refreshEnv, usesMediaGateway]);
+  }, [refreshEnv]);
 
   // ── 模型配置可编辑（v2）：保存到 .env / openclaw ──────────
   const [saving, setSaving] = useState(false);
@@ -693,15 +683,15 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
               className="btn btn-sm btn-primary"
               onClick={() => void saveCurrent()}
               disabled={saving || modelLoading || sec !== 'model' || (chan === 'chat' && (selectedHarness !== harness || !['api', 'openclaw'].includes(harness)))}
-              title={usesMediaGateway ? '保存供应商配置' : chan === 'chat' && usesSubscription ? `${subscriptionLabel} · 请使用「保存底座」` : chan === 'chat' && !['api', 'openclaw'].includes(harness) ? '请使用「保存底座」或「保存供应商」' : undefined}
+              title={chan === 'chat' && usesSubscription ? `${subscriptionLabel} · 请使用「保存底座」` : chan === 'chat' && !['api', 'openclaw'].includes(harness) ? '请使用「保存底座」或「保存供应商」' : undefined}
             >
               {saving ? '保存中…' : '保存配置'}
             </button>
             <button
               className="btn btn-sm"
               onClick={() => void doSelftest(sec === 'model' ? chan : 'all')}
-              disabled={usesMediaGateway || testing || modelLoading || selectedHarness !== harness || (!['api', 'openclaw'].includes(harness) && (sec !== 'model' || chan === 'chat'))}
-              title={usesMediaGateway ? '统一网关自测暂不可用' : chan === 'chat' && usesSubscription ? `${subscriptionLabel} · 自测暂不可用` : !['api', 'openclaw'].includes(harness) ? '当前引擎自测暂不可用' : undefined}
+              disabled={testing || modelLoading || selectedHarness !== harness || (!['api', 'openclaw'].includes(harness) && (sec !== 'model' || chan === 'chat'))}
+              title={chan === 'chat' && usesSubscription ? `${subscriptionLabel} · 自测暂不可用` : !['api', 'openclaw'].includes(harness) ? '当前引擎自测暂不可用' : undefined}
             >
               {testing ? '自测中…' : '全部自测'}
             </button>
@@ -754,7 +744,12 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
             {sec === 'storage' && <StorageSettings />}
             {sec === 'model' && (
               <section className="st-sec active">
-                <MediaGatewaySettings onChange={onMediaGatewayChange} />
+                <div className={`settings-source${usesSubscription ? ' on' : ''}`} role="status" aria-label="服务来源">
+                  <strong>{!harnessSettings ? '正在确认服务来源…' : usesSubscription ? '正在使用订阅' : '正在使用自定义接口'}</strong>
+                  <span>{!harnessSettings ? '开通了订阅就优先使用订阅；没有开通时使用下面各通道配置的自定义接口。' : usesSubscription
+                    ? '已开通订阅：对话、生图、视频、配音等优先使用订阅接口，按套餐扣点。订阅到期后自动改用下面配置的自定义接口。'
+                    : '还没有开通订阅：使用下面各通道配置的自定义接口。开通套餐后会自动改用订阅接口。'}</span>
+                </div>
                 <div className="tabbar">
                   {CHANNELS.map((c) => (
                     <button key={c.id} className={`tab${chan === c.id ? ' active' : ''}`} onClick={() => setChan(c.id)}>
@@ -842,11 +837,6 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
                     {renderBoard([...transRows, localRow], { onRow: (i, p) => updateRow(setTransRows, i, p) })}
                   </section>
                 )}
-
-                {usesMediaGateway && mediaCapability && mediaGateway && <section className="st-panel active media-gateway-channel" aria-label="当前媒体通道">
-                  <strong>当前通道使用统一网关 · {mediaGateway.configured[mediaCapability] ? '配置完整' : '配置待完善'} · 模型可用性待验证</strong>
-                  <p>模型：{mediaGateway[mediaCapability].model || '供应商默认模型'} · 网关：{mediaGateway.baseUrl || '尚未填写'}</p>
-                </section>}
 
                 {chan === 'speech' && (
                   <section className="st-panel active">

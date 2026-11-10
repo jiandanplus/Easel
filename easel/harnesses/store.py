@@ -38,10 +38,11 @@ def write_json(path: Path, data: dict) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def settings(outputs: Path, env: dict[str, str]) -> dict:
+def settings(outputs: Path, env: dict[str, str], *, service_source: str | None = None) -> dict:
+    """service_source, when given, replaces the saved choice (the automatic subscription rule)."""
     data = read_json(outputs / "_harness" / "config.json")
     from easel.service_contracts import ServiceRoute
-    route = ServiceRoute(data.get("service_source", "custom"), data.get("execution_target", "local"))
+    route = ServiceRoute(service_source or data.get("service_source", "custom"), data.get("execution_target", "local"))
     state_dir = Path(env.get("EASEL_OPENCLAW_STATE_DIR") or Path.home() / ".openclaw-easel")
     legacy = "EASEL_CHAT_TRANSPORT" in env or (state_dir / "openclaw.json").is_file()
     default = "openclaw" if legacy else "pi"
@@ -63,7 +64,7 @@ def settings(outputs: Path, env: dict[str, str]) -> dict:
         from .provider import provider_status
         provider = provider_status(outputs.parent)
         models = {**models, runtime: provider["model"] if provider["configured"] else ""}
-    backend = data.get("subscription_backend", "legacy")
+    backend = "central" if service_source == "subscription" else data.get("subscription_backend", "legacy")
     if backend not in ("legacy", "central"):
         raise HarnessError("无效的订阅后端")
     sandbox = data.get("sandbox", "workspace-write")
