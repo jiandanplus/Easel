@@ -62,6 +62,7 @@ from easel.timeouts import TIMEOUT_CHAT, TIMEOUT_DIRECT, TIMEOUT_PRODUCE
 from easel.routes.schemas import AttachmentRef, ChatRequest
 from easel.routes import planning as _planning
 from easel.routes import updates as _updates
+from easel.routes import system as _system
 from easel.routes import accounts as _accounts
 from easel.routes import outputs as _outputs
 from easel.routes import settings as _settings
@@ -1690,6 +1691,7 @@ def _submit_sync_task(message: str, timeout: int, context: TaskContext, *,
 
 
 app.include_router(_outputs.create_router(sys.modules[__name__]))
+app.include_router(_system.create_router(sys.modules[__name__]))
 
 
 app.include_router(_accounts.create_router(sys.modules[__name__]))

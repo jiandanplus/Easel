@@ -158,7 +158,7 @@ export default function OutputsPage({ jumpPath, onJumpHandled, resolveSource, on
     e.stopPropagation();
     const isDir = node.type === 'dir';
     const label = isDir ? `项目/文件夹「${node.meta?.title || node.name}」及其全部内容` : `文件「${node.name}」`;
-    if (!window.confirm(`确定删除${label}？\n此操作不可恢复。`)) return;
+    if (!window.confirm(`把${label}移到回收站？\n30 天内可以在「设置 → 回收站」里恢复。`)) return;
     try {
       await deleteOutput(node.path);
       setSelected((cur) => (cur?.path === node.path ? null : cur));

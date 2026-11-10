@@ -3,15 +3,16 @@ import { platformStatus, platformConfigure, platformAuthenticate, platformLogout
 import type { PlatformStatus, PlatformPlan, PlatformGrant, PlatformUsage, PlatformDevice } from '../lib/api';
 import './PlatformAccountSettings.css';
 import CentralAccountSettings from './CentralAccountSettings';
+import type { AccountView } from './CentralAccountSettings';
 
-export default function PlatformAccountSettings() {
+export default function PlatformAccountSettings({ view = 'all' }: { view?: AccountView } = {}) {
   const [legacyExpanded, setLegacyExpanded] = useState(false);
   return <div className="platform-account-container">
-    <CentralAccountSettings />
-    <div className="central-account-legacy">
+    <CentralAccountSettings view={view} />
+    {(view === 'all' || view === 'profile') && <div className="central-account-legacy">
       <button type="button" className="btn btn-sm" aria-expanded={legacyExpanded} aria-controls="legacy-platform-account" onClick={() => setLegacyExpanded(!legacyExpanded)}>高级：旧测试账号 {legacyExpanded ? '收起' : '展开'}</button>
       {legacyExpanded && <div id="legacy-platform-account"><LegacyPlatformAccountSettings /></div>}
-    </div>
+    </div>}
   </div>;
 }
 

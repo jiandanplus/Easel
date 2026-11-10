@@ -47,7 +47,7 @@ for (const clean_end of [false, undefined]) {
     assert.equal(view.state.sessions[0], view.original);
     assert.equal(view.state.sessions[0].messages.length, 2);
     assert.equal(view.state.reads.length, 1);
-    assert.match(view.state.notice?.message || '', /账号与订阅.*中断请求状态/);
+    assert.match(view.state.notice?.message || '', /余额.*待核算请求/);
     assert.match(view.state.notice?.message || '', /新建对话|不要.*重发/);
   });
 }

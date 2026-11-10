@@ -1298,3 +1298,16 @@ export function fetchAvailableModels(
     body: JSON.stringify({ baseUrl, key, protocol, slot, name }),
   });
 }
+
+// ── 设置：本机、数据存储、回收站 ───────────────────────────
+export interface SystemPlace { key: string; label: string; desc: string; path: string; exists: boolean; bytes: number; files: number }
+export interface SystemInfo { device: { name: string; os: string; arch: string; python: string }; workspace: string; storage: SystemPlace[] }
+export function fetchSystem(): Promise<SystemInfo> { return request<SystemInfo>('/api/system'); }
+export function openSystemPlace(key: string): Promise<{ ok: boolean }> {
+  return request('/api/system/open', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
+}
+export interface TrashItem { id: string; name: string; original: string; kind: 'dir' | 'file'; bytes: number; files: number; deleted_at: number; expires_at: number }
+export function fetchTrash(): Promise<{ items: TrashItem[]; keep_days: number }> { return request('/api/trash'); }
+export function restoreTrash(id: string): Promise<{ id: string; restored: string }> { return request(`/api/trash/${encodeURIComponent(id)}/restore`, { method: 'POST' }); }
+export function removeTrash(id: string): Promise<{ ok: boolean }> { return request(`/api/trash/${encodeURIComponent(id)}`, { method: 'DELETE' }); }
+export function emptyTrash(): Promise<{ ok: boolean; removed: number }> { return request('/api/trash', { method: 'DELETE' }); }

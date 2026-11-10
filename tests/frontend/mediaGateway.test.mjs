@@ -101,7 +101,7 @@ test('managed gateway keeps retained provider table editable while selftest stay
     React: { Fragment: 'fragment', createElement: (type, props, ...children) => ({ type, props: props || {}, children: children.flat() }) },
     useState: initial => { const i = cursor++; if (!(i in states)) states[i] = typeof initial === 'function' ? initial() : initial === true ? false : initial; return [states[i], next => { states[i] = typeof next === 'function' ? next(states[i]) : next; }]; },
     useEffect() {}, useCallback: callback => callback, useRef: value => ({ current: value }),
-    CHANNELS: [{ id: 'image', label: '生图' }], MediaGatewaySettings: 'media-gateway', HarnessSettings: 'harness', ThemeSettings: 'theme', PlatformAccountSettings: 'account', EnvBoard: 'env', IconSlidersHorizontal: 'icon', IconPackage: 'icon', IconEllipsis: 'icon',
+    CHANNELS: [{ id: 'image', label: '生图' }], SETTINGS_GROUPS: [], NAV_ICONS: {}, MediaGatewaySettings: 'media-gateway', HarnessSettings: 'harness', ThemeSettings: 'theme', PlatformAccountSettings: 'account', EnvBoard: 'env', IconSlidersHorizontal: 'icon', IconPackage: 'icon', IconEllipsis: 'icon',
   });
   const render = () => { cursor = 0; return component({ onClose() {} }); };
   nodes(render(), 'button').find(node => text(node) === '生图').props.onClick();

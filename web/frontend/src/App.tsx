@@ -17,6 +17,7 @@ import BreakdownPage from './components/BreakdownPage';
 import AppTopbar from './components/AppTopbar';
 import OnboardingWizard from './components/OnboardingWizard';
 import SettingsPanel from './components/SettingsPanel';
+import type { Sec as SettingsSection } from './components/SettingsPanel';
 import { fetchStatus, fetchPersonas, streamChat, fetchLastTurn, stopChat, fetchChatTurn, withdrawChatTurn, fetchArtifactReference, subscribeCentralAccountBoundary } from './lib/api';
 import type { PersonaItem, UploadedFile, ChatQuestion, ChatTurnSelection, WorkbenchContract, StatusResponse, ChatSubmissionError } from './lib/api';
 import { createComposerDraftStore, draftScopeKey } from './lib/composerDrafts';
@@ -102,7 +103,7 @@ export default function App() {
     return () => narrow.removeEventListener('change', handleResize);
   }, []);
   const [settingsSectionRequest, setSettingsSectionRequest] = useState(0);
-  const [settingsSection, setSettingsSection] = useState<'model' | 'theme' | 'account'>('model');
+  const [settingsSection, setSettingsSection] = useState<'model' | 'theme' | 'account' | SettingsSection>('model');
   // 装完还没配模型时，首开要把用户直接带到模型设置页（安装脚本不再在终端问 Key）
   const [needModelSetup, setNeedModelSetup] = useState(false);
 
@@ -809,7 +810,7 @@ export default function App() {
       }
       const central = source === 'subscription' && backend === 'central';
       if (central && last.clean_end !== true) {
-        setResendNotice({ sessionId, blocked: true, message: '上一轮结果或费用尚未确认，已保留原消息。请到设置 → 账号与订阅 → 中断请求状态查询；不要直接重发原任务。如需发起独立任务，请新建对话。' });
+        setResendNotice({ sessionId, blocked: true, message: '上一轮结果或费用尚未确认，已保留原消息。请到设置 → 余额 → 待核算请求查询；不要直接重发原任务。如需发起独立任务，请新建对话。' });
         return;
       }
       setResendNotice(central ? { sessionId, blocked: false, message: '本次重新生成会创建新任务，并按新请求另行计点。' } : null);
@@ -1210,7 +1211,7 @@ export default function App() {
     setActiveSessionId(newSession.id);
   }, [activeSessionId]);
 
-  const openSettings = (section: 'model' | 'theme' | 'account') => {
+  const openSettings = (section: 'model' | 'theme' | 'account' | SettingsSection) => {
     setHistoryOpen(false);
     setSettingsSection(section);
     setSettingsSectionRequest(request => request + 1);
@@ -1229,6 +1230,24 @@ export default function App() {
     closeSettings();
     setCurrentPage(page);
   };
+
+  // Global shortcuts (listed in 设置 → 快捷键). The ref keeps the handler pointed at the latest state.
+  const shortcutActions = useRef({ settings: () => {}, newChat: () => {} });
+  shortcutActions.current = { settings: () => openSettings('model'), newChat: () => { closeSettings(); handleNewChat(); } };
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || event.isComposing) return;
+      const key = event.key.toLowerCase();
+      if (key === ',') { event.preventDefault(); shortcutActions.current.settings(); }
+      else if (key === 'n') { event.preventDefault(); shortcutActions.current.newChat(); }
+      else if (key === 'k') {
+        const input = document.querySelector<HTMLInputElement>('.topbar-search input');
+        if (input) { event.preventDefault(); input.focus(); input.select(); }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <div className="app-layout">
@@ -1266,6 +1285,7 @@ export default function App() {
           <div className="page-view" hidden={settingsOpen}>{renderPage()}</div>
           {settingsOpen && <SettingsPanel initialSection={settingsSection} sectionRequest={settingsSectionRequest}
             banner={needModelSetup ? '配置创作服务' : ''}
+            onOpenPage={page => navigateToPage(page)}
             onClose={closeSettings} />}
         </div>
       </main>

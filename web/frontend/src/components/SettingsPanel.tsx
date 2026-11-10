@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import EnvBoard from './EnvBoard';
 import ThemeSettings from './ThemeSettings';
-import UpdateSettings from './UpdateSettings';
 import HarnessSettings from './HarnessSettings';
 import PlatformAccountSettings from './PlatformAccountSettings';
 import MediaGatewaySettings from './MediaGatewaySettings';
@@ -14,17 +13,31 @@ import {
   fetchLocalAgents, enableLocalAgent, fetchAvailableModels,
 } from '../lib/api';
 import type { EnvTool, ModelRow, SelftestResult, LocalAgentInfo, MediaCapability, MediaGatewaySettings as MediaGatewayState, HarnessSettingsResponse } from '../lib/api';
-import { IconSlidersHorizontal, IconPackage, IconEllipsis } from './settingsIcons';
+import AccountsPage from './AccountsPage';
+import { ComingSoon, DeviceSettings, ShortcutSettings, SkillSettings, StatsSettings, StorageSettings, TrashSettings } from './SettingsPages';
+import { NAV_ICONS } from './settingsNavIcons';
 
 interface Props {
   onClose: () => void;
-  initialSection?: 'model' | 'theme' | 'account';
+  initialSection?: 'model' | 'theme' | 'account' | Sec;
+  /** 从「技能」页跳到主界面的技能库。 */
+  onOpenPage?: (page: 'skills') => void;
   sectionRequest?: number;
   /** 非空时在面板顶部显示一条提示条。首开未配置模型时由 App 传入。 */
   banner?: string;
 }
 
-type Sec = 'model' | 'theme' | 'env' | 'more' | 'account' | 'update';
+export type Sec = 'profile' | 'theme' | 'shortcuts' | 'stats' | 'plan' | 'usage' | 'balance' | 'billing'
+  | 'model' | 'skills' | 'connectors' | 'chat' | 'accounts' | 'devices' | 'env' | 'trash' | 'storage';
+/** 设置侧栏：六组，跟着用户的任务分。 */
+export const SETTINGS_GROUPS: { label: string; items: { id: Sec; label: string }[] }[] = [
+  { label: '账号', items: [{ id: 'profile', label: '个人中心' }, { id: 'theme', label: '外观' }, { id: 'shortcuts', label: '快捷键' }, { id: 'stats', label: '数据统计' }] },
+  { label: '订阅与账单', items: [{ id: 'plan', label: '套餐' }, { id: 'usage', label: '用量' }, { id: 'balance', label: '余额' }, { id: 'billing', label: '账单' }] },
+  { label: '智能体', items: [{ id: 'model', label: 'AI 服务商' }, { id: 'skills', label: '技能' }, { id: 'connectors', label: '连接器' }] },
+  { label: '连接', items: [{ id: 'chat', label: '聊天平台' }, { id: 'accounts', label: '账号管理' }] },
+  { label: '运行资源', items: [{ id: 'devices', label: '设备' }, { id: 'env', label: '运行环境' }] },
+  { label: '其他', items: [{ id: 'trash', label: '回收站' }, { id: 'storage', label: '数据存储' }] },
+];
 type Chan = 'chat' | 'transcribe' | 'speech' | 'image' | 'video' | 'music';
 
 const CHANNELS: { id: Chan; label: string }[] = [
@@ -65,9 +78,11 @@ const hhmm = (ts: number) => {
 };
 
 /** 设置（统一入口）：竖＝功能分类（模型配置 / 环境安装 / 更多设置），横＝模型六通道。 */
-export default function SettingsPanel({ onClose, banner = '', initialSection = 'model', sectionRequest = 0 }: Props) {
-  const [sec, setSec] = useState<Sec>(initialSection);
-  useEffect(() => { setSec(initialSection); }, [initialSection, sectionRequest]);
+export default function SettingsPanel({ onClose, banner = '', initialSection = 'model', sectionRequest = 0, onOpenPage }: Props) {
+  const sectionOf = (value: Props['initialSection']): Sec => value === 'account' ? 'profile' : value || 'model';
+  const [sec, setSec] = useState<Sec>(sectionOf(initialSection));
+  const [collapsed, setCollapsed] = useState<string[]>([]);
+  useEffect(() => { setSec(sectionOf(initialSection)); }, [initialSection, sectionRequest]);
   const [chan, setChan] = useState<Chan>('chat');
   const [harness, setHarness] = useState('');
   const [selectedHarness, setSelectedHarness] = useState('');
@@ -705,29 +720,31 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
         )}
 
         <div className="settings-body">
-          <nav className="settings-nav">
-            <button className={`snav${sec === 'model' ? ' active' : ''}`} onClick={() => setSec('model')}>
-              <IconSlidersHorizontal size={16} />模型配置<small>六个通道</small>
-            </button>
-            <button className={`snav${sec === 'account' ? ' active' : ''}`} onClick={() => setSec('account')}>账号与订阅</button>
-            <button className={`snav${sec === 'theme' ? ' active' : ''}`} onClick={() => setSec('theme')}>
-              <span aria-hidden="true">◐</span>主题设置<small>五套风格</small>
-            </button>
-            <button className={`snav${sec === 'env' ? ' active' : ''}`} onClick={() => setSec('env')}>
-              <IconPackage size={16} />环境安装<small>{total ? (okCount === total ? '全就绪' : `${okCount}/${total}`) : '…'}</small>
-            </button>
-            <button className={`snav${sec === 'update' ? ' active' : ''}`} onClick={() => setSec('update')}>
-              <span aria-hidden="true">↻</span>版本更新
-            </button>
-            <button className={`snav${sec === 'more' ? ' active' : ''}`} onClick={() => setSec('more')}>
-              <IconEllipsis size={16} />更多设置
-            </button>
+          <nav className="settings-nav settings-nav-grouped" aria-label="设置分类">
+            {SETTINGS_GROUPS.map(group => {
+              const open = !collapsed.includes(group.label);
+              return <div className="snav-group" key={group.label}>
+                <button type="button" className="snav-group-title" aria-expanded={open} onClick={() => setCollapsed(list => open ? [...list, group.label] : list.filter(item => item !== group.label))}>{group.label}<span aria-hidden="true">{open ? '▾' : '▸'}</span></button>
+                {open && group.items.map(item => <button type="button" key={item.id} className={`snav${sec === item.id ? ' active' : ''}`} aria-current={sec === item.id ? 'page' : undefined} onClick={() => setSec(item.id)}>
+                  {NAV_ICONS[item.id]}<span>{item.label}</span>{item.id === 'env' && total > 0 && <small>{okCount === total ? '全就绪' : `${okCount}/${total}`}</small>}
+                </button>)}
+              </div>;
+            })}
           </nav>
 
           <div className="settings-main">
-            {sec === 'account' && <PlatformAccountSettings />}
+            {sec === 'profile' && <PlatformAccountSettings view="profile" />}
+            {(sec === 'plan' || sec === 'usage' || sec === 'balance' || sec === 'billing') && <PlatformAccountSettings view={sec} />}
             {sec === 'theme' && <ThemeSettings />}
-            {sec === 'update' && <UpdateSettings />}
+            {sec === 'shortcuts' && <ShortcutSettings />}
+            {sec === 'stats' && <StatsSettings />}
+            {sec === 'skills' && <SkillSettings onOpenLibrary={onOpenPage ? () => onOpenPage('skills') : undefined} />}
+            {sec === 'connectors' && <ComingSoon title="连接器" desc="让智能体读写你常用的工具和资料，比如网盘、文档和数据库。" items={[['MCP 服务器', '接入支持 MCP 协议的工具，智能体可以直接调用'], ['云文档与网盘', '飞书文档、Notion、Google Drive 等'], ['浏览器', '让智能体打开网页、读取内容']]} />}
+            {sec === 'chat' && <ComingSoon title="聊天平台" desc="在常用的聊天软件里直接和智能体对话、接收任务结果。" items={[['飞书', '在飞书群或私聊里使用智能体'], ['企业微信', '在企业微信里使用智能体'], ['钉钉', '在钉钉里使用智能体'], ['Telegram', '在 Telegram 里使用智能体']]} />}
+            {sec === 'accounts' && <div className="settings-embed-page"><AccountsPage /></div>}
+            {sec === 'devices' && <DeviceSettings />}
+            {sec === 'trash' && <TrashSettings />}
+            {sec === 'storage' && <StorageSettings />}
             {sec === 'model' && (
               <section className="st-sec active">
                 <MediaGatewaySettings onChange={onMediaGatewayChange} />
@@ -885,18 +902,6 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
               </section>
             )}
 
-            {sec === 'more' && (
-              <section className="st-sec active settings-more" aria-label="更多设置">
-                <h3>更多设置</h3>
-                <div className="settings-more-options">
-                  {['网关参数', '语言设置', '自动更新', '数据目录'].map(label => (
-                    <button type="button" className="settings-more-option" key={label} disabled>
-                      <strong>{label}</strong><span>暂未开放</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
           </div>
         </div>
 

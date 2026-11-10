@@ -22,7 +22,7 @@ function setup() {
     useEffect(fn, deps) { const i = effectCursor++; if (!effects[i] || deps.some((value, j) => value !== effects[i].deps[j])) { effects[i]?.cleanup?.(); effects[i] = { deps, cleanup: fn() }; } },
   };
   const api = { fetchModelChannels: async () => ({ channels: { chat: { rows: [] }, transcribe: { rows: [] } } }) };
-  runInNewContext(code, { exports, require: name => name === 'react' ? React : name.includes('/api') ? api : { __esModule: true, default: name.split('/').at(-1) }, React, localStorage: { getItem: () => null }, window: { addEventListener() {}, removeEventListener() {} }, setTimeout, clearTimeout, Date, Error, Promise });
+  runInNewContext(code, { exports, require: name => name === 'react' ? React : name.includes('/api') ? api : name.includes('settingsNavIcons') ? { NAV_ICONS: {} } : { __esModule: true, default: name.split('/').at(-1) }, React, localStorage: { getItem: () => null }, window: { addEventListener() {}, removeEventListener() {} }, setTimeout, clearTimeout, Date, Error, Promise });
   return { render() { cursor = 0; effectCursor = 0; callbackCursor = 0; return exports.default({ onClose() {}, banner: '请先配置模型，再开始创作。' }); }, cleanup() { effects.forEach(effect => effect.cleanup?.()); } };
 }
 
@@ -37,7 +37,7 @@ for (const backend of ['central', 'legacy']) {
     view.render(); await settle(); tree = view.render();
     const copy = text(tree);
     assert.match(copy, backend === 'central' ? /中央订阅/ : /旧版订阅/);
-    assert.match(copy, /账号与订阅/);
+    assert.match(copy, /订阅与账单/);
     assert.match(copy, /新建对话/);
     assert.doesNotMatch(copy, /请先配置模型|自定义供应商地址|API Key/);
     assert.match(copy, /selected-text/);

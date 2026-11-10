@@ -56,7 +56,11 @@ function displayDate(value?: number | string | null): string {
   return Number.isNaN(date.getTime()) ? '未知' : date.toLocaleString();
 }
 
-export default function CentralAccountSettings() {
+export type AccountView = 'all' | 'profile' | 'plan' | 'usage' | 'balance' | 'billing' | 'devices';
+const VIEW_TITLES: Record<AccountView, string> = { all: '账号与订阅', profile: '个人中心', plan: '套餐', usage: '用量', balance: '余额', billing: '账单', devices: '登录设备' };
+
+export default function CentralAccountSettings({ view = 'all' }: { view?: AccountView } = {}) {
+  const show = (part: AccountView) => view === 'all' || view === part;
   const [status, setStatus] = useState<CentralStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const [statusError, setStatusError] = useState('');
@@ -171,21 +175,27 @@ export default function CentralAccountSettings() {
   const pending = status?.login.pending;
 
   return <section className="central-account st-sec active" aria-label="中央账号与订阅">
-    <div className="central-account-header"><div><h3>账号与订阅</h3></div><button type="button" className="btn btn-sm" disabled={busy || statusLoading || pending} onClick={() => setRevision(value => value + 1)}>刷新账号状态</button></div>
+    <div className="central-account-header"><div><h3>{VIEW_TITLES[view]}</h3></div><button type="button" className="btn btn-sm" disabled={busy || statusLoading || pending} onClick={() => setRevision(value => value + 1)}>刷新账号状态</button></div>
     {!statusLoading && !statusError && status?.configured && !status.error && <p className="central-account-notice">{status.capabilities?.subscription_execution_enabled ? '文本订阅已开放' : status.capabilities?.test_execution_enabled ? '文本订阅 · 测试点数' : '订阅暂未开放'}</p>}
     {statusLoading && <p role="status">正在读取账号状态…</p>}
     {statusError && <p className="env-error" role="alert">{statusError}</p>}
     {status?.error && <p className="env-error" role="alert">{status.error.message}</p>}
     {actionError && <p className="env-error" role="alert">{actionError}</p>}
     {!statusLoading && status && !status.configured && <p role="status">账号服务暂不可用</p>}
-    {status?.authenticated ? <div className="central-account-identity"><div><strong>{status.account?.email || status.account?.id || '统一账号'}</strong><p className="desc">{status.account?.email_verified ? '邮箱已验证' : '邮箱未验证'} · 产品 {status.scope?.product_id || '未知'}</p></div><button type="button" className="btn btn-sm" disabled={busy || statusLoading} onClick={() => void logout()}>退出账号</button></div> : <div className="central-account-login">
+    {status?.authenticated ? (show('profile') && <div className="central-account-identity"><div><strong>{status.account?.email || status.account?.id || '统一账号'}</strong><p className="desc">{status.account?.email_verified ? '邮箱已验证' : '邮箱未验证'} · 产品 {status.scope?.product_id || '未知'}</p></div><button type="button" className="btn btn-sm" disabled={busy || statusLoading} onClick={() => void logout()}>退出账号</button></div>) : <div className="central-account-login">
+      {view !== 'all' && view !== 'profile' && <p className="desc">登录后可以查看{VIEW_TITLES[view]}。</p>}
       {status?.scope && <><p className="desc">登录状态待确认，请刷新或重新登录</p><button type="button" className="btn btn-sm" disabled={busy || statusLoading} onClick={() => void logout()}>退出本机账号</button></>}
       <button type="button" className="btn btn-sm" disabled={busy || statusLoading || !status?.configured || pending} onClick={() => void startLogin()}>登录／注册</button>
       {pending && <><p role="status">等待统一账号站完成登录…{status?.login.expires_at ? ` 期限 ${displayDate(status.login.expires_at)}` : ''}</p>{authorizationUrl && <a className="btn btn-sm" href={authorizationUrl} target="_blank" rel="noopener noreferrer">打开统一账号站</a>}<button type="button" className="btn btn-sm" disabled={busy} onClick={() => void cancelLogin()}>取消登录</button></>}
       {status?.login.error && <p role="alert" className="env-error">{status.login.error.message}；可重新登录。</p>}
     </div>}
+    {status?.authenticated && view === 'profile' && <dl className="central-account-balances central-account-summary">
+      <div><dt>可用点数</dt><dd>{formatMicrocredits(wallet.data?.available)}</dd></div>
+      <div><dt>当前套餐</dt><dd>{entitlements.data ? (entitlements.data.active ? `${entitlements.data.memberships.length} 个生效中` : '暂无') : '…'}</dd></div>
+      <div><dt>累计已用点数</dt><dd>{formatMicrocredits(wallet.data?.spent)}</dd></div>
+    </dl>}
     {status?.authenticated && <>
-      <section className="central-account-section" aria-label="共享钱包" aria-busy={wallet.loading}>
+      {show('balance') && <section className="central-account-section" aria-label="共享钱包" aria-busy={wallet.loading}>
         <h4>共享钱包</h4><p className="central-account-notice">{wallet.data?.funding_mode === 'mixed' ? '测试和正式点数混合，请分别查看来源' : wallet.data?.funding_mode === 'live' ? '正式点数钱包' : wallet.data?.funding_mode === 'empty' ? '当前钱包为空' : wallet.data?.test_only ? '测试点数钱包 · 不代表正式余额' : '点数来源暂未知'}</p>
         {wallet.data === null && <p role={wallet.error ? 'alert' : 'status'}>{readMessage(wallet, '钱包')}</p>}
         <dl className="central-account-balances">
@@ -197,27 +207,27 @@ export default function CentralAccountSettings() {
           <strong>内部体验额度 · 非付款</strong>
           <dl className="central-account-balances"><div><dt>内部体验可用点数</dt><dd>{formatMicrocredits(wallet.data.experience_available)}</dd></div><div><dt>内部体验累计发放</dt><dd>{formatMicrocredits(wallet.data.experience_issued)}</dd></div><div><dt>体验额度到期</dt><dd>{displayDate(wallet.data.experience_expires_at)}</dd></div></dl>
         </aside>}
-      </section>
-      <RedeemSection onRedeemed={() => setRevision(value => value + 1)} />
-      <section className="central-account-section" aria-label="当前权益" aria-busy={entitlements.loading}>
+      </section>}
+      {show('plan') && <RedeemSection onRedeemed={() => setRevision(value => value + 1)} />}
+      {show('plan') && <section className="central-account-section" aria-label="当前权益" aria-busy={entitlements.loading}>
         <h4>当前权益</h4>{entitlements.data === null ? <p role={entitlements.error ? 'alert' : 'status'}>{readMessage(entitlements, '测试权益')}</p> : <>
           <p className="desc">{entitlements.data.test_only ? '测试权益 · 不代表正式订阅' : '包含正式权益 · 点数来源见共享钱包'}</p><p>{entitlements.data.active ? '权益生效中' : '当前无生效权益'} · 产品 {entitlements.data.product_id} · 并发 {entitlements.data.concurrency}</p><p>能力：{entitlements.data.features.map(feature => ({ text: '文本对话', image: '图片生成' } as Record<string, string>)[feature] || feature).join('、') || '暂无'}</p>
           {entitlements.data.memberships.map(membership => <article className="central-account-card" key={membership.id}><strong>{membership.funding_source === 'internal_experience' ? '内部体验额度 · 非付款' : membership.plan_id}</strong><p>到期 {displayDate(membership.expires_at)}</p></article>)}
         </>}
-      </section>
-      <section className="central-account-section" aria-label="点数明细" aria-busy={usage.loading}>
+      </section>}
+      {show('usage') && <section className="central-account-section" aria-label="点数明细" aria-busy={usage.loading}>
         <h4>点数明细</h4>{usage.data === null && <p role={usage.error ? 'alert' : 'status'}>{readMessage(usage, '点数明细')}</p>}{usage.data?.length === 0 && <p>暂无点数明细。</p>}
         {usage.data?.map(item => <article className="central-account-card" key={item.id}><strong>{({ execution: '文本对话', media: '媒体任务' } as Record<string, string>)[item.operation] || item.operation} · {item.product_id}</strong><p>状态 {item.status === 'waived' ? '平台承担费用' : item.status} · 预算点数 {formatMicrocredits(item.amount)} · {item.status === 'waived' ? '用户不扣点' : `实际扣点${formatMicrocredits(item.actual)}`}</p>{item.status === 'waived' && <p className="central-account-notice">供应商用量仍未知 · 用户不扣点</p>}<p className="desc">费率 {item.rate_version} · {displayDate(item.created_at)}</p></article>)}
-      </section>
-      <section className="central-account-section" aria-label="设备会话" aria-busy={devices.loading}>
+      </section>}
+      {show('devices') && <section className="central-account-section" aria-label="设备会话" aria-busy={devices.loading}>
         <h4>设备会话</h4>{devices.data === null && <p role={devices.error ? 'alert' : 'status'}>{readMessage(devices, '设备会话')}</p>}{devices.data?.length === 0 && <p>暂无设备会话。</p>}
         {devices.data?.map(device => <article className="central-account-card" key={device.id}><strong>{device.client_id}</strong><p>{device.current ? '当前设备 · ' : ''}{device.product_id} · 会话期限 {displayDate(device.expires_at)}</p><button type="button" className="btn btn-sm" disabled={busy || statusLoading} onClick={() => void revoke(device.id)}>撤销此设备</button></article>)}
-      </section>
+      </section>}
     </>}
-    {status?.configured && <CentralExecutionSettings authenticated={status.authenticated} revision={revision} scopeKey={JSON.stringify([status.url, status.account?.id, status.scope])} />}
-    {status?.configured && <CentralMediaSettings accountSignature={centralAccountSignature(status)} revision={revision} />}
-    {status?.configured && <CentralBillingSettings status={status} onFinancialChange={() => setRevision(value => value + 1)} />}
-    {status?.configured && <section className="central-account-section" aria-label="套餐权益目录" aria-busy={plans.loading}>
+    {status?.configured && show('plan') && <CentralExecutionSettings authenticated={status.authenticated} revision={revision} scopeKey={JSON.stringify([status.url, status.account?.id, status.scope])} />}
+    {status?.configured && show('plan') && <CentralMediaSettings accountSignature={centralAccountSignature(status)} revision={revision} />}
+    {status?.configured && show('billing') && <CentralBillingSettings status={status} onFinancialChange={() => setRevision(value => value + 1)} />}
+    {status?.configured && show('plan') && <section className="central-account-section" aria-label="套餐权益目录" aria-busy={plans.loading}>
       <h4>套餐权益目录</h4>
       {plans.data === null && <p role={plans.error ? 'alert' : 'status'}>{readMessage(plans, '套餐权益目录')}</p>}{plans.data?.length === 0 && <p>暂无套餐。</p>}
       {plans.data?.map(plan => <article className="central-account-card" key={plan.id}><strong>{plan.name}</strong><p>{plan.test_only ? '测试套餐' : '正式套餐'} · 版本 {plan.version} · {formatMicrocredits(plan.credits)} 点 · {plan.days} 天 · 并发 {plan.concurrency}</p><p>覆盖产品：{plan.included_products.join('、')}</p><p>能力：{plan.features.join('、') || '暂无'}</p></article>)}
