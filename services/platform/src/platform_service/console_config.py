@@ -20,6 +20,12 @@ class ConsoleSettings:
     session_ttl: int = 28800
     auth_ttl: int = 300
     provider_public_key: str | None = field(default=None, repr=False)
+    # Optional: editing sign-in accounts (Logto Management API, machine-to-machine app).
+    logto_endpoint: str | None = None
+    logto_client_id: str | None = None
+    logto_client_secret: str | None = field(default=None, repr=False)
+    # The issuer products sign in with; accounts made in the console are linked under it.
+    product_issuer: str | None = None
 
     def __post_init__(self):
         if (not isinstance(self.db_schema, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,62}", self.db_schema)
@@ -48,6 +54,10 @@ class ConsoleSettings:
                 issuer=env["CENTRAL_CONSOLE_OIDC_ISSUER"],client_id=env["CENTRAL_CONSOLE_OIDC_CLIENT_ID"],
                 client_secret=env["CENTRAL_CONSOLE_OIDC_CLIENT_SECRET"],db_schema=env["CENTRAL_CONSOLE_DB_SCHEMA"],
                 allow_loopback_http=env.get("CENTRAL_CONSOLE_ALLOW_LOOPBACK_HTTP")=="1",
-                provider_public_key=env.get("CENTRAL_CONSOLE_PROVIDER_PUBLIC_KEY") or None)
+                provider_public_key=env.get("CENTRAL_CONSOLE_PROVIDER_PUBLIC_KEY") or None,
+                logto_endpoint=env.get("CENTRAL_CONSOLE_LOGTO_ENDPOINT") or None,
+                logto_client_id=env.get("CENTRAL_CONSOLE_LOGTO_M2M_ID") or None,
+                logto_client_secret=env.get("CENTRAL_CONSOLE_LOGTO_M2M_SECRET") or None,
+                product_issuer=env.get("CENTRAL_CONSOLE_PRODUCT_ISSUER") or None)
         except (KeyError,TypeError,ValueError):
             raise ValueError("invalid_console_configuration") from None

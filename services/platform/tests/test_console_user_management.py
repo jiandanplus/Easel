@@ -86,7 +86,7 @@ async def test_admin_issues_published_plan_within_limits(db, console, console_ro
     _, _, _, scope = await seed(db)
     members = MembershipService(db)
     await members.publish_plan(PUBLISHER, live_plan('friend-trial-v1'))
-    await members.publish_plan(PUBLISHER, live_plan('too-big-v1', credits='200000000'))
+    await members.publish_plan(PUBLISHER, live_plan('too-big-v1', credits='2000000000000'))
     await members.publish_plan(PUBLISHER, live_plan('too-long-v1', days=400))
     catalog, queries, principal, _ = await low_catalog(console, console_role, 'admin')
     first = await catalog.issue_plan(principal, 'wallet', 'friend-trial-v1', '朋友试用', 'plan-1')

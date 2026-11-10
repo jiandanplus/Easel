@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { ConsoleError, formatCredits, formatDate, RequestGate } from './core';
 import type { ConsoleClient, LoadState, PageData, RecordData } from './core';
 import type { Manage } from './ManageDialog';
+import type { UserAdmin } from './UserAdminDialog';
+import { phoneText } from './UserAdminDialog';
 import { BarChart, creditNumber, dayLabel, ModelBars } from './charts';
-import { Badge, DetailFields, Loading, UserSummary } from './views';
+import { Badge, DetailFields, Loading, RoleBadge, UserSummary } from './views';
 
 type Tab = 'overview' | 'usage' | 'ledger' | 'sessions' | 'audits' | 'raw';
 const TABS: [Tab, string][] = [['overview', '概览'], ['usage', '调用记录'], ['ledger', '额度流水'], ['sessions', '登录记录'], ['audits', '后台操作'], ['raw', '全部字段']];
 const operations: Record<string, string> = { execution: '文本', media: '媒体' };
-const journalKinds: Record<string, string> = { issue: '发放额度', reserve: '预留（调用开始）', settle: '结算（调用完成）', release: '退回预留', expire: '额度到期' };
+const journalKinds: Record<string, string> = { issue: '发放额度', reserve: '预留（调用开始）', settle: '结算（调用完成）', release: '退回预留', expire: '额度到期', adjust: '后台扣减', refund: '退款' };
 const planNames: Record<string, string> = { 'easel-owner-allowance-v1': '所有者额度', 'easel-internal-experience-v1': '内部体验额度' };
 const usageStatuses: [string, string][] = [['', '全部结果'], ['settled', '成功'], ['released', '已退回'], ['pending_reconciliation', '结果不明'], ['dispatched', '进行中']];
 
@@ -86,26 +88,61 @@ function Audits({ client, base, onFailure }: { client: ConsoleClient; base: stri
   if (state.kind !== 'ready') return <Loading state={state} onRetry={retry} />;
   const items = Array.isArray(state.data.items) ? state.data.items as RecordData[] : [];
   if (!items.length) return <div className="empty-state"><strong>后台还没有对这个用户做过操作</strong></div>;
-  const actions: Record<string, string> = { 'allowance.issue': '发放所有者额度', 'plan.issue': '按套餐发放', 'user.status': '启用或停用账号', 'user.logout': '强制下线', 'user.note': '更新备注' };
+  const actions: Record<string, string> = { 'allowance.issue': '发放所有者额度', 'plan.issue': '按套餐发放', 'user.status': '启用或停用账号', 'user.logout': '强制下线', 'user.note': '更新备注', 'user.role': '设置角色', 'user.delete': '删除账号', 'user.restore': '恢复账号', 'user.create': '新建账号', 'user.profile': '编辑资料', 'user.password': '重置密码', 'credits.adjust': '调整余额', 'plan.end': '结束套餐' };
   return <ul className="plain-list">{items.map(row => <li key={String(row.id)}><span>{formatDate(row.created_at)} · {actions[String(row.action)] ?? String(row.action)}</span><span className="muted">{String(row.reason ?? '')}</span></li>)}</ul>;
 }
 
-export function UserDetail({ client, data, permissions, onAllowance, onManage, onFailure }: { client: ConsoleClient; data: RecordData; permissions: string[]; onAllowance?: (wallet: RecordData) => void; onManage: (action: Manage) => void; onFailure: (error: unknown) => string }) {
+const sources: Record<string, string> = { console: '后台发放', points: '后台加点', purchase: '购买', redemption: '兑换码', other: '其他' };
+function Plans({ data, onEnd }: { data: RecordData; onEnd?: (plan: RecordData) => void }) {
+  const plans = Array.isArray(data.plans) ? data.plans as RecordData[] : [];
+  if (!plans.length) return <p className="muted">还没有套餐。</p>;
+  return <div className="table-scroll"><table><thead><tr><th>套餐</th><th>来源</th><th>剩余 / 发放（点）</th><th>到期</th><th>状态</th>{onEnd && <th />}</tr></thead><tbody>
+    {plans.map(plan => { const live = !plan.ended && !plan.expired; return <tr key={String(plan.id)}><td>{planNames[String(plan.plan_id)] ?? String(plan.plan_name ?? plan.plan_id)}{plan.test_only ? <span className="muted">（测试）</span> : null}</td>
+      <td>{sources[String(plan.source)] ?? String(plan.source)}</td><td>{plan.issued == null ? '—' : `${formatCredits(plan.available)} / ${formatCredits(plan.issued)}`}</td><td>{formatDate(plan.expires_at)}</td>
+      <td>{plan.ended ? <span className="badge neutral">已结束</span> : plan.expired ? <span className="badge neutral">已到期</span> : <span className="badge positive">生效中</span>}</td>
+      {onEnd && <td>{live && plan.source !== 'points' && <button className="text-button" onClick={() => onEnd(plan)}>结束</button>}</td>}</tr>; })}
+  </tbody></table></div>;
+}
+
+function Profile({ data }: { data: RecordData }) {
+  const profile = (data.profile ?? null) as RecordData | null;
+  if (!profile) return data.profile_error ? <p className="muted">登录服务暂时读不到这个账号的资料。</p> : null;
+  return <dl className="detail-grid"><div><dt>用户名</dt><dd>{String(profile.username ?? '—')}</dd></div><div><dt>手机号</dt><dd>{phoneText(profile.phone) || '—'}</dd></div>
+    <div><dt>邮箱</dt><dd>{String(profile.email ?? '—')}</dd></div><div><dt>密码</dt><dd>{profile.has_password ? '已设置' : '未设置（只能验证码登录）'}</dd></div>
+    <div><dt>最近登录</dt><dd>{typeof profile.last_sign_in_at === 'number' ? formatDate(new Date(profile.last_sign_in_at).toISOString()) : '—'}</dd></div><div><dt>登录服务状态</dt><dd>{profile.suspended ? '已禁止登录' : '正常'}</dd></div></dl>;
+}
+
+export function UserDetail({ client, data, permissions, onAllowance, onManage, onAdmin, onFailure }: { client: ConsoleClient; data: RecordData; permissions: string[]; onAllowance?: (wallet: RecordData) => void; onManage: (action: Manage) => void; onAdmin?: (action: UserAdmin) => void; onFailure: (error: unknown) => string }) {
   const [tab, setTab] = useState<Tab>('overview');
   const base = `/api/users/${encodeURIComponent(String(data.id))}`;
   const manage = permissions.includes('users:manage'), note = (data.note ?? null) as RecordData | null;
   const tags = Array.isArray(note?.tags) ? note.tags as string[] : [];
+  const admin = permissions.includes('admins:manage') && onAdmin, issue = permissions.includes('plans:issue') && onAdmin;
+  const wallets = Array.isArray(data.wallets) ? data.wallets as RecordData[] : [];
+  const deleted = Boolean(data.deleted_at), directory = data.directory === true;
   return <div className="user-detail">
-    {manage && <div className="manage-bar">
-      {data.active === false ? <button className="button primary" onClick={() => onManage({ kind: 'enable', user: data })}>重新启用账号</button> : <button className="button danger" onClick={() => onManage({ kind: 'disable', user: data })}>停用账号</button>}
-      <button className="button" onClick={() => onManage({ kind: 'logout', user: data })}>强制下线</button>
-      <button className="button" onClick={() => onManage({ kind: 'note', user: data })}>{note ? '编辑备注' : '添加备注'}</button>
+    <div className="user-role-line"><RoleBadge value={data.role} />{deleted && <span className="badge warning">已删除</span>}</div>
+    {(admin || manage) && <div className="manage-bar">
+      {admin && <>
+        <button className="button" disabled={!directory || deleted} title={directory ? undefined : '还没有连接登录服务'} onClick={() => onAdmin({ kind: 'profile', user: data })}>编辑资料</button>
+        <button className="button" disabled={!directory || deleted} title={directory ? undefined : '还没有连接登录服务'} onClick={() => onAdmin({ kind: 'password', user: data })}>重置密码</button>
+        <button className="button" disabled={deleted} onClick={() => onAdmin({ kind: 'role', user: data })}>{data.role === 'admin' ? '取消管理员' : '设为管理员'}</button></>}
+      {manage && !deleted && <>
+        <button className="button" onClick={() => onManage({ kind: 'note', user: data })}>{note ? '编辑备注' : '添加备注'}</button>
+        <button className="button" onClick={() => onManage({ kind: 'logout', user: data })}>强制下线</button>
+        {data.active === false ? <button className="button primary" onClick={() => onManage({ kind: 'enable', user: data })}>重新启用</button> : <button className="button" onClick={() => onManage({ kind: 'disable', user: data })}>停用账号</button>}</>}
+      {admin && (deleted ? <button className="button primary" onClick={() => onAdmin({ kind: 'restore', user: data })}>恢复账号</button> : <button className="button danger" onClick={() => onAdmin({ kind: 'delete', user: data })}>删除账号</button>)}
     </div>}
-    {data.active === false && <p className="notice error">这个账号已停用，用户不能登录或使用模型。</p>}
+    {deleted ? <p className="notice error">这个账号已删除，用户不能登录。余额、套餐和记录都还在，可以恢复。</p> : data.active === false && <p className="notice error">这个账号已停用，用户不能登录或使用模型。</p>}
     {(note?.note || tags.length > 0) && <div className="note-card">{tags.length > 0 && <span className="tags">{tags.map(tag => <span key={tag} className="tag">{tag}</span>)}</span>}{typeof note?.note === 'string' && note.note && <p>{note.note}</p>}<small className="muted">备注只有后台能看到 · 更新于 {formatDate(note?.updated_at)}</small></div>}
     <div className="page-tabs" role="tablist" aria-label="用户详情">{TABS.map(([value, label]) => <button key={value} role="tab" aria-selected={tab === value} className={tab === value ? 'active' : ''} onClick={() => setTab(value)}>{label}</button>)}</div>
     <div role="tabpanel">
-      {tab === 'overview' && <><UserSummary data={data} onAllowance={onAllowance} onPlan={permissions.includes('plans:issue') ? wallet => onManage({ kind: 'plan', user: data, wallet }) : undefined} /><Activity client={client} base={base} onFailure={onFailure} /></>}
+      {tab === 'overview' && <><Profile data={data} />
+        <div className="section-heading"><h3>套餐与点数</h3>{issue && !deleted && wallets[0] && <div className="wallet-actions">
+          <button className="button" onClick={() => onAdmin!({ kind: 'credits', user: data, wallet: String(wallets[0].id) })}>调整余额</button>
+          {permissions.includes('plans:issue') && <button className="button" onClick={() => onManage({ kind: 'plan', user: data, wallet: wallets[0] })}>发放 / 更换套餐</button>}</div>}</div>
+        <Plans data={data} onEnd={issue && !deleted ? plan => onAdmin!({ kind: 'end', user: data, plan }) : undefined} />
+        <UserSummary data={data} onAllowance={onAllowance} onPlan={permissions.includes('plans:issue') && !onAdmin ? wallet => onManage({ kind: 'plan', user: data, wallet }) : undefined} /><Activity client={client} base={base} onFailure={onFailure} /></>}
       {tab === 'usage' && <Usage client={client} base={base} onFailure={onFailure} />}
       {tab === 'ledger' && <Ledger client={client} base={base} onFailure={onFailure} />}
       {tab === 'sessions' && <Sessions client={client} base={base} onFailure={onFailure} />}

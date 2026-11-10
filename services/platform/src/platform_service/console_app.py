@@ -400,6 +400,48 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
         value, key = await command(request, {"note", "tags", "reason"})
         return await catalog.set_user_note(actor, item_id, value["note"], value["tags"], value["reason"], key)
 
+    @app.post("/api/users")
+    async def user_create(request: Request):
+        actor = await principal(request, "admins:manage", write=True)
+        value, key = await command(request, {"username", "phone", "email", "password", "reason"})
+        return await catalog.create_user(actor, value["username"], value["phone"], value["email"], value["password"], value["reason"], key)
+
+    @app.post("/api/users/{item_id}/role")
+    async def user_role(request: Request, item_id: str):
+        actor = await principal(request, "admins:manage", write=True)
+        value, key = await command(request, {"role", "reason"})
+        return await catalog.set_user_role(actor, item_id, value["role"], value["reason"], key)
+
+    @app.post("/api/users/{item_id}/delete")
+    async def user_delete(request: Request, item_id: str):
+        actor = await principal(request, "admins:manage", write=True)
+        value, key = await command(request, {"deleted", "reason"})
+        return await catalog.set_user_deleted(actor, item_id, value["deleted"], value["reason"], key)
+
+    @app.post("/api/users/{item_id}/profile")
+    async def user_profile(request: Request, item_id: str):
+        actor = await principal(request, "admins:manage", write=True)
+        value, key = await command(request, {"username", "phone", "email", "reason"})
+        return await catalog.update_profile(actor, item_id, value["username"], value["phone"], value["email"], value["reason"], key)
+
+    @app.post("/api/users/{item_id}/password")
+    async def user_password(request: Request, item_id: str):
+        actor = await principal(request, "admins:manage", write=True)
+        value, key = await command(request, {"password", "reason"})
+        return await catalog.set_password(actor, item_id, value["password"], value["reason"], key)
+
+    @app.post("/api/wallets/{item_id}/credits")
+    async def wallet_credits(request: Request, item_id: str):
+        actor = await principal(request, "plans:issue", write=True)
+        value, key = await command(request, {"points", "reason"})
+        return await catalog.adjust_credits(actor, item_id, value["points"], value["reason"], key)
+
+    @app.post("/api/wallets/{item_id}/plans/end")
+    async def wallet_plan_end(request: Request, item_id: str):
+        actor = await principal(request, "plans:issue", write=True)
+        value, key = await command(request, {"membership_id", "reason"})
+        return await catalog.end_plan(actor, item_id, value["membership_id"], value["reason"], key)
+
     @app.post("/api/models/{item_id}/state")
     async def model_state(request: Request, item_id: str):
         actor = await principal(request, "execution:publish", write=True)

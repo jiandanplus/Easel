@@ -149,6 +149,14 @@ CONSOLE_FUNCTIONS = (
     "console_disable_redemption_batch(text,text)",
     "console_approve_request(text,text,text,text)",
     "console_disable_admin(text,text)",
+    "console_user_role(text,text)",
+    "console_set_user_role(text,text,text,text,text)",
+    "console_user_subject(text,text,text)",
+    "console_set_user_deleted(text,text,boolean,text)",
+    "console_create_user(text,text,text,text,text)",
+    "console_update_identity(text,text,text,text)",
+    "console_adjust_credits(text,text,bigint,text,text)",
+    "console_end_membership(text,text,text,text)",
 )
 # The one SECURITY DEFINER entry point the product runtime may call (migration 026).
 RUNTIME_FUNCTIONS = ("redeem_code(text,text,text)",)

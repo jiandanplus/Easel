@@ -71,6 +71,7 @@ REQUIRED_MIGRATIONS = [
     "035_model_names_with_spaces.sql",
     "036_plan_states.sql",
     "037_text_price_unit.sql",
+    "038_console_user_admin.sql",
 ]
 ACCEPTANCE_CREDITS = 100_000_000
 ACCEPTANCE_RATE = {

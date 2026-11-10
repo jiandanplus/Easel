@@ -5,7 +5,7 @@ import { Modal } from './views';
 
 export type Manage = { kind: 'disable' | 'enable' | 'logout' | 'note'; user: RecordData } | { kind: 'plan'; user: RecordData; wallet: RecordData };
 
-const MAX_CREDITS = 100000000n;
+const MAX_CREDITS = 1000000000000n;
 export function issuable(plan: RecordData): boolean {
   const id = String(plan.id ?? ''), credits = typeof plan.credits === 'string' && /^\d+$/.test(plan.credits) ? BigInt(plan.credits) : 0n;
   return plan.retired !== true && !id.startsWith('easel-internal-') && !id.startsWith('easel-owner-allowance-') && credits > 0n && credits <= MAX_CREDITS
@@ -22,7 +22,7 @@ const copy = {
   enable: ['重新启用账号', '启用后，这个用户可以重新登录。之前的登录不会恢复，需要本人重新登录。', '启用原因', '确认启用'],
   logout: ['强制下线', '这个用户会退出所有设备，需要重新登录。账号本身不受影响。', '下线原因', '确认下线'],
   note: ['编辑备注', '备注和标签只有后台能看到，用户看不到。可以按标签搜索用户。', '', '保存备注'],
-  plan: ['按套餐发放', '从已发布的套餐里选一个发给这个钱包。只能选不超过 100 点、365 天的套餐；同一套餐没到期前不能重复发。这不是付款。', '发放原因', '确认发放'],
+  plan: ['按套餐发放', '从已发布的套餐里选一个发给这个钱包。套餐的点数和天数立即生效，同一套餐没到期前不能重复发（要更换，先在“套餐与点数”里结束当前套餐）。这不是付款。', '发放原因', '确认发放'],
 } as const;
 
 export function ManageDialog({ client, action, onClose, onFailure, onDone }: { client: ConsoleClient; action: Manage; onClose: () => void; onFailure: (error: unknown) => string; onDone: (message: string) => void }) {
@@ -67,7 +67,7 @@ export function ManageDialog({ client, action, onClose, onFailure, onDone }: { c
   return <Modal title={title} onClose={onClose} busy={busy}><form onSubmit={e => { e.preventDefault(); void submit(); }}><div className="dialog-content">
     <p>用户：<strong>{String(action.user.username ?? action.user.id)}</strong></p>
     <p className="muted">{description}</p>
-    {action.kind === 'plan' && <label className="reason-field">套餐{plans === null ? <span className="muted">正在读取套餐…</span> : plans.length === 0 ? <span className="muted">没有可发放的套餐。请先在“模型与套餐”里发布一个不超过 100 点、365 天的套餐。</span> :
+    {action.kind === 'plan' && <label className="reason-field">套餐{plans === null ? <span className="muted">正在读取套餐…</span> : plans.length === 0 ? <span className="muted">没有可发放的套餐。请先在“模型与套餐”里发布套餐（不超过 365 天）。</span> :
       <select value={planId} disabled={locked} onChange={e => setPlanId(e.target.value)}><option value="">请选择</option>{plans.map(p => <option key={String(p.id)} value={String(p.id)}>{String(p.name ?? p.id)} · {formatCredits(p.credits)} 点 · {String(p.days)} 天{p.test_only ? ' · 测试' : ''}</option>)}</select>}</label>}
     {action.kind === 'note' ? <>
       <label className="reason-field">备注<textarea maxLength={500} rows={4} value={text} disabled={locked} onChange={e => setText(e.target.value)} placeholder="例如：老朋友，先给文本额度" /></label>

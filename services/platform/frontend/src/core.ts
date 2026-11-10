@@ -48,6 +48,26 @@ export function formatDay(value: unknown): string {
 }
 const CODE_MESSAGES: Record<string, string> = {
   console_price_too_high: '价格太高：按模型最大输入和输出估算，单次调用会超过 100 点上限，用户的每次调用都会被拒绝。文本模型按“每百万 token 多少点”填写。',
+  console_logto_not_configured: '还没有连接登录服务，暂时不能新建用户、改资料或重置密码。',
+  console_logto_unavailable: '登录服务暂时连不上，请稍后重试。',
+  console_username_taken: '这个用户名已经有人用了，换一个。',
+  console_email_taken: '这个邮箱已经绑定了别的账号。',
+  console_phone_taken: '这个手机号已经绑定了别的账号。',
+  console_username_invalid: '用户名只能用英文字母、数字和下划线，并以字母或下划线开头。',
+  console_phone_invalid: '手机号格式不对。国内号码直接填 11 位，境外号码以 + 和国家码开头。',
+  console_email_invalid: '邮箱格式不对。',
+  console_password_invalid: '密码需要 8 到 128 位。',
+  console_password_rejected: '登录服务拒绝了这个密码，可能太简单。换一个更长、更复杂的密码。',
+  console_last_admin: '这是最后一个管理员，不能取消。',
+  console_cannot_demote_self: '不能取消自己的管理员。请让另一位管理员操作。',
+  console_user_inactive: '账号已停用或已删除，不能设为管理员。',
+  console_user_is_admin: '这个用户是管理员，请先把角色改成“用户”再删除。',
+  console_no_live_plan: '这个用户没有生效中的正式套餐。增加的点数要挂在套餐上，请先发放套餐。',
+  console_points_insufficient: '余额不够扣这么多。',
+  console_plan_not_active: '这个套餐已经结束或到期了。',
+  console_calls_in_flight: '这个套餐有正在进行的调用，请稍后再结束。',
+  plan_grant_active: '这个用户已有同一套餐、还没到期。要更换请先结束当前套餐。',
+  plan_above_console_limit: '套餐超过后台发放上限（100 万点、365 天）。',
 };
 export class ConsoleError extends Error {
   constructor(public status: number, public code: string) {
@@ -100,8 +120,11 @@ export class ConsoleClient {
   }
   operation(path: string, value: unknown, permission: string) {
     if (!this.session?.admin.permissions.includes(permission)) throw new ConsoleError(403, 'permission_denied');
+    // Account changes reach the sign-in service and need the admin permission, not users:manage.
+    if ((path === '/api/users' || /^\/api\/users\/[^/]+\/(?:role|delete|profile|password)$/.test(path)) && permission !== 'admins:manage') throw new ConsoleError(403, 'permission_denied');
+    if (/^\/api\/wallets\/[^/]+\/(?:credits|plans\/end)$/.test(path) && permission !== 'plans:issue') throw new ConsoleError(403, 'permission_denied');
     const session = this.session, epoch = this.epoch, key = this.newKey(), body = JSON.stringify(value);
-    if (!/^\/api\/(?:(?:plans|offers|models)(?:\/[A-Za-z0-9%_.~-]+\/(?:withdraw|state|revise))?|wallets\/[A-Za-z0-9%_.~-]+\/(?:allowance|plans)|users\/[A-Za-z0-9%_.~-]+\/(?:status|logout|note)|redemptions(?:\/[A-Za-z0-9%_.~-]+\/disable)?|admin-requests\/[A-Za-z0-9%_.~-]+\/approve|admins\/[A-Za-z0-9%_.~-]+\/disable|provider-configs\/(?:chat|transcribe|speech|image|video|music)|catalog\/models|catalog\/import|catalog\/(?:execution|media)\/[A-Za-z0-9%_.~:-]+\/(?:price|trial)|catalog\/media\/[A-Za-z0-9%_.~:-]+\/state)$/.test(path)) throw new ConsoleError(400, 'invalid_operation');
+    if (!/^\/api\/(?:(?:plans|offers|models)(?:\/[A-Za-z0-9%_.~-]+\/(?:withdraw|state|revise))?|wallets\/[A-Za-z0-9%_.~-]+\/(?:allowance|plans|credits|plans\/end)|users|users\/[A-Za-z0-9%_.~-]+\/(?:status|logout|note|role|delete|profile|password)|redemptions(?:\/[A-Za-z0-9%_.~-]+\/disable)?|admin-requests\/[A-Za-z0-9%_.~-]+\/approve|admins\/[A-Za-z0-9%_.~-]+\/disable|provider-configs\/(?:chat|transcribe|speech|image|video|music)|catalog\/models|catalog\/import|catalog\/(?:execution|media)\/[A-Za-z0-9%_.~:-]+\/(?:price|trial)|catalog\/media\/[A-Za-z0-9%_.~:-]+\/state)$/.test(path)) throw new ConsoleError(400, 'invalid_operation');
     return { key, send: async () => {
       if (this.epoch !== epoch || this.session !== session) throw new ConsoleError(401, 'session_changed');
       return this.request<RecordData>(path, { method: 'POST', body, headers: { 'Content-Type': 'application/json', 'X-Console-CSRF': session.csrf_token, 'Idempotency-Key': key } });
@@ -135,7 +158,7 @@ export class Submission {
     finally { this.busy = false; }
   }
 }
-export const userFilters: [string, string][] = [['', '全部用户'], ['funded', '有余额'], ['empty', '没有余额'], ['expiring', '7 天内到期'], ['disabled', '已停用']];
+export const userFilters: [string, string][] = [['', '全部用户'], ['admins', '管理员'], ['funded', '有余额'], ['empty', '没有余额'], ['expiring', '7 天内到期'], ['disabled', '已停用'], ['deleted', '已删除']];
 export const userSorts: [string, string][] = [['created', '最新注册'], ['last_used', '最近使用'], ['balance', '余额最多'], ['spent', '用得最多']];
 export type ListOptions = { status?: string; sort?: string; limit?: number };
 export function listPath(domain: Domain, query: string, offset: number, options: ListOptions = {}): string {

@@ -14,13 +14,22 @@ from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, provider_id, public
 SNAPSHOT_NOTE = '只读余额快照；账面剩余包含尚未过账的过期额度。冻结与未过账过期可能重叠，不可相加。'
 
 
+LIVE = 'x.deleted_at IS NULL AND '
 USER_FILTERS = {
-    '': 'true',
-    'funded': 'x.spendable_available>0',
-    'empty': 'x.spendable_available=0',
-    'expiring': "x.expires_at>transaction_timestamp() AND x.expires_at<=transaction_timestamp()+interval '7 days'",
-    'disabled': 'NOT x.active',
+    '': 'x.deleted_at IS NULL',
+    'funded': LIVE + 'x.spendable_available>0',
+    'empty': LIVE + 'x.spendable_available=0',
+    'expiring': LIVE + "x.expires_at>transaction_timestamp() AND x.expires_at<=transaction_timestamp()+interval '7 days'",
+    'disabled': LIVE + 'NOT x.active',
+    'admins': LIVE + "x.role<>'user'",
+    'deleted': 'x.deleted_at IS NOT NULL',
 }
+# The plan a person is on now: the live membership that runs longest, ended ones excluded.
+CURRENT_PLAN = """FROM memberships m JOIN plans p ON p.id=m.plan_id JOIN billing_accounts b ON b.id=m.billing_account_id
+    JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id AND m.starts_at<=transaction_timestamp()
+    AND m.expires_at>transaction_timestamp() AND NOT EXISTS(SELECT 1 FROM membership_revocations r WHERE r.membership_id=m.id)
+    AND NOT EXISTS(SELECT 1 FROM console_credit_adjustments a WHERE a.membership_id=m.id)
+    ORDER BY m.expires_at DESC,m.id LIMIT 1"""
 USER_SORTS = {
     'created': 'x.created_at DESC,x.id DESC',
     'balance': 'x.spendable_available DESC,x.id DESC',
@@ -105,6 +114,11 @@ def offer_snapshot(definition):
     return result
 
 
+def directory_of(settings):
+    from .logto_admin import from_settings
+    return from_settings(settings)
+
+
 class ConsoleQueries:
     def __init__(self, db, auth, *, provider_ids=(), payments_mode='disabled', sealing_ready=False):
         if payments_mode not in {'disabled','test','live'}:
@@ -112,6 +126,25 @@ class ConsoleQueries:
         self.db, self.auth, self.payments_mode = db, auth, payments_mode
         self.registry = provider_registry(provider_ids)
         self.sealing_ready = sealing_ready
+        self._directory = None
+        self._directory_set = False
+
+    @property
+    def directory(self):
+        """The Logto Management API client, or None when the console has no credentials for it."""
+        return self._directory if self._directory_set else directory_of(getattr(self.auth, 'settings', None))
+
+    @property
+    def console_issuer(self):
+        return getattr(getattr(self.auth, 'settings', None), 'issuer', '') or ''
+
+    @property
+    def product_issuer(self):
+        return getattr(getattr(self.auth, 'settings', None), 'product_issuer', None) or self.console_issuer
+
+    @directory.setter
+    def directory(self, value):
+        self._directory, self._directory_set = value, True
 
     @asynccontextmanager
     async def _snapshot(self, principal):
@@ -168,7 +201,10 @@ class ConsoleQueries:
             raise PlatformError(422, 'console_query_invalid')
         owned = """FROM credit_reservations r JOIN billing_accounts b ON b.id=r.billing_account_id
                 JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id AND r.funding_mode='live'"""
-        return await self._list(principal, """SELECT * FROM (SELECT u.id,u.active,u.created_at,
+        return await self._list(principal, """SELECT * FROM (SELECT u.id,u.active,u.created_at,u.deleted_at,
+            console_user_role(u.id,%s) AS role,
+            (SELECT p.name """ + CURRENT_PLAN + """) AS plan_name,
+            (SELECT m.expires_at """ + CURRENT_PLAN + """) AS plan_expires_at,
             (SELECT count(*) FROM tenants t WHERE t.owner_user_id=u.id) AS tenant_count,
             (SELECT count(*) FROM billing_accounts b JOIN tenants t ON t.id=b.tenant_id WHERE t.owner_user_id=u.id) AS wallet_count,
             (SELECT coalesce(sum(l.available) FILTER(WHERE NOT l.frozen AND l.expires_at>transaction_timestamp()),0)
@@ -185,7 +221,7 @@ class ConsoleQueries:
             FROM users u WHERE %s='' OR strpos(lower(u.id),lower(%s))>0 OR EXISTS(SELECT 1 FROM external_identities e
                 WHERE e.user_id=u.id AND (strpos(lower(coalesce(e.username,'')),lower(%s))>0 OR strpos(lower(coalesce(e.email,'')),lower(%s))>0))
             OR EXISTS(SELECT 1 FROM console_user_notes n WHERE n.user_id=u.id AND (strpos(lower(n.note),lower(%s))>0 OR lower(%s)=ANY(SELECT lower(t) FROM unnest(n.tags) t)))
-            ) x WHERE """ + USER_FILTERS[status] + " ORDER BY " + USER_SORTS[sort], (q,q,q,q,q,q),limit,offset,q)
+            ) x WHERE """ + USER_FILTERS[status] + " ORDER BY " + USER_SORTS[sort], (self.console_issuer,q,q,q,q,q,q),limit,offset,q)
 
     @staticmethod
     async def _owned_wallets(conn, id):
@@ -294,10 +330,28 @@ class ConsoleQueries:
     async def user(self, principal, id):
         identifier(id)
         async with self._snapshot(principal) as conn:
-            row = await (await conn.execute('SELECT id,active,created_at FROM users WHERE id=%s',(id,))).fetchone()
+            row = await (await conn.execute('SELECT id,active,created_at,deleted_at,console_user_role(id,%s) AS role FROM users WHERE id=%s',
+                                            (self.console_issuer, id))).fetchone()
             if not row:
                 raise PlatformError(404,'console_user_not_found')
             result = projected(row)
+            result['plans'] = [projected(r) for r in await (await conn.execute("""SELECT m.id,m.billing_account_id AS wallet_id,
+                m.plan_id,p.name AS plan_name,m.starts_at,m.expires_at,(p.definition->>'test_only')::boolean AS test_only,
+                l.issued,l.available,l.spent,l.held,r.membership_id IS NOT NULL AS ended,
+                m.expires_at<=transaction_timestamp() AS expired,
+                CASE WHEN EXISTS(SELECT 1 FROM console_credit_adjustments a WHERE a.membership_id=m.id AND a.direction='add') THEN 'points'
+                     WHEN m.operator_id LIKE 'console:%%' THEN 'console' WHEN m.operator_id LIKE 'billing:%%' THEN 'purchase'
+                     WHEN m.operator_id LIKE 'redemption:%%' THEN 'redemption' ELSE 'other' END AS source
+                FROM memberships m JOIN plans p ON p.id=m.plan_id JOIN billing_accounts b ON b.id=m.billing_account_id
+                JOIN tenants t ON t.id=b.tenant_id LEFT JOIN credit_lots l ON l.membership_id=m.id
+                LEFT JOIN membership_revocations r ON r.membership_id=m.id
+                WHERE t.owner_user_id=%s ORDER BY (r.membership_id IS NULL AND m.expires_at>transaction_timestamp()) DESC,
+                m.expires_at DESC,m.id LIMIT 50""", (id,))).fetchall()]
+            if 'admins:manage' in principal.permissions and self.directory is not None:
+                subject = (await (await conn.execute('SELECT console_user_subject(%s,%s,%s) AS subject',
+                    (principal.id, id, self.product_issuer))).fetchone())['subject']
+            else:
+                subject = None
             note = await (await conn.execute('SELECT note,tags,updated_at FROM console_user_notes WHERE user_id=%s', (id,))).fetchone()
             result['note'] = projected(note) if note else None
             result['identities'] = [projected(r) for r in await (await conn.execute('SELECT username,email,email_verified FROM external_identities WHERE user_id=%s ORDER BY username,email LIMIT 10',(id,))).fetchall()]
@@ -307,7 +361,15 @@ class ConsoleQueries:
             result['has_more'] = any(len(result[name])>100 for name in ('tenants','wallets','products'))
             for name in ('tenants','wallets','products'):
                 result[name] = result[name][:100]
-            return result
+        result['profile'] = None
+        if subject:
+            from .logto_admin import profile
+            try:
+                result['profile'] = profile(await self.directory.get_user(subject))
+            except PlatformError as error:
+                result['profile_error'] = error.code
+        result['directory'] = self.directory is not None
+        return result
 
     async def products(self, principal, limit=25, offset=0, q=''):
         return await self._list(principal,"""SELECT p.id,p.enabled,

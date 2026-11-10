@@ -13,7 +13,7 @@ SELECT_TABLES = frozenset({
     "billing_offers", "billing_offer_withdrawals",
     "execution_models", "execution_model_states", "redemption_batches", "redemption_codes",
     "media_models", "media_model_states", "provider_catalog", "managed_model_bindings", "model_prices", "model_trial_access",
-    "provider_configs", "provider_config_status", "plan_states",
+    "provider_configs", "provider_config_status", "plan_states", "console_credit_adjustments",
 })
 SELECT_COLUMNS = {
     "console_reconciliation_cases": frozenset({"job_id","state","revision","actor_id","reason","snapshot_hash","last_operation_id","created_at","updated_at"}),

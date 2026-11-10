@@ -93,6 +93,27 @@ PLAN_ERRORS = {
 ADMIN_ERRORS = {'EA403': (403, 'console_permission_denied'), 'EA404': (404, 'console_request_invalid'),
                 'EA409': (409, 'console_acl_conflict')}
 USER_ERRORS = {'EA403': (403, 'console_permission_denied'), 'EA404': (404, 'console_user_not_found')}
+ROLE_ERRORS = {**USER_ERRORS, 'EA409': (409, 'console_last_admin'), 'EA413': (403, 'console_cannot_demote_self'),
+               'EA414': (409, 'console_user_inactive'), 'EA422': (422, 'invalid_console_command')}
+DELETE_ERRORS = {**USER_ERRORS, 'EA409': (409, 'console_user_is_admin')}
+CREDIT_ERRORS = {'EA403': (403, 'console_permission_denied'), 'EA404': (404, 'billing_account_not_found'),
+                 'EA405': (409, 'console_plan_not_active'), 'EA409': (409, 'console_calls_in_flight'),
+                 'EA410': (409, 'wallet_capacity_exceeded'), 'EA411': (409, 'console_points_insufficient'),
+                 'EA412': (409, 'console_no_live_plan'), 'EA422': (422, 'invalid_console_command')}
+_UNSET = object()
+
+
+def signed_points(value):
+    """'+12.5' or '-3' points as signed microcredits; never zero, at most 1,000,000 points."""
+    if not isinstance(value, str) or not re.fullmatch(r'[+-]?\d{1,7}(\.\d{1,6})?', value.strip()):
+        raise PlatformError(422, 'invalid_console_command')
+    text_value = value.strip()
+    sign = -1 if text_value.startswith('-') else 1
+    whole, _, part = text_value.lstrip('+-').partition('.')
+    micro = int(whole) * 1000000 + int((part + '000000')[:6])
+    if not 0 < micro <= 1000000000000:
+        raise PlatformError(422, 'invalid_console_command')
+    return sign * micro
 
 
 async def guarded(conn, statement, params, errors):
@@ -122,6 +143,39 @@ class ConsoleCatalog:
         self.db, self.auth = db, auth
         self.public_key = public_key if public_key and valid_public_key(public_key) else None
         self.providers = provider_registry(provider_ids)
+        self._directory = _UNSET
+
+    @property
+    def directory(self):
+        """The Logto Management API client, or None when the console has no credentials for it."""
+        if self._directory is _UNSET:
+            from .logto_admin import from_settings
+            settings = self.auth.settings
+            self._directory = from_settings(settings)
+        return self._directory
+
+    @directory.setter
+    def directory(self, value):
+        self._directory = value
+
+    @property
+    def console_issuer(self):
+        return self.auth.settings.issuer
+
+    @property
+    def product_issuer(self):
+        return getattr(self.auth.settings, 'product_issuer', None) or self.auth.settings.issuer
+
+    def _require_directory(self):
+        if self.directory is None:
+            raise PlatformError(503, 'console_logto_not_configured')
+        return self.directory
+
+    async def _subject(self, conn, actor, user):
+        subject = await guarded(conn, 'SELECT console_user_subject(%s,%s,%s) AS result', (actor, user, self.product_issuer), USER_ERRORS)
+        if not subject:
+            raise PlatformError(404, 'console_user_not_found')
+        return subject
 
     def _verified_model(self, definition):
         d = validate_definition(definition)
@@ -133,7 +187,7 @@ class ConsoleCatalog:
             raise PlatformError(409, 'console_provider_not_preverified')
         return d
 
-    async def _command(self, principal, action, target_type, target_id, payload, reason, key, permissions, secret=None, sealed=None):
+    async def _command(self, principal, action, target_type, target_id, payload, reason, key, permissions, secret=None, sealed=None, private=None):
         reason, key = text(reason, 512), text(key, 128)
         target_id = text(target_id, 255)
         try:
@@ -259,6 +313,37 @@ class ConsoleCatalog:
                     updated_by=EXCLUDED.updated_by,updated_at=clock_timestamp() RETURNING note,tags,updated_at""",
                     (target_id, payload['note'], payload['tags'], actor))).fetchone()
                 result = {'id': target_id, 'note': row['note'], 'tags': row['tags'], 'updated_at': row['updated_at'].isoformat()}
+            elif action == 'user.role':
+                result = await guarded(conn, 'SELECT console_set_user_role(%s,%s,%s,%s,%s) AS result',
+                                       (actor, target_id, payload['role'], self.console_issuer, self.product_issuer), ROLE_ERRORS)
+            elif action in ('user.delete', 'user.restore'):
+                deleted = action == 'user.delete'
+                result = await guarded(conn, 'SELECT console_set_user_deleted(%s,%s,%s,%s) AS result',
+                                       (actor, target_id, deleted, self.console_issuer), DELETE_ERRORS)
+                if self.directory is not None:
+                    # Logto refuses sign-in too, so a deleted person cannot even reach the login page's end.
+                    await self.directory.set_suspended(await self._subject(conn, actor, target_id), deleted)
+            elif action == 'user.create':
+                created = await self._require_directory().create_user(
+                    username=payload['username'], phone=payload['phone'], email=payload['email'], password=private)
+                result = await guarded(conn, 'SELECT console_create_user(%s,%s,%s,%s,%s) AS result',
+                                       (actor, self.product_issuer, created['id'], payload['username'], payload['email']), USER_ERRORS)
+            elif action == 'user.profile':
+                directory = self._require_directory()
+                await directory.update_user(await self._subject(conn, actor, target_id),
+                                            username=payload['username'], phone=payload['phone'], email=payload['email'])
+                result = await guarded(conn, 'SELECT console_update_identity(%s,%s,%s,%s) AS result',
+                                       (actor, target_id, payload['username'], payload['email']), USER_ERRORS)
+            elif action == 'user.password':
+                directory = self._require_directory()
+                await directory.set_password(await self._subject(conn, actor, target_id), private)
+                result = {'id': target_id}
+            elif action == 'credits.adjust':
+                result = await guarded(conn, 'SELECT console_adjust_credits(%s,%s,%s,%s,%s) AS result',
+                                       (actor, target_id, payload['delta'], key_hash, reason), CREDIT_ERRORS)
+            elif action == 'plan.end':
+                result = await guarded(conn, 'SELECT console_end_membership(%s,%s,%s,%s) AS result',
+                                       (actor, target_id, payload['membership_id'], reason), CREDIT_ERRORS)
             else:
                 raise PlatformError(422, 'invalid_console_command')
             operation_id = uuid4().hex
@@ -588,6 +673,42 @@ class ConsoleCatalog:
             raise PlatformError(422, 'invalid_console_command')
         return await self._command(principal, 'user.note', 'user', user, {'note': note, 'tags': tags(tag_list)},
                                    reason, key, ('users:manage',))
+
+    async def set_user_role(self, principal, user, role, reason, key):
+        if role not in ('admin', 'user'):
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'user.role', 'user', user, {'role': role}, reason, key, ('admins:manage',))
+
+    async def set_user_deleted(self, principal, user, deleted, reason, key):
+        if type(deleted) is not bool:
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'user.delete' if deleted else 'user.restore', 'user', user, {}, reason, key, ('admins:manage',))
+
+    async def create_user(self, principal, username, phone, email, password, reason, key):
+        from .logto_admin import clean_email, clean_password, clean_phone, clean_username
+        payload = {'username': clean_username(username), 'phone': clean_phone(phone), 'email': clean_email(email)}
+        secret = None if password in (None, '') else clean_password(password)
+        return await self._command(principal, 'user.create', 'user', 'new', payload, reason, key, ('admins:manage',), private=secret)
+
+    async def update_profile(self, principal, user, username, phone, email, reason, key):
+        from .logto_admin import clean_email, clean_phone, clean_username
+        payload = {'username': clean_username(username), 'phone': clean_phone(phone), 'email': clean_email(email)}
+        return await self._command(principal, 'user.profile', 'user', user, payload, reason, key, ('admins:manage',))
+
+    async def set_password(self, principal, user, password, reason, key):
+        from .logto_admin import clean_password
+        return await self._command(principal, 'user.password', 'user', user, {}, reason, key, ('admins:manage',),
+                                   private=clean_password(password))
+
+    async def adjust_credits(self, principal, wallet, points, reason, key):
+        if isinstance(reason, str) and len(reason) > 256:
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'credits.adjust', 'wallet', wallet, {'delta': signed_points(points)}, reason, key, ('plans:issue',))
+
+    async def end_plan(self, principal, wallet, membership_id, reason, key):
+        if isinstance(reason, str) and len(reason) > 256:
+            raise PlatformError(422, 'invalid_console_command')
+        return await self._command(principal, 'plan.end', 'wallet', wallet, {'membership_id': text(membership_id, 255)}, reason, key, ('plans:issue',))
 
     async def create_redemptions(self, principal, plan_id, name, count, days, reason, key):
         if (type(count) is not int or not 1 <= count <= 100 or type(days) is not int or not 1 <= days <= 365

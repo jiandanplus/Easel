@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { load } from './load.mjs';
 const m = load('ManageDialog.tsx'), c = load('core.ts');
-test('only ordinary plans within 100 points and 365 days can be issued from the page',()=>{
+test('only ordinary plans within 1,000,000 points and 365 days can be issued from the page',()=>{
   assert.equal(m.issuable({id:'friend-v1',credits:'50000000',days:30}),true);
-  assert.equal(m.issuable({id:'big-v1',credits:'100000001',days:30}),false);
+  assert.equal(m.issuable({id:'pro-v1',credits:'10000000000',days:30}),true);
+  assert.equal(m.issuable({id:'big-v1',credits:'1000000000001',days:30}),false);
   assert.equal(m.issuable({id:'long-v1',credits:'1',days:366}),false);
   assert.equal(m.issuable({id:'easel-owner-allowance-v1',credits:'100000000',days:365}),false);
   assert.equal(m.issuable({id:'easel-internal-experience-v1',credits:'10000000',days:7}),false);
@@ -22,6 +23,11 @@ test('management commands use exact paths and need the matching permission',()=>
   client.setSession({admin:{id:'a',role:'admin',permissions:['console:read','plans:publish']},csrf_token:'csrf'});
   for(const path of ['/api/plans','/api/plans/plan-a/revise','/api/plans/plan-a/state'])assert.ok(client.operation(path,{},'plans:publish'));
   assert.throws(()=>client.operation('/api/plans/plan-a/delete',{},'plans:publish'));
+  client.setSession({admin:{id:'a',role:'admin',permissions:['console:read','users:manage','admins:manage','plans:issue']},csrf_token:'csrf'});
+  for(const path of ['/api/users','/api/users/u1/role','/api/users/u1/delete','/api/users/u1/profile','/api/users/u1/password'])assert.ok(client.operation(path,{},'admins:manage'));
+  for(const path of ['/api/wallets/w/credits','/api/wallets/w/plans/end'])assert.ok(client.operation(path,{},'plans:issue'));
+  assert.throws(()=>client.operation('/api/users/u1/role',{},'users:manage'));
+  assert.throws(()=>client.operation('/api/wallets/w/credits',{},'users:manage'));
 });
 test('redemption and admin commands are allowed only on their exact paths',()=>{
   const client=new c.ConsoleClient(async()=>new Response('{}'),()=> 'key-12345678');
