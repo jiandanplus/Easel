@@ -44,7 +44,8 @@ class ExecutionEvidence:
     async def start(self, job_id, attempt_id, *, provider_request_hash, upstream_model, request_id, provider_scope_hash):
         validate_evidence_hash(provider_request_hash); validate_evidence_hash(provider_scope_hash); correlation_id(request_id)
         if (not isinstance(upstream_model, str) or not 1 <= len(upstream_model) <= 128
-                or any(ord(char) < 33 for char in upstream_model)):
+                or not re.fullmatch(r"\S+(?: \S+)*", upstream_model)
+                or any(ord(char) < 32 or 127 <= ord(char) <= 0x9f for char in upstream_model)):
             raise PlatformError(422, "invalid_execution_evidence")
         try:
             async with self.db.connection() as conn:

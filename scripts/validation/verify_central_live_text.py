@@ -68,6 +68,7 @@ REQUIRED_MIGRATIONS = [
     "032_provider_accounts.sql",
     "033_provider_voices.sql",
     "034_apimart_images.sql",
+    "035_model_names_with_spaces.sql",
 ]
 ACCEPTANCE_CREDITS = 100_000_000
 ACCEPTANCE_RATE = {

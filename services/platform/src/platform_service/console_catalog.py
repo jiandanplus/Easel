@@ -40,6 +40,22 @@ def text(value, maximum):
     return value
 
 
+def upstream_name(value):
+    """A supplier's model name. Some contain single spaces ("Midjourney v8.2"); no other whitespace."""
+    if not re.fullmatch(r'\S+(?: \S+)*', text(value, 128)) or any(0x80 <= ord(char) <= 0x9f for char in value):
+        raise PlatformError(422, 'invalid_console_command')
+    return value
+
+
+def local_model_id(upstream):
+    """Our id for a pulled model. Names that lose non-ASCII text get a short hash so they stay distinct."""
+    model = re.sub(r'[^A-Za-z0-9_.:-]+', '-', upstream).strip('-_.:')[:120]
+    if any(ord(char) > 127 for char in upstream):
+        digest = hashlib.sha256(upstream.encode()).hexdigest()[:6]
+        model = (model + '-' if model else 'model-') + digest
+    return model
+
+
 def protected(value):
     if isinstance(value, str) and value.startswith('easel-internal-'):
         raise PlatformError(403, 'console_internal_plan_protected')
@@ -303,7 +319,7 @@ class ConsoleCatalog:
             if await (await conn.execute('SELECT 1 FROM managed_model_bindings WHERE kind=%s AND provider_id=%s AND upstream_model=%s', (kind, payload['provider_id'], upstream))).fetchone():
                 skipped.append(upstream)
                 continue
-            model = re.sub(r'[^A-Za-z0-9_.:-]', '-', upstream).lstrip('-_.:')[:128]
+            model = local_model_id(upstream)
             if not model:
                 raise PlatformError(422, 'invalid_console_command')
             name = upstream
@@ -447,7 +463,7 @@ class ConsoleCatalog:
 
     async def create_managed_model(self, principal, model, name, capability, provider_id, upstream_model, prices, reason, key):
         payload = {'name': text(name, 128), 'capability': text(capability, 64), 'provider_id': text(provider_id, 64),
-                   'upstream_model': text(upstream_model, 128), 'prices': prices}
+                   'upstream_model': upstream_name(upstream_model), 'prices': prices}
         if not re.fullmatch(r'[A-Za-z0-9_.:/-]{1,128}', model or ''):
             raise PlatformError(422, 'invalid_console_command')
         return await self._command(principal, 'model.managed', 'model', model, payload, reason, key, ('execution:publish',))
@@ -456,9 +472,7 @@ class ConsoleCatalog:
         if (not isinstance(upstream_models, list) or not 1 <= len(upstream_models) <= 100 or len(set(map(str, upstream_models))) != len(upstream_models)
                 or type(enabled) is not bool):
             raise PlatformError(422, 'invalid_console_command')
-        payload = {'capability': text(capability, 64), 'provider_id': text(provider_id, 64), 'upstream_models': [text(name, 128) for name in upstream_models], 'prices': prices, 'enabled': enabled}
-        if any(any(ord(c) < 33 for c in name) for name in upstream_models):
-            raise PlatformError(422, 'invalid_console_command')
+        payload = {'capability': text(capability, 64), 'provider_id': text(provider_id, 64), 'upstream_models': [upstream_name(name) for name in upstream_models], 'prices': prices, 'enabled': enabled}
         return await self._command(principal, 'model.import', 'model', 'import:' + provider_id, payload, reason, key, ('execution:publish',))
 
     async def set_model_price(self, principal, kind, model, prices, reason, key):

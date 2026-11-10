@@ -1,4 +1,6 @@
 """Console model catalog (migration 027) through the low Console role on a real PostgreSQL."""
+import re
+
 import pytest
 
 from platform_service.errors import PlatformError
@@ -92,13 +94,30 @@ async def test_pulled_models_are_added_and_enabled_in_one_step(db, console, cons
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("names", [[], ["a"] * 2, ["has space"], [f"m{i}" for i in range(101)]])
+@pytest.mark.parametrize("names", [[], ["a"] * 2, ["two  spaces"], [" lead"], ["tab\tname"], ["wide　space"], ["c1\x85"], [f"m{i}" for i in range(101)]])
 async def test_pulled_model_lists_are_checked(db, console, console_role, names):
     await seed(db)
     await providers(db)
     catalog, _, principal, _ = await low_catalog(console, console_role, "admin")
     with pytest.raises(PlatformError):
         await catalog.import_models(principal, "text", "gateway", names, TEXT_PRICES, True, "拉取", "bad-1")
+
+
+@pytest.mark.asyncio
+async def test_supplier_names_with_spaces_and_chinese_are_added(db, console, console_role):
+    await seed(db)
+    await providers(db)
+    catalog, queries, principal, _ = await low_catalog(console, console_role, "admin")
+    names = ["Midjourney v8.2", "gpt-image-2.0", "gpt-image-2.0-不超分", "gpt-image-2.0-原生", "完全无限制-Z-Image", "极速生图"]
+    result = await catalog.import_models(principal, "image.generate", "images", names, {"image": "2"}, True, "拉取", "zh-1")
+    added = result["added"]
+    assert len(added) == len(set(added)) == 6 and not result["skipped"]
+    assert added[:2] == ["Midjourney-v8.2", "gpt-image-2.0"]
+    assert re.fullmatch(r"gpt-image-2\.0-[0-9a-f]{6}", added[2]) and added[2] != added[3]
+    assert re.fullmatch(r"Z-Image-[0-9a-f]{6}", added[4]) and re.fullmatch(r"model-[0-9a-f]{6}", added[5])
+    rows = {row["id"]: row for row in (await queries.model_catalog(principal))["items"]}
+    assert [rows[model]["upstream_model"] for model in added] == names
+    assert rows["Midjourney-v8.2"]["name"] == "Midjourney v8.2" and rows["Midjourney-v8.2"]["enabled"] is True
 
 
 @pytest.mark.asyncio

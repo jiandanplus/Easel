@@ -162,6 +162,7 @@ async def test_prepare_only_real_http_auth_and_zero_provider_calls(test_dsn, run
             "032_provider_accounts.sql",
             "033_provider_voices.sql",
             "034_apimart_images.sql",
+            "035_model_names_with_spaces.sql",
         ]
         assert receipt["no_payment_rows"] == {
             "billing_orders": 0,
