@@ -440,18 +440,22 @@ class CentralClient:
                     failure = CentralError("invalid_authentication", 401)
                     self._forget_invalid(state, failure)
                     auth = None
+            username = None
             if auth and verify and failure is None:
                 try:
                     me = self._safe(self._get(state, "/v2/me", deadline=self.absolute_deadline))
                     auth = state["auth"]
                     if me.get("scope") != auth["scope"] or me.get("account", {}).get("id") != auth["account"]["id"]:
                         raise PlatformError("account_changed", 409)
+                    name = me.get("account", {}).get("username")
+                    if isinstance(name, str) and 0 < len(name) <= 128 and name.isprintable():
+                        username = name
                 except PlatformError as error:
                     failure = error
                     if self._forget_invalid(state, error):
                         auth = None
         result = {"configured": bool(state["url"]), "url": state["url"], "authenticated": bool(auth and auth["refresh_expires_at"] > self.clock() and not failure),
-                  "account": {k: auth["account"].get(k) for k in ("id", "email", "email_verified")} if auth else None,
+                  "account": {**{k: auth["account"].get(k) for k in ("id", "email", "email_verified")}, "username": username} if auth else None,
                   "scope": dict(auth["scope"]) if auth else None, "login": {"pending": False}}
         if failure:
             result["error"] = {"code": failure.code, "message": str(failure)}

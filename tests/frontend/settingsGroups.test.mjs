@@ -42,3 +42,11 @@ test('storage sizes and shortcut list read naturally', () => {
   assert.ok(all.some(([keys, label]) => keys === '⌘ ,' && label === '打开设置'));
   assert.ok(all.some(([keys, label]) => keys === '⌘ N' && label === '新建对话'));
 });
+
+test('profile shows a letter when there is no avatar', () => {
+  const { initialOf } = pick('ProfileSettings.tsx', ['initialOf']);
+  assert.equal(initialOf('jiandan'), 'J');
+  assert.equal(initialOf('进击的晴明'), '进');
+  assert.equal(initialOf(''), '优');
+  assert.equal(initialOf(null), '优');
+});

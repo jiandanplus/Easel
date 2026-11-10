@@ -165,8 +165,10 @@ async def test_login_keeps_display_username_and_drops_malformed_ones(identity, d
         async with db.connection() as conn:
             return (await (await conn.execute(
                 "SELECT username FROM external_identities WHERE subject='subject-1'")).fetchone())["username"]
-    await login(identity, username="alice")
+    session = await login(identity, username="alice")
     assert await stored() == "alice"
+    scope = await identity[0].authenticate(session["access_token"], "easel")
+    assert (await identity[0].me(scope))["account"]["username"] == "alice"  # Shown on the desktop profile page.
     await login(identity, username="alice-renamed")
     assert await stored() == "alice-renamed"
     for bad in ("", "   ", "x" * 129, "bad\nname", 42):

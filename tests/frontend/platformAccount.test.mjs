@@ -68,7 +68,7 @@ test('settings account navigation mounts account panel without changing model se
  const states=[];let cursor=0;
  const component=runInNewContext(output,{React:{Fragment:'fragment',createElement:(type,props,...children)=>({type,props:props||{},children:children.flat()})},
  useState:initial=>{let i=cursor++;if(!(i in states))states[i]=typeof initial==='function'?initial():initial;return[states[i],v=>states[i]=typeof v==='function'?v(states[i]):v]},useEffect:()=>{},useCallback:cb=>cb,useRef:value=>({current:value}),
- CHANNELS:[],SETTINGS_GROUPS:[{label:'账号',items:[{id:'profile',label:'个人中心'}]},{label:'智能体',items:[{id:'model',label:'AI 服务商'}]}],NAV_ICONS:{},ThemeSettings:'theme',HarnessSettings:'harness',MediaGatewaySettings:'media-gateway',PlatformAccountSettings:'platform-account',EnvBoard:'env',IconSlidersHorizontal:'icon',IconPackage:'icon',IconEllipsis:'icon'});
+ CHANNELS:[],SETTINGS_GROUPS:[{label:'账号',items:[{id:'profile',label:'个人中心'}]},{label:'智能体',items:[{id:'model',label:'AI 服务商'}]}],NAV_ICONS:{},ThemeSettings:'theme',HarnessSettings:'harness',MediaGatewaySettings:'media-gateway',PlatformAccountSettings:'platform-account',ProfileSettings:'platform-account',EnvBoard:'env',IconSlidersHorizontal:'icon',IconPackage:'icon',IconEllipsis:'icon'});
  const render=()=>{cursor=0;return component({onClose(){}})};
  assert.equal(nodes(render(),'platform-account').length,0);
  nodes(render(),'button').find(n=>text(n)==='个人中心').props.onClick();

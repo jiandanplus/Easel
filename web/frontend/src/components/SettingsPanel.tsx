@@ -14,6 +14,7 @@ import {
 } from '../lib/api';
 import type { EnvTool, ModelRow, SelftestResult, LocalAgentInfo, MediaCapability, MediaGatewaySettings as MediaGatewayState, HarnessSettingsResponse } from '../lib/api';
 import AccountsPage from './AccountsPage';
+import ProfileSettings from './ProfileSettings';
 import { ComingSoon, DeviceSettings, ShortcutSettings, SkillSettings, StatsSettings, StorageSettings, TrashSettings } from './SettingsPages';
 import { NAV_ICONS } from './settingsNavIcons';
 
@@ -21,7 +22,7 @@ interface Props {
   onClose: () => void;
   initialSection?: 'model' | 'theme' | 'account' | Sec;
   /** 从「技能」页跳到主界面的技能库。 */
-  onOpenPage?: (page: 'skills') => void;
+  onOpenPage?: (page: 'skills' | 'profile') => void;
   sectionRequest?: number;
   /** 非空时在面板顶部显示一条提示条。首开未配置模型时由 App 传入。 */
   banner?: string;
@@ -733,7 +734,7 @@ export default function SettingsPanel({ onClose, banner = '', initialSection = '
           </nav>
 
           <div className="settings-main">
-            {sec === 'profile' && <PlatformAccountSettings view="profile" />}
+            {sec === 'profile' && <ProfileSettings onOpenPersonas={onOpenPage ? () => onOpenPage('profile') : undefined} onOpenAccounts={() => setSec('accounts')} />}
             {(sec === 'plan' || sec === 'usage' || sec === 'balance' || sec === 'billing') && <PlatformAccountSettings view={sec} />}
             {sec === 'theme' && <ThemeSettings />}
             {sec === 'shortcuts' && <ShortcutSettings />}

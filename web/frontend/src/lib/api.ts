@@ -69,7 +69,7 @@ export interface CentralScope {
 }
 export interface CentralStatus {
   configured: boolean; url: string; authenticated: boolean;
-  account: { id: string; email: string | null; email_verified: boolean } | null;
+  account: { id: string; email: string | null; email_verified: boolean; username?: string | null } | null;
   scope: CentralScope | null;
   error?: { code: string; message: string };
   login: { pending: boolean; expires_at?: number; error?: { code: string; message: string } };
@@ -1311,3 +1311,15 @@ export function fetchTrash(): Promise<{ items: TrashItem[]; keep_days: number }>
 export function restoreTrash(id: string): Promise<{ id: string; restored: string }> { return request(`/api/trash/${encodeURIComponent(id)}/restore`, { method: 'POST' }); }
 export function removeTrash(id: string): Promise<{ ok: boolean }> { return request(`/api/trash/${encodeURIComponent(id)}`, { method: 'DELETE' }); }
 export function emptyTrash(): Promise<{ ok: boolean; removed: number }> { return request('/api/trash', { method: 'DELETE' }); }
+
+// ── 个人中心：头像只存在这台电脑上 ───────────────────────────
+export function avatarUrl(version: number): string { return `${BASE}/api/profile/avatar?v=${version}`; }
+export async function hasAvatar(): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/profile/avatar`, { method: 'GET', cache: 'no-store' });
+  return res.ok;
+}
+export function uploadAvatar(file: File): Promise<{ ok: boolean }> {
+  const form = new FormData(); form.append('file', file);
+  return request('/api/profile/avatar', { method: 'POST', body: form });
+}
+export function removeAvatar(): Promise<{ ok: boolean }> { return request('/api/profile/avatar', { method: 'DELETE' }); }

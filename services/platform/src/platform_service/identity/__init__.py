@@ -473,7 +473,8 @@ class IdentityService:
     async def _account(self, conn, row):
         external = await (
             await conn.execute(
-                "SELECT email,email_verified FROM external_identities WHERE issuer=%s AND subject=%s AND user_id=%s",
+                # to_jsonb keeps this working on schemas from before migration 023 (no username column).
+                "SELECT email,email_verified,to_jsonb(e)->>'username' AS username FROM external_identities e WHERE issuer=%s AND subject=%s AND user_id=%s",
                 (row["issuer"], row["subject"], row["user_id"]),
             )
         ).fetchone()

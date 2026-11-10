@@ -65,3 +65,19 @@ def test_system_reports_device_and_where_data_lives(sandbox):
     assert sandbox.post("/api/system/open", json={"key": "nowhere"}).status_code == 404
     assert sandbox.post("/api/system/open", json={"key": "trash"}).status_code == 404  # Nothing there yet.
     assert time.time() > 0
+
+
+def test_avatar_is_stored_on_this_machine_and_checked(sandbox):
+    assert sandbox.get("/api/profile/avatar").status_code == 404
+    png = b"\x89PNG\r\n\x1a\n" + b"0" * 64
+    assert sandbox.post("/api/profile/avatar", files={"file": ("a.png", png, "image/png")}).json()["type"] == "image/png"
+    got = sandbox.get("/api/profile/avatar")
+    assert got.status_code == 200 and got.content == png and got.headers["content-type"] == "image/png"
+    jpg = b"\xff\xd8\xff" + b"1" * 32
+    sandbox.post("/api/profile/avatar", files={"file": ("b.jpg", jpg, "image/jpeg")})
+    assert sandbox.get("/api/profile/avatar").content == jpg and not (web.OUTPUTS_DIR / "_profile" / "avatar.png").exists()
+    assert sandbox.post("/api/profile/avatar", files={"file": ("x.png", b"<svg/>", "image/png")}).status_code == 415
+    assert sandbox.post("/api/profile/avatar", files={"file": ("big.png", b"\x89PNG\r\n\x1a\n" + b"0" * (2 * 1024 * 1024), "image/png")}).status_code == 413
+    assert sandbox.delete("/api/profile/avatar").status_code == 200
+    assert sandbox.get("/api/profile/avatar").status_code == 404
+    assert sandbox.get("/api/output/_profile/avatar.jpg").status_code in (403, 404)  # Not exposed as library content.
