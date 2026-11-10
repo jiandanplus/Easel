@@ -1276,11 +1276,12 @@ export default function App() {
         />
       </>}
       <main className="main-content">
-        <AppTopbar currentPage={currentPage} settingsOpen={settingsOpen}
+        {/* Settings has its own header; the page top bar would only repeat navigation there. */}
+        {!settingsOpen && <AppTopbar currentPage={currentPage} settingsOpen={settingsOpen}
           personas={personas} selectedPersona={selectedPersona}
           onNavigate={navigateToPage}
           onPersonaChange={handlePersonaChange} onNewProfile={() => setShowWizard(true)}
-          onAppearance={() => openSettings('theme')} />
+          onAppearance={() => openSettings('theme')} />}
         <div className="page-host">
           <div className="page-view" hidden={settingsOpen}>{renderPage()}</div>
           {settingsOpen && <SettingsPanel initialSection={settingsSection} sectionRequest={settingsSectionRequest}
