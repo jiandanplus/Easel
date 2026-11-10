@@ -208,7 +208,7 @@ export default function CentralAccountSettings({ view = 'all' }: { view?: Accoun
           <dl className="central-account-balances"><div><dt>内部体验可用点数</dt><dd>{formatMicrocredits(wallet.data.experience_available)}</dd></div><div><dt>内部体验累计发放</dt><dd>{formatMicrocredits(wallet.data.experience_issued)}</dd></div><div><dt>体验额度到期</dt><dd>{displayDate(wallet.data.experience_expires_at)}</dd></div></dl>
         </aside>}
       </section>}
-      {show('plan') && <RedeemSection onRedeemed={() => setRevision(value => value + 1)} />}
+      {show('balance') && <RedeemSection onRedeemed={() => setRevision(value => value + 1)} />}
       {show('plan') && <section className="central-account-section" aria-label="当前权益" aria-busy={entitlements.loading}>
         <h4>当前权益</h4>{entitlements.data === null ? <p role={entitlements.error ? 'alert' : 'status'}>{readMessage(entitlements, '测试权益')}</p> : <>
           <p className="desc">{entitlements.data.test_only ? '测试权益 · 不代表正式订阅' : '包含正式权益 · 点数来源见共享钱包'}</p><p>{entitlements.data.active ? '权益生效中' : '当前无生效权益'} · 产品 {entitlements.data.product_id} · 并发 {entitlements.data.concurrency}</p><p>能力：{entitlements.data.features.map(feature => ({ text: '文本对话', image: '图片生成' } as Record<string, string>)[feature] || feature).join('、') || '暂无'}</p>
