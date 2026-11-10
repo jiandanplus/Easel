@@ -1,0 +1,60 @@
+{
+  "actual_sdk_recovery": {
+    "actual": null,
+    "agent_requests": 3,
+    "create_calls": 1,
+    "pi_agent_core_version": "1.4.0",
+    "pi_ai_version": "1.4.0",
+    "query_calls": 1,
+    "real_network_requests": 0,
+    "scenario": "media-recovery",
+    "success": true,
+    "terminal_status": "pending_reconciliation",
+    "worker_sha256": "fa122e93d0d9cffae32aac5f95724189c039ab22a705f09d74c125d57515342f"
+  },
+  "f50_modified": false,
+  "independent_extra_fence_checks": [
+    "SystemExit after persisted sending fence prevents restart refresh reuse; explicit logout exits locally without refresh.",
+    "Directory fsync failure after guard file replacement prevents any refresh POST; restart remains fenced.",
+    "Directory fsync failure after new auth rename cannot resend old refresh; actual fresh file is used after restart."
+  ],
+  "input_sha256": {
+    "easel/harnesses/pi.py": "414642b4ba6714ea1f7f7ae12d4944c8688cd3e3fbb5e8e9b9005157a74677f1",
+    "easel/platform/auth_refresh.py": "57a5773a21cee59b2657aadd39b8350ed38e80eedd8b65f3ed896f65d5b6284f",
+    "easel/platform/central.py": "9849d356ea3b5038cb2341bbb76848a33d209e2527646970ae1ad39e95fae6cf",
+    "easel/platform/media.py": "e320cb7e21d2cda56cb64ac7609b865bc6dccf7251ee8b1a957b87970bb00f4c",
+    "tests/test_central_auth_hardening.py": "541096c0657a9a3aa7e3eabe2d90b9d4dc5785d31e051a91d45705a47f0a5e28",
+    "tests/test_central_media_auth_rotation.py": "f1bfdb9960860520631f4e52131384b47d72c717e3dafefdbbd93ec135e7d6b8",
+    "tests/test_central_media_host.py": "0d8415066595ddd83fda19a0f2c0a7c3280f6802d2d98c980384545b666472c6",
+    "tests/test_central_platform_web.py": "3ef7ab501b3516310caa247150ea4e0dca1ac1547fe5a552eec9705bc8f829b4",
+    "tests/test_pi_media_host.py": "c6ab7f1dad492fd96c029e9e9791713342c2850762d9c2df4a75cf833be93959"
+  },
+  "inputs_before_after_and_at_report_unchanged": true,
+  "limits": [
+    "Source and local fixtures reviewed, not a packaged v23 installation or production rollout.",
+    "Login hardening does not explain the actual image failure; independently reproduced EROFS is a separate root cause.",
+    "Uncertain local logout removes local credentials; it does not claim confirmed remote revocation.",
+    "Pi SDK recovery uses deterministic provider events and fake tool results; no paid text/image call."
+  ],
+  "real_provider_calls": 0,
+  "runtime_sessions_modified": false,
+  "skip_reasons": [
+    "test_central_execution_native.py:92 explicit EASEL_TEST_CODEX_BINARY",
+    "test_central_execution_stream.py:357 explicit EASEL_TEST_CODEX_BINARY",
+    "test_central_execution_stream.py:362 explicit EASEL_TEST_CODEX_NODE",
+    "test_central_native_protocol.py:14 explicit EASEL_TEST_CODEX_NODE"
+  ],
+  "ssh_calls": 0,
+  "status": "limited_independent_auth_pi_review_passed_no_known_blocker",
+  "test_log_sha256": "b527f4d42b56cd96365f34da9ecb01c6f0f7d17a18e78cc9369c3820cba69403",
+  "tested": {
+    "exit_code": 0,
+    "failed": 0,
+    "passed": 454,
+    "scope": "all tests/test_central*.py + six Pi modules + three independent fence fault tests",
+    "seconds": 14.05,
+    "skipped": 4
+  },
+  "user_auth_read_or_changed": false,
+  "v22_modified": false
+}

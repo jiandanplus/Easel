@@ -1,0 +1,138 @@
+{
+  "date": "2026-10-28",
+  "status": "local_preview_activated_ui_verified_live_text_failed_no_retry",
+  "artifact": {
+    "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v27/Easel/Easel.app",
+    "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261028-v27/Easel-Pi-macOS15-arm64.zip",
+    "sha256": "2cb9e38759a90083813139c4fbb15ff61294a306c6ec99b0902660ce73053948",
+    "archive_bytes": 129828928,
+    "inventory_files": 15401,
+    "schema_version": 1,
+    "engine": "pi",
+    "git_commit": "e972af07444e181e3eb737441ecac306bca778b3",
+    "source_manifest_sha256": "87894ec57ec7a062a04dcca3fdfc805490068f54550464ee33abe2635530521f",
+    "pi_manifest_sha256": "8448f44712ed33164b3e04fd2dc198be2b03ba2bd0f62f237aec3c0d4f7d9783",
+    "frontend_receipt_sha256": "4e6d900b5256e10d12a75f911ddc4677f7e37d73543ec731ca15a5b95d0afb97",
+    "python_archive_verified": false,
+    "python_runtime_inventory_verified": true,
+    "python_version": "3.12.13",
+    "wheel_count": 26,
+    "minimum_macos": "15.0",
+    "unsigned": true,
+    "notarized": false,
+    "ui": "loopback web browser"
+  },
+  "package_safe_sha256": "24a1d3a3d130f35e7a9725ab9ed34cd0448576d56f76f6f9369bbf0eaf63e677",
+  "preview": {
+    "url": "http://127.0.0.1:17868/",
+    "pid": 80315,
+    "same_workspace": true,
+    "home_override": false,
+    "previous_apps_and_zips_retained": true
+  },
+  "preservation_at_upgrade": {
+    "ok": true,
+    "protected_files": 138,
+    "new_private_runtime_files": [],
+    "history_and_custom_config_preserved": true,
+    "same_account_scope": true,
+    "same_wallet": true,
+    "wallet_observed": true,
+    "changes": [],
+    "model_calls": 0
+  },
+  "frontend": {
+    "passed": 462,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 3.708756709,
+    "log_sha256": "31e200bc9e2e0f1cb60b1f16e0407047dc3331c225c539bfd28f7aadca618ce7",
+    "tsc_exit_code": 0,
+    "diffcheck_exit_code": 0
+  },
+  "browser": {
+    "actual_skills": 114,
+    "raw_agent_metadata_removed_from_primary_cards_and_drawer": true,
+    "search_by_internal_alias_preserved": true,
+    "drawer_canonical_execution_id_unchanged": true,
+    "environment_versions_sizes_status_retained": true,
+    "themes_rendered": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E"
+    ],
+    "restored_appearance": "system",
+    "screenshots_sha256": {
+      "skill-drawer.png": "6162bb9e823dc7cbc39389b2f4d7ea2613c443c9fe928009a49b019f97a4bfb8",
+      "environment.png": "848b8bbf69f71403557c2b17560d83ba5e7e9ba3a5602a4d5ea0739a01969ad3",
+      "skills-theme-A.png": "24254042c06deacb25dfa77987b349eec10e41795450a7d75e202751ff19a9a1",
+      "skills-theme-B.png": "4f68399a9ab7d614692a913baa1c5b969fde3854f56308809a2d1130f1bf87d1",
+      "skills-theme-C.png": "c4d9c5221e2179f75c7a9f7f9c4557460772567b6267963f8e6e67f70ec36bec",
+      "skills-theme-D.png": "f2a6406295c353ce3f73c8dc63e8371a90ec7bdf9316b3fc6eee8a2c0302a918",
+      "skills-theme-E.png": "f73607bfef7d7972bbcb1ff9623705d350a0fbbca31dc99167ac8c6d06094323",
+      "live-text-failed.png": "574f6ac2b28ec0741202b40e1661f596471c4781c36ffad57984630ac16164a2"
+    }
+  },
+  "live_text": {
+    "session_id": "mvridwfi6pmrzb",
+    "turn_id": "b01ee330-6497-479b-9ce3-90eb913c02ba",
+    "execution_id": "bdbc4509-7b03-42ac-9b68-3c1381e977c5",
+    "model": "easel-deepseek-flash-internal-v1",
+    "upstream_model": "deepseek-flash",
+    "provider_attempts": 1,
+    "http_status": 400,
+    "result": "failed_pending_reconciliation",
+    "actual": null,
+    "reserved_microcredits": "9728",
+    "file_created": false,
+    "tool_success_verified": false,
+    "automatic_resubmit": false,
+    "raw_gateway_logs_read": true,
+    "diagnostic_authorized": true,
+    "raw_gateway_logs_read_on_server_only": true,
+    "raw_gateway_log_exported": false,
+    "confirmed_error_categories": [
+      "invalid_request_error",
+      "tool_schema_root_object_required",
+      "tool_schema_root_type_missing"
+    ],
+    "confirmed_tool_schema_parameter_names": [
+      "create_media",
+      "type"
+    ],
+    "root_cause_fixed": false,
+    "raw_gateway_logs_exported": false
+  },
+  "wallet_after_live_attempt": {
+    "unit": "microcredit",
+    "microcredits_per_point": "1000000",
+    "available": "6942425",
+    "reserved": "1009728",
+    "spent": "2047847",
+    "expired": "0",
+    "issued": "10000000",
+    "frozen": "0",
+    "refunded": "0",
+    "test_available": "0",
+    "live_available": "6942425",
+    "experience_available": "6942425",
+    "experience_issued": "10000000",
+    "experience_expires_at": "2026-10-30T11:23:47.552184+00:00",
+    "pending_reconciliation": 2,
+    "active_requests": 0,
+    "pending_reconciliation_limit": 3,
+    "test_only": false,
+    "funding_mode": "live"
+  },
+  "scope": {
+    "signing": false,
+    "notarization": false,
+    "clean_other_device": false,
+    "native_clipboard_ime_voiceover": false,
+    "central_m3_and_incho_deployed": false,
+    "commercial_payments_enabled": false,
+    "commit_push_merge": false
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "variant": "B",
+  "page": "11",
+  "title": "发布中心",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-f8e2-7a90-9676-a91b8de1387f/exec-a33db078-48ff-42bc-a7cf-d24eb82354a9.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/11.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "发布中心",
+    "标题",
+    "正文",
+    "平台预览",
+    "发布前预检",
+    "一键发布"
+  ],
+  "status": "reviewed-required-labels-legible; active-sidebar-correct; extra-short-demo-copy",
+  "visuallyConfirmedLabels": [
+    "发布中心",
+    "标题",
+    "正文",
+    "平台预览",
+    "发布前预检",
+    "一键发布"
+  ],
+  "qaNotes": "Manual visual check confirms mandatory heading/control labels; not a guarantee for every decorative glyph",
+  "sha256": "5d67cc91c789a35296b0bd740e0e9009e361fa7f16e767611193a29d2f194ea3"
+}

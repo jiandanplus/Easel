@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "mode": "central",
+  "noncommercial_fixture": true,
+  "success": false,
+  "terminal_success": false,
+  "events": [
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 10.670004,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 10.670827,
+      "marker": null
+    },
+    {
+      "kind": "activity",
+      "monotonic_seconds": 10.724075,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 13.512079,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 13.514059,
+      "marker": null
+    },
+    {
+      "kind": "activity",
+      "monotonic_seconds": 13.555466,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 16.393687,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 16.415105,
+      "marker": null
+    },
+    {
+      "kind": "activity",
+      "monotonic_seconds": 16.41834,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 18.65947,
+      "marker": null
+    },
+    {
+      "kind": "thinking",
+      "monotonic_seconds": 18.660515,
+      "marker": null
+    },
+    {
+      "kind": "activity",
+      "monotonic_seconds": 18.6811,
+      "marker": null
+    }
+  ],
+  "tools": [
+    {
+      "name": "list_files",
+      "ok": true,
+      "content_sha256": "3f244466504388fed6fc50e5737b01b7bf326943d7026c71fb0c9b137dabeecf"
+    },
+    {
+      "name": "write_file",
+      "ok": true,
+      "content_sha256": "2553a785fef2a40558ddd2972e63d70d2b07d9d7a25d16062babfc9bcfe48271"
+    },
+    {
+      "name": "read_file",
+      "ok": true,
+      "content_sha256": "812a913c2f8bbefbb4cc0dbec3dbb4cbb0e8f4da5c0f261b06e3115dac6ace7b"
+    },
+    {
+      "name": "write_file",
+      "ok": true,
+      "content_sha256": "2553a785fef2a40558ddd2972e63d70d2b07d9d7a25d16062babfc9bcfe48271"
+    }
+  ],
+  "invocation_key": "2a7dc50d-bd4f-41f3-ba24-967ec6dc35b9",
+  "runtime": {
+    "python": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v2/Easel/Easel.app/Contents/Resources/python/bin/python3.12",
+    "node": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v2/Easel/Easel.app/Contents/Resources/runtime/pi/node/bin/node",
+    "worker": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v2/Easel/Easel.app/Contents/Resources/runtime/pi/worker.mjs",
+    "pi_version": "1.4.0"
+  },
+  "scope_sha256": "99a733f74810961b43bb822f5b6deec4712eb9ddcb3eea7868ffcf7f38592929",
+  "session_bound": true,
+  "exception_type": "HarnessError",
+  "reply_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "reply_matches_marker": false,
+  "observations": {
+    "marker_write": false,
+    "marker_read": false,
+    "python_tool": false
+  },
+  "marker_file_sha256": null,
+  "duration_seconds": 25.830215,
+  "token_bytes": 0
+}

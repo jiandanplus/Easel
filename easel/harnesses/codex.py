@@ -7,17 +7,61 @@ from easel import __version__
 
 from .base import Descriptor, HarnessError, RunRequest
 from .commands import base_command
+from .runtime import prepare_codex
 from .permissions import can_auto_approve
 from .rpc import connection
 from .workspace import harness_instructions
+from .secrets import private_run
 
 
 class CodexAdapter:
     descriptor = Descriptor("codex", "Codex", "app-server", "npm install -g @openai/codex；codex login")
 
+    @private_run
     async def run(self, request: RunRequest, emit, ask, bind):
+        if request.service_source == "subscription" and request.subscription_backend == "central":
+            from easel.platform.central import CentralClient
+            from easel.platform.execution_proxy import ExecutionProxy
+            from .runtime import prepare_subscription
+            if request.sandbox not in ("read-only", "workspace-write"):
+                raise HarnessError("Codex 只允许只读或工作区写入权限")
+            client = CentralClient(request.cwd)
+            # Capture the accepted identity once. Every renewal stays in the same
+            # invocation, preserving server operation/budget/expiration caps.
+            account, model, origin, invocation_key = (request.account_id, request.model,
+                                                       request.platform_url, request.invocation_key)
+            scope = dict(request.central_scope)
+            async def renew():
+                return await asyncio.to_thread(client.task_credential, account, model,
+                                               origin, dict(scope), invocation_key)
+            credential = await renew()
+            directory = request.cwd / "outputs" / "_harness" / "central-execution"
+            if not directory.resolve().is_relative_to(request.cwd.resolve()):
+                raise HarnessError("中央执行私有目录不能指向工作区外部")
+            async with ExecutionProxy(directory, request.platform_url, credential["task_token"],
+                                      request.model, credential["invocation_id"],
+                                      credential=credential, renew=renew,
+                                      **({"session_key": request.session_key, "turn_id": request.turn_id}
+                                         if request.turn_id else {})) as proxy:
+                command = list(request.command) if request.command else base_command("codex") + ["app-server"]
+                prepared, command = prepare_subscription(request, command, proxy_url=proxy.base_url,
+                                                         proxy_token=proxy.local_token)
+                await self._run(prepared, emit, ask, bind, prepared_command=command)
+            return
+        await self._run(request, emit, ask, bind)
+
+    async def _run(self, request, emit, ask, bind, *, prepared_command=None):
         if request.sandbox not in ("read-only", "workspace-write"):
             raise HarnessError("Codex 只允许只读或工作区写入权限")
+        command = list(request.command) if request.command else base_command("codex") + ["app-server"]
+        from easel.platform.privacy import remember
+        if prepared_command is None:
+            request, command = await asyncio.to_thread(prepare_codex, request, command)
+        else:
+            command = prepared_command
+        # Newly minted task credentials join the same transient output context.
+        remember(request.cwd, [value for key, value in request.env.items()
+                               if any(marker in key.upper() for marker in ("KEY", "TOKEN", "SECRET", "PASSWORD"))])
         completion = asyncio.get_running_loop().create_future()
         thread_id = request.native_id
         turn_id = ""
@@ -48,7 +92,7 @@ class CodexAdapter:
                 else:
                     error = turn.get("error") or {}
                     completion.set_exception(HarnessError(
-                        str(error.get("message") or f"Codex 本轮未完成：{turn.get('status')}")))
+                        error.get("message") or f"Codex 本轮未完成：{turn.get('status')}"))
             elif method == "error" and not params.get("willRetry", False):
                 if not completion.done():
                     completion.set_exception(HarnessError("Codex 执行失败，请检查原生登录与模型配置"))
@@ -78,7 +122,6 @@ class CodexAdapter:
                 return {"answers": {key: {"answers": value} for key, value in answers.items()}}
             raise HarnessError("不支持的 Codex 客户端请求")
 
-        command = list(request.command) if request.command else base_command("codex") + ["app-server"]
         async with connection(request, command, notify, respond) as rpc:
             if rpc.initialized is None:
                 rpc.initialized = await rpc.call("initialize", {
@@ -130,5 +173,8 @@ class CodexAdapter:
                     pass
                 raise
             finally:
-                if completion.done() and not completion.cancelled():
+                # Finalize before connection cleanup can deliver a late notification.
+                if not completion.done():
+                    completion.cancel()
+                elif not completion.cancelled():
                     completion.exception()

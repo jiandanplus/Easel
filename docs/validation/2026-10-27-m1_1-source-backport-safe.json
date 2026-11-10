@@ -1,0 +1,76 @@
+{
+  "scope": "local mixed development tree; not production release",
+  "frozen_release_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+  "frozen_release_source_unchanged": true,
+  "migrations_001_016_identical_to_frozen_candidate": true,
+  "typed_reconciliation_function_byte_equal_before_removal": true,
+  "voice_stages_preserved": true,
+  "m2_resource_functions_byte_preserved": true,
+  "source_files_sha256": {
+    "services/platform/src/platform_service/internal_features.py": "3e8f0019aa54df21c2c4f0a132b0af5a7bb81cf6bff919315f2d689a0040541f",
+    "services/platform/src/platform_service/media_config.py": "19c4865e0515e08a111eeda215a3e063dc6f92474ffc500f8ed7fd76e036c042",
+    "services/platform/src/platform_service/media_runtime.py": "b96eb8619c0615d59e9b42f9028f081b9e8c612270b04c22779a51da0ec0dd57",
+    "services/platform/src/platform_service/membership.py": "b28dd740a0fc1b5bf2141d3ad58d692db51671a2c51d3652ac379ec206f3c922",
+    "services/platform/src/platform_service/permissions.py": "4bdd5882f30bf9ee4777a733d2a8aa814f4bf765904f6bd61b97f33c044677a5",
+    "services/platform/src/platform_service/media/contracts.py": "8bb7044d0911f0cb34d4923cbfd35e81084489fbf67575864e0d88a936a5e5d5",
+    "services/platform/src/platform_service/media/core.py": "97272499a7b7d8d2560952e9535373f93d33ce432ae6a13bd0653d9f6afd403b",
+    "services/platform/src/platform_service/media/references.py": "f90465b257eeb0b836c619b3466f158bcdc4f7bf330d5b4b8cd1978a5485c959",
+    "services/platform/src/platform_service/media/adapters/base.py": "3707fd509771e45d29527e588f602716219b874c3edbf8c62ba4241d8839f0e9",
+    "services/platform/src/platform_service/media/adapters/openai_images.py": "b1494b8d51b9e1814546ca342d0775175e1ac1e5b171afafcf9b163794d7da20",
+    "services/platform/src/platform_service/migrations/016_m1_image_enablement.sql": "a5a1dcfdb90299ebd063b18377a900ad68e1338bb2137cba9a7010f9694d6cba",
+    "services/platform/src/platform_service/migrations/017_voice_stages.sql": "5fce221f9149fed9ef7bb9ade018092c627facd4687b95c95a852296e08a8995",
+    "services/platform/tests/test_media_newapi_images.py": "fcf65dbaafda390a762634b1a06f1999877e5b9fe1d1538daf17a777e825f8df",
+    "services/platform/tests/test_internal_features.py": "1e9ec6ca7e013c1974acab66cbd25e3f9fa4a86882a688c26f58c23d840dc735",
+    "services/platform/tests/test_media_storage.py": "b9a377dbc64845f1c5425befa3561929e0899307051cb5beaae873cb0a0a0c54",
+    "services/platform/tests/test_media_images_runtime.py": "03e34268b45a9b4792f3ea40b8565008104c6b283d0ffd056e32db177e17423a",
+    "services/platform/tests/test_internal_grants.py": "48bb61b8f9a7fa824289e7628201a6c692619bf196e903497976ed51906357f6",
+    "scripts/validation/verify_central_live_text.py": "4c2c49855b871b3c392dc7a1dc1f5e978e27c57065ee98612c474ff86db27daf",
+    "services/platform/tests/test_live_validation_runner.py": "a0dd42ea01a4cec779de048818b445f837bec84878b25dac3fe69465cc3c032f"
+  },
+  "patch": "docs/validation/assets/2026-10-27-m1_1-source-backport.patch",
+  "patch_sha256": "dd8f3f57d5aadee4b37449cf44948badc66733bf029429bc7ff65e2540758c40",
+  "tests": {
+    "initial_mixed": {
+      "passed": 229,
+      "failed": 1,
+      "seconds": 52.87,
+      "known_failure": "test_audio_track_declared_duration_cannot_hide_missing_tail_samples_under_valid_video"
+    },
+    "targeted": {
+      "passed": 317,
+      "failed": 0,
+      "seconds": 66.75,
+      "module_counts": {
+        "test_media_newapi_images": 18,
+        "test_internal_features": 11,
+        "test_media_audio_protocol": 34,
+        "test_media_audio_references": 3,
+        "test_media_voice_protocol": 9,
+        "test_media_voice_stages": 12,
+        "test_media_resources": 21,
+        "test_media_contracts": 23,
+        "test_media_config": 12,
+        "test_media_auth": 10,
+        "test_media_credits": 16,
+        "test_media_storage": 26,
+        "test_media_images_runtime": 22,
+        "test_media_images_integration": 10,
+        "test_media_web": 2,
+        "test_media_artifacts": 10,
+        "test_runtime_permissions": 20,
+        "test_internal_grants": 37,
+        "test_membership": 5,
+        "test_live_validation_runner": 16
+      }
+    },
+    "av_supported": {
+      "passed": 16,
+      "deselected": 1,
+      "seconds": 1.43,
+      "deselected_reason": "known unshipped M2 audio missing-tail check, reproduced as failure above"
+    },
+    "runner_red_before_list_update": true
+  },
+  "remote_actions_during_backport": 0,
+  "m2_m3_delivery_complete": false
+}

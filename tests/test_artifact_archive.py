@@ -3,6 +3,8 @@ import zipfile
 import pytest
 from fastapi import HTTPException
 
+
+from easel.routes import outputs as output_routes  # noqa: E402
 import web.app as web
 
 
@@ -23,7 +25,7 @@ def test_gallery_indexes_only_existing_preview_files_named_in_archive(tmp_path, 
     (project / "unrelated.png").write_bytes(b"other")
     make_archive(project, [("one.png", b"one"), ("two.html", b"two"),
                            ("absent.png", b"absent"), ("report.md", b"text")])
-    assert web.api_artifact_archive("project/artifacts.zip") == {
+    assert output_routes.api_artifact_archive("project/artifacts.zip") == {
         "paths": ["project/one.png", "project/two.html"],
     }
 
@@ -38,7 +40,7 @@ def test_gallery_never_extracts_archive_or_exposes_traversal_and_hidden_files(tm
     make_archive(project, [("../outside.png", b"secret"), ("/outside.png", b"secret"),
                            (r"..\outside.png", b"secret"), (".private.png", b"private"),
                            ("one.png", b"original"), ("new.png", b"new")])
-    assert web.api_artifact_archive("project/artifacts.zip") == {"paths": []}
+    assert output_routes.api_artifact_archive("project/artifacts.zip") == {"paths": []}
     assert not (project / "new.png").exists()
 
 
@@ -53,7 +55,7 @@ def test_gallery_rejects_archive_symlink_member_outside_outputs(tmp_path, monkey
     except OSError:
         pytest.skip("Symlinks unavailable")
     make_archive(outputs, [("link.png", b"secret")])
-    assert web.api_artifact_archive("artifacts.zip") == {"paths": []}
+    assert output_routes.api_artifact_archive("artifacts.zip") == {"paths": []}
 
 
 @pytest.mark.parametrize("name,content,status", [
@@ -65,7 +67,7 @@ def test_archive_api_rejects_invalid_requests(tmp_path, monkeypatch, name, conte
     if content:
         (tmp_path / name).write_bytes(content)
     with pytest.raises(HTTPException) as error:
-        web.api_artifact_archive(name)
+        output_routes.api_artifact_archive(name)
     assert error.value.status_code == status
 
 
@@ -77,4 +79,4 @@ def test_archive_gallery_bounds_member_count(tmp_path, monkeypatch):
         (tmp_path / name).write_bytes(b"image")
         entries.append((name, b"image"))
     make_archive(tmp_path, entries)
-    assert len(web.api_artifact_archive("artifacts.zip")["paths"]) == 100
+    assert len(output_routes.api_artifact_archive("artifacts.zip")["paths"]) == 100

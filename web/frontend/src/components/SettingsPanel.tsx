@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import EnvBoard from './EnvBoard';
+import ThemeSettings from './ThemeSettings';
 import HarnessSettings from './HarnessSettings';
 import { OptionsDropdown } from './SettingsSelect';
 import type { JobView } from './EnvBoard';
@@ -9,16 +10,37 @@ import {
   fetchModelChannels, runChannelSelftest, saveModelConfig,
   fetchLocalAgents, enableLocalAgent, fetchAvailableModels,
 } from '../lib/api';
-import type { EnvTool, ModelRow, SelftestResult, LocalAgentInfo } from '../lib/api';
-import { IconSlidersHorizontal, IconPackage, IconEllipsis } from './settingsIcons';
+import type { EnvTool, ModelRow, SelftestResult, LocalAgentInfo, HarnessSettingsResponse } from '../lib/api';
+import AccountsPage from './AccountsPage';
+import ProfileSettings from './ProfileSettings';
+import PlanSettings from './PlanSettings';
+import UsageSettings from './UsageSettings';
+import BalanceSettings from './BalanceSettings';
+import BillingPage from './BillingPage';
+import { ComingSoon, DeviceSettings, ShortcutSettings, SkillSettings, StatsSettings, StorageSettings, TrashSettings } from './SettingsPages';
+import { NAV_ICONS } from './settingsNavIcons';
 
 interface Props {
   onClose: () => void;
+  initialSection?: 'model' | 'theme' | 'account' | Sec;
+  /** 从「技能」页跳到主界面的技能库。 */
+  onOpenPage?: (page: 'skills' | 'profile') => void;
+  sectionRequest?: number;
   /** 非空时在面板顶部显示一条提示条。首开未配置模型时由 App 传入。 */
   banner?: string;
 }
 
-type Sec = 'model' | 'env' | 'more';
+export type Sec = 'profile' | 'theme' | 'shortcuts' | 'stats' | 'plan' | 'usage' | 'balance' | 'billing'
+  | 'model' | 'skills' | 'connectors' | 'chat' | 'accounts' | 'devices' | 'env' | 'trash' | 'storage';
+/** 设置侧栏：六组，跟着用户的任务分。 */
+export const SETTINGS_GROUPS: { label: string; items: { id: Sec; label: string }[] }[] = [
+  { label: '账号', items: [{ id: 'profile', label: '个人中心' }, { id: 'theme', label: '外观' }, { id: 'shortcuts', label: '快捷键' }, { id: 'stats', label: '数据统计' }] },
+  { label: '订阅与账单', items: [{ id: 'plan', label: '套餐' }, { id: 'usage', label: '用量' }, { id: 'balance', label: '余额' }, { id: 'billing', label: '账单' }] },
+  { label: '智能体', items: [{ id: 'model', label: 'AI 服务商' }, { id: 'skills', label: '技能' }, { id: 'connectors', label: '连接器' }] },
+  { label: '连接', items: [{ id: 'chat', label: '聊天平台' }, { id: 'accounts', label: '账号管理' }] },
+  { label: '运行资源', items: [{ id: 'devices', label: '设备' }, { id: 'env', label: '运行环境' }] },
+  { label: '其他', items: [{ id: 'trash', label: '回收站' }, { id: 'storage', label: '数据存储' }] },
+];
 type Chan = 'chat' | 'transcribe' | 'speech' | 'image' | 'video' | 'music';
 
 const CHANNELS: { id: Chan; label: string }[] = [
@@ -59,11 +81,20 @@ const hhmm = (ts: number) => {
 };
 
 /** 设置（统一入口）：竖＝功能分类（模型配置 / 环境安装 / 更多设置），横＝模型六通道。 */
-export default function SettingsPanel({ onClose, banner = '' }: Props) {
-  const [sec, setSec] = useState<Sec>('model');
+export default function SettingsPanel({ onClose, banner = '', initialSection = 'model', sectionRequest = 0, onOpenPage }: Props) {
+  const sectionOf = (value: Props['initialSection']): Sec => value === 'account' ? 'profile' : value || 'model';
+  const [sec, setSec] = useState<Sec>(sectionOf(initialSection));
+  const [collapsed, setCollapsed] = useState<string[]>([]);
+  useEffect(() => { setSec(sectionOf(initialSection)); }, [initialSection, sectionRequest]);
   const [chan, setChan] = useState<Chan>('chat');
   const [harness, setHarness] = useState('');
   const [selectedHarness, setSelectedHarness] = useState('');
+  const [harnessSettings, setHarnessSettings] = useState<HarnessSettingsResponse | null>(null);
+  const usesSubscription = harnessSettings?.service_source === 'subscription';
+  const subscriptionLabel = harnessSettings?.subscription_backend === 'central' ? '中央订阅' : '旧版订阅';
+  const setupBanner = banner && usesSubscription
+    ? `${subscriptionLabel} · ${harnessSettings.subscription_model ? '模型已保存，请新建对话' : '请选择模型并保存底座'}`
+    : banner;
 
   // ── 环境安装（引擎真实数据） ──────────────────────────────
   const [tools, setTools] = useState<EnvTool[]>([]);
@@ -239,10 +270,10 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
         setChatRows(d.channels.chat.rows || []);
         setTransRows(d.channels.transcribe.rows || []);
         setMediaRows({
-          image: d.channels.image?.rows || [],
-          video: d.channels.video?.rows || [],
-          music: d.channels.music?.rows || [],
-          speech: d.channels.speech?.rows || [],
+          image: (d.channels.image?.rows || []).filter(row => row.slot !== 'new-api'),
+          video: (d.channels.video?.rows || []).filter(row => row.slot !== 'new-api'),
+          music: (d.channels.music?.rows || []).filter(row => row.slot !== 'new-api'),
+          speech: (d.channels.speech?.rows || []).filter(row => row.slot !== 'new-api'),
         });
         setModelErr('');
       })
@@ -275,7 +306,7 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
   const saveCurrent = useCallback(async () => {
     const rows = chan === 'chat' ? chatRows : chan === 'transcribe' ? transRows : (mediaRows[chan] || []);
     const payload = rows
-      .filter((r) => r.slot)
+      .filter((r) => r.slot && r.slot !== 'new-api')
       .map((r) => ({
         slot: r.slot as string,
         name: r.slot === 'custom' ? r.name.trim().toLowerCase() : '',
@@ -303,10 +334,10 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
       setChatRows(d.channels.chat.rows || []);
       setTransRows(d.channels.transcribe.rows || []);
       setMediaRows({
-        image: d.channels.image?.rows || [],
-        video: d.channels.video?.rows || [],
-        music: d.channels.music?.rows || [],
-        speech: d.channels.speech?.rows || [],
+        image: (d.channels.image?.rows || []).filter(row => row.slot !== 'new-api'),
+        video: (d.channels.video?.rows || []).filter(row => row.slot !== 'new-api'),
+        music: (d.channels.music?.rows || []).filter(row => row.slot !== 'new-api'),
+        speech: (d.channels.speech?.rows || []).filter(row => row.slot !== 'new-api'),
       });
       setSavedNote(d.note ? `✓ 已保存（${d.note}）` : '✓ 已保存');
       void refreshEnv();
@@ -411,9 +442,9 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
     ops?: { onRow?: (i: number, patch: Partial<ModelRow>) => void; onPrimary?: (i: number) => void; onRemove?: (i: number) => void; media?: boolean },
   ) => (
     modelLoading && rows.length === 0 ? (
-      <div className="board"><div className="empty"><span className="spin" /> 正在读取配置…<span className="hint">（后台繁忙时可能稍慢，会自动重试）</span></div></div>
+      <div className="board"><div className="empty"><span className="spin" /> 正在读取配置…</div></div>
     ) : rows.length === 0 ? (
-      <div className="board"><div className="empty">还没有配置。<span className="hint">可在「环境安装」先补齐本地能力。</span></div></div>
+      <div className="board"><div className="empty">还没有配置。</div></div>
     ) : (
       <div className="board">
         <div className="prow head">
@@ -451,7 +482,7 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
                   aria-haspopup="listbox"
                   aria-expanded={!!protoDd[i]}
                   ref={(el) => { protoRefs.current[i] = el; }}
-                  title="上游协议：中转站是 OpenAI 兼容格式选 openai；原生 Anthropic 格式（/v1/messages）选 anthropic"
+                  title="接口协议"
                   onClick={() => setProtoDd((s) => ({ ...s, [i]: !s[i] }))}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
@@ -640,22 +671,19 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
   const transOk = transRows.length > 1 && transRows[1].result.includes('已配置');
 
   return (
-    <div
-      className="settings-overlay"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="settings-panel" role="dialog" aria-modal="true" aria-label="设置">
+    <div className="settings-page settings-overlay">
+      <div className="settings-panel" role="region" aria-label="设置">
         <div className="settings-head">
           <div>
             <h2 className="settings-title">设置</h2>
-            <div className="settings-sub">模型配置 · 环境安装 · 更多设置</div>
           </div>
           <div className="settings-actions">
+            {sec === 'model' && <>
             <button
               className="btn btn-sm btn-primary"
               onClick={() => void saveCurrent()}
               disabled={saving || modelLoading || sec !== 'model' || (chan === 'chat' && (selectedHarness !== harness || !['api', 'openclaw'].includes(harness)))}
-              title={chan === 'chat' && !['api', 'openclaw'].includes(harness) ? '请使用下方「保存底座」保存原生配置' : undefined}
+              title={chan === 'chat' && usesSubscription ? `${subscriptionLabel} · 请使用「保存底座」` : chan === 'chat' && !['api', 'openclaw'].includes(harness) ? '请使用「保存底座」或「保存供应商」' : undefined}
             >
               {saving ? '保存中…' : '保存配置'}
             </button>
@@ -663,15 +691,16 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
               className="btn btn-sm"
               onClick={() => void doSelftest(sec === 'model' ? chan : 'all')}
               disabled={testing || modelLoading || selectedHarness !== harness || (!['api', 'openclaw'].includes(harness) && (sec !== 'model' || chan === 'chat'))}
-              title={!['api', 'openclaw'].includes(harness) ? '原生对话请发送消息或运行 easel ping 验证' : undefined}
+              title={chan === 'chat' && usesSubscription ? `${subscriptionLabel} · 自测暂不可用` : !['api', 'openclaw'].includes(harness) ? '当前引擎自测暂不可用' : undefined}
             >
               {testing ? '自测中…' : '全部自测'}
             </button>
+            </>}
             <button className="settings-close" onClick={onClose} title="关闭（Esc）">✕</button>
           </div>
         </div>
 
-        {banner && (
+        {setupBanner && (
           <div
             role="status"
             style={{
@@ -680,26 +709,47 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
               border: '1px solid var(--warn-border, #fed7aa)', fontSize: 13, lineHeight: 1.5,
             }}
           >
-            {banner}
+            {setupBanner}
           </div>
         )}
 
         <div className="settings-body">
-          <nav className="settings-nav">
-            <button className={`snav${sec === 'model' ? ' active' : ''}`} onClick={() => setSec('model')}>
-              <IconSlidersHorizontal size={16} />模型配置<small>六个通道</small>
-            </button>
-            <button className={`snav${sec === 'env' ? ' active' : ''}`} onClick={() => setSec('env')}>
-              <IconPackage size={16} />环境安装<small>{total ? (okCount === total ? '全就绪' : `${okCount}/${total}`) : '…'}</small>
-            </button>
-            <button className={`snav${sec === 'more' ? ' active' : ''}`} onClick={() => setSec('more')}>
-              <IconEllipsis size={16} />更多设置
-            </button>
+          <nav className="settings-nav settings-nav-grouped" aria-label="设置分类">
+            {SETTINGS_GROUPS.map(group => {
+              const open = !collapsed.includes(group.label);
+              return <div className="snav-group" key={group.label}>
+                <button type="button" className="snav-group-title" aria-expanded={open} onClick={() => setCollapsed(list => open ? [...list, group.label] : list.filter(item => item !== group.label))}>{group.label}<span aria-hidden="true">{open ? '▾' : '▸'}</span></button>
+                {open && group.items.map(item => <button type="button" key={item.id} className={`snav${sec === item.id ? ' active' : ''}`} aria-current={sec === item.id ? 'page' : undefined} onClick={() => setSec(item.id)}>
+                  {NAV_ICONS[item.id]}<span>{item.label}</span>{item.id === 'env' && total > 0 && <small>{okCount === total ? '全就绪' : `${okCount}/${total}`}</small>}
+                </button>)}
+              </div>;
+            })}
           </nav>
 
           <div className="settings-main">
+            {sec === 'profile' && <ProfileSettings onOpenPersonas={onOpenPage ? () => onOpenPage('profile') : undefined} onOpenAccounts={() => setSec('accounts')} />}
+            {sec === 'plan' && <PlanSettings onOpenBilling={() => setSec('billing')} />}
+            {sec === 'usage' && <UsageSettings onOpenPlans={() => setSec('plan')} />}
+            {sec === 'balance' && <BalanceSettings onOpenUsage={() => setSec('usage')} onOpenPlans={() => setSec('plan')} />}
+            {sec === 'billing' && <BillingPage onOpenUsage={() => setSec('usage')} onOpenPlans={() => setSec('plan')} />}
+            {sec === 'theme' && <ThemeSettings />}
+            {sec === 'shortcuts' && <ShortcutSettings />}
+            {sec === 'stats' && <StatsSettings />}
+            {sec === 'skills' && <SkillSettings onOpenLibrary={onOpenPage ? () => onOpenPage('skills') : undefined} />}
+            {sec === 'connectors' && <ComingSoon title="连接器" desc="让智能体读写你常用的工具和资料，比如网盘、文档和数据库。" items={[['MCP 服务器', '接入支持 MCP 协议的工具，智能体可以直接调用'], ['云文档与网盘', '飞书文档、Notion、Google Drive 等'], ['浏览器', '让智能体打开网页、读取内容']]} />}
+            {sec === 'chat' && <ComingSoon title="聊天平台" desc="在常用的聊天软件里直接和智能体对话、接收任务结果。" items={[['飞书', '在飞书群或私聊里使用智能体'], ['企业微信', '在企业微信里使用智能体'], ['钉钉', '在钉钉里使用智能体'], ['Telegram', '在 Telegram 里使用智能体']]} />}
+            {sec === 'accounts' && <div className="settings-embed-page"><AccountsPage /></div>}
+            {sec === 'devices' && <DeviceSettings />}
+            {sec === 'trash' && <TrashSettings />}
+            {sec === 'storage' && <StorageSettings />}
             {sec === 'model' && (
               <section className="st-sec active">
+                <div className={`settings-source${usesSubscription ? ' on' : ''}`} role="status" aria-label="服务来源">
+                  <strong>{!harnessSettings ? '正在确认服务来源…' : usesSubscription ? '正在使用订阅' : '正在使用自定义接口'}</strong>
+                  <span>{!harnessSettings ? '开通了订阅就优先使用订阅；没有开通时使用下面各通道配置的自定义接口。' : usesSubscription
+                    ? '已开通订阅：对话、生图、视频、配音等优先使用订阅接口，按套餐扣点。订阅到期后自动改用下面配置的自定义接口。'
+                    : '还没有开通订阅：使用下面各通道配置的自定义接口。开通套餐后会自动改用订阅接口。'}</span>
+                </div>
                 <div className="tabbar">
                   {CHANNELS.map((c) => (
                     <button key={c.id} className={`tab${chan === c.id ? ' active' : ''}`} onClick={() => setChan(c.id)}>
@@ -709,7 +759,7 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
                 </div>
                 {savedNote ? <div className={`save-note${savedNote.startsWith('保存失败') || savedNote.startsWith('没有') ? ' err' : ''}`}>{savedNote}</div> : null}
 
-                {chan === 'chat' && <HarnessSettings onChange={setHarness} onSelect={setSelectedHarness} />}
+                {chan === 'chat' && <HarnessSettings onChange={setHarness} onSelect={setSelectedHarness} onSettingsChange={setHarnessSettings} />}
                 {chan === 'chat' && (selectedHarness === 'api' || selectedHarness === 'openclaw') && (
                   <section className="st-panel active">
                     <div className="panel-top">
@@ -720,8 +770,7 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
                       <button className="btn btn-sm" onClick={() => void doSelftest('chat')} disabled={testing || selectedHarness !== harness}>自测本通道</button>
                     </div>
                     {renderBoard(chatRows, { onRow: (i, p) => updateRow(setChatRows, i, p), onPrimary: setPrimaryRow, onRemove: removeRow })}
-                    {selectedHarness === 'api' ? <div className="foot-note">此通道使用独立的 EASEL_DIRECT_API_* 配置，与原有 OpenAI 通道分开保存。支持聊天、画像、文本和图片附件（需模型支持图片）。没有本机文件、浏览器或技能执行工具。</div>
-                      : <div className="add-row" onClick={addProvider}>＋ 添加供应商（填名称 / 模型 / Base URL / Key；点「设为主」切换生效通道）</div>}
+                    {selectedHarness === 'openclaw' && <div className="add-row" onClick={addProvider}>＋ 添加供应商</div>}
                     {harness === 'openclaw' && (() => {
                       // 本机 agent 区块：装了 Claude Code / Gemini CLI 并登录过的用户不需要填 API Key。
                       // 只展示「已装」的行 —— 没装的用户看一眼全是灰的只会困惑。
@@ -735,8 +784,8 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
                             本机 Agent
                             <span className="desc">
                               {usable.length
-                                ? `检测到可免 API Key 使用：${usable.map((a) => a.label).join('、')}`
-                                : '检测到的 CLI 暂无底座后端，仍需填 API Key'}
+                                ? `${usable.length} 个可接入`
+                                : '暂无可接入引擎'}
                             </span>
                           </div>
                           {shown.map((a) => (
@@ -763,7 +812,7 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
                                   <button
                                     className="btn btn-sm"
                                     disabled={enabling === a.id}
-                                    title={a.configured ? '重新应用所选模型（写入 openclaw.json 主模型）' : '写入 openclaw.json，免 API Key 接入'}
+                                    title={a.configured ? '应用所选模型' : '接入本机 Agent'}
                                     onClick={() => void doEnableAgent(a.id, laModels[a.id] ?? '')}
                                   >{enabling === a.id ? '接入中…' : a.configured ? '应用模型' : '一键接入'}</button>
                                 )}
@@ -775,32 +824,27 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
                         </div>
                       );
                     })()}
-                    <div className="foot-note">改完点右上角「保存配置」（key 留空=不改）；自动降级链随统一网关接入开放。</div>
                   </section>
                 )}
 
                 {chan === 'transcribe' && (
                   <section className="st-panel active">
                     <div className="panel-top">
-                      <span className={`pill ${transOk ? 'ok' : 'warn'}`}><span className="dot" />{transOk ? '主通道在线' : (localReady ? '本地兜底生效' : '备用待安装')}</span>
-                      <span className="desc">三级链：自带字幕 → API → 本地兜底</span>
+                      <span className={`pill ${transOk ? 'ok' : 'warn'}`}><span className="dot" />{transOk ? '主通道已配置' : (localReady ? '本地兜底生效' : '备用待安装')}</span>
                       <span className="spacer" />
                       <button className="btn btn-sm" onClick={() => void doSelftest('transcribe')} disabled={testing}>自测本通道</button>
                     </div>
                     {renderBoard([...transRows, localRow], { onRow: (i, p) => updateRow(setTransRows, i, p) })}
-                    <div className="foot-note">有字幕不下模型；API 通道缺 key 自动落到本地 whisper（本地组件在「环境安装」页装）。保存即写入 .env 生效。</div>
                   </section>
                 )}
 
                 {chan === 'speech' && (
                   <section className="st-panel active">
                     <div className="panel-top">
-                      <span className={`pill ${mediaOk('speech') ? 'ok' : 'off'}`}><span className="dot" />{mediaOk('speech') ? '有可用提供商' : '未配置'}</span>
-                      <span className="desc">只填 Key 即用（地址/模型内建）；「主/备」= 默认</span>
+                      <span className={`pill ${mediaOk('speech') ? 'ok' : 'off'}`}><span className="dot" />{mediaOk('speech') ? '已配置' : '未配置'}</span>
                       <span className="spacer" />
                     </div>
                     {renderBoard(mediaRows.speech || [], { onRow: (i, p) => updateMediaRow('speech', i, p), onPrimary: (i) => setMediaPrimary('speech', i), media: true })}
-                    <div className="foot-note">配音脚本按「主」provider 合成；本地 VoxCPM / edge-tts 在视频产线里可直接替代。</div>
                   </section>
                 )}
 
@@ -808,31 +852,26 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
                   <section className="st-panel active">
                     <div className="panel-top">
                       <span className={`pill ${mediaOk('image') ? 'ok' : 'off'}`}><span className="dot" />{mediaOk('image') ? '已配置' : '未配置'}</span>
-                      <span className="desc">只填 Key 即用（地址/模型内建，点「高级」可覆盖）</span>
                       <span className="spacer" />
                     </div>
                     {renderBoard(mediaRows.image || [], { onRow: (i, p) => updateMediaRow('image', i, p), media: true })}
-                    <div className="foot-note">按 Base URL 自动选同步 / 异步（apimart）模式；模型名留空用服务端默认。</div>
                   </section>
                 )}
 
                 {chan === 'video' && (
                   <section className="st-panel active">
                     <div className="panel-top">
-                      <span className={`pill ${mediaOk('video') ? 'ok' : 'off'}`}><span className="dot" />{mediaOk('video') ? '有可用提供商' : '未配置'}</span>
-                      <span className="desc">只填 Key 即用（地址/模型内建，点「高级」可覆盖）；「主/备」= 默认</span>
+                      <span className={`pill ${mediaOk('video') ? 'ok' : 'off'}`}><span className="dot" />{mediaOk('video') ? '已配置' : '未配置'}</span>
                       <span className="spacer" />
                     </div>
                     {renderBoard(mediaRows.video || [], { onRow: (i, p) => updateMediaRow('video', i, p), onPrimary: (i) => setMediaPrimary('video', i), media: true })}
-                    <div className="foot-note">脚本按「主」provider 出片；同类多家的自动降级随统一网关接入开放。</div>
                   </section>
                 )}
 
                 {chan === 'music' && (
                   <section className="st-panel active">
                     <div className="panel-top">
-                      <span className={`pill ${mediaOk('music') ? 'ok' : 'off'}`}><span className="dot" />{mediaOk('music') ? '有可用提供商' : '未配置'}</span>
-                      <span className="desc">只填 Key 即用；「主/备」= 默认</span>
+                      <span className={`pill ${mediaOk('music') ? 'ok' : 'off'}`}><span className="dot" />{mediaOk('music') ? '已配置' : '未配置'}</span>
                       <span className="spacer" />
                     </div>
                     {renderBoard(mediaRows.music || [], { onRow: (i, p) => updateMediaRow('music', i, p), onPrimary: (i) => setMediaPrimary('music', i), media: true })}
@@ -860,27 +899,12 @@ export default function SettingsPanel({ onClose, banner = '' }: Props) {
               </section>
             )}
 
-            {sec === 'more' && (
-              <section className="st-sec active">
-                <div className="panel-top">
-                  <span className="pill off"><span className="dot" />可扩展位</span>
-                  <span className="desc">同一个面板，以后放更多设置</span>
-                </div>
-                <div className="board">
-                  <div className="stub-row"><span className="tag2">预留</span>网关参数（端口 / 绑定 / 会话）<span className="future">就挂在这页旁边</span></div>
-                  <div className="stub-row"><span className="tag2">预留</span>通用设置（语言 / 更新 / 数据目录）<span className="future">按需加</span></div>
-                </div>
-                <div className="foot-note">扩展方式：在这个面板里加标签即可——模型、环境已各就位，其余按需加。</div>
-              </section>
-            )}
           </div>
         </div>
 
-        <div className="settings-foot">
-          {harness === 'api' || harness === 'openclaw'
-            ? 'ⓘ 供应商配置保存到 .env；API 直连仅聊天、无工具。切换底座或对话模式后请新建对话。'
-            : 'ⓘ 原生 Agent 认证由其 CLI 管理；「保存底座」只保存底座、模型覆盖和权限设置。媒体通道仍单独配置。'}
-        </div>
+        {sec === 'model' && usesSubscription && <div className="settings-foot">
+          {subscriptionLabel} · {harnessSettings?.subscription_model || '未选择模型'}
+        </div>}
       </div>
     </div>
   );

@@ -1,0 +1,10 @@
+[Unit]
+Description=Easel: daily sealed New API backup
+
+[Timer]
+OnCalendar=*-*-* 20:10:00
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

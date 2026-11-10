@@ -1,0 +1,24 @@
+{
+  "variant": "B",
+  "page": "21",
+  "title": "技能详情",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-5204ee84-584c-4ab1-8bed-1cc138ffdcd2.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/21.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "技能详情",
+    "竞品分析",
+    "说明",
+    "输入",
+    "输出",
+    "执行"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Additional catalog rows and explanation outside page whitelist"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "91562aeaf277b482787a00bf9ee7e8723d3ac9063b262ce6b44d3a7c1ed111b2"
+}

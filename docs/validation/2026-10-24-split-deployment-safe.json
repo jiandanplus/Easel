@@ -1,0 +1,416 @@
+{
+  "ok": true,
+  "target": "154.217.245.179",
+  "receipts": {
+    "central-restored-safe.json": {
+      "final_dump_sha256": "41ecd566f2e2007f4be2540d4fc48410f578233f083aa855d32763da93d1438e",
+      "full_data_schema_sequence_privileges_equal": true,
+      "low_privilege_wallet_counts": {
+        "console_cbabf5af7060_runtime": 2,
+        "wb_e6467e17dc33_runtime": 2
+      },
+      "migration_010_applied": false,
+      "ok": true,
+      "semantic": {
+        "admin_states": [
+          [
+            "admin",
+            true,
+            1
+          ]
+        ],
+        "counts": {
+          "billing_accounts": 2,
+          "billing_orders": 0,
+          "console_admins": 1,
+          "console_sessions": 1,
+          "credit_lots": 1,
+          "credit_reservations": 7,
+          "execution_jobs": 7,
+          "identity_sessions": 2,
+          "memberships": 1,
+          "tenants": 2,
+          "users": 2
+        },
+        "financial_balanced": true,
+        "jobs": {
+          "settled": 7
+        },
+        "journals_balanced": true
+      },
+      "services_started": false,
+      "table_count": 46,
+      "target": "154.217.245.179"
+    },
+    "identity-restored-safe.json": {
+      "bootstrap_owner_oid": 10,
+      "database": "easel_logto_preview",
+      "database_acl_is_original_null": true,
+      "excluded_role_proof": {
+        "excluded_role": "central_runtime",
+        "references_in_schema_sql": false,
+        "references_in_scoped_metadata": false,
+        "references_in_toc": false,
+        "schema_sql_sha256": "b0447001d4d7b0a75d8c00000ece6e3506f13abd7175344699f03f9940522545",
+        "toc_sha256": "bb8484fc70c77dbebc88340ec36aac02648302f7237899a9c5436d5b92181782"
+      },
+      "final_dump_sha256": "6bbb1ef781598bc9ca1de2147141044aecbfb21a63efae8cd5c7e2a3cd7681f7",
+      "logto_config_sha256": "b318e3456f508a6d095771b5eef8823dc80efbab2b24d38892a4e869b732fc8e",
+      "ok": true,
+      "restore_helper_version": 2,
+      "restored_membership_count": 5,
+      "restored_role_count": 4,
+      "runtime_role_created": false,
+      "services_started": false,
+      "source_metadata_sha256": "fe842bcfc804f9b0b0accf7f6fa00e18e35b04dba1275d8f4e0875fb64d76638",
+      "source_role_names": [
+        "logto_tenant_easel_logto_preview",
+        "logto_tenant_easel_logto_preview_admin",
+        "logto_tenant_easel_logto_preview_default",
+        "preview_owner"
+      ],
+      "strict_inventory_proof_pending": true,
+      "tenant_login_count": 2,
+      "tenant_low_privilege_and_nonowner": true
+    },
+    "identity-continuity-safe.json": {
+      "ok": true,
+      "strict_restore_proof_recorded": true,
+      "source_and_target_schema_data_sequence_users_apps_equal": true,
+      "evidence_method": "co-located-private-workers",
+      "stock_wan_cli_passed": false,
+      "operation": "fd13efa319487866926acf525e389dbd",
+      "proof": {
+        "candidate_sha256": "88ae085716d09051b4ebd4ddb973557035e6e790435e51da6c0730f149a66ae8",
+        "console_count": 1,
+        "expires_at": "2026-10-24T11:18:01.415263+00:00",
+        "product_count": 2,
+        "proof_id": "1967b14dc39044af8dfc010f73d8b4d0"
+      },
+      "apply": {
+        "console_count": 1,
+        "migration_id": "052cbf92399d480a8f93c1cbceac5a60",
+        "product_count": 2,
+        "proof_id": "1967b14dc39044af8dfc010f73d8b4d0",
+        "replayed": false,
+        "result_sha256": "81d6fc30c6ab3686e968be468beb7f5725336f3863a8ce3dd5f61c38e6fb7796"
+      },
+      "new_users_or_wallets_created": false,
+      "collector_sha256": "11d2e78c2025c439121e1bfb548dee17f69fa238a757a3e710356f2b60cfabcf",
+      "policy_sha256": "0ba512f971e56de54d597cd93b2f0d834dc45a3dd2114cfdab1f565ea077c8aa",
+      "backup_sha256": "6bbb1ef781598bc9ca1de2147141044aecbfb21a63efae8cd5c7e2a3cd7681f7",
+      "schema_sha256": "e38365c68dbf1cfa0f33c9d657a2ff822e63fcfd1418f1c6420a7c83c2e78b2b",
+      "data_sha256": "100aefde9c9facce542a387b61d6e946af5f316728ff14043ecdefff0620f81f",
+      "source_context_sha256": "f6785ee5f84506095dc594d8c770a4850956c1ad67eb5bcbdee6497dbe4dc804",
+      "target_context_sha256": "28b55c9e8b70f7ed976a2e173ffc72b82e4ebaa9861b6549e32e302d66fd1bcf",
+      "source_users_count": 5,
+      "source_clients_count": 4,
+      "verified_at": "2026-10-24T10:17:55.483000+00:00"
+    },
+    "services-open-safe.json": {
+      "ok": true,
+      "health": {
+        "api": {
+          "ok": true,
+          "stage": "accounts_plans_wallet"
+        },
+        "console": {
+          "ok": true,
+          "service": "central-console",
+          "assets_ready": true
+        }
+      },
+      "public_accounts_and_login_enabled": true,
+      "console_private_only": true,
+      "private_console_origin": "http://127.0.0.1:18885",
+      "commercial_payments_enabled": false
+    },
+    "gateway-models-safe.json": {
+      "ok": true,
+      "strict_tls": true,
+      "encrypted_cross_cloud_tunnel": true,
+      "providers": [
+        {
+          "provider": "workbench_glm53",
+          "authenticated_model_list_status": 200,
+          "available_models": [
+            "deepseek-v4.1-flash",
+            "glm-5.3",
+            "grok-4.7",
+            "kimi-k3",
+            "minimax-m2.7"
+          ],
+          "configured_models_present": true
+        }
+      ],
+      "model_generation_requests": 0,
+      "wallet_changes": 0
+    },
+    "scheduled-backup-safe.json": {
+      "ok": true,
+      "backup": {
+        "backup_id": "d2bb952d-8769-4f7c-bebf-d7cabd41beb3",
+        "ciphertext_bytes": 789322,
+        "ciphertext_sha256": "a92a7779245bbaf43548ab03b657420bbbac414cd8b05e7c0f08f222797dbef1",
+        "file_count": 13,
+        "fresh_restore": false,
+        "manifest_sha256": "60efbee0caea513e411d5f0372d949be68965ec7b4725d7199dbdf49ab802551",
+        "path": "/var/backups/easel-encrypted/20261024T110020Z-d2bb952d-8769-4f7c-bebf-d7cabd41beb3.sealed",
+        "payload_bytes": 788480,
+        "payload_sha256": "b3922b439844566c501c3e174c29b221833099c415a41cce02f02a683de91685",
+        "status": "selfverified"
+      },
+      "invocation_id": "b81b2540965b488e9f17572b3035a23d",
+      "fresh_artifact_verified": true,
+      "systemd_completion_job_result": "done",
+      "conditions_live_rechecked": true,
+      "post_completion_show_was_gc_reset": true,
+      "timer": {
+        "NextElapseUSecRealtime": "Sat 2026-10-24 19:32:36 UTC",
+        "ActiveState": "active"
+      },
+      "offsite": false,
+      "fresh_restore": false
+    },
+    "restart-validation-safe.json": {
+      "ok": true,
+      "controlled_component_restart": true,
+      "full_host_reboot": false,
+      "same_container_ids_images_volumes_internal_addresses": true,
+      "central_all_rows_before_after_equal": true,
+      "central_table_count": 51,
+      "central_sha256": "6f4af4e1f9be914093f048d6788a194f04a9d579289c92d6edb5b7c7f8e36eb8",
+      "units": {
+        "easel-central-production": "active",
+        "easel-console-production": "active",
+        "easel-gateway-tunnel": "active",
+        "nginx": "active"
+      },
+      "source_services_untouched": true,
+      "automatic_rollback": false
+    },
+    "runtime-boundary-safe.json": {
+      "ok": true,
+      "containers": {
+        "easel-central-pg-20261024": {
+          "running": true,
+          "memory_limit_mib": 512,
+          "restart_policy": "unless-stopped"
+        },
+        "easel-identity-pg-v2-20261024": {
+          "running": true,
+          "memory_limit_mib": 512,
+          "restart_policy": "unless-stopped"
+        },
+        "easel-logto-v2-20261024": {
+          "running": true,
+          "memory_limit_mib": 768,
+          "restart_policy": "unless-stopped"
+        }
+      },
+      "loopback_listeners": {
+        "19874": [
+          "127.0.0.1:19874"
+        ],
+        "19875": [
+          "127.0.0.1:19875"
+        ],
+        "19443": [
+          "127.0.0.1:19443"
+        ],
+        "5432": [],
+        "3001": [],
+        "3002": [],
+        "18080": [
+          "0.0.0.0:18080"
+        ]
+      },
+      "memory_mib": {
+        "total": 3915,
+        "available": 2907
+      },
+      "disk_gib": {
+        "total": 48.28,
+        "free": 40.93
+      },
+      "docker_stats": [
+        {
+          "Name": "easel-central-pg-20261024",
+          "MemUsage": "24.03MiB / 512MiB",
+          "CPUPerc": "0.24%",
+          "PIDs": "8"
+        },
+        {
+          "Name": "easel-identity-pg-v2-20261024",
+          "MemUsage": "18.15MiB / 512MiB",
+          "CPUPerc": "0.00%",
+          "PIDs": "6"
+        },
+        {
+          "Name": "easel-logto-v2-20261024",
+          "MemUsage": "218.9MiB / 768MiB",
+          "CPUPerc": "0.00%",
+          "PIDs": "34"
+        }
+      ],
+      "panel_port_guard_rule_count": 1,
+      "upstream_tls_via_ssh": "200|127.0.0.1|19443|0",
+      "payments_enabled": false
+    },
+    "certificate-renewal-safe.json": {
+      "ok": true,
+      "http_to_https_accounts_login": true,
+      "http_console_default_404": true,
+      "certificate_renewal_dry_run": true,
+      "deploy_hook_tested": true,
+      "certificate": "notBefore=Oct 24 08:25:13 2026 GMT\nnotAfter=Jan 22 08:25:12 2027 GMT\nX509v3 Subject Alternative Name: \n    DNS:accounts.drawbookai.cn, DNS:console.drawbookai.cn, DNS:login.drawbookai.cn\n",
+      "certbot_timer_enabled": "enabled"
+    },
+    "upstream-live-stream-safe.json": {
+      "ok": true,
+      "scope": "direct_upstream_after_deployment_not_wallet_acceptance",
+      "model": "glm-5.3",
+      "strict_tls": true,
+      "tunnel": true,
+      "synthetic_prompt_only": true,
+      "tool_round_trip": true,
+      "streamed_text_marker_verified": true,
+      "event_counts": {
+        "response.created": 2,
+        "response.output_item.added": 4,
+        "response.reasoning_summary_part.added": 2,
+        "response.reasoning_summary_text.delta": 42,
+        "response.function_call_arguments.delta": 4,
+        "response.reasoning_summary_text.done": 2,
+        "response.reasoning_summary_part.done": 2,
+        "response.output_item.done": 4,
+        "response.function_call_arguments.done": 1,
+        "response.completed": 2,
+        "response.output_text.delta": 2,
+        "response.output_text.done": 1
+      },
+      "requests": 2,
+      "usage": [
+        {
+          "input_tokens": 223,
+          "output_tokens": 88,
+          "total_tokens": 311
+        },
+        {
+          "input_tokens": 120,
+          "output_tokens": 137,
+          "total_tokens": 257
+        }
+      ],
+      "central_wallet_touched": false,
+      "central_points_acceptance": false,
+      "project_files_sent": false
+    }
+  },
+  "observed_at_utc": "2026-10-24T11:08:52.869050+00:00",
+  "public_checks": {
+    "ok": true,
+    "tls_verified": true,
+    "proxy_environment_ignored": true,
+    "tests": {
+      "api_health": {
+        "http_status": 200,
+        "expected": 200
+      },
+      "api_anonymous": {
+        "http_status": 401,
+        "expected": 401
+      },
+      "api_wrong_origin": {
+        "http_status": 403,
+        "expected": 403
+      },
+      "api_wrong_host": {
+        "http_status": 404,
+        "expected": 404
+      },
+      "login_discovery": {
+        "http_status": 200,
+        "expected": 200,
+        "issuer": "https://login.drawbookai.cn/oidc"
+      },
+      "public_console_closed": {
+        "http_status": 404,
+        "expected": 404
+      },
+      "private_console_health": {
+        "http_status": 200,
+        "expected": 200
+      },
+      "private_console_anonymous": {
+        "http_status": 401,
+        "expected": 401
+      },
+      "private_console_wrong_origin": {
+        "http_status": 403,
+        "expected": 403
+      },
+      "private_console_wrong_host": {
+        "http_status": 400,
+        "expected": 400
+      },
+      "http_accounts": {
+        "http_status": 308,
+        "expected": 308
+      },
+      "http_login": {
+        "http_status": 308,
+        "expected": 308
+      },
+      "http_console": {
+        "http_status": 404,
+        "expected": 404
+      },
+      "public_port_5432": {
+        "connection_blocked_or_refused": true
+      },
+      "public_port_3001": {
+        "connection_blocked_or_refused": true
+      },
+      "public_port_3002": {
+        "connection_blocked_or_refused": true
+      },
+      "public_port_19874": {
+        "connection_blocked_or_refused": true
+      },
+      "public_port_19875": {
+        "connection_blocked_or_refused": true
+      },
+      "public_port_19443": {
+        "connection_blocked_or_refused": true
+      },
+      "public_port_18080": {
+        "connection_blocked_or_refused": true
+      }
+    }
+  },
+  "old_identity_fence": {
+    "ok": true,
+    "old_logto_stopped_restart_no": true,
+    "original_identity_database_accepts_connections": false,
+    "old_identity_clients": 0,
+    "other_databases_preserved": true,
+    "source_mutations": false
+  },
+  "workbench_switch": {
+    "url": "https://accounts.drawbookai.cn",
+    "preview": "http://127.0.0.1:17868",
+    "same_v6_package": true,
+    "custom_provider_config_session_files_unchanged": true,
+    "authenticated_at_switch": false,
+    "pending_at_switch": false
+  },
+  "pending_acceptance": [
+    "product_owner_login",
+    "independent_admin_login",
+    "workbench_real_pi_stream_tool_points_recovery",
+    "fresh_restore_of_scheduled_backup",
+    "offsite_backup_and_key_recovery",
+    "load_and_high_availability"
+  ]
+}

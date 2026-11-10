@@ -154,6 +154,6 @@ layer: publish
 ## Profile 感知
 
 - **有 Profile**：从 Profile 提取完整人设特征，进行全维度对比。这是本 SKILL 的标准工作模式。
-- **无 Profile**：**无法工作**。直接提示用户创建 Profile，说明所需内容（style、tone、personality），并终止执行。本 SKILL 是 Easel 中唯一强制要求 Profile 的 SKILL。
+- **无 Profile**：**无法工作**。直接提示用户创建 Profile，说明所需内容（style、tone、personality），并终止执行。本技能是优创中唯一强制要求画像（Profile）的技能。
 
 > 自研溯源与参考项目见同目录 `EASEL-META.md`。

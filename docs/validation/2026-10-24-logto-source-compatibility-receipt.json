@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "verification": "real_single_source_readonly_inventory",
+  "verified_at": "2026-10-23T16:57:38.515208+00:00",
+  "collector_sha256": "ba35a40f67173f64a2279e90f2db7cdeb19859f71d4fe40c5f268104d42c272e",
+  "schema_sha256": "453f675bc2e68f91363a81a7a4e995b52a1f7d324d2d2e08e047bde5edc3e772",
+  "data_sha256": "4a77716455ec90629946807a1c0cba7c8d0260feed9b4ad75a1cf06c9c7ce41e",
+  "context_sha256": "f6785ee5f84506095dc594d8c770a4850956c1ad67eb5bcbdee6497dbe4dc804",
+  "user_count": 5,
+  "application_count": 4,
+  "required_clients_present": {
+    "product": true,
+    "console": true
+  },
+  "elapsed_seconds": 0.607,
+  "read_only": true,
+  "row_data_exported": false,
+  "proof_created": false,
+  "target_restored_or_compared": false,
+  "identity_mapping_applied": false,
+  "production_ready": false
+}

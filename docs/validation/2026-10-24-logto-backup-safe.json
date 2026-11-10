@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "verification": "actual_private_logto_backup_only",
+  "backup_operation_id": "70f8cc47e59146e995029fc3aed46b7c",
+  "phase": "complete",
+  "source_database": "easel_logto_preview",
+  "source_mutated": false,
+  "files": [
+    {
+      "name": "source-logto-rehearsal.dump",
+      "bytes": 399811,
+      "sha256": "40d20ed3f7181e58272058e23d566a2350ed341df60d1313cbdcfbc8d9a588fc",
+      "mode": "0600"
+    },
+    {
+      "name": "source-roles-no-passwords.sql",
+      "bytes": 1499,
+      "sha256": "664cb06be4c08a5775c4f43fce4cd9f82ec31cae16dd38ee196f83ae426adbee",
+      "mode": "0600"
+    },
+    {
+      "name": "source-permissions-private.json",
+      "bytes": 67865,
+      "sha256": "b9bd268d328e05c207d7af1407ff31858f6459216ea2ee7c71bbe77681b015ab",
+      "mode": "0600"
+    },
+    {
+      "name": "backup-manifest-private.json",
+      "bytes": 1895,
+      "sha256": "6ff020ca6fcb4f4fbd9918375b520564892c97974d002b8510098835d4c82dde",
+      "mode": "0600"
+    }
+  ],
+  "identity_transfer_executed": false,
+  "identity_target_created": false,
+  "identity_restore_executed": false,
+  "logto_started": false,
+  "final_identity_proof_created": false,
+  "supplier_config_opened": false,
+  "production_ready": false,
+  "reviewed_helper_sha256": "e68695987276e4832a9f5fd51424a2446edb90122be4278082709a329ef80aa1",
+  "blocked_action": "SSH transfer of real account archive to 115.190.211.112",
+  "block_reason": "automatic approval requires explicit authorization for sensitive payload and destination; command not executed",
+  "user_authorization_pending": true
+}

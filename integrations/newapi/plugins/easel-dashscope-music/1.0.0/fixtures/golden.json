@@ -1,0 +1,647 @@
+{
+  "cases": [
+    {
+      "name": "Decode valid music input",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "fun-music-v1",
+              "input": {
+                "prompt": "A calm piano song",
+                "is_instrumental": true
+              }
+            }
+          }
+        }
+      ],
+      "member": "create",
+      "expected": {
+        "kind": "submit",
+        "model": "fun-music-v1",
+        "action": "generate",
+        "requestBody": {
+          "model": "fun-music-v1",
+          "input": {
+            "prompt": "A calm piano song",
+            "is_instrumental": true
+          }
+        }
+      }
+    },
+    {
+      "name": "Reject legacy duration",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "fun-music-v1",
+              "input": {
+                "prompt": "A calm piano song",
+                "is_instrumental": true
+              },
+              "parameters": {
+                "duration": 10
+              }
+            }
+          }
+        }
+      ],
+      "member": "create",
+      "expectedError": "Legacy parameters and duration are not supported by Fun-Music."
+    },
+    {
+      "name": "Reject legacy model",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "audio-generation",
+              "input": {
+                "prompt": "A calm piano song",
+                "is_instrumental": true
+              }
+            }
+          }
+        }
+      ],
+      "member": "create",
+      "expectedError": "Unsupported Fun-Music model."
+    },
+    {
+      "name": "Reject streaming",
+      "hook": "native",
+      "args": [
+        {
+          "body": {
+            "kind": "json",
+            "value": {
+              "model": "fun-music-v1",
+              "input": {
+                "prompt": "A calm piano song",
+                "is_instrumental": true
+              },
+              "stream": true
+            }
+          }
+        }
+      ],
+      "member": "create",
+      "expectedError": "Streaming and background requests are not supported by this plugin."
+    },
+    {
+      "name": "Build actual provider endpoint",
+      "hook": "buildSubmitRequest",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-channel-key",
+          "upstreamModel": "fun-music-v1",
+          "requestBody": {
+            "model": "fun-music-v1",
+            "input": {
+              "prompt": "A calm piano song",
+              "is_instrumental": true
+            }
+          },
+          "publicTaskId": "task_public"
+        }
+      ],
+      "expected": {
+        "url": "https://workspace.cn-beijing.maas.aliyuncs.com/api/v1/services/audio/music/generation",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer fixture-channel-key",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "model": "fun-music-v1",
+          "input": {
+            "prompt": "A calm piano song",
+            "is_instrumental": true
+          }
+        }
+      }
+    },
+    {
+      "name": "Retain completed result",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-channel-key",
+          "upstreamModel": "fun-music-v1",
+          "requestBody": {
+            "model": "fun-music-v1",
+            "input": {
+              "prompt": "A calm piano song",
+              "is_instrumental": true
+            }
+          },
+          "publicTaskId": "task_public"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "request_id": "request_fixture",
+            "output": {
+              "audio": {
+                "id": "audio_fixture",
+                "url": "https://media.example.test/song.mp3",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "duration": 123
+            }
+          }
+        }
+      ],
+      "expected": {
+        "taskId": "audio_fixture",
+        "taskData": {
+          "output": {
+            "audio": {
+              "url": "https://media.example.test/song.mp3",
+              "expires_at": 2000000000
+            },
+            "finish_reason": "stop"
+          },
+          "usage": {
+            "duration": 123
+          }
+        },
+        "immediate": {
+          "status": "SUCCESS",
+          "progress": "100%",
+          "url": "https://media.example.test/song.mp3"
+        }
+      }
+    },
+    {
+      "name": "Reject provider error without raw body echo",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-channel-key",
+          "upstreamModel": "fun-music-v1",
+          "requestBody": {
+            "model": "fun-music-v1",
+            "input": {
+              "prompt": "A calm piano song",
+              "is_instrumental": true
+            }
+          },
+          "publicTaskId": "task_public"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "code": "InvalidApiKey",
+            "message": "fixture private"
+          }
+        }
+      ],
+      "expectedError": "The music provider rejected the request."
+    },
+    {
+      "name": "Reject incomplete result",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-channel-key",
+          "upstreamModel": "fun-music-v1",
+          "requestBody": {
+            "model": "fun-music-v1",
+            "input": {
+              "prompt": "A calm piano song",
+              "is_instrumental": true
+            }
+          },
+          "publicTaskId": "task_public"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "output": {
+              "finish_reason": "null"
+            }
+          }
+        }
+      ],
+      "expectedError": "The provider did not return a final music result."
+    },
+    {
+      "name": "Reject missing usage",
+      "hook": "parseSubmitResponse",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-channel-key",
+          "upstreamModel": "fun-music-v1",
+          "requestBody": {
+            "model": "fun-music-v1",
+            "input": {
+              "prompt": "A calm piano song",
+              "is_instrumental": true
+            }
+          },
+          "publicTaskId": "task_public"
+        },
+        {
+          "statusCode": 200,
+          "body": {
+            "output": {
+              "audio": {
+                "id": "audio_fixture",
+                "url": "https://media.example.test/song.mp3",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            }
+          }
+        }
+      ],
+      "expectedError": "A positive provider usage duration is required."
+    },
+    {
+      "name": "Reject zero usage",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "usage": {
+            "duration": 0
+          }
+        }
+      ],
+      "expectedError": "A positive provider usage duration is required."
+    },
+    {
+      "name": "Unknown admission usage is null",
+      "hook": "extractUsage",
+      "args": [
+        {
+          "baseUrl": "https://workspace.cn-beijing.maas.aliyuncs.com",
+          "authHeader": "Bearer fixture-channel-key",
+          "upstreamModel": "fun-music-v1",
+          "requestBody": {
+            "model": "fun-music-v1",
+            "input": {
+              "prompt": "A calm piano song",
+              "is_instrumental": true
+            }
+          },
+          "publicTaskId": "task_public"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "name": "Completion uses real provider duration",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {
+          "status": "SUCCESS"
+        },
+        {
+          "request_id": "request_fixture",
+          "output": {
+            "audio": {
+              "id": "audio_fixture",
+              "url": "https://media.example.test/song.mp3",
+              "expires_at": 2000000000
+            },
+            "finish_reason": "stop"
+          },
+          "usage": {
+            "duration": 123
+          }
+        }
+      ],
+      "expected": {
+        "duration_seconds": 123
+      }
+    },
+    {
+      "name": "Failure does not invent usage",
+      "hook": "extractUsageOnComplete",
+      "args": [
+        {},
+        {
+          "status": "FAILURE"
+        },
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "No fabricated upstream polling",
+      "hook": "buildQueryRequest",
+      "args": [
+        {
+          "taskId": "audio_fixture"
+        }
+      ],
+      "expectedError": "Fun-Music has no upstream polling endpoint; successful submissions complete immediately."
+    },
+    {
+      "name": "Valid final observation",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "request_id": "request_fixture",
+          "output": {
+            "audio": {
+              "id": "audio_fixture",
+              "url": "https://media.example.test/song.mp3",
+              "expires_at": 2000000000
+            },
+            "finish_reason": "stop"
+          },
+          "usage": {
+            "duration": 123
+          }
+        },
+        {
+          "status": 200
+        }
+      ],
+      "expected": {
+        "status": "SUCCESS",
+        "progress": "100%",
+        "url": "https://media.example.test/song.mp3"
+      }
+    },
+    {
+      "name": "Explicit failure observation",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {
+          "code": "GenerationFailed"
+        },
+        {
+          "status": 200
+        }
+      ],
+      "expected": {
+        "status": "FAILURE",
+        "reason": "The music provider rejected the task."
+      }
+    },
+    {
+      "name": "Transport outcome remains unknown",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {},
+        {
+          "status": 503
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "The music provider is unavailable."
+      }
+    },
+    {
+      "name": "Incomplete observation remains unknown",
+      "hook": "parseTaskResult",
+      "args": [
+        {},
+        {},
+        {
+          "status": 200
+        }
+      ],
+      "expected": {
+        "status": "UNKNOWN",
+        "reason": "The provider did not return a verifiable final music result."
+      }
+    },
+    {
+      "name": "Public ID in created",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_public",
+          "status": "SUCCESS",
+          "data": {
+            "request_id": "request_fixture",
+            "output": {
+              "audio": {
+                "id": "audio_fixture",
+                "url": "https://media.example.test/song.mp3",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "duration": 123
+            }
+          }
+        }
+      ],
+      "member": "created",
+      "expected": {
+        "output": {
+          "task_id": "task_public",
+          "task_status": "SUCCEEDED",
+          "audio": {
+            "url": "https://media.example.test/song.mp3",
+            "expires_at": 2000000000
+          },
+          "finish_reason": "stop"
+        },
+        "usage": {
+          "duration": 123
+        }
+      }
+    },
+    {
+      "name": "Public ID in status",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_public",
+          "status": "SUCCESS",
+          "data": {
+            "request_id": "request_fixture",
+            "output": {
+              "audio": {
+                "id": "audio_fixture",
+                "url": "https://media.example.test/song.mp3",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "duration": 123
+            }
+          }
+        }
+      ],
+      "member": "status",
+      "expected": {
+        "output": {
+          "task_id": "task_public",
+          "task_status": "SUCCEEDED",
+          "audio": {
+            "url": "https://media.example.test/song.mp3",
+            "expires_at": 2000000000
+          },
+          "finish_reason": "stop"
+        },
+        "usage": {
+          "duration": 123
+        }
+      }
+    },
+    {
+      "name": "Unknown task remains unknown",
+      "hook": "native",
+      "args": [
+        {},
+        {
+          "task_id": "task_public",
+          "status": "UNKNOWN",
+          "data": {}
+        }
+      ],
+      "member": "status",
+      "expected": {
+        "output": {
+          "task_id": "task_public",
+          "task_status": "UNKNOWN"
+        }
+      }
+    },
+    {
+      "name": "Audio artifact projection",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "SUCCESS",
+          "data": {
+            "request_id": "request_fixture",
+            "output": {
+              "audio": {
+                "id": "audio_fixture",
+                "url": "https://media.example.test/song.mp3",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "duration": 123
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "key": "audio",
+          "type": "audio",
+          "mimeType": "audio/mpeg"
+        }
+      ]
+    },
+    {
+      "name": "No artifact on failed task",
+      "hook": "listArtifacts",
+      "args": [
+        {
+          "status": "FAILURE",
+          "data": {
+            "request_id": "request_fixture",
+            "output": {
+              "audio": {
+                "id": "audio_fixture",
+                "url": "https://media.example.test/song.mp3",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "duration": 123
+            }
+          }
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "No credential forwarding to CDN",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "audio",
+          "data": {
+            "request_id": "request_fixture",
+            "output": {
+              "audio": {
+                "id": "audio_fixture",
+                "url": "https://media.example.test/song.mp3",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "duration": 123
+            }
+          },
+          "authHeader": "Bearer must-not-leak",
+          "clientRequest": {
+            "method": "HEAD"
+          }
+        }
+      ],
+      "expected": {
+        "url": "https://media.example.test/song.mp3",
+        "method": "HEAD",
+        "credentialless": true
+      }
+    },
+    {
+      "name": "Reject unknown artifact",
+      "hook": "buildContentRequest",
+      "args": [
+        {
+          "artifactKey": "video",
+          "data": {
+            "request_id": "request_fixture",
+            "output": {
+              "audio": {
+                "id": "audio_fixture",
+                "url": "https://media.example.test/song.mp3",
+                "expires_at": 2000000000
+              },
+              "finish_reason": "stop"
+            },
+            "usage": {
+              "duration": 123
+            }
+          }
+        }
+      ],
+      "expectedError": "Unknown music artifact."
+    }
+  ]
+}

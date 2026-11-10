@@ -34,7 +34,7 @@ async def close_sessions(session_key: str | None = None):
 
 @asynccontextmanager
 async def connection(request: RunRequest, command: list[str], notify, respond, *, acp=False):
-    if not request.session_key:
+    if not request.session_key or (request.service_source == "subscription" and request.subscription_backend == "central"):
         async with RPC(request, command, notify, respond, acp=acp) as rpc:
             yield rpc
         return

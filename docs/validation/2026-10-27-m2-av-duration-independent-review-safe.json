@@ -1,0 +1,35 @@
+{
+  "exit_code": 0,
+  "pytest_log": "/private/tmp/easel-m2-av-independent-review-20261027/av-final27.log",
+  "elapsed_seconds_including_extra_boundaries": 2.47,
+  "inputs_before_after": {
+    "services/platform/src/platform_service/media/av_artifacts.py": "11254764d0b956b7074687ec16fd001e6a62db275ca6e470a9899971adfa002a",
+    "services/platform/tests/test_media_av_artifacts.py": "74fa9498368fe9c6e6a01277bce8e9dd669659a228b69aba3ea139902a04ea0d"
+  },
+  "input_hashes_stable": true,
+  "ffmpeg_version": "8.0.1",
+  "one_sample_pcm_audio_below_one_ms_rejected": true,
+  "box_count8193_and_depth14_rejected_before_tools": true,
+  "image_wheel_sha256_unchanged": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+  "provider_network_or_production_calls": false,
+  "reviewer": "delivery_media_review",
+  "passed": 27,
+  "skipped": 0,
+  "pytest_seconds": 2.07,
+  "counts_overlap_note": "27 final AV tests include original26 plus1; no addition to implementer135 combined suite",
+  "resolved_finding": {
+    "trigger": "real500ms video +48000Hz single-sample PCM audio with movie_timescale48000",
+    "before": "require_audio=True accepted audio_duration_ms=0",
+    "fix": "each decoded stream requires out_time_us>=1000 before floor-to-ms",
+    "after": "same actual FFmpeg fixture rejected"
+  },
+  "remaining_known_blocking_findings": [],
+  "scope_limits": [
+    "only current M2 av_artifacts.py and its tests reviewed",
+    "no PG/SSH/server/provider/production call",
+    "image f50e wheel unchanged and has no av_artifacts.py",
+    "no full M2 adapters/worker/recovery or real provider readiness claim",
+    "single ordinary nonempty edit requires original remaining media and edit length each agree with decoded duration within100ms; not all legal MP4 editing supported",
+    "manual bounded cases not added as disjoint global test count"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "revoked_synthetic_local_files_removed": [
+    "fixture-auth-private.json",
+    "glm-live/fixture-auth-private.json",
+    "central-workspace/outputs/_harness/central-platform-session.json",
+    "short-live/central-workspace/outputs/_harness/central-platform-session.json",
+    "glm-live/central-workspace/outputs/_harness/central-platform-session.json",
+    "glm-live/cancel-workspace/outputs/_harness/central-platform-session.json",
+    "glm-live/custom-workspace/outputs/_harness/bundled-provider.json",
+    "glm-live/python-live/custom-workspace/outputs/_harness/bundled-provider.json"
+  ],
+  "owned_ssh_tunnels": [
+    {
+      "pid": 2859,
+      "port": 18872,
+      "stopped": true
+    },
+    {
+      "pid": 18687,
+      "port": 18873,
+      "stopped": true
+    }
+  ],
+  "marker_history_and_operation_records_retained": true,
+  "user_preview_17868_untouched": true,
+  "unrelated_user_config_untouched": true
+}

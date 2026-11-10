@@ -9,11 +9,13 @@ from .base import Descriptor, HarnessError, RunRequest
 from .workspace import harness_instructions
 from .commands import acp_command, base_command
 from .rpc import connection
+from .secrets import private_run
 
 
 class ACPAdapter:
     descriptor = Descriptor("acp", "通用 ACP", "ACP v1", "配置本机 ACP CLI，详见 docs/agent-harnesses.md")
 
+    @private_run
     async def run(self, request: RunRequest, emit, ask, bind):
         session_id = request.native_id
         active = False

@@ -3,17 +3,22 @@ import { artifactFromUrl, fitArtifact, mergeArtifacts } from '../lib/artifacts';
 import { fetchArtifactArchive, mediaUrl } from '../lib/api';
 import type { Artifact } from '../lib/artifacts';
 import { IconChevron, IconOutputs } from './icons';
+import DeliverableActions from './DeliverableActions';
+import { deliverableFromUrl } from '../lib/deliverables';
+import type { DeliverableReference } from '../lib/deliverables';
 
 function HtmlArtifact({ artifact }: { artifact: Artifact }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [source, setSource] = useState('');
   const [error, setError] = useState(false);
+  const [revision, setRevision] = useState(0);
   const [bounds, setBounds] = useState({ width: 800, height: 600 });
   const [available, setAvailable] = useState({ width: 640, height: 480 });
   const token = useRef(crypto.randomUUID());
   useEffect(() => {
     const controller = new AbortController();
+    setError(false); setSource('');
     void fetch(artifact.url, { signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error('preview');
       const html = await response.text();
@@ -39,7 +44,7 @@ function HtmlArtifact({ artifact }: { artifact: Artifact }) {
       if (!controller.signal.aborted) setError(true);
     });
     return () => controller.abort();
-  }, [artifact.url]);
+  }, [artifact.url, revision]);
   useEffect(() => {
     const observer = new ResizeObserver(entries => {
       const rect = entries[0].contentRect;
@@ -60,7 +65,7 @@ function HtmlArtifact({ artifact }: { artifact: Artifact }) {
   const fitted = fitArtifact(bounds.width, bounds.height, available.width - 24, available.height - 24);
   return (
     <div className="artifact-html-stage" ref={stage}>
-      {error ? <span className="artifact-hint">预览加载失败，可在新标签打开原文件</span>
+      {error ? <span className="artifact-hint" role="status">预览加载失败 <button type="button" className="btn btn-sm" onClick={() => setRevision(value => value + 1)}>重新加载</button></span>
         : !source ? <span className="artifact-hint">正在加载预览…</span>
         : <div className="artifact-html-fit" style={{ width: fitted.width, height: fitted.height }}>
           <iframe ref={frame} srcDoc={source} title={artifact.name} sandbox="allow-scripts" allow="clipboard-write"
@@ -72,7 +77,7 @@ function HtmlArtifact({ artifact }: { artifact: Artifact }) {
 
 function ArtifactPreview({ artifact }: { artifact: Artifact }) {
   const [error, setError] = useState(false);
-  if (error) return <div className="artifact-hint">预览加载失败，可打开或下载原文件</div>;
+  if (error) return <div className="artifact-hint" role="status">预览加载失败 <button type="button" className="btn btn-sm" onClick={() => setError(false)}>重新加载</button></div>;
   if (artifact.kind === 'html') return <HtmlArtifact artifact={artifact} />;
   if (artifact.kind === 'image') return <img src={artifact.url} alt={artifact.name} onError={() => setError(true)} />;
   if (artifact.kind === 'video') return <video src={artifact.url} controls preload="metadata" onError={() => setError(true)} />;
@@ -80,7 +85,10 @@ function ArtifactPreview({ artifact }: { artifact: Artifact }) {
   return <iframe src={artifact.url} title={artifact.name} sandbox="" />;
 }
 
-export default function ArtifactGallery({ artifacts, archives }: { artifacts: Artifact[]; archives?: string[] }) {
+export default function ArtifactGallery({ artifacts, archives, sourceSessionId, onContinue, onSource }: {
+  artifacts: Artifact[]; archives?: string[]; sourceSessionId?: string;
+  onContinue?: (reference: DeliverableReference) => void; onSource?: (sessionId: string) => void;
+}) {
   const [index, setIndex] = useState(0);
   const [archiveArtifacts, setArchiveArtifacts] = useState<Artifact[]>([]);
   useEffect(() => {
@@ -97,10 +105,11 @@ export default function ArtifactGallery({ artifacts, archives }: { artifacts: Ar
     }
     return () => controller.abort();
   }, [archives]);
-  const items = mergeArtifacts(artifacts, archiveArtifacts);
+  const items = mergeArtifacts(artifacts, archiveArtifacts).filter(item => !!deliverableFromUrl(item.url));
   const current = Math.min(index, items.length - 1);
   const artifact = items[current];
   if (!artifact) return null;
+  const reference = deliverableFromUrl(artifact.url, sourceSessionId);
   const move = (direction: number) => setIndex((current + direction + items.length) % items.length);
   return (
     <section className="artifact-gallery" aria-label="对话产物预览" aria-roledescription="轮播"
@@ -112,7 +121,7 @@ export default function ArtifactGallery({ artifacts, archives }: { artifacts: Ar
           move(event.key === 'ArrowLeft' ? -1 : 1);
         }
       }}>
-      <div className="artifact-header"><IconOutputs size={16} /><span>创作产物</span>
+      <div className="artifact-header"><IconOutputs size={16} /><span>成品</span>
         <span className="artifact-count" aria-live="polite">{current + 1} / {items.length}</span></div>
       <div className="artifact-stage">
         <ArtifactPreview key={artifact.url} artifact={artifact} />
@@ -126,7 +135,7 @@ export default function ArtifactGallery({ artifacts, archives }: { artifacts: Ar
       <div className="artifact-footer">
         <span className="artifact-name" title={artifact.name}>{artifact.name}</span>
         <a href={artifact.url} target="_blank" rel="noreferrer">打开 ↗</a>
-        <a href={artifact.url} download={artifact.name}>下载</a>
+        {reference && <DeliverableActions reference={reference} onContinue={onContinue} onSource={onSource} />}
       </div>
     </section>
   );

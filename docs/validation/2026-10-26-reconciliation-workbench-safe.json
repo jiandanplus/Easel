@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-26T03:29:05.037717+00:00",
+  "status": "passed_for_r1_scope",
+  "branch": "codex/ui-redesign",
+  "merged_to_main": false,
+  "scope": "R1 review metadata and financial read-only queue; no trusted settlement or provider requests",
+  "central_tests": {
+    "exit_code": 0,
+    "duration_seconds": 115.446,
+    "summary": "1030 passed in 114.88s (0:01:54)",
+    "source_manifest_before_after_identical": true,
+    "source_manifest_sha256": "5677892152f5784b30cb5b61689a108aa2bc52bdc233a0dc94d4c5707af26d4b",
+    "stdout_sha256": "4244efb73fe0d1bfc99a6af99c27cf06d1e67304b212f2308b260b3a4f3a742f",
+    "stderr_bytes": 0
+  },
+  "frontend_tests": {
+    "tests": 38,
+    "passed": 38,
+    "failed": 0,
+    "skipped": 0,
+    "build_passed": true,
+    "stdout_sha256": "115e248fa1764d53944c51dff4ff5cfc53634dd038ba74060c38b623cb74c63d",
+    "build_stdout_sha256": "fd5a3c0de7cfa2d3e2226fa67dd39e1d66eab027d79ce3927a52cc99f2e7d187"
+  },
+  "test_bound_source_manifest_still_matches": true,
+  "wheel": {
+    "ok": true,
+    "wheel": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/reconciliation-r1-20261026/wheel/easel_central_platform-0.1.0-py3-none-any.whl",
+    "sha256": "94ca79973b12cab2b552edf426473ad127785d7118c20e7b817589c67f9b7857",
+    "public_payload_files": 57,
+    "changed_source_files": [
+      "platform_service/console_app.py",
+      "platform_service/console_auth.py",
+      "platform_service/console_permissions.py",
+      "platform_service/console_reconciliation.py",
+      "platform_service/migrations/011_console_reconciliation.sql"
+    ],
+    "prior_migrations_byte_identical": true,
+    "financial_execution_modules_byte_identical": true,
+    "wheel_matches_current_source_and_dist": true,
+    "central_test_source_manifest": "5677892152f5784b30cb5b61689a108aa2bc52bdc233a0dc94d4c5707af26d4b"
+  },
+  "synthetic_browser": {
+    "synthetic_only": true,
+    "funds_unchanged": true,
+    "before_financial_sha256": "9fcbd893f2c99c775c2cc2c0d45092c39cd9b551c7f08a8dd912f7d81b2d4fbc",
+    "after_financial_sha256": "9fcbd893f2c99c775c2cc2c0d45092c39cd9b551c7f08a8dd912f7d81b2d4fbc",
+    "cases": [
+      {
+        "state": "awaiting_evidence",
+        "revision": 1
+      }
+    ],
+    "review_audit_count": 1,
+    "review_posts": 1,
+    "operation_gets": 1,
+    "faults_injected": 1,
+    "real_model_posts": 0
+  },
+  "production": {
+    "cutover": {
+      "ok": true,
+      "release": "/srv/easel/releases/20261026-reconciliation-r1-v1",
+      "migration_applied": [
+        "011_console_reconciliation.sql"
+      ],
+      "metadata_role_granted_and_guarded": true,
+      "public_console_exposure_changed": false,
+      "maintenance_admission_and_old_worker_drain_verified": true,
+      "all_active_drained_before_stop": true,
+      "financial_scope": "all_wallets_eight_authoritative_tables",
+      "financial_tables": [
+        "credit_lots",
+        "credit_reservations",
+        "credit_holds",
+        "credit_journals",
+        "credit_entries",
+        "execution_invocations",
+        "execution_jobs",
+        "execution_receipts"
+      ],
+      "financial_projection_unchanged": true,
+      "financial_sha256": "3fcd787bf72e79a76d6669255e8e15feb2eda2a2ae68312e73d385503c248e79",
+      "financial_table_counts": {
+        "credit_lots": 1,
+        "credit_reservations": 27,
+        "credit_holds": 27,
+        "credit_journals": 53,
+        "credit_entries": 131,
+        "execution_invocations": 11,
+        "execution_jobs": 27,
+        "execution_receipts": 25
+      },
+      "pending_job_count": 2,
+      "old_pending_amount": 9728,
+      "old_pending_actual": null,
+      "original_configuration_hashes_unchanged": true,
+      "console_api_and_assets_healthy": true,
+      "original_nginx_restored": true,
+      "model_admission_restored": true,
+      "production_review_writes": 0,
+      "model_calls": 0,
+      "cache_ttl_cleanup_excluded_from_financial_scope": true
+    },
+    "post_verification": {
+      "ok": true,
+      "services_active": {
+        "easel-central-production": true,
+        "easel-console-production": true,
+        "nginx": true,
+        "easel-gateway-tunnel": true
+      },
+      "migration_011_sha256": "ad3219dcfe496137a32493bd97e69519799f6cc221494ac54e8209bf7efef7d5",
+      "financial_projection_matches_cutover": true,
+      "financial_sha256": "3fcd787bf72e79a76d6669255e8e15feb2eda2a2ae68312e73d385503c248e79",
+      "financial_table_counts": {
+        "credit_entries": 131,
+        "credit_holds": 27,
+        "credit_journals": 53,
+        "credit_lots": 1,
+        "credit_reservations": 27,
+        "execution_invocations": 11,
+        "execution_jobs": 27,
+        "execution_receipts": 25
+      },
+      "totals": {
+        "issued": 10000000,
+        "available": 9954247,
+        "held": 19456,
+        "spent": 26297,
+        "expired": 0,
+        "refunded": 0
+      },
+      "pending_jobs": 2,
+      "old_pending": {
+        "status": "pending_reconciliation",
+        "amount": 9728,
+        "actual": null
+      },
+      "console_metadata_counts": {
+        "console_reconciliation_cases": 0,
+        "console_operations": 0,
+        "console_audit_events": 0
+      },
+      "financial_balanced": true,
+      "journals_balanced": true,
+      "probe_model_calls": 0
+    },
+    "backup_before": {
+      "ok": true,
+      "scope": "before_reconciliation_r1_deployment",
+      "backup": {
+        "backup_id": "045ba8d9-a3ad-47a9-a711-3e1442c6eb33",
+        "ciphertext_bytes": 809802,
+        "ciphertext_sha256": "7ce95a0240db601513e1484b4dff479bc4d03c16b9a1f2433b8625862de244e1",
+        "file_count": 13,
+        "fresh_restore": false,
+        "manifest_sha256": "70d4efafda72fc4a40baeb696f33f37372b0ac700f5e0a6b2e6afabe5a0875c0",
+        "path": "/var/backups/easel-encrypted/20261026T024244Z-045ba8d9-a3ad-47a9-a711-3e1442c6eb33.sealed",
+        "payload_bytes": 808960,
+        "payload_sha256": "1f59c8dd06540a98beb70f1fbed2b4e9a4a7b8fe5071f2e97b2dc145016d4db1",
+        "status": "selfverified"
+      },
+      "journal_invocation_id": "f543d963f1e24a1eadb76149cb29e65d",
+      "systemd_completion_job_result": "done",
+      "fresh_artifact_hash_and_permissions_verified": true,
+      "offsite": false,
+      "fresh_restore": false
+    },
+    "backup_after": {
+      "ok": true,
+      "scope": "after_reconciliation_r1_deployment",
+      "backup": {
+        "backup_id": "177dbd5d-9e00-4a35-b691-4dcc4f1fed3b",
+        "ciphertext_bytes": 830282,
+        "ciphertext_sha256": "5aef207f6fddeb9c4ce1e7974d5dda83aa7d2c7c79eec878d147d8ee0d495907",
+        "file_count": 13,
+        "fresh_restore": false,
+        "manifest_sha256": "897247c3149ad514d13673b0f5df1cf076f27748fcb99381eaecfff96dcb9353",
+        "path": "/var/backups/easel-encrypted/20261026T030425Z-177dbd5d-9e00-4a35-b691-4dcc4f1fed3b.sealed",
+        "payload_bytes": 829440,
+        "payload_sha256": "8cf1bfdc8c44ecb3b4fcdcde7368b122a3c2550ab6de1f0c770a7703bd9cec63",
+        "status": "selfverified"
+      },
+      "journal_invocation_id": "e5db6da6a09e4b96b3e08530016d003a",
+      "systemd_completion_job_result": "done",
+      "fresh_artifact_hash_and_permissions_verified": true,
+      "offsite": false,
+      "fresh_restore": false
+    },
+    "post_browser_verification": {
+      "ok": true,
+      "services_active": {
+        "easel-central-production": true,
+        "easel-console-production": true,
+        "nginx": true,
+        "easel-gateway-tunnel": true
+      },
+      "migration_011_sha256": "ad3219dcfe496137a32493bd97e69519799f6cc221494ac54e8209bf7efef7d5",
+      "financial_projection_matches_cutover": true,
+      "financial_sha256": "3fcd787bf72e79a76d6669255e8e15feb2eda2a2ae68312e73d385503c248e79",
+      "financial_table_counts": {
+        "credit_entries": 131,
+        "credit_holds": 27,
+        "credit_journals": 53,
+        "credit_lots": 1,
+        "credit_reservations": 27,
+        "execution_invocations": 11,
+        "execution_jobs": 27,
+        "execution_receipts": 25
+      },
+      "totals": {
+        "issued": 10000000,
+        "available": 9954247,
+        "held": 19456,
+        "spent": 26297,
+        "expired": 0,
+        "refunded": 0
+      },
+      "pending_jobs": 2,
+      "old_pending": {
+        "status": "pending_reconciliation",
+        "amount": 9728,
+        "actual": null
+      },
+      "console_metadata_counts": {
+        "console_reconciliation_cases": 0,
+        "console_operations": 0,
+        "console_audit_events": 0
+      },
+      "financial_balanced": true,
+      "journals_balanced": true,
+      "probe_model_calls": 0
+    }
+  },
+  "browser_login": {
+    "private_console_rendered": true,
+    "public_login_rendered": true,
+    "previous_blank_page_reproduced_on_fresh_flow": false,
+    "root_cause_confirmed": false,
+    "authentication_proxy_or_identity_settings_changed": false,
+    "first_user_login_result": "pending_authorization_for_a_different_account",
+    "original_admin_and_current_issuer_alias_intact": true,
+    "new_administrator_granted": false,
+    "personal_admin_queue_acceptance": true,
+    "personal_admin_session_verified": true,
+    "personal_admin_queue_count": 2,
+    "personal_admin_detail_count": 2,
+    "personal_admin_accessibility_labels": [
+      "管理员 独立管理会话",
+      "已验证管理会话"
+    ],
+    "production_review_form_filled": false,
+    "production_review_submitted": false,
+    "personal_admin_details": [
+      {
+        "job_id_prefix": "690ef707",
+        "financial_status": "pending_reconciliation",
+        "reserved_microcredits": 9728,
+        "actual": null,
+        "review_revision": 0,
+        "central_usage_present": false,
+        "input_tokens": null,
+        "output_tokens": null,
+        "review_history_count": 0
+      },
+      {
+        "job_id_prefix": "33344a42",
+        "financial_status": "pending_reconciliation",
+        "reserved_microcredits": 9728,
+        "actual": null,
+        "review_revision": 0,
+        "central_usage_present": false,
+        "input_tokens": null,
+        "output_tokens": null,
+        "review_history_count": 0
+      }
+    ],
+    "queue_tab_retained": "tab15",
+    "post_browser_financial_recheck": "verified"
+  },
+  "custom_configuration_preservation": {
+    "unchanged": true,
+    "files": {
+      "config.json": "2f62f99a2b24df0c7d4a89793333a8c873e12d25c777d6fbd786e6a3a5f36d08",
+      "bundled-provider.json": "bc36a4ad692e1fd3289926f827d7ea251e026232c0110450681fb36b19b875d0"
+    }
+  },
+  "cleanup": {
+    "synthetic_preview_stopped": true,
+    "owned_schema_removed": true,
+    "owned_role_removed": true,
+    "owned_test_container_stopped": true,
+    "test_container_retained": true,
+    "production_console_tunnel_retained": true,
+    "user_workbench_untouched": true
+  },
+  "limitations": [
+    "Production personal administrator acceptance was read-only; review metadata writes were verified only on the isolated synthetic fixture.",
+    "Unknown review operation recovery survives detail close and App navigation only; full browser reload persistence is not implemented.",
+    "Old unknown-cost jobs retain their holds; R2 trusted reconciliation is not implemented.",
+    "Backups were selfverified on the same host; this phase does not prove fresh restore or offsite recovery.",
+    "No real provider/model call, financial review write, payment, or grant was made by R1 acceptance."
+  ],
+  "screenshots": [
+    "assets/reconciliation-r1-20261026/unknown-recovered-synthetic.jpg",
+    "assets/reconciliation-r1-20261026/recovered-history-synthetic.jpg",
+    "assets/reconciliation-r1-20261026/admin-login-recovered.jpg",
+    "assets/reconciliation-r1-20261026/production-admin-queue.jpg",
+    "assets/reconciliation-r1-20261026/production-old-pending-detail.jpg",
+    "assets/reconciliation-r1-20261026/production-new-pending-detail.jpg"
+  ]
+}

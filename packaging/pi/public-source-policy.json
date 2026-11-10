@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "roots": ["easel", "web", "skills", "agents", "scripts"],
+  "excluded_directories": [".git", "node_modules", "__pycache__", ".venv", "profiles", "outputs", ".cache", "models", "cookies", "dist", "tests", "test", "fixtures", ".pytest_cache", ".easel", ".easel-platform", "private"],
+  "excluded_prefixes": ["scripts/validation/", "scripts/packaging/"],
+  "extensions": [".py", ".html", ".css", ".js", ".mjs", ".json", ".md", ".txt", ".yaml", ".yml", ".toml", ".sh", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".woff", ".woff2", ".ttf", ".otf"],
+  "frontend_extensions": [".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".html", ".css", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".woff", ".woff2", ".ttf", ".otf", ".md"],
+  "private_names": ["auth.json", "credentials.json", "secrets.json", "api_keys.json", "api-key.json", "token.json", "tokens.json", "cookies.json", "wechat-publisher.yaml", "session.json", "sessions.json"],
+  "private_fragments": ["token_cache", "credentials.local", "secret.local", "private-key", "id_rsa", "id_ed25519"]
+}

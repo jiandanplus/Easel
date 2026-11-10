@@ -1,0 +1,23 @@
+{
+  "variant": "B",
+  "page": "16",
+  "title": "生图",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-765a273e-3bdb-464a-84d9-367f5e9be182.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/16.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "生图",
+    "图像生成服务",
+    "供应商",
+    "Base URL",
+    "保存配置"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Additional 示例效果 label outside whitelist"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "ca71fb34c4839159d252a6cc2b6bedfe22b81487ad545f185e8f1ab593fbb72a"
+}

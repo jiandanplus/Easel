@@ -1,0 +1,28 @@
+{
+  "added_channel": {
+    "channel_id": 4,
+    "name": "Easel Pi GLM Responses v1",
+    "type": 58,
+    "status": 1,
+    "models": "glm-5.3",
+    "priority": 1
+  },
+  "original_channels_unchanged": true,
+  "original_channel_ids": [
+    1,
+    2,
+    3
+  ],
+  "channel_count_before": 3,
+  "channel_count_after": 4,
+  "ability_count": 1,
+  "backup_bytes": 274815,
+  "backup_sha256": "7d150c42ca5cdf73459ace1e08f1557adb227c9f9442ce2fa632bfeccc1954a8",
+  "backup_path": "/tmp/easel-pi-live-m9cu7v3q/newapi-before-pi-glm.dump",
+  "automatic_cache_refresh_seconds": 60,
+  "newapi_restarted": false,
+  "secret_left_server": false,
+  "source_channel_id": 2,
+  "responses_converter": "openai_responses_to_openai_chat_completions",
+  "commercial_pricing_claim": false
+}

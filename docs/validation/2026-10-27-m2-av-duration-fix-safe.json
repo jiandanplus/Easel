@@ -1,0 +1,48 @@
+{
+  "scope": "local M2 decoder only; not included in frozen M1.1 f50 release",
+  "frozen_release_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+  "source_sha256": {
+    "services/platform/src/platform_service/media/av_artifacts.py": "11254764d0b956b7074687ec16fd001e6a62db275ca6e470a9899971adfa002a",
+    "services/platform/tests/test_media_av_artifacts.py": "74fa9498368fe9c6e6a01277bce8e9dd669659a228b69aba3ea139902a04ea0d"
+  },
+  "before_decoder_sha256": "96ea823201ce8c1ebfacd13dc8658083e1b4484c6f350938356652ddfef27731",
+  "patch_sha256": "c68c37dcdb930c796ee2b3e788f5dd5ffbe78d54c2c70f1b0a38b26179093325",
+  "red_tests_observed": 4,
+  "green": {
+    "passed": 135,
+    "seconds": 15.91,
+    "module_counts": {
+      "test_media_av_artifacts": 27,
+      "test_media_resources": 21,
+      "test_media_audio_protocol": 34,
+      "test_media_audio_references": 3,
+      "test_media_voice_protocol": 9,
+      "test_media_voice_stages": 12,
+      "test_media_newapi_images": 18,
+      "test_internal_features": 11
+    }
+  },
+  "probe_actual_fixture_ms": {
+    "valid": {
+      "audio_mdhd": "323.2199546485261",
+      "audio_elst": "300",
+      "probe_audio": "300"
+    },
+    "extended": {
+      "audio_mdhd": "523.219954648526",
+      "audio_elst": "500",
+      "probe_audio": "323.220"
+    }
+  },
+  "limitations": [
+    "single nonempty rate-one MP4 edit only",
+    "unprovable or complex timelines remain closed",
+    "does not implement M2 async worker or supplier enablement"
+  ],
+  "remote_or_supplier_calls": 0,
+  "superseded_source_sha256": {
+    "services/platform/src/platform_service/media/av_artifacts.py": "efa0aefb280e9bc5ecbbfd42ccdbbc22b6cae2424277b71a0feef808e121edda",
+    "services/platform/tests/test_media_av_artifacts.py": "f584be85cff354e4d0036a93d10c3f9ed5cab92b5d78f3e3fe2ac255a9fbccb0"
+  },
+  "independent_submillisecond_review_reproduction_fixed": true
+}

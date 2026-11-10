@@ -1,0 +1,27 @@
+{
+  "variant": "E",
+  "page": "07",
+  "title": "技能库",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-13fbe7ef-552b-4cc5-93a2-33934942b1a3.png",
+  "requiredLabels": [
+    "技能库",
+    "搜索技能",
+    "发现",
+    "制作",
+    "发布",
+    "已配置"
+  ],
+  "status": "visually-reviewed",
+  "width": 1586,
+  "height": 992,
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/E/07.png",
+  "visuallyConfirmedLabels": [
+    "技能库",
+    "搜索技能",
+    "发现",
+    "制作",
+    "发布",
+    "已配置"
+  ],
+  "sha256": "fea2d23bf993f8ab593f9d1de8b786f852b4f00886c6542912e99f0af9306138"
+}

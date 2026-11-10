@@ -1,0 +1,28 @@
+{
+  "variant": "B",
+  "page": "02",
+  "title": "对话",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-4b2574b6-dabf-42ab-9df9-de738782a18d.png",
+  "requiredLabels": [
+    "对话",
+    "新对话",
+    "确认需求",
+    "脚本预览",
+    "发送"
+  ],
+  "status": "reviewed-required-labels",
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked.",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/02.png",
+  "width": 1586,
+  "height": 992,
+  "visuallyConfirmedLabels": [
+    "对话",
+    "新对话",
+    "确认需求",
+    "脚本预览",
+    "发送"
+  ],
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "sha256": "5f79f96f7351a5cf181cbe90f041ea7824e15fb2039ae652f7e0d1dd40538b99"
+}

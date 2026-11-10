@@ -39,7 +39,8 @@ def resolve_script(doc: Path, token: str) -> Path | None:
         return None
     candidate = Path(token)
     if candidate.is_absolute():
-        return candidate
+        # 仓库外的绝对路径（如 /private/tmp 下的一次性脚本）不是仓库产物，无从校验。
+        return candidate if candidate.is_relative_to(ROOT) else None
     if token.startswith(("skills/", "agents/")):
         return ROOT / candidate
     if token.startswith("scripts/"):
@@ -48,6 +49,9 @@ def resolve_script(doc: Path, token: str) -> Path | None:
                 break
             if (parent / "SKILL.md").is_file():
                 return parent / candidate
+        return ROOT / candidate
+    # 运维手册的命令约定从仓库根目录执行；文档相对路径不存在时按仓库根解析。
+    if not (doc.parent / candidate).exists() and (ROOT / candidate).exists():
         return ROOT / candidate
     return doc.parent / candidate
 

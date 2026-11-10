@@ -1,0 +1,23 @@
+{
+  "variant": "D",
+  "page": "16",
+  "title": "生图",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-db7992d6-8225-461b-bda1-0778589bc18c.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/D/16.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "生图",
+    "图像生成服务",
+    "供应商",
+    "Base URL",
+    "保存配置"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Decorative D letter beside Easel brand"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "b092a0854b9426595c3c12f53dbfd5dda888dffcc1842f06121b3209300443a4"
+}

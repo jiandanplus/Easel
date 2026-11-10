@@ -1,0 +1,19 @@
+{
+  "variant": "B",
+  "page": "01",
+  "title": "工作台",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-38d41947-c611-411a-b63f-7161469f6570.png",
+  "requiredLabels": [
+    "工作台",
+    "开始创作",
+    "待做选题",
+    "待发排期",
+    "内容项目"
+  ],
+  "status": "key-labels-visually-checked",
+  "qaNotes": "Single landscape page, key headings and controls inspected; secondary demo content not individually character-certified.",
+  "width": 1586,
+  "height": 992,
+  "sha256": "58ab92b87d5cbcad6b5b4795b638553a0805423f600ee1f4310cf33109df50fa",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/01.png"
+}

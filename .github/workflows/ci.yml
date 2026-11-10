@@ -169,6 +169,83 @@ jobs:
         run: node --test ../../tests/frontend/*.test.mjs
       - run: npm run build
 
+  # 中央服务是独立 uv 项目（Python 3.12 + PostgreSQL 16），根目录 pytest 不收集它。
+  # PG 测试缺 DSN 时按设计直接失败而非跳过，所以这里起一个仅 CI 内可见的临时 PG16。
+  # 媒体测试的库夹具要求 B2「自有容器授权」：镜像固定为下面的摘要，授权文件在运行时生成。
+  central-platform:
+    name: Central platform (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
+        env:
+          POSTGRES_PASSWORD: ci-only-not-a-secret-for-b2-tests
+          POSTGRES_DB: easel_s1_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d easel_s1_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      EASEL_CENTRAL_TEST_DSN: postgresql://postgres:ci-only-not-a-secret-for-b2-tests@127.0.0.1:5432/easel_s1_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: services/platform/frontend/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+      - name: Build Console (packaged into the wheel)
+        run: |
+          npm ci --prefix services/platform/frontend --ignore-scripts
+          npm test --prefix services/platform/frontend
+          python3 services/platform/scripts/build_console.py
+      - run: uv sync --project services/platform --python 3.12 --frozen --group test
+      - name: Create owned B2 test authority
+        env:
+          CONTAINER_ID: ${{ job.services.postgres.id }}
+        run: |
+          nonce=$(openssl rand -hex 16)
+          psql "$EASEL_CENTRAL_TEST_DSN" -qc "CREATE DATABASE easel_s1_test_b2_$nonce"
+          dir="$RUNNER_TEMP/easel-b2-owned-pg-$nonce"
+          mkdir -m 700 "$dir"
+          (umask 077; python3 - "$dir/authority.private.json" "$nonce" "$CONTAINER_ID" <<'PY'
+          import json, sys
+          path, nonce, container = sys.argv[1:]
+          json.dump({"format": "easel-b2-owned-test-pg-v1", "nonce": nonce, "container_id": container,
+                     "image": "postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97",
+                     "host": "127.0.0.1", "port": 5432, "database": f"easel_s1_test_b2_{nonce}",
+                     "user": "postgres", "password": "ci-only-not-a-secret-for-b2-tests"}, open(path, "w"))
+          PY
+          )
+          echo "EASEL_B2_TEST_AUTHORITY_FILE=$dir/authority.private.json" >> "$GITHUB_ENV"
+      # 从仓库根以 `python -m pytest` 运行：部分用例按 services.platform.tests.* 导入。
+      # 排除已冻结的 AV（需 Linux Docker 守护进程）与 B2 恢复链路测试，见 docs/decisions/0001-freeze-b2-b3-av.md。
+      - name: Central service tests
+        timeout-minutes: 30
+        run: >-
+          uv run --project services/platform --frozen --group test python -m pytest services/platform/tests -q
+          --ignore-glob='services/platform/tests/test_av_*'
+          --ignore-glob='services/platform/tests/test_media_backup_b3_*'
+          --ignore-glob='services/platform/tests/test_b3_*'
+          --ignore=services/platform/tests/test_media_backup_b2_capture_pg.py
+          --ignore=services/platform/tests/test_media_backup_b2_integrated.py
+          --ignore=services/platform/tests/test_media_backup_b2_pipeline.py
+          --ignore=services/platform/tests/test_settled_media_restore_fixture.py
+          --ignore=services/platform/tests/test_mixed_media_restore_fixture.py
+          --ignore=services/platform/tests/test_media_restore_capture.py
+      # B3 按设计在“状态不明”时保留目录与文件描述符、不提供释放接口（由 Root 处置，进程退出即释放），
+      # 测试大量构造这类保留场景；同进程累积到上万个后，后续用到 select() 的用例会越过 1024 上限。
+      # 因此每个 B3 文件单独一个进程，进程退出即完成处置。
+      - name: Central B3 tests (one process per file)
+        timeout-minutes: 30
+        run: |
+          set -e
+          for file in services/platform/tests/test_media_backup_b3_*.py services/platform/tests/test_b3_*.py; do
+            uv run --project services/platform --frozen --group test python -m pytest -q "$file"
+          done
+
   # 真·跑一遍安装。只在 nightly / 手动触发 / 打了 ci:full-install 标签的 PR 上跑：
   # 一次完整安装要下 ~1GB（pip 的 opencv/faster-whisper/rembg + npm + Chromium），
   # windows-latest 上 I/O 更慢且按 2 倍计费，挂在每个 PR 上并不现实。

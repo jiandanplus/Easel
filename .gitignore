@@ -87,3 +87,7 @@ skills/builtin/video-production/vendor/**/node_modules/
 skills/builtin/video-production/vendor/**/.remotion/
 skills/builtin/video-production/vendor/**/models/
 skills/builtin/video-production/vendor/**/*large-v3*
+# Managed Pi dependencies/payloads are separate from ordinary public source.
+/runtime/pi/node_modules/
+/packaging/pi/payload/
+/packaging/pi/stage/

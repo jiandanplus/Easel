@@ -1,0 +1,477 @@
+{
+  "schema_version": 1,
+  "success": true,
+  "archive": "/var/lib/easel-validation/pi-embedded-20261023",
+  "owned_pg_dump": {
+    "bytes": 923683,
+    "sha256": "569228a40851fa470639757202c9dddbca0d4f1166ce301a2c886a23b2f7ec3c"
+  },
+  "production_backup_copy": {
+    "bytes": 274815,
+    "sha256": "7d150c42ca5cdf73459ace1e08f1557adb227c9f9442ce2fa632bfeccc1954a8"
+  },
+  "public_file_count": 13,
+  "public_source_receipt_hashes": {
+    "old_pi/channels-before-pi-glm-safe.jsonl": {
+      "bytes": 371,
+      "sha256": "4adf1d688eb8bd4c6630683845d4628aff4086dcc5c9a2fe40cbb73a944377e5"
+    },
+    "old_pi/dispatch-safe.json": {
+      "bytes": 1037,
+      "sha256": "04e84cbc11a791eadcf42568b5377984c72653889c9aa06926b34f496d9f56a9"
+    },
+    "old_pi/live_runner.py": {
+      "bytes": 29898,
+      "sha256": "d3cc1558a64e0477a4a0590bfc58131776d6e55c65a01da3dcc9128885c3700e"
+    },
+    "old_pi/prepare-safe.json": {
+      "bytes": 1050,
+      "sha256": "754bdaab03cc8fd349cad87b88b6a59ecefda0b2c2ee03d1c7aeae987bd5057d"
+    },
+    "old_pi/remote_pi_validation.py": {
+      "bytes": 14626,
+      "sha256": "cf88d6af34d398257eac29041765028bd2b97c2264e16abc3ea41baa19d4c793"
+    },
+    "old_pi/snapshot-safe.json": {
+      "bytes": 4156,
+      "sha256": "e4aa93a9c92697bccf698b9e46e58dc08f6e04c84e5277141228ff1dfff0df10"
+    },
+    "glm_pi/custom-count-safe.json": {
+      "bytes": 1,
+      "sha256": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce"
+    },
+    "glm_pi/dispatch-safe.json": {
+      "bytes": 1451,
+      "sha256": "52da3773062c8a5ef30381c825fbeb53b83989a77cf302f33551848efbb26655"
+    },
+    "glm_pi/live_runner.py": {
+      "bytes": 29898,
+      "sha256": "d3cc1558a64e0477a4a0590bfc58131776d6e55c65a01da3dcc9128885c3700e"
+    },
+    "glm_pi/prepare-safe.json": {
+      "bytes": 2317,
+      "sha256": "9a45a714a523859b29a36d13a9d01f321ef2aa0fcb9f6b93f967ee74689827bc"
+    },
+    "glm_pi/remote_pi_validation.py": {
+      "bytes": 17953,
+      "sha256": "b6610c445c95a0624fc30136f946bd8b3fe412c83f1a35e806ff54ac9e0c9a92"
+    },
+    "glm_pi/replay-safe.json": {
+      "bytes": 83,
+      "sha256": "df1a23b40e9a64ef7ee994ff165b7a6a07d185cfa620cd29b8918ae561a6ae54"
+    },
+    "glm_pi/snapshot-safe.json": {
+      "bytes": 4496,
+      "sha256": "3a5c8e2da914fa85e22d9957bd95fc96d15e1b6af6501126c256a4cc3a52b600"
+    }
+  },
+  "wallets_before": {
+    "old_pi": {
+      "lots": [
+        {
+          "id": "5f2d1873-65bc-42c5-a3da-b35fa5b77020",
+          "issued": "100000000",
+          "available": "99988356",
+          "held": "9728",
+          "spent": "1916"
+        }
+      ],
+      "spent": 1916,
+      "held": 9728,
+      "job_status_counts": {
+        "pending_reconciliation": 1,
+        "settled": 4
+      },
+      "financial_table_fingerprints": {
+        "credit_lots": {
+          "count": 1,
+          "sha256": "aabfe1c2146e39db65ac5a65c6d40fa8773c5dfd98884944af20e97a00265459"
+        },
+        "credit_reservations": {
+          "count": 5,
+          "sha256": "5ef36cd968a6a01f94d703193f4485256785c5c4fce588ec6245feb488320f94"
+        },
+        "credit_holds": {
+          "count": 5,
+          "sha256": "e12872b4e607288b518de833533b590e356f12dfe077b47b10ffb28ac288eb08"
+        },
+        "credit_journals": {
+          "count": 10,
+          "sha256": "4a57ebcb15aae6e36b2271c6b2c854a5e9024815b88454901813cbfe7341c012"
+        },
+        "credit_entries": {
+          "count": 24,
+          "sha256": "eda7a1b99cc70b88a2cdf155d751592cd309e343712e9c4ecb8a4354f5192340"
+        },
+        "execution_invocations": {
+          "count": 2,
+          "sha256": "df05867b2df7e727b3403ea19c610ae1079d31538ca21655a0d57cf6d9f74075"
+        },
+        "execution_jobs": {
+          "count": 5,
+          "sha256": "3260f90e4b664bb29b7e7951c04a0ccf2b4b211dc6f5a4eaec4375594a3980d2"
+        },
+        "execution_receipts": {
+          "count": 4,
+          "sha256": "006f1e52b798d0a0c2745a332ee1e0cdebd5d62349eb513538ac2de860dd8d56"
+        },
+        "execution_results": {
+          "count": 4,
+          "sha256": "82afff95f4e6ad7eabad307c49e12e254b7bf8702a3b2ecbe93c298c6a3fec9f"
+        }
+      }
+    },
+    "glm_pi": {
+      "lots": [
+        {
+          "id": "9df11ba8-bcb3-4c9e-9437-c03bda923fed",
+          "issued": "100000000",
+          "available": "99989865",
+          "held": "8960",
+          "spent": "1175"
+        }
+      ],
+      "spent": 1175,
+      "held": 8960,
+      "job_status_counts": {
+        "pending_reconciliation": 1,
+        "settled": 3
+      },
+      "financial_table_fingerprints": {
+        "credit_lots": {
+          "count": 1,
+          "sha256": "85858f45c32d545752c49f1264bd41f18939450ffbd5280c0237c941b2e96e79"
+        },
+        "credit_reservations": {
+          "count": 4,
+          "sha256": "763e0effed1d63beee9f10265e06b5250eb051c5ff03a4b56aed0d9f4c90250c"
+        },
+        "credit_holds": {
+          "count": 4,
+          "sha256": "ecc1ebfffb7359bb0589ab4b8d0683e238b261f0bb3f35869df23cd4dddd5129"
+        },
+        "credit_journals": {
+          "count": 8,
+          "sha256": "ec9f10d59eadcaece361ddd379a5f6fee9bc1c85f88c34fa6a5a0605d613ec1f"
+        },
+        "credit_entries": {
+          "count": 19,
+          "sha256": "adfd0c99bfde721ce7202f6ce690fa75d71c3a869531a615b6e9eaa904056dbb"
+        },
+        "execution_invocations": {
+          "count": 2,
+          "sha256": "b2f3ebd5bad82103ed0e42d2f11c30ed1bde8dca60e396efb56254754a049b8c"
+        },
+        "execution_jobs": {
+          "count": 4,
+          "sha256": "14f85c408f841d8d1aa7564dbfe4006732f4343371be255233487c6986b301c2"
+        },
+        "execution_receipts": {
+          "count": 3,
+          "sha256": "f9c416af76d92871ccf128d8dee64b9d415da4cf9451a09488bee658f6b7589a"
+        },
+        "execution_results": {
+          "count": 3,
+          "sha256": "d3d228f440c5400e6f90bdcbac2d56a8f56f9563679f218a3181360ef903dfa1"
+        }
+      }
+    },
+    "old_s3b": {
+      "lots": [
+        {
+          "id": "f040dc12-dc4c-4fe6-b8d8-c9456486d3e6",
+          "issued": "100000000",
+          "available": "99965499",
+          "held": "33152",
+          "spent": "1349"
+        }
+      ],
+      "spent": 1349,
+      "held": 33152,
+      "job_status_counts": {
+        "pending_reconciliation": 1,
+        "settled": 4
+      },
+      "financial_table_fingerprints": {
+        "credit_lots": {
+          "count": 1,
+          "sha256": "df328257fd68fd36724d185b658d671f15c7822562288920ba02a2b0d663bd95"
+        },
+        "credit_reservations": {
+          "count": 5,
+          "sha256": "0df991ce3fcc98889393b754a29d2918988c7411c2fa5589fb1bc8ff27ac75e9"
+        },
+        "credit_holds": {
+          "count": 5,
+          "sha256": "c8e17e516deeadc0b13cd11b020b0a6feaee0aa352f2e0037b2b4f9d71a87439"
+        },
+        "credit_journals": {
+          "count": 10,
+          "sha256": "52890c277fe71cd508ecb945671e8b21dff70ed21108ddb644561ac28f5a1d9f"
+        },
+        "credit_entries": {
+          "count": 24,
+          "sha256": "9f4e42f3696d450f545db3a5c617b882daf43495c566ff4c58e2bd31d08f0849"
+        },
+        "execution_invocations": {
+          "count": 4,
+          "sha256": "da7c988bda2c646609ec32dba6bb7fafc67952d1148038d9d961f10855d71c72"
+        },
+        "execution_jobs": {
+          "count": 5,
+          "sha256": "ec50a97d43965e5bce6420b57e2ea0232a1a1fa52459a80826b54abeb3625e82"
+        },
+        "execution_receipts": {
+          "count": 4,
+          "sha256": "43e7e55984b6c0ae98a5220df11e3f70429c9152748620c6fd835fa5f9d73190"
+        },
+        "execution_results": {
+          "count": 4,
+          "sha256": "6c114b15489e3e75b4e292000bdab6086063908bbad3bab1f63a7bb4733a39d3"
+        }
+      }
+    }
+  },
+  "wallets_after": {
+    "old_pi": {
+      "lots": [
+        {
+          "id": "5f2d1873-65bc-42c5-a3da-b35fa5b77020",
+          "issued": "100000000",
+          "available": "99988356",
+          "held": "9728",
+          "spent": "1916"
+        }
+      ],
+      "spent": 1916,
+      "held": 9728,
+      "job_status_counts": {
+        "pending_reconciliation": 1,
+        "settled": 4
+      },
+      "financial_table_fingerprints": {
+        "credit_lots": {
+          "count": 1,
+          "sha256": "aabfe1c2146e39db65ac5a65c6d40fa8773c5dfd98884944af20e97a00265459"
+        },
+        "credit_reservations": {
+          "count": 5,
+          "sha256": "5ef36cd968a6a01f94d703193f4485256785c5c4fce588ec6245feb488320f94"
+        },
+        "credit_holds": {
+          "count": 5,
+          "sha256": "e12872b4e607288b518de833533b590e356f12dfe077b47b10ffb28ac288eb08"
+        },
+        "credit_journals": {
+          "count": 10,
+          "sha256": "4a57ebcb15aae6e36b2271c6b2c854a5e9024815b88454901813cbfe7341c012"
+        },
+        "credit_entries": {
+          "count": 24,
+          "sha256": "eda7a1b99cc70b88a2cdf155d751592cd309e343712e9c4ecb8a4354f5192340"
+        },
+        "execution_invocations": {
+          "count": 2,
+          "sha256": "df05867b2df7e727b3403ea19c610ae1079d31538ca21655a0d57cf6d9f74075"
+        },
+        "execution_jobs": {
+          "count": 5,
+          "sha256": "3260f90e4b664bb29b7e7951c04a0ccf2b4b211dc6f5a4eaec4375594a3980d2"
+        },
+        "execution_receipts": {
+          "count": 4,
+          "sha256": "006f1e52b798d0a0c2745a332ee1e0cdebd5d62349eb513538ac2de860dd8d56"
+        },
+        "execution_results": {
+          "count": 4,
+          "sha256": "82afff95f4e6ad7eabad307c49e12e254b7bf8702a3b2ecbe93c298c6a3fec9f"
+        }
+      }
+    },
+    "glm_pi": {
+      "lots": [
+        {
+          "id": "9df11ba8-bcb3-4c9e-9437-c03bda923fed",
+          "issued": "100000000",
+          "available": "99989865",
+          "held": "8960",
+          "spent": "1175"
+        }
+      ],
+      "spent": 1175,
+      "held": 8960,
+      "job_status_counts": {
+        "pending_reconciliation": 1,
+        "settled": 3
+      },
+      "financial_table_fingerprints": {
+        "credit_lots": {
+          "count": 1,
+          "sha256": "85858f45c32d545752c49f1264bd41f18939450ffbd5280c0237c941b2e96e79"
+        },
+        "credit_reservations": {
+          "count": 4,
+          "sha256": "763e0effed1d63beee9f10265e06b5250eb051c5ff03a4b56aed0d9f4c90250c"
+        },
+        "credit_holds": {
+          "count": 4,
+          "sha256": "ecc1ebfffb7359bb0589ab4b8d0683e238b261f0bb3f35869df23cd4dddd5129"
+        },
+        "credit_journals": {
+          "count": 8,
+          "sha256": "ec9f10d59eadcaece361ddd379a5f6fee9bc1c85f88c34fa6a5a0605d613ec1f"
+        },
+        "credit_entries": {
+          "count": 19,
+          "sha256": "adfd0c99bfde721ce7202f6ce690fa75d71c3a869531a615b6e9eaa904056dbb"
+        },
+        "execution_invocations": {
+          "count": 2,
+          "sha256": "b2f3ebd5bad82103ed0e42d2f11c30ed1bde8dca60e396efb56254754a049b8c"
+        },
+        "execution_jobs": {
+          "count": 4,
+          "sha256": "14f85c408f841d8d1aa7564dbfe4006732f4343371be255233487c6986b301c2"
+        },
+        "execution_receipts": {
+          "count": 3,
+          "sha256": "f9c416af76d92871ccf128d8dee64b9d415da4cf9451a09488bee658f6b7589a"
+        },
+        "execution_results": {
+          "count": 3,
+          "sha256": "d3d228f440c5400e6f90bdcbac2d56a8f56f9563679f218a3181360ef903dfa1"
+        }
+      }
+    },
+    "old_s3b": {
+      "lots": [
+        {
+          "id": "f040dc12-dc4c-4fe6-b8d8-c9456486d3e6",
+          "issued": "100000000",
+          "available": "99965499",
+          "held": "33152",
+          "spent": "1349"
+        }
+      ],
+      "spent": 1349,
+      "held": 33152,
+      "job_status_counts": {
+        "pending_reconciliation": 1,
+        "settled": 4
+      },
+      "financial_table_fingerprints": {
+        "credit_lots": {
+          "count": 1,
+          "sha256": "df328257fd68fd36724d185b658d671f15c7822562288920ba02a2b0d663bd95"
+        },
+        "credit_reservations": {
+          "count": 5,
+          "sha256": "0df991ce3fcc98889393b754a29d2918988c7411c2fa5589fb1bc8ff27ac75e9"
+        },
+        "credit_holds": {
+          "count": 5,
+          "sha256": "c8e17e516deeadc0b13cd11b020b0a6feaee0aa352f2e0037b2b4f9d71a87439"
+        },
+        "credit_journals": {
+          "count": 10,
+          "sha256": "52890c277fe71cd508ecb945671e8b21dff70ed21108ddb644561ac28f5a1d9f"
+        },
+        "credit_entries": {
+          "count": 24,
+          "sha256": "9f4e42f3696d450f545db3a5c617b882daf43495c566ff4c58e2bd31d08f0849"
+        },
+        "execution_invocations": {
+          "count": 4,
+          "sha256": "da7c988bda2c646609ec32dba6bb7fafc67952d1148038d9d961f10855d71c72"
+        },
+        "execution_jobs": {
+          "count": 5,
+          "sha256": "ec50a97d43965e5bce6420b57e2ea0232a1a1fa52459a80826b54abeb3625e82"
+        },
+        "execution_receipts": {
+          "count": 4,
+          "sha256": "43e7e55984b6c0ae98a5220df11e3f70429c9152748620c6fd835fa5f9d73190"
+        },
+        "execution_results": {
+          "count": 4,
+          "sha256": "6c114b15489e3e75b4e292000bdab6086063908bbad3bab1f63a7bb4733a39d3"
+        }
+      }
+    }
+  },
+  "financial_state_unchanged": true,
+  "revoked_only_synthetic_sessions": [
+    "old_pi/acceptance-session",
+    "glm_pi/acceptance-session"
+  ],
+  "owned_http_stopped": {
+    "old_pi": {
+      "pid": 4156172,
+      "stopped": true,
+      "signal_sent": true
+    },
+    "glm_pi": {
+      "pid": 4170855,
+      "stopped": true,
+      "signal_sent": true
+    }
+  },
+  "owned_pg_stopped": true,
+  "container_and_volumes_retained": true,
+  "newapi_channels_public": [
+    {
+      "id": 1,
+      "type": 60,
+      "name": "\u70c1\u516c\u76ca\u7ad9",
+      "status": 1,
+      "models": "deepseek-v4.1-flash,minimax-m2.7,kimi-k3,glm-5.3",
+      "priority": 0
+    },
+    {
+      "id": 2,
+      "type": 60,
+      "name": "Ark API",
+      "status": 1,
+      "models": "glm-5.3,grok-4.7",
+      "priority": 0
+    },
+    {
+      "id": 3,
+      "type": 58,
+      "name": "Easel S3B MiniMax Responses v1",
+      "status": 1,
+      "models": "minimax-m2.7",
+      "priority": 1
+    },
+    {
+      "id": 4,
+      "type": 58,
+      "name": "Easel Pi GLM Responses v1",
+      "status": 1,
+      "models": "glm-5.3",
+      "priority": 1
+    }
+  ],
+  "newapi_restarted": false,
+  "gateway_calls": 0,
+  "physical_provider_posts": {
+    "old_pi": 5,
+    "glm_pi": 7,
+    "total": 12
+  },
+  "ephemeral_private_files_removed": [
+    "old_pi/first-operation-private.json",
+    "old_pi/product-auth-private.json",
+    "old_pi/server-private.json",
+    "glm_pi/first-operation-private.json",
+    "glm_pi/operation-08ba4f0f43892e976ca393a1fc1ffaada6d676e4086038a15eea55256101e22f-private.json",
+    "glm_pi/operation-a465b53db946230ec66f33a430974631d907ddb629b4c6664c76896dc79987c7-private.json",
+    "glm_pi/operation-bcd0d3ea9d48713887841c4b499d9e148cbba4955c528b637063309cc35133ba-private.json",
+    "glm_pi/operation-c9f0b51a24a000d03c7bd939bf1dbe70b7084c2ea937deb58333b5833d0943b3-private.json",
+    "glm_pi/product-auth-private.json",
+    "glm_pi/server-private.json"
+  ],
+  "original_s3b_private_state_retained": true,
+  "secret_left_server": false,
+  "archive_script_sha256": "e5d8cb43d35f077bb69c42c283564ef5d12298607f1f55ba22f744b990142ef0"
+}

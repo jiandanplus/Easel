@@ -1,0 +1,25 @@
+# Task3 private owner disposition bookkeeping and closed-schema clarification
+
+This supplies the minimal owner-source support needed by the original approved RETAINED design. Caller-only counter overlays cannot implement that design truthfully. Task3 may therefore additionally modify `execution.py` and its focused tests **only** for the private bookkeeping/observation below. The public owner API, native operation table and unknown/no-replay boundaries remain unchanged; no resource operation is authorized by this document.
+
+## Original-owner retention
+
+A private method may accept the already validated disposition-document hash and original owner-binding hash under the original owner lock. It must independently match the exact original registries, job device/inode, input/context/policy pins, original deadline and actual retained journal head. It cannot create/adopt an owner from DATA. Require no active work, no original local live/unobserved process or observation error, no failed/partial normal-close attempt, and overall UNKNOWN. Strongly retain original owner/FD/native/audit references and freeze the original matched binding and document hash. Caller records EXECUTION_RETAIN separately; no owner close/stop/remove/retry or cleanup TERMINAL row.
+
+After this exact transition, snapshot reports retained=true/count1 while UNKNOWN remains true and actual remote uncertainty remains unchanged. Authorized subsequent closing of original caller-owned peers may be represented as expected disposition state in the passive audit; it must not masquerade as unknown owner-owned FD closure or disable original identity/content checks. Replaced peers, changed pins/journal, duplicate/foreign native objects, new active work or failed polling remain observation errors. Do not globally ignore peer-closed flags, clear UNKNOWN or convert the owner into known-closed state. Original owned descriptors remain retained. A failed retention transition prevents all unrelated cleanup.
+
+## Terminality versus successful attestation
+
+For disposition only, distinguish an observed terminal original local process from a successfully drained/validated native operation. A nonzero original exit can be terminal while the execution remains UNKNOWN. An exact producer-bound original Popen whose poll yields a retained exact integer exit and no active work may count as locally terminal; missing/partially initialized/unpollable/replaced objects remain live/unobserved or observation-error. Never invent missing output hashes, a successful result row, remote completion or COMMITTED state from that observation. Normal ATTEST success still requires all existing EOF/exit0/transcript/remote/durability gates and two commits. This distinction is not a positive-result waiver.
+
+## Closed external versions
+
+Preserve legacy target-only config/spec/status. New target-only snapshots may contain the full28-field graph only when all12 execution fields are exact zero/false. Accept the historical16-field graph and new28-field zero-owner graph as two explicit shapes, not a general optional-field bag; do not mix graph versions in one terminal report.
+
+ATTEST uses new closed config/spec format names `b3-target-root-config-attest-v1` and `b3-external-supervisor-spec-attest-v1`, mandatory exact execution_policy and full28-field positive terminal checks. The result's context_sha256 is a **closed mapping with central and identity keys**, each bound to its own original context pin; there is no single invented common context. Bind all common input/job/clock fields and both ordered existing v3 summaries from original retained objects. Expected binding hashes must be independently reconstructed/checked, not echoed from caller JSON. Explicitly retain SQL_restore=false and isolated_restore_verified=false.
+
+Task3 concrete-owner tests and independent review must cover this private transition, failed-local terminal observation, later authorized peer cleanup, persistent remote/UNKNOWN counters, wrong/missing binding, close-failure absorption and both legacy graph versions before acceptance. All other assigned-file restrictions and actual qualification gates remain unchanged.
+
+## Supervisor reconstruction provenance
+
+ATTEST terminal validation is a consistency boundary under the sealed original child and Root manifest, not a new kernel observation authority. Caller packages the closed original `attempt.execution_policy.binding` DATA only after checking its canonical hash against that retained binding. Supervisor independently reconstructs the binding from closed DATA, target CIDs/identities from separately validated target receipts and common original input/context/job/namespace fields. Original restore/source/operation IDs are pinned by `expected_root_context` supplied from workflow-held spec/manifest/job and directory inode; caller-echoed expected hashes are insufficient. ATTEST requires this context; the legacy three-argument target-only validation remains supported. Dynamic target identities are not invented before target creation and are not promoted into independent kernel observations by JSON validation.

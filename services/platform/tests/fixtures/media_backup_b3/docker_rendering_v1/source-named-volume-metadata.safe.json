@@ -1,0 +1,36 @@
+{
+  "HostConfig_Mounts": [
+    {
+      "Source": "easel-b2-disk-e419567e242e68b72e0a7b3a26d4385f-data",
+      "Target": "/var/lib/postgresql/data",
+      "Type": "volume"
+    }
+  ],
+  "Mounts": [
+    {
+      "Destination": "/var/lib/postgresql/data",
+      "Driver": "local",
+      "Mode": "z",
+      "Name": "easel-b2-disk-e419567e242e68b72e0a7b3a26d4385f-data",
+      "Propagation": "",
+      "RW": true,
+      "Source": "/var/lib/docker/volumes/easel-b2-disk-e419567e242e68b72e0a7b3a26d4385f-data/_data",
+      "Type": "volume"
+    }
+  ],
+  "actual_target_created": false,
+  "read_only_metadata_observation": true,
+  "source_data_read": false,
+  "volume_inspect": {
+    "CreatedAt": "2026-11-03T09:03:49Z",
+    "Driver": "local",
+    "Labels": {
+      "easel.nonce": "e419567e242e68b72e0a7b3a26d4385f",
+      "easel.purpose": "b2-owned-regression-source"
+    },
+    "Mountpoint": "/var/lib/docker/volumes/easel-b2-disk-e419567e242e68b72e0a7b3a26d4385f-data/_data",
+    "Name": "easel-b2-disk-e419567e242e68b72e0a7b3a26d4385f-data",
+    "Options": null,
+    "Scope": "local"
+  }
+}

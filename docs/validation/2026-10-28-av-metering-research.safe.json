@@ -1,0 +1,265 @@
+{
+  "status": "RESEARCH_DESIGN_READY_TDD_NOT_STARTED",
+  "design_path": "docs/superpowers/plans/2026-10-28-av-decoded-timeline-plan.md",
+  "design_sha256": "3748a8aa39f3e71da31126da46e43c21898cc1edc6c069eabd538bceec6fe9d6",
+  "source_changes": false,
+  "system_installation": false,
+  "installed_status_dryrun_executed": false,
+  "official_docs": {
+    "context7_commands": 3,
+    "library": "/websites/ffmpeg_ffmpeg-all",
+    "source_url": "https://ffmpeg.org/ffmpeg-all.html",
+    "concepts": [
+      "framehash raw PCM/rawvideo packet schema",
+      "fps_mode passthrough",
+      "enc_time_base demux versus default"
+    ]
+  },
+  "binary": "official Ubuntu 7:6.1.1-3ubuntu5 amd64 from prior verified AV preparation",
+  "first_experiment_session": {
+    "id": 69772,
+    "exit": 0,
+    "commands": 16,
+    "all_outputs_retrieved_and_hash_verified": true
+  },
+  "extra_experiment_session": {
+    "id": 93476,
+    "exit": 0,
+    "commands": 10,
+    "raw_receipts_remote_path": "/root/easel-central-av-preparation-20261028/metering-research-extra-single-codec",
+    "raw_receipts_retrieved": false,
+    "observed_results": {
+      "aac_decoded_samples": 24576,
+      "aac_rate": 48000,
+      "aac_ms": 512,
+      "short_av_audio_samples": 15360,
+      "short_av_audio_ms": 320,
+      "short_av_video_ms": 500,
+      "fractional_video_ticks": 3003,
+      "fractional_video_timebase": "1/30000",
+      "fractional_video_exact_ms": "1001/10"
+    }
+  },
+  "preserved_failures": [
+    {
+      "session": 72422,
+      "exit": 1,
+      "kind": "mixed fixture generation resource limit; output encoders not explicitly single-threaded"
+    },
+    {
+      "session": 52990,
+      "exit": 1,
+      "kind": "filter thread cap alone insufficient; unchanged512MiB bound preserved"
+    },
+    {
+      "session": 9174,
+      "exit": 255,
+      "kind": "extra receipts scp SSH banner/kex timeout to154:22; no files received; no retry/system intervention"
+    }
+  ],
+  "research_parser": {
+    "scope": "research prototype only, not application integration",
+    "real_trace_cases": [
+      {
+        "file": "tone.wav.framehash.stdout",
+        "chunk_sizes": [
+          1,
+          7,
+          4096
+        ],
+        "result": {
+          "duration_seconds": "1/2",
+          "duration_ms": 500,
+          "records": 4,
+          "samples": 8000,
+          "peak_carry": 686,
+          "total_bytes": 686
+        }
+      },
+      {
+        "file": "tone.mp3.framehash.stdout",
+        "chunk_sizes": [
+          1,
+          7,
+          4096
+        ],
+        "result": {
+          "duration_seconds": "1/2",
+          "duration_ms": 500,
+          "records": 15,
+          "samples": 8000,
+          "peak_carry": 1918,
+          "total_bytes": 1918
+        }
+      },
+      {
+        "file": "tone.ogg.framehash.stdout",
+        "chunk_sizes": [
+          1,
+          7,
+          4096
+        ],
+        "result": {
+          "duration_seconds": "1/2",
+          "duration_ms": 500,
+          "records": 26,
+          "samples": 24000,
+          "peak_carry": 3150,
+          "total_bytes": 3150
+        }
+      },
+      {
+        "file": "stereo-1001.framehash.stdout",
+        "chunk_sizes": [
+          1,
+          7,
+          4096
+        ],
+        "result": {
+          "duration_seconds": "143/6300",
+          "duration_ms": 22,
+          "records": 1,
+          "samples": 1001,
+          "peak_carry": 352,
+          "total_bytes": 352
+        }
+      },
+      {
+        "file": "vfr.demux.framehash.stdout",
+        "chunk_sizes": [
+          1,
+          7,
+          4096
+        ],
+        "result": {
+          "duration_seconds": "4/5",
+          "duration_ms": 800,
+          "records": 4,
+          "samples": 0,
+          "peak_carry": 667,
+          "total_bytes": 667
+        }
+      },
+      {
+        "file": "bframes.framehash.stdout",
+        "chunk_sizes": [
+          1,
+          7,
+          4096
+        ],
+        "result": {
+          "duration_seconds": "1/2",
+          "duration_ms": 500,
+          "records": 5,
+          "samples": 0,
+          "peak_carry": 779,
+          "total_bytes": 779
+        }
+      },
+      {
+        "file": "one-frame.framehash.stdout",
+        "chunk_sizes": [
+          1,
+          7,
+          4096
+        ],
+        "result": {
+          "duration_seconds": "1/10",
+          "duration_ms": 100,
+          "records": 1,
+          "samples": 0,
+          "peak_carry": 331,
+          "total_bytes": 331
+        }
+      }
+    ],
+    "chunked_positive_runs": 21,
+    "long_synthetic_parser_trace": {
+      "duration_seconds": "900",
+      "duration_ms": 900000,
+      "records": 27000,
+      "samples": 0,
+      "peak_carry": 205,
+      "total_bytes": 2434985
+    },
+    "negative_cases": [
+      "duplicate_header",
+      "unknown_header",
+      "wrong_hash",
+      "wrong_rate",
+      "wrong_tb",
+      "noninteger",
+      "zero_duration",
+      "sample_size_mismatch",
+      "second_stream",
+      "gap",
+      "overlap",
+      "negative_pts",
+      "overflow",
+      "trailing_partial",
+      "empty_frames",
+      "oversize_line",
+      "trailing_header",
+      "duration_limit",
+      "nonzero_exit"
+    ],
+    "negative_count": 19,
+    "long_synthetic_audio_trace": {
+      "duration_seconds": "900",
+      "duration_ms": 900000,
+      "records": 42188,
+      "samples": 43200000,
+      "peak_carry": 227,
+      "total_bytes": 4197318
+    }
+  },
+  "constraints": [
+    "original900000ms contract retained with constant-memory streaming; no128KiB wholetrace truncation",
+    "full decoded PCM basis including AAC padding; no probe/edit-header clipping",
+    "existing100ms independent declaration guard unchanged",
+    "public metadata/SQL001-020/pricing/provider facts/unknown holds unchanged",
+    "actual cleanenv AVTools still fails; API UID/systemd not tested",
+    "no full suite or real provider request"
+  ],
+  "artifacts": {
+    "bframes.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bframes.framehash.stdout": "f17e5ae39e21d32d6a8adc3cf80d1032da93d86891977b8f37b383a7d31c03d9",
+    "bframes.frames.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bframes.frames.stdout": "558e30cd58073fd9c69bda96f0b767798c00cd56968acdb9548db9e2cab9cbd4",
+    "experiments.safe.json": "e1f71315566facf1f67f9a0b83be4c09fb440486bec7fa9695896c287d44fc79",
+    "extra_experiments.py": "27bb3071d813ab8b4ce8b128eff605d7e4dbebbec25f158127561cbfc786d6a2",
+    "extra_single_codec.py": "3f1f9fce124243e4fbaae36de741bd7be21d5b2a970837cac8f74fad7bc454b5",
+    "extra_single_filter.py": "afdad62187dc6943060e480037df7cb29e465aaa51507fec5232918b10b49768",
+    "framehash_experiments.py": "136e68bac73acb45e1498dfcf3eb80eb6dd43797182cc883c182beec8d42e527",
+    "generate-bframes.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "generate-bframes.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "generate-one-frame.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "generate-one-frame.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "generate-vfr.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "generate-vfr.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "one-frame.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "one-frame.framehash.stdout": "0c60288e1aecba2b3278f230c22e6a7e0ff89f90227fa6021a828238a49cd378",
+    "one-frame.frames.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "one-frame.frames.stdout": "46505779f34247dfdb9fa01a06d0c7ddbd8ba94f3228a07f2129c0b353f4f369",
+    "parser-prototype.safe.json": "2cf7354556c7471d8db6ee5c8399030a3d1c8339f737748bcf323c56cd1eeed3",
+    "plain.mp4.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "plain.mp4.framehash.stdout": "ac589810cabe41a418c0db578609050a3a722c495c8b6eda846cfdfe270bb04f",
+    "stereo-1001.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stereo-1001.framehash.stdout": "aba76dcf53b5cbd7b5b9aaa7708fd9966dd0b38eb90d54aecf0ba76e93e139a5",
+    "stream_prototype.py": "896fe1a2c2d1ad8105b0bb10751149ec9c7e7a014cd1022bcda2efeff3188c7a",
+    "tone.mp3.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tone.mp3.framehash.stdout": "00ff29fe7dc5a711a2c25828ee50494377bcb94a07c46c47a090fa38832a983c",
+    "tone.ogg.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tone.ogg.framehash.stdout": "3de7d050930f419a211ef082b9b51dfec4fbad13cca5367c712d31dfa847e1d0",
+    "tone.wav.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tone.wav.framehash.stdout": "d415a66943a779cd6c3422380e64d86ce4fb62ecf5dc9be4bca8245c222845ad",
+    "vfr.default.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vfr.default.framehash.stdout": "74f6c897b23848305c1c32623891f55db325b925f17e640331e6fcb4e7c19817",
+    "vfr.demux.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vfr.demux.framehash.stdout": "6dd5ef1a90ee0bcb888e8b3d361a32db117febbfcb8cd1856beb2dedf6eb1b5d",
+    "vfr.frames.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vfr.frames.stdout": "dadb41fa8a270912d89fd50c5205083a87f3071b733974df46aa3ff1c631cfd7",
+    "vfr.one-10240.framehash.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vfr.one-10240.framehash.stdout": "6dd5ef1a90ee0bcb888e8b3d361a32db117febbfcb8cd1856beb2dedf6eb1b5d"
+  }
+}

@@ -1,4 +1,4 @@
-"""Easel CLI — 社媒内容工作流整合层。
+"""优创命令行工具（命令名 easel）— 社媒内容工作流整合层。
 
 用法：
     easel chat                              # 新会话（选画像后进入）
@@ -27,13 +27,16 @@ from easel.persona import list_personas as _list_personas
 from easel.persona import persona_prefix
 from easel.persona import chat_turn_message
 from easel.persona import load_profile_text
+from easel.service_contracts import task_context
 from easel.direct_api import (DirectAPIError, SYSTEM_PROMPT, history_path,
                               read_settings, stream_chat)
 from easel.timeouts import TIMEOUT_CHAT
 from easel import harnesses
 from easel.harnesses.base import HarnessError
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from easel.paths import workspace_root, resource_root
+
+PROJECT_ROOT = workspace_root()
 PROFILES_DIR = PROJECT_ROOT / "profiles"
 PROFILE = "easel"
 
@@ -82,11 +85,20 @@ def _build_chat_cmd(session_key: str, message_prefix: str = "") -> list[str]:
 
 
 def cmd_chat(_args) -> int:
-    """启动 Easel 交互对话（每次新会话）。"""
+    """启动优创交互对话（每次新会话）。"""
 
     print()
-    print(f"  {CYAN}Easel{NC} — 社媒内容工作流")
+    print(f"  {CYAN}优创{NC} — 社媒内容工作流")
     print()
+
+    settings = read_settings()
+    try:
+        config = harnesses.settings(PROJECT_ROOT / "outputs", settings)
+        context = task_context(config, root=PROJECT_ROOT)
+    except HarnessError as error:
+        print(f"Agent 服务不可用：{error}")
+        return 1
+    runtime = context.runtime
 
     # ---- 选择画像 ----
     personas = _list_personas()
@@ -130,8 +142,6 @@ def cmd_chat(_args) -> int:
 
     session_key = f"easel-{time.strftime('%m%d-%H%M%S')}"
 
-    settings = read_settings()
-    runtime = harnesses.settings(PROJECT_ROOT / "outputs", settings)["runtime"]
     if runtime not in ("api", "openclaw"):
         print(f"  Agent 底座：{runtime}（/exit 退出）")
         native_id = ""
@@ -148,7 +158,7 @@ def cmd_chat(_args) -> int:
                 if message:
                     _, native_id = asyncio.run(harnesses.console_turn(
                         chat_turn_message(message, selected_persona), PROJECT_ROOT,
-                        {**settings, **_proxy_env()}, native_id, on_bind=remember))
+                        {**settings, **_proxy_env()}, native_id, on_bind=remember, config=config, context=context))
                     print()
             except (EOFError, KeyboardInterrupt):
                 print()
@@ -162,7 +172,7 @@ def cmd_chat(_args) -> int:
             system += "\n\n当前画像：\n" + load_profile_text(selected_persona)
         async def reply(message):
             async for kind, text in stream_chat(
-                    read_settings(), message, system=system,
+                    settings, message, system=system,
                     history_file=history_path(PROJECT_ROOT / "outputs" / "_sessions", session_key),
                     timeout=TIMEOUT_CHAT):
                 if kind == "token":
@@ -207,7 +217,10 @@ def cmd_web(args) -> int:
     port = getattr(args, "port", 7860)
     env = web_environment(_proxy_env())
     env["EASEL_PORT"] = str(port)
-    script = PROJECT_ROOT / "web" / "app.py"
+    for name, resolve in (("EASEL_WORKSPACE_ROOT", workspace_root), ("EASEL_RESOURCE_ROOT", resource_root)):
+        if os.environ.get(name): env[name] = str(resolve())
+    script_root = resource_root() if (os.environ.get("EASEL_RESOURCE_ROOT") or os.environ.get("EASEL_WORKSPACE_ROOT")) else PROJECT_ROOT
+    script = script_root / "web" / "app.py"
     if not script.is_file():
         print(f"{RED}未找到 web/app.py{NC} — 安装可能不完整，请重跑 `bash setup.sh`。",
               file=sys.stderr)
@@ -225,7 +238,7 @@ def cmd_web(args) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="easel",
-        description="Easel — 社媒内容工作流整合层 CLI",
+        description="优创 — 社媒内容工作流整合层命令行工具",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

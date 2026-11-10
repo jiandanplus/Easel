@@ -21,12 +21,17 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "web"))
 
+
+from easel.routes import settings as settings_routes  # noqa: E402
 import app  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def openclaw_engine(monkeypatch):
+def openclaw_engine(monkeypatch, tmp_path):
     monkeypatch.setenv("EASEL_AGENT_RUNTIME", "openclaw")
+    monkeypatch.setattr(app, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(app, "_oc_config_path", lambda: tmp_path / "absent-openclaw.json")
+    monkeypatch.setattr(app, "check_gateway", lambda: False)
 
 
 @pytest.fixture
@@ -40,7 +45,7 @@ def oc_cfg(tmp_path, monkeypatch):
 
 def test_anthropic_provider_declares_api(oc_cfg):
     """① provider 必须带 api=anthropic-messages，否则请求会打到 /responses。"""
-    app._sync_anthropic_provider("https://example.test/v1", "sk-test-key")
+    settings_routes._sync_anthropic_provider("https://example.test/v1", "sk-test-key")
     prov = json.loads(oc_cfg.read_text(encoding="utf-8"))["models"]["providers"]["anthropic"]
     assert prov["api"] == "anthropic-messages"
     assert prov["baseUrl"] == "https://example.test/v1"
@@ -52,7 +57,7 @@ def test_incomplete_existing_provider_gets_repaired(oc_cfg):
     oc_cfg.write_text(json.dumps({"models": {"providers": {"anthropic": {
         "baseUrl": "https://example.test/v1", "apiKey": "sk-test-key", "models": [],
     }}}}), encoding="utf-8")
-    app._sync_anthropic_provider("https://example.test/v1", "sk-test-key")
+    settings_routes._sync_anthropic_provider("https://example.test/v1", "sk-test-key")
     prov = json.loads(oc_cfg.read_text(encoding="utf-8"))["models"]["providers"]["anthropic"]
     assert prov["api"] == "anthropic-messages", "缺 api 的既有 provider 必须被补上"
 
@@ -62,7 +67,7 @@ def test_legacy_relay_provider_is_folded_in(oc_cfg):
     oc_cfg.write_text(json.dumps({"models": {"providers": {"relay": {
         "baseUrl": "https://relay.test/v1", "apiKey": "sk-legacy", "models": [],
     }}}}), encoding="utf-8")
-    app._sync_anthropic_provider("", "")
+    settings_routes._sync_anthropic_provider("", "")
     provs = json.loads(oc_cfg.read_text(encoding="utf-8"))["models"]["providers"]
     assert "relay" not in provs, "迁移后 relay 必须删掉，避免两处并存"
     assert provs["anthropic"]["apiKey"] == "sk-legacy"
@@ -90,7 +95,7 @@ def test_placeholder_key_reports_missing(tmp_path, monkeypatch):
     envf.write_text("ANTHROPIC_API_KEY=sk-ant-REPLACE_ME\n"
                     "CLAUDE_MODEL=anthropic/claude-sonnet-4-6\n", encoding="utf-8")
     monkeypatch.setattr(app, "ENV_FILE", envf)
-    rows = app._model_channels()["channels"]["chat"]["rows"]
+    rows = settings_routes._model_channels()["channels"]["chat"]["rows"]
     assert rows, "应当仍然列出该槽位（只是标记为缺 key）"
     for r in rows:
         assert r["result"] == "缺 key", f"占位符被判为已配置：{r}"
@@ -105,7 +110,7 @@ def test_real_key_reports_configured(tmp_path, monkeypatch):
     # 「非空且非占位符」，随便一个不含 REPLACE_ME 的值就够了。
     envf.write_text("ANTHROPIC_API_KEY=dummy-value-for-unit-test\n", encoding="utf-8")
     monkeypatch.setattr(app, "ENV_FILE", envf)
-    rows = app._model_channels()["channels"]["chat"]["rows"]
+    rows = settings_routes._model_channels()["channels"]["chat"]["rows"]
     anth = [r for r in rows if r["slot"] == "anthropic"]
     assert anth and anth[0]["result"] == "已配置"
     assert anth[0]["keyMasked"]
@@ -161,8 +166,8 @@ def test_gateway_restart_takes_no_parameters() -> None:
     """该端点刻意无参数：web/app.py 绑 0.0.0.0 且无鉴权，argv 必须完全固定。"""
     import inspect
 
-    src = inspect.getsource(app.api_gateway_restart)
-    sig = inspect.signature(app.api_gateway_restart)
+    src = inspect.getsource(settings_routes.api_gateway_restart)
+    sig = inspect.signature(settings_routes.api_gateway_restart)
     assert not sig.parameters, f"不允许接受参数：{sig}"
     # 命令里只许出现字面量与脚本路径，不得有外部输入拼接
     assert "'restart'" in src or '"restart"' in src
@@ -191,7 +196,7 @@ def test_primary_row_reports_main_role(env_key, slot, tmp_path, monkeypatch, oc_
         "models": {"providers": {}},
     }), encoding="utf-8")
 
-    rows = {r["slot"]: r for r in app._model_channels()["channels"]["chat"]["rows"]}
+    rows = {r["slot"]: r for r in settings_routes._model_channels()["channels"]["chat"]["rows"]}
     assert slot in rows, f"{slot} 行应当出现：{list(rows)}"
     assert rows[slot]["role"] == "主", f"{slot} 是主模型却显示 {rows[slot]['role']}"
 
@@ -208,7 +213,7 @@ def test_non_primary_row_reports_backup_role(tmp_path, monkeypatch, oc_cfg):
         "models": {"providers": {}},
     }), encoding="utf-8")
 
-    rows = {r["slot"]: r for r in app._model_channels()["channels"]["chat"]["rows"]}
+    rows = {r["slot"]: r for r in settings_routes._model_channels()["channels"]["chat"]["rows"]}
     assert rows["relay"]["role"] == "备", "primary 指向 openai 时 relay 不该显示主"
 
 
@@ -223,5 +228,5 @@ def test_bare_model_name_also_matches_primary(tmp_path, monkeypatch, oc_cfg):
         "models": {"providers": {}},
     }), encoding="utf-8")
 
-    rows = {r["slot"]: r for r in app._model_channels()["channels"]["chat"]["rows"]}
+    rows = {r["slot"]: r for r in settings_routes._model_channels()["channels"]["chat"]["rows"]}
     assert rows["anthropic"]["role"] == "主"

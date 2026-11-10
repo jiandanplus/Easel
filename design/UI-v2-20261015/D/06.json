@@ -1,0 +1,39 @@
+{
+  "variant": "D",
+  "page": "06",
+  "title": "爆款拆解",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-f0f78f5a-dc34-4c19-b7e9-4161f5a83b78.png",
+  "requiredLabels": [
+    "爆款拆解",
+    "参考内容",
+    "开始拆解",
+    "开头钩子",
+    "可复用模板"
+  ],
+  "status": "reviewed-required-labels",
+  "visuallyConfirmedLabels": [
+    "爆款拆解",
+    "参考内容",
+    "开始拆解",
+    "开头钩子",
+    "可复用模板"
+  ],
+  "qa": "Mandatory labels and primary layout visually inspected. Fine secondary text not exhaustively checked. Calendar alignment checked where applicable.",
+  "ocr": {
+    "source": "/Users/jiandan/.codex/generated_images/01a13b8e-09ed-7b00-af25-f0845859b7d3/exec-f0f78f5a-dc34-4c19-b7e9-4161f5a83b78.ocr.json",
+    "requiredFound": [
+      "爆款拆解",
+      "参考内容",
+      "开始拆解",
+      "开头钩子",
+      "可复用模板"
+    ],
+    "requiredMissing": []
+  },
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/D/06.png",
+  "width": 1586,
+  "height": 992,
+  "qaNote": "Mandatory labels and active sidebar state visually reviewed. OCR-only misses do not indicate absent labels. Fine secondary prose has not been exhaustively checked.",
+  "activeNavMatchesPage": true,
+  "sha256": "32553859aa9ffb79f3741245e8688ea486e7ae2784f2146a911cba585314cdfd"
+}

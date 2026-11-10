@@ -1,0 +1,127 @@
+{
+  "status": "source_and_synthetic_lifecycle_verified_waiting_space_for_package",
+  "root": {
+    "status": "root_full_frontend_and_tsc_passed",
+    "passed": 514,
+    "failed": 0,
+    "skipped": 0,
+    "node_version": "v24.14.0",
+    "inputs_unchanged": 152,
+    "test_files": 54,
+    "log_sha256": "d643b072dd2f34acb8313673e12024b0afb898b7ab4f0bee91bc82976e616ba3",
+    "tsc_exit": 0,
+    "source_sha256": {
+      "web/frontend/src/components/ChatPage.tsx": "5294c2d04e62140d89a6586e96cd43cc4cf9b66792c67984bb0fd86d939b1015",
+      "web/frontend/src/components/ComposerModelPicker.tsx": "a9e77bbe03a2110e9ec999fdfcdbd34b98b03fc3571f516699fcc83f7ed25eeb",
+      "tests/frontend/modelReadinessLifecycle.test.mjs": "53c6528e39e5d822a5e32a4b4902cdf207402e85184503d2b6f433ba5cb09150"
+    },
+    "real_browser": false,
+    "package_built": false,
+    "model_calls": 0,
+    "prior_checker_failure": "initial run tests514 pass0fail and tsc0; checker incorrectly expected TAP prefix for default spec footer; original logs retained"
+  },
+  "independent": {
+    "verdict": "pass_with_explicit_source_and_synthetic_lifecycle_limits",
+    "blocking_findings": [],
+    "source_before_sha256": {
+      "web/frontend/src/components/ChatPage.tsx": "5294c2d04e62140d89a6586e96cd43cc4cf9b66792c67984bb0fd86d939b1015",
+      "web/frontend/src/components/ComposerModelPicker.tsx": "a9e77bbe03a2110e9ec999fdfcdbd34b98b03fc3571f516699fcc83f7ed25eeb",
+      "tests/frontend/modelReadinessLifecycle.test.mjs": "53c6528e39e5d822a5e32a4b4902cdf207402e85184503d2b6f433ba5cb09150",
+      "web/frontend/src/App.tsx": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+      "web/frontend/src/lib/api.ts": "728e17eed4d8d514d4849725a405f3057f5fb886343dc53901d0f980757f60b0",
+      "web/frontend/src/components/DashboardPage.tsx": "a32303d92d8651b0b013b8219e7f14312d50702c627ae4715b527355da9ce733",
+      "web/frontend/src/lib/workbenchReadiness.ts": "7ebc372650158ba37d4896fec3b81048bdf40847aa5ad7c9f6dc751f47eaa251",
+      "packaging/pi/source-manifest.json": "2e36b274862d5faaeacfb1012186ca51992bbf835869ef2d81b1a29235156842"
+    },
+    "source_after_sha256": {
+      "web/frontend/src/components/ChatPage.tsx": "5294c2d04e62140d89a6586e96cd43cc4cf9b66792c67984bb0fd86d939b1015",
+      "web/frontend/src/components/ComposerModelPicker.tsx": "a9e77bbe03a2110e9ec999fdfcdbd34b98b03fc3571f516699fcc83f7ed25eeb",
+      "tests/frontend/modelReadinessLifecycle.test.mjs": "53c6528e39e5d822a5e32a4b4902cdf207402e85184503d2b6f433ba5cb09150",
+      "web/frontend/src/App.tsx": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+      "web/frontend/src/lib/api.ts": "728e17eed4d8d514d4849725a405f3057f5fb886343dc53901d0f980757f60b0",
+      "web/frontend/src/components/DashboardPage.tsx": "a32303d92d8651b0b013b8219e7f14312d50702c627ae4715b527355da9ce733",
+      "web/frontend/src/lib/workbenchReadiness.ts": "7ebc372650158ba37d4896fec3b81048bdf40847aa5ad7c9f6dc751f47eaa251",
+      "packaging/pi/source-manifest.json": "2e36b274862d5faaeacfb1012186ca51992bbf835869ef2d81b1a29235156842"
+    },
+    "recorded_input_count": 8,
+    "recorded_inputs_unchanged": true,
+    "original_components_verified_before_sha256": {
+      "web/frontend/src/components/ChatPage.tsx": "c1a3fcfc499407b3daa5e3df5d915476c56fb647622b9c3088309700f0c1d227",
+      "web/frontend/src/components/ComposerModelPicker.tsx": "41ca7b1d22562294b6fadc12d5d6ff46a25ec2285f8678ef690816bec23ae75f"
+    },
+    "reviewer_actual_results": {
+      "focused": {
+        "tests": 67,
+        "pass": 67,
+        "fail": 0,
+        "skipped": 0,
+        "exit": 0,
+        "log_sha256": "2906f3fe99b1e072dd1f6a87abc5fa7e175245b79452353f99203f15be281c7d"
+      },
+      "original-red": {
+        "tests": 22,
+        "pass": 13,
+        "fail": 9,
+        "skipped": 0,
+        "exit": 1,
+        "log_sha256": "3883e1384c7501a0292eeab3881a29f3035e9d7f6a90a3c4aff17daebc103d95"
+      },
+      "independent-boundaries-final": {
+        "tests": 30,
+        "pass": 30,
+        "fail": 0,
+        "skipped": 0,
+        "exit": 0,
+        "log_sha256": "c89e540a6338676045a2122d0bc219af7a8ad69011908d2d5b5672ab22a6d63b"
+      },
+      "full-frontend": {
+        "tests": 514,
+        "pass": 514,
+        "fail": 0,
+        "skipped": 0,
+        "exit": 0,
+        "log_sha256": "c5084287209244bd2d98cdff5e7ffd2c5010f5eac790fccccffaeb1a4bf0cec4"
+      }
+    },
+    "tsc_exit": 0,
+    "tsc_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reviewer_added_boundary_cases": 8,
+    "production_source_edits": 0,
+    "F2_restore_file_edits": 0,
+    "real_browser_HTTP_auth_model_SSH_PG_calls": 0,
+    "new_dependencies_downloads_containers": 0,
+    "commit_push_merge_package_activate": false,
+    "synthetic_strictmode_effect_replay_only": true,
+    "review_path": "/private/tmp/easel-composer-reconnect-independent-20261028/review.md",
+    "review_sha256": "2c0b32bc62949e35f4c5dbb2b4ce037dd7992f56a7a952c46a2b34902af7601f"
+  },
+  "author_safe_sha256": "d97f2965bc88d144cb7b9b4391965e5402c097a08cf98cbd43ceedf408524214",
+  "source_sha256": {
+    "web/frontend/src/components/ChatPage.tsx": "5294c2d04e62140d89a6586e96cd43cc4cf9b66792c67984bb0fd86d939b1015",
+    "web/frontend/src/components/ComposerModelPicker.tsx": "a9e77bbe03a2110e9ec999fdfcdbd34b98b03fc3571f516699fcc83f7ed25eeb",
+    "tests/frontend/modelReadinessLifecycle.test.mjs": "53c6528e39e5d822a5e32a4b4902cdf207402e85184503d2b6f433ba5cb09150"
+  },
+  "evidence": {
+    "author-review.md": "534de362c28bcfeca80d3371d6877faaefc2ce1420ef7ca8312b98d06490aaaa",
+    "candidate-safe.json": "d97f2965bc88d144cb7b9b4391965e5402c097a08cf98cbd43ceedf408524214",
+    "reconnect.patch": "275906e81df674bd1459d7c60d0f5432a740308c5bfad26ddc192321307f1258",
+    "red.log": "eb3f3cf1e61b38b9ceb8515f202ab69aec42edc5ab48687ffc5cbb64a6ae7304",
+    "intermediate-lease-red.log": "c6197ec07361674393ab5fafa5482d3d597dfbe9a904202ab8384506593c6ab1",
+    "author-full-frontend.log": "4610d89d071712b74705e2916e9a6b5db9de794033c91e564115c74fe6659ee2",
+    "root-verification-safe.json": "6756ac0dd250cf5ae6c6b1c27d8ecf826480ae92cc09b028eb524a83dbfc28b9",
+    "root-full-frontend-r2.log": "d643b072dd2f34acb8313673e12024b0afb898b7ab4f0bee91bc82976e616ba3",
+    "root-r2-inputs-before.json": "9117f712b04eb30d49a40423d619c27b1a8f2100a50ed6c88d7304a1fdf3ab89",
+    "root-r2-inputs-after.json": "9117f712b04eb30d49a40423d619c27b1a8f2100a50ed6c88d7304a1fdf3ab89",
+    "independent-review.md": "2c0b32bc62949e35f4c5dbb2b4ce037dd7992f56a7a952c46a2b34902af7601f",
+    "independent-safe.json": "a1aec2c0d09e8de39a3a7ef1caef0fa0a9d5db82c1de9c9497ecbde781e386c0",
+    "independent-boundaries.test.mjs": "1995965a432a0d0d15235910bae307b26642786d952186185b51c28afa756160",
+    "independent-boundaries-final.log": "c89e540a6338676045a2122d0bc219af7a8ad69011908d2d5b5672ab22a6d63b",
+    "independent-original-red.log": "3883e1384c7501a0292eeab3881a29f3035e9d7f6a90a3c4aff17daebc103d95"
+  },
+  "current_17868_package": "v29",
+  "new_package_built": false,
+  "activation_performed": false,
+  "original_models_manually_refreshed_read_only": true,
+  "real_new_model_posts": 0,
+  "full_goal_complete": false
+}

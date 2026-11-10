@@ -1,0 +1,23 @@
+{
+  "variant": "B",
+  "page": "19",
+  "title": "环境安装",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-99fecc46-c366-4bd5-a75e-653cd2f7f0e2.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/B/19.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "环境安装",
+    "环境体检",
+    "重新检测",
+    "已安装",
+    "未安装"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Illustrative Chromium version outside whitelist; verify during implementation"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "a7da7eb874f8a9596f9137d230470f96538c94fd2e4943443fc5a85599752f03"
+}

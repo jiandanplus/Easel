@@ -1,4 +1,6 @@
 import type { UploadedFile, ChatQuestion } from './api';
+import { mergeVerifiedArtifacts } from './deliverables';
+import type { VerifiedArtifact } from './deliverables';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -7,6 +9,10 @@ export interface ChatMessage {
   attachments?: UploadedFile[]; // 结构化附件引用；仅用于请求/重试，不在消息气泡展示
   thinking?: string;   // 模型思考过程（隐思考），流式结束后持久保留
   activity?: string;   // 工具/执行活动步骤（换行分隔），持久保留
+  centralRecoveryTurnId?: string; // 服务端已接受的中央轮次；只用于精确只读查询
+  taskState?: 'stopped' | 'failed' | 'completed' | 'unknown';
+  turnId?: string;
+  verifiedArtifacts?: VerifiedArtifact[];
 }
 
 export interface ChatSession {
@@ -17,16 +23,23 @@ export interface ChatSession {
   created: number;
   sessionKey?: string;  // OpenClaw 的 session key，用于后端删除
   pendingTurnId?: string; // 进行中的可重连 job；浏览器重开后继续按 eventId 续流
+  pendingVerifiedArtifacts?: VerifiedArtifact[];
   archived?: boolean;   // 归档：从 History 主列表移到「已归档」区
+  sourceScope?: string;
+  hasDraft?: boolean;
+  draftTitle?: boolean;
 }
 
 /** 进行中的流式状态（存于 App，不随页面切换/ChatPage 卸载而丢失）。 */
 export interface StreamState {
+  turnId?: string;
+  verifiedArtifacts?: VerifiedArtifact[];
   content: string;
   thinking: string;
   activity: string;
   stillWorking?: string;   // 防呆心跳提示（未卡住）；独立于 activity，不覆盖真实状态
   questions: ChatQuestion[];   // ask_user 问答题卡片（进行中）
+  phase?: 'draft' | 'submitting' | 'confirming' | 'accepted' | 'running' | 'stopping' | 'stopped' | 'done' | 'failed' | 'unknown';
 }
 
 /** 发布中心草稿：持久化到 localStorage，切页/刷新都不丢。 */
@@ -97,8 +110,10 @@ export function loadSessions(): ChatSession[] {
     // 防御：损坏/缺字段的会话（旧版写入或写中断）恢复成可用形态，绝不让渲染期崩。
     return sessions.map((session) => ({
       ...session,
+      ...(session.pendingVerifiedArtifacts ? { pendingVerifiedArtifacts: mergeVerifiedArtifacts([], session.pendingVerifiedArtifacts, session.id, session.pendingTurnId) } : {}),
       messages: Array.isArray(session.messages)
         ? session.messages.map((message) => {
+            if (message?.verifiedArtifacts) message = { ...message, verifiedArtifacts: mergeVerifiedArtifacts([], message.verifiedArtifacts, session.id, message.turnId) };
             if (message?.role !== 'user' || message.agentContent || !message.content?.includes('【附件素材】')) {
               return message;
             }
@@ -120,7 +135,7 @@ export function loadSessions(): ChatSession[] {
 function prune(sessions: ChatSession[]): ChatSession[] {
   let keptEmpty = false;
   const pruned = sessions.filter((s) => {
-    if (s.messages.length > 0) return true;
+    if (s.messages.length > 0 || s.hasDraft) return true;
     if (keptEmpty) return false;
     keptEmpty = true;
     return true;
@@ -129,13 +144,13 @@ function prune(sessions: ChatSession[]): ChatSession[] {
 }
 
 export function saveSessions(sessions: ChatSession[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(prune(sessions)));
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prune(sessions))); } catch { /* Keep live in-memory messages and scoped drafts. */ }
 }
 
 export function createSession(persona?: string): ChatSession {
   return {
     id: generateId(),
-    title: 'New Chat',
+    title: '新对话',
     messages: [],
     persona,
     created: Date.now(),
@@ -255,7 +270,8 @@ export function generateSessionTitle(message: string, _seed = message): string {
 
 export function updateSessionTitle(session: ChatSession): void {
   const first = Array.isArray(session.messages) ? session.messages[0] : undefined;
-  if (first && session.title === 'New Chat') {
+  if (first && (session.title === 'New Chat' || session.title === '新对话' || session.draftTitle)) {
+    session.draftTitle = false;
     session.title = generateSessionTitle(first.content || '', session.id);
   }
 }

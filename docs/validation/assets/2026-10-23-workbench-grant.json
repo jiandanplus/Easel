@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "environment_id": "wb-20261023-e6467e17dc33",
+  "wallet_sha256": "76c7709ad5a46af9641f42b48e82ed8a0cfd631822858248d94a9444ed57abed",
+  "funding_source": "internal_experience",
+  "credits": "10000000",
+  "days": 7,
+  "starts_at": "2026-10-23T11:23:47.552184+00:00",
+  "expires_at": "2026-10-30T11:23:47.552184+00:00",
+  "audited_grants": 1,
+  "idempotent_replay_no_extra_credit": true,
+  "payment_rows_unchanged_zero": true,
+  "wallet": {
+    "issued": "10000000",
+    "available": "10000000",
+    "held": "0",
+    "spent": "0",
+    "entry_total": "0"
+  }
+}

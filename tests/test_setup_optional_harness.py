@@ -11,6 +11,7 @@ import pytest
 
 from easel.harnesses import store
 from easel import installation
+from easel.routes import settings as settings_routes
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -163,7 +164,7 @@ def test_skipped_install_can_save_native_harness_from_web(tmp_path, monkeypatch,
     installation.initialize_runtime(web.PROJECT_ROOT)
     assert web._harness_settings()["runtime"] == "api"
     monkeypatch.setattr(web.harnesses, "describe", lambda selected: {"id": selected, "installed": selected != "openclaw"})
-    result = asyncio.run(web.api_harness_settings_save(web.HarnessSettingsRequest(runtime=runtime, model="native-model")))
+    result = asyncio.run(settings_routes.api_harness_settings_save(settings_routes.HarnessSettingsRequest(runtime=runtime, model="native-model")))
     assert result["runtime"] == runtime
     assert result["locked"] is False
     assert web._harness_settings()["runtime"] == runtime

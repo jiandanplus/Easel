@@ -1,0 +1,632 @@
+{
+  "status": "failed",
+  "tool_session_id": 61826,
+  "exit_code": 1,
+  "candidate": "M3 review-r2 plus frozen M4 review-r1",
+  "command": "rtk proxy env EASEL_CENTRAL_TEST_DSN_FILE=/private/tmp/easel-media-review-20261027-second/test-pg-private.json services/platform/.venv/bin/python -m pytest services/platform/tests -q --tb=short -rs --junitxml=/private/tmp/easel-m3-final-central-20261028/full-central.junit.xml",
+  "result": {
+    "passed": 1697,
+    "failed": 90,
+    "errors": 7,
+    "skipped": 7,
+    "seconds": 317.33
+  },
+  "source_input_count": 423,
+  "source_inputs_unchanged": true,
+  "snapshot": {
+    "manifest_sha256": "6bfc0f19c59b4a26c1e649c824d6518ad9fe9e5cf8c0f85e6762abd948f83933",
+    "source_tar_sha256": "d25a547af5061b5ca44b31c44390b3833afe09d668256ae5aad8e6267cc6929b"
+  },
+  "failure_groups": [
+    {
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired",
+      "count": 30
+    },
+    {
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired",
+      "count": 26
+    },
+    {
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale",
+      "count": 12
+    },
+    {
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_execution_failed",
+      "count": 7
+    },
+    {
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: execution_lease_expired\"",
+      "count": 6
+    },
+    {
+      "kind": "failure",
+      "message": "AssertionError: assert ('released' == 'pending_reconciliation'",
+      "count": 4
+    },
+    {
+      "kind": "failure",
+      "message": "assert (0 == 1)",
+      "count": 3
+    },
+    {
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_asset_unavailable",
+      "count": 2
+    },
+    {
+      "kind": "failure",
+      "message": "AssertionError: assert ('0' is None)",
+      "count": 2
+    },
+    {
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: console_authentication_stale\"",
+      "count": 1
+    },
+    {
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: task_token_invalid",
+      "count": 1
+    },
+    {
+      "kind": "failure",
+      "message": "TypeError: unsupported operand type(s) for +: 'NoneType' and 'datetime.timedelta'",
+      "count": 1
+    },
+    {
+      "kind": "failure",
+      "message": "assert 0 == 1",
+      "count": 1
+    },
+    {
+      "kind": "failure",
+      "message": "AssertionError: assert ('0' == '1'",
+      "count": 1
+    }
+  ],
+  "failures": [
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_signed_user_without_acl_only_requests_and_never_becomes_product_or_admin",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_session_has_current_role_csrf_and_only_cookie_hash_persisted[admin-permissions0]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_session_has_current_role_csrf_and_only_cookie_hash_persisted[operator-permissions1]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_session_has_current_role_csrf_and_only_cookie_hash_persisted[viewer-permissions2]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_console_login_rejects_correlation_expiry_replay_and_bad_signed_claims[replay]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_same_email_or_wrong_issuer_subject_does_not_gain_acl",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_session_revocation_and_expiry_are_checked_on_every_read_and_write[UPDATE console_admins SET active=false]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_session_revocation_and_expiry_are_checked_on_every_read_and_write[UPDATE console_admins SET authorization_epoch=authorization_epoch+1]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_session_revocation_and_expiry_are_checked_on_every_read_and_write[UPDATE console_sessions SET revoked_at=clock_timestamp()]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_session_revocation_and_expiry_are_checked_on_every_read_and_write[UPDATE console_sessions SET expires_at=clock_timestamp()-interval '1 second']",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_validate_is_readonly_and_rechecks_role_and_csrf",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_auth.py::test_logout_and_arbitrary_product_bearer_are_not_console_auth",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: console_authentication_stale"
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_reconciliation.py::test_detail_unknown_usage_and_versioned_stable_safe_snapshot",
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: execution_lease_expired\""
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_reconciliation.py::test_review_is_atomic_metadata_only_and_hash_ignores_review_history",
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: execution_lease_expired\""
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_reconciliation.py::test_idempotency_replays_original_even_after_later_revision",
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: execution_lease_expired\""
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_reconciliation.py::test_original_key_lookup_does_not_cross_actor_job_or_create_rows",
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: execution_lease_expired\""
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_reconciliation.py::test_same_key_concurrent_replay_and_first_registration_cas",
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: execution_lease_expired\""
+    },
+    {
+      "nodeid": "services/platform/tests/test_console_reconciliation.py::test_two_first_registrations_have_one_winner_without_orphan_audit",
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: execution_lease_expired\""
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_evidence.py::test_terminal_evidence_and_waiver_cannot_both_win",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_evidence.py::test_normal_reply_can_backfill_after_financial_only_recovery_without_recharge",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_evidence.py::test_excess_evidence_does_not_starve_later_recoverable_job",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_gateway_integration.py::test_real_http_postgres_json_sse_charge_replay_and_pending",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_mode_isolation.py::test_trusted_dispatched_receipt_keeps_original_mode_after_switch_and_revoke[test-live]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_mode_isolation.py::test_trusted_dispatched_receipt_keeps_original_mode_after_switch_and_revoke[live-test]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_mode_isolation.py::test_trusted_dispatched_receipt_keeps_original_mode_after_switch_and_revoke[test-disabled]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_mode_isolation.py::test_trusted_dispatched_receipt_keeps_original_mode_after_switch_and_revoke[live-disabled]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_native_metadata.py::test_native_metadata_is_hashed_but_not_forwarded_or_authoritative",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_plan_is_read_only_and_apply_preserves_unknown_actual_without_fake_reply",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_writeoff_capability_is_not_implied_by_publish_or_review",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_stale_changed_or_tampered_plan_cannot_write",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_same_key_concurrent_apply_runs_once_and_different_plan_conflicts",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_expired_held_lot_does_not_return_to_available",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_unexpired_pending_lease_is_not_eligible",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_late_finish_cannot_charge_waived_job",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_direct_unaudited_waiver_and_audit_tampering_are_rejected",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_batch_stale_member_rolls_back_every_job",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_failure_after_financial_write_rolls_back_audit_and_batch",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_reviewed_plan_cannot_rebind_attempt_scope_or_reservation[attempt_id-wrong-attempt]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_reviewed_plan_cannot_rebind_attempt_scope_or_reservation[binding_hash-foreign-binding]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_reviewed_plan_cannot_rebind_attempt_scope_or_reservation[scope_hash-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_reviewed_plan_cannot_rebind_attempt_scope_or_reservation[reservation_id-foreign-reservation]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_runtime_can_settle_same_wallet_after_owner_waiver_without_audit_privileges",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_null_unknown_actual_cannot_hide_a_nonzero_release_charge",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_terminal_evidence_arriving_after_plan_prevents_writeoff",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_database_refuses_inserting_a_new_waived_job_or_reservation",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_reconciliation.py::test_plan_transaction_rejects_an_accidental_write",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_recovery.py::test_tuple_lookup_each_financial_and_cache_state_is_read_only",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_execution_recovery.py::test_current_authorization_all_business_dimensions_and_fresh_login",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: execution_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_identity_migration.py::test_candidate_owner_wallet_resolution_uses_two_set_queries",
+      "kind": "error",
+      "message": "failed on setup with \"platform_service.errors.PlatformError: console_authentication_stale\""
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_runtime.py::test_music_missing_download_paths_is_closed_before_post[newapi_suno_v1]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: task_token_invalid"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_store.py::test_known_association_recovers_one_queue_and_exclusive_lease",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_store.py::test_no_provider_id_remains_unknown_and_is_never_queued_for_regeneration",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_store.py::test_reclaimed_lease_rejects_late_observation_and_preserves_download_budget",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_store.py::test_observation_scope_and_sources_are_immutable_and_source_refresh_cannot_change_identity",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_store.py::test_source_stage_and_attachment_are_fenced_and_idempotent_after_logout",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_get_recovery_decodes_original_video_settles_once_after_logout[video]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_get_recovery_decodes_original_video_settles_once_after_logout[av]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_expired_queue_is_manual_and_keeps_financial_and_storage_holds",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_stale_lease_cannot_write_terminal_or_settle",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_settlement_failure_recovers_only_frozen_evidence_under_new_lease",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_cancelled_supplier_status_keeps_hold_without_cost_evidence",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_nonowner_async_role_can_deliver_but_cannot_rebind_or_rewrite_history",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_database_rejects_done_without_settlement",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_database_binds_terminal_to_first_immutable_observation",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_real_pg_expired_slow_get_is_cancelled_manual_and_heartbeat_cannot_extend",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_async_worker.py::test_known_query_retains_active_admission_but_get_failure_stays_pending",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_references.py::test_binary_reference_is_distinct_from_object_id_and_binds_authentic_http_header",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_references.py::test_typed_binary_terminal_requires_equal_body_hash_and_keeps_provider_id_null",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_references.py::test_same_authenticated_http_response_cannot_be_attached_to_another_job",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_runtime.py::test_speech_raw_owned_audio_typed_header_hash_single_settlement",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_execution_failed"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_runtime.py::test_transcription_owned_multipart_empty_text_and_actual_input_audio_duration[False]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_execution_failed"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_runtime.py::test_transcription_owned_multipart_empty_text_and_actual_input_audio_duration[True]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_execution_failed"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_runtime.py::test_audio_unknown_holds_and_missing_decoder_rejects_before_admission[timeout]",
+      "kind": "failure",
+      "message": "assert (0 == 1)"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_runtime.py::test_audio_unknown_holds_and_missing_decoder_rejects_before_admission[missing_header]",
+      "kind": "failure",
+      "message": "assert (0 == 1)"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_runtime.py::test_audio_unknown_holds_and_missing_decoder_rejects_before_admission[corrupt]",
+      "kind": "failure",
+      "message": "assert (0 == 1)"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_audio_runtime.py::test_transcription_strict_usage_profile_never_invents_missing_quantities[tokens-payload0-2]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_execution_failed"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_m3_review_regressions.py::test_completed_stage_after_post_deadline_only_finishes_existing_registration[register]",
+      "kind": "failure",
+      "message": "TypeError: unsupported operand type(s) for +: 'NoneType' and 'datetime.timedelta'"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_newapi_images.py::test_real_pg_newapi_url_decode_fixed_delivery_receipt_is_typed_and_replay_never_posts",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_execution_failed"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_newapi_images.py::test_typed_reference_is_immutable_and_rejects_wrong_namespace_header_attempt_binding_body",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_newapi_images.py::test_database_cannot_reuse_gateway_reference_or_attach_wrong_attempt_scope_and_header",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_newapi_images.py::test_database_terminal_typed_tuple_and_body_hash_cannot_be_forged",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_newapi_images.py::test_gateway_unknown_or_invalid_delivery_preserves_hold_and_replay_never_generates_again[download_timeout]",
+      "kind": "failure",
+      "message": "AssertionError: assert ('released' == 'pending_reconciliation'"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_newapi_images.py::test_gateway_unknown_or_invalid_delivery_preserves_hold_and_replay_never_generates_again[decode_failure]",
+      "kind": "failure",
+      "message": "AssertionError: assert ('released' == 'pending_reconciliation'"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_newapi_images.py::test_gateway_unknown_or_invalid_delivery_preserves_hold_and_replay_never_generates_again[wrong_header]",
+      "kind": "failure",
+      "message": "AssertionError: assert ('released' == 'pending_reconciliation'"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_newapi_images.py::test_gateway_wrong_decoded_dimensions_keep_unknown_hold_budget_and_never_register_or_repost",
+      "kind": "failure",
+      "message": "AssertionError: assert ('released' == 'pending_reconciliation'"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_storage.py::test_concurrent_paid_jobs_reserve_output_budget_before_either_post",
+      "kind": "failure",
+      "message": "assert 0 == 1"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_storage.py::test_unknown_task_pins_expired_input_and_partial_output_without_releasing_funds",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_asset_unavailable"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_storage.py::test_artifact_file_reader_holds_sql_share_lock_until_snapshot_completes",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_storage.py::test_status_label_without_immutable_terminal_evidence_never_unpins_or_releases_storage",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_asset_unavailable"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_storage.py::test_database_rejects_registry_foreign_attempt_even_with_balanced_budget_transfer",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_storage.py::test_migration015_backfills_legacy014_job_budgets_and_replays_idempotently[False]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_storage.py::test_migration015_backfills_legacy014_job_budgets_and_replays_idempotently[True]",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_lease_expired"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_voice_runtime.py::test_minimax_every_post_has_durable_stage_then_owned_ready_and_cross_public_model_synthesis",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_execution_failed"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_voice_runtime.py::test_voice_unknown_stage_never_reposts_and_keeps_original_hold[upload]",
+      "kind": "failure",
+      "message": "AssertionError: assert ('0' is None)"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_voice_runtime.py::test_voice_unknown_stage_never_reposts_and_keeps_original_hold[register]",
+      "kind": "failure",
+      "message": "AssertionError: assert ('0' is None)"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_voice_runtime.py::test_fish_restart_download_failure_only_get_original_task_and_single_decoded_artifact",
+      "kind": "failure",
+      "message": "platform_service.errors.PlatformError: media_execution_failed"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_voice_runtime.py::test_known_unknown_registration_recovers_only_get_and_settles_once",
+      "kind": "failure",
+      "message": "AssertionError: assert ('0' == '1'"
+    }
+  ],
+  "skips": [
+    {
+      "nodeid": "services/platform/tests/test_encrypted_restore_drill.py::test_actual_synthetic_exported_snapshot_dump_and_fresh_restore",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_encrypted_restore_drill.py::test_public_r2_fresh_restore_keeps_raw_schema_and_all_constraint_attributes[public]",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_encrypted_restore_drill.py::test_public_r2_fresh_restore_keeps_raw_schema_and_all_constraint_attributes[nonpublic]",
+      "reason": "explicit synthetic Docker environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_media_restore_drill.py::test_full_016_owned_registry_ciphertext_nonempty_fresh_restore",
+      "reason": "explicit owned synthetic Docker environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_mixed_media_restore_drill.py::test_two_pngs_plus_erofs_pending_hold_and_absence_survive_fresh_cipher_restore",
+      "reason": "explicit owned synthetic restore environment required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_settled_media_restore_drill.py::test_actual_nonpublic_window_resolves_immutable_storage_function_in_scope",
+      "reason": "explicit owned synthetic source handle required"
+    },
+    {
+      "nodeid": "services/platform/tests/test_settled_media_restore_drill.py::test_two_settled_pngs_typed_receipts_wallet_and_raw_inventory_survive_fresh_cipher_restore",
+      "reason": "explicit owned synthetic restore environment required"
+    }
+  ],
+  "post_run_clock_sample": {
+    "kind": "read-only PostgreSQL clock comparison after failed full suite",
+    "host_before_utc": "2026-10-27T23:28:14.195681+00:00",
+    "postgres_utc": "2026-10-27T23:28:14.207812+00:00",
+    "host_after_utc": "2026-10-27T23:28:14.213929+00:00",
+    "elapsed_monotonic_seconds": 0.018146624963264912,
+    "postgres_minus_host_midpoint_seconds": 0.003007
+  },
+  "limitations": [
+    "The failed run is preserved; no tests rerun and no source changed.",
+    "Post-run clock agreement does not establish clock behavior during tests or explain failures.",
+    "Seven explicit restore-environment skips are not passes.",
+    "No new Docker, SSH, deployment, or real supplier requests."
+  ],
+  "evidence_hashes": {
+    "full-central.log": "a3361eb50766577ffe3297798ed934b69dfdaac1d92d1a75f1af35056c78b423",
+    "full-central.junit.xml": "63a7ac749f1940a27b83061888ede9fdb4bc87c75be5a5db215565ef5fe0e66f",
+    "input-manifest.json": "6bfc0f19c59b4a26c1e649c824d6518ad9fe9e5cf8c0f85e6762abd948f83933",
+    "input-source-snapshot.tar.gz": "d25a547af5061b5ca44b31c44390b3833afe09d668256ae5aad8e6267cc6929b",
+    "runtime-inputs.json": "e2a82a3a220d7d948825ab31fda452bc24727a4810c8d617f23677815922b8d0",
+    "post-run-hashes.json": "93421e70392c0020e22c1b5543a2964d8d1b4a605ac5355da63b63245aba9d21",
+    "clock-comparison.safe.json": "0d4ba7bd7379f1d1236a911c6cf3556daace05ae1ecb72f855ca1f5d1e58faf3"
+  }
+}

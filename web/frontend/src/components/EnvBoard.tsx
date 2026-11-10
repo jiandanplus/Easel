@@ -29,18 +29,21 @@ const ICONS: Record<string, ComponentType<{ size?: number }>> = {
   pw: IconGlobe, cft: IconCompass, pylibs: IconLibrary,
 };
 
-const GROUPS: { id: string; title: string; en: string }[] = [
-  { id: 'rm', title: '视频产线套件', en: 'Remotion' },
-  { id: 'pub', title: '发布链', en: '发布与读回' },
-  { id: 'common', title: '常用库', en: '按需' },
+const GROUPS: { id: string; title: string }[] = [
+  { id: 'rm', title: '视频产线套件' },
+  { id: 'pub', title: '发布链' },
+  { id: 'common', title: '常用库' },
 ];
 
+function toolSpecs(description: string): string {
+  return description.match(/(?:约\s*)?\d+(?:\.\d+)*\s*(?:[KMGT]i?B|LTS)\b|\d+(?:\.\d+)+\+/gi)?.join(' · ') || '';
+}
+
 /** 环境安装页：引擎（install_tool）的真实体检 + 后台安装 + 进度轮询。 */
-export default function EnvBoard({ tools, python, loading, error, jobs, anyRunning, onRefresh, onInstall, onInstallMany }: Props) {
+export default function EnvBoard({ tools, loading, error, jobs, anyRunning, onRefresh, onInstall, onInstallMany }: Props) {
   const total = tools.length;
   const okCount = tools.filter((t) => t.state === 'ok').length;
   const allDone = total > 0 && okCount === total;
-  const pid = python ? python.split('\\').pop() : '';
 
   const groupTools = (gid: string) => tools.filter((t) => t.group === gid);
   const installable = (t: EnvTool) => t.state !== 'no_dir';
@@ -70,9 +73,6 @@ export default function EnvBoard({ tools, python, loading, error, jobs, anyRunni
     <section className="st-env">
       <div className="panel-top">
         <span className="pill sum" aria-live="polite">{allDone ? '全就绪' : `就绪 ${okCount} / ${total}`}</span>
-        <span className="desc">
-          装完自动校验{pid ? ` · 目标解释器 ${pid}` : ''} · 给其他机器＝整个目录拷过去
-        </span>
         <span className="spacer" />
         <button className="btn btn-sm" onClick={onRefresh} disabled={loading || anyRunning}>
           {loading ? '检测中…' : '重新检测'}
@@ -86,7 +86,7 @@ export default function EnvBoard({ tools, python, loading, error, jobs, anyRunni
       </div>
       {error ? <div className="env-error">{error}</div> : null}
       {loading && !tools.length ? (
-        <div className="board"><div className="empty"><span className="spin" /> 正在体检环境…<span className="hint">（后台繁忙时可能稍慢，会自动重试）</span></div></div>
+        <div className="board"><div className="empty"><span className="spin" /> 正在体检环境…</div></div>
       ) : null}
 
       {GROUPS.map((g) => {
@@ -97,7 +97,7 @@ export default function EnvBoard({ tools, python, loading, error, jobs, anyRunni
         return (
           <div className="grp" key={g.id}>
             <div className="grp-hd">
-              <h3>{g.title} <span className="en">{g.en}</span></h3>
+              <h3>{g.title}</h3>
               <span className="grp-stat">{ok} / {list.length} 就绪</span>
               <button className="btn btn-sm" onClick={() => runGroup(g.id)} disabled={anyRunning || pending === 0}>
                 整组安装
@@ -108,6 +108,7 @@ export default function EnvBoard({ tools, python, loading, error, jobs, anyRunni
                 const v = view(t);
                 const Icon = ICONS[t.id] || IconPackage;
                 const job = jobs[t.id];
+                const specs = toolSpecs(t.desc);
                 return (
                   <div className="card" key={t.id} data-tool={t.id} data-state={v.state}>
                     <div className="card-top">
@@ -115,7 +116,7 @@ export default function EnvBoard({ tools, python, loading, error, jobs, anyRunni
                       <span className={`badge pill ${v.cls}`}><span className="dot" />{v.badge}</span>
                     </div>
                     <div className="card-name">{t.name}</div>
-                    <div className="card-desc">{t.desc}</div>
+                    {specs && <div className="card-desc">{specs}</div>}
                     <div className="card-foot">
                       {v.state === 'busy' ? (
                         <>
@@ -141,7 +142,7 @@ export default function EnvBoard({ tools, python, loading, error, jobs, anyRunni
                                   : ''}
                           </span>
                           {v.state === 'nodir' ? (
-                            <button className="btn btn-sm" disabled title="需要 --dir 工程目录（随独立版内置）">需目录</button>
+                            <button className="btn btn-sm" disabled title="需要指定工程目录">需目录</button>
                           ) : v.state === 'fail' ? (
                             <button className="btn btn-sm btn-fill" onClick={() => void onInstall(t.id)} disabled={anyRunning}>重试</button>
                           ) : (
@@ -164,7 +165,6 @@ export default function EnvBoard({ tools, python, loading, error, jobs, anyRunni
         );
       })}
 
-      <div className="foot-note">装到哪：本机用户环境（Python 用户级 · PATH 自动接好）；给其他机器＝把独立版整个目录拷过去，双击即开。</div>
     </section>
   );
 }

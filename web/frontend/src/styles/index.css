@@ -668,7 +668,8 @@ textarea.field { resize: vertical; min-height: 90px; }
 }
 .skill-card {
   position: relative; padding: 17px 16px 15px; overflow: hidden;
-  display: flex; flex-direction: column; gap: 9px; min-height: 124px;
+  display: flex; flex-direction: column; gap: 9px;
+  font: inherit; color: inherit; text-align: left;
 }
 .skill-card::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;

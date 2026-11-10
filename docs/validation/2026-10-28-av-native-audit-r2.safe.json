@@ -1,0 +1,53 @@
+{
+  "status": "local_focused_pass_independent_linux_full_pending",
+  "tool_session": 79282,
+  "terminal_exit": 0,
+  "tests": 137,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "wall_summary_seconds": 13.45,
+  "sources": {
+    "services/platform/src/platform_service/media/av_artifacts.py": "e2f8c862084345d72e0563be41b817692c50f03b033be459595f61e5ab1cef74",
+    "services/platform/src/platform_service/media/decoded_timeline.py": "41a0f2cfd5e79017240e1f8485cf8907e2d402f42aae00cee85093a302c8fc9e",
+    "services/platform/tests/test_media_av_artifacts.py": "2215eabc3418ffacbb0ac31d730e94ac984af35f9455836f135d0f2097391cc9",
+    "services/platform/tests/test_media_decoded_timeline.py": "50718fc6694229b254248d3dbe1f93a643a872ac094ce14a8ae9cb1e8a9300ca"
+  },
+  "source_manifest_sha256": "cb8f79b0c719d1f4a14d6785e4aa5a9d4a0d3a14dacf39bf02dc6678511955df",
+  "source_tar_sha256": "fb226658ea6acd33f2264c9ac3d67a26c86ed3ca1cf4d7cc7f778d4324a56013",
+  "direct_inputs": 9,
+  "direct_inputs_before_after_equal": true,
+  "broader_observation_inputs": 212,
+  "broader_before_after_equal": true,
+  "broader_scope_is_not_full_dependency_closure_or_global_freeze": true,
+  "protected_migrations": 20,
+  "protected_migrations_match_r1": true,
+  "known_boundaries": [
+    "local ffmpeg/ffprobe 8.0.1 only",
+    "Linux 6.1 r2 replay pending",
+    "actual cleanenv/directELF and APIUID/systemd not passed",
+    "no PG or full suite",
+    "real dynamic sample_fmt/layout covered by parser, not claimed as generated binary evidence"
+  ],
+  "artifacts": {
+    "approved-r2-plan.md": "4f8fbd33d7873061b0c9a39e4e37fab279a5656281779c0e4d7b34cd3b23d28d",
+    "boundaries-green.safe.log": "74e8edc9f4eb5552ad36bbfa06848dfa3f872975620bbb21f823a67123d7acde",
+    "direct-inputs-after.json": "29cf4bb71308be013af04b39e48c312c1f36115252fe61c0c3a6a7a82abb2965",
+    "direct-inputs-before.json": "29cf4bb71308be013af04b39e48c312c1f36115252fe61c0c3a6a7a82abb2965",
+    "final.junit.xml": "6fb49909d6ce9a1632b4a50235a4b51393b992bef85d77221777134900e065b3",
+    "final.safe.log": "970803a4e629c1bad6dcecc48c770c04893f068a27d4090cd325b6fb5a901426",
+    "initial-green.safe.log": "ff1eb3289563954004da234cdf39bde3ea902910993fa70033b881ddbf507c19",
+    "initial-red.safe.log": "e0f3d71243a4a9df408ad450591d13be9deefd4c7d2c19c3c847471533713fbb",
+    "inputs-after.json": "7bc7cfe1020baea29bd4eaf105964380c62eb1c84867b7c333187100b7bc938f",
+    "inputs-before.json": "7bc7cfe1020baea29bd4eaf105964380c62eb1c84867b7c333187100b7bc938f",
+    "local-tools.json": "3c14ca5cbb1b97eb63f907fdde82b53df5b76d6ab27f3291f5dec4350a6293c6",
+    "native-real-variants.safe.log": "62e93ea32de8c9187f4220c6be96b405c6cace24ffdfccb1ad8e85c1eba0ca74",
+    "original-reviewer-bytes-green.safe.log": "355b81e75c7da5f8b7823469a8fc9ecbea7e55b1c33739bcfcace9da85041855",
+    "positive-compatibility-attempt.safe.log": "6491f52714221c5521769eae389a4a65a8ce7fd0ef00e456379da0cb2eb3f3d2",
+    "protected-001-020.json": "7322a73dbfeed11f9998b9f55a3fa0ad83a6505a79a6222de0593f69bcc901aa",
+    "r1-to-r2.diff": "87ff5e9c611766cada1c22435688f08b289e6f358ff34cc1e7a51a8c0e2dad65",
+    "reviewed-source.tar.gz": "fb226658ea6acd33f2264c9ac3d67a26c86ed3ca1cf4d7cc7f778d4324a56013",
+    "source-manifest.json": "cb8f79b0c719d1f4a14d6785e4aa5a9d4a0d3a14dacf39bf02dc6678511955df",
+    "spawn-deadline-red.safe.log": "86eed1b427ff86754243a3d9f292785554ab12efd67ff65e4d62b761c581424c"
+  }
+}

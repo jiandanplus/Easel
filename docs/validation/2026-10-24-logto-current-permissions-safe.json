@@ -1,0 +1,103 @@
+{
+  "acquisition_completed_at_utc": "2026-10-24T03:55:46.038465+00:00",
+  "acquisition_started_at_utc": "2026-10-24T03:55:44.377192+00:00",
+  "acquisition_window_seconds": 1.658383124973625,
+  "all_other_raw_checks_passed": true,
+  "automatic_retry": false,
+  "combined_sql_sha256": "ca8e8f7a99556d0b1c75795afbfe5e21de1bf5faedc0671222c9edb178d1609f",
+  "current_full_permission_metadata_reverified": true,
+  "current_full_schema_reverified": false,
+  "database_modified": false,
+  "effective_grant_count": 857,
+  "effective_table_acl_equal": true,
+  "effective_table_count": 79,
+  "fresh_raw_checks": {
+    "column_acls": true,
+    "database_contract": true,
+    "default_privileges": true,
+    "extensions": true,
+    "memberships": true,
+    "objects": false,
+    "role_settings": true,
+    "roles_excluding_acknowledged_unrelated_central_runtime": true,
+    "schema": true,
+    "server_version_num": true,
+    "summary_counts_and_required_apps": true,
+    "unexpected_target_roles_absent": true
+  },
+  "full_data_proof": false,
+  "ignored_operational_field": "summary.active_other_sessions",
+  "max_acquisition_window_seconds": 120,
+  "ok": true,
+  "operation": "effective_table_acl_v31",
+  "operation_id": "7de6f24d75484e3d877184e0290c1148",
+  "outcome_unknown": false,
+  "phase": "complete",
+  "raw_baseline_modified": false,
+  "raw_baseline_objects_equal": false,
+  "raw_difference_count": 3,
+  "raw_differences": [
+    {
+      "fields": {
+        "acl": {
+          "source": "{preview_owner=arwdDxt/preview_owner}",
+          "target": null
+        },
+        "acl_is_null": {
+          "source": false,
+          "target": true
+        }
+      },
+      "kind": "relation:r",
+      "name": "service_logs"
+    },
+    {
+      "fields": {
+        "acl": {
+          "source": "{preview_owner=arwdDxt/preview_owner}",
+          "target": null
+        },
+        "acl_is_null": {
+          "source": false,
+          "target": true
+        }
+      },
+      "kind": "relation:r",
+      "name": "systems"
+    },
+    {
+      "fields": {
+        "acl": {
+          "source": "{preview_owner=arwdDxt/preview_owner}",
+          "target": null
+        },
+        "acl_is_null": {
+          "source": false,
+          "target": true
+        }
+      },
+      "kind": "relation:r",
+      "name": "tenants"
+    }
+  ],
+  "raw_failure_operation": "678a4038e3a449d4a014c0343eda5154",
+  "raw_failure_result_sha256": "c0bc112ec162dbef8f5ce7455176425ba512e8d94aef0f5e0abddf7f47184641",
+  "read_only": true,
+  "runtime_privileges_accepted": false,
+  "same_repeatable_read_transaction_per_endpoint": true,
+  "source_acquisition": {
+    "completed_at_utc": "2026-10-24T03:55:44.470073+00:00",
+    "duration_seconds": 0.07153645803919062,
+    "started_at_utc": "2026-10-24T03:55:44.398536+00:00"
+  },
+  "source_and_target_match_their_raw_baselines": true,
+  "source_baseline_sha256": "b9bd268d328e05c207d7af1407ff31858f6459216ea2ee7c71bbe77681b015ab",
+  "source_projection_sha256": "8e95baeb8698b60dd72cddd430e2c30c6e5ce96828c411736cbcf85d9d0b8924",
+  "target_acquisition": {
+    "completed_at_utc": "2026-10-24T03:55:45.881481+00:00",
+    "duration_seconds": 0.1248127780854702,
+    "started_at_utc": "2026-10-24T03:55:45.756668+00:00"
+  },
+  "target_baseline_sha256": "8d747e9d5170e3ee123f0b881f3375435a6a1e8610b95c7a368ca7f6a66438c8",
+  "target_projection_sha256": "c584d4a2be42f1ec06fcde54004e0d2360acf4c8315a2f6841dfc06bb86640a6"
+}

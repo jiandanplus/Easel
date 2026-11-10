@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from easel.paths import workspace_root
 
 from .acp import ACPAdapter, OpenCodeAdapter
 from .base import Descriptor, HarnessError, RunRequest
@@ -16,6 +17,9 @@ ADAPTERS = {adapter.descriptor.id: adapter for adapter in (OpenCodeAdapter(), Co
 
 
 def adapter(runtime: str):
+    if runtime == "pi":
+        from .pi import PiAdapter
+        return PiAdapter()
     if runtime not in ADAPTERS:
         raise HarnessError("此 Agent 使用原有 OpenClaw 通道，或未注册")
     return ADAPTERS[runtime]
@@ -25,27 +29,47 @@ def describe(runtime: str) -> dict:
     descriptor = CHAT_ONLY if runtime == "api" else OPENCLAW if runtime == "openclaw" else adapter(runtime).descriptor
     from dataclasses import asdict
     result = asdict(descriptor)
+    from .capabilities import subscription_backends
+    result["subscription_backends"] = subscription_backends(runtime)
+    if runtime == "pi":
+        result.update(origin="bundled", version="")
+    if runtime == "codex":
+        import os
+        result.update(origin="bundled" if "EASEL_RUNTIME_MANIFEST" in os.environ else
+                      "override" if "EASEL_CODEX_EXECUTABLE" in os.environ else "external", version="")
     try:
-        if runtime == "api":
+        if runtime == "pi":
+            from .pi_runtime import resolve_pi
+            resolved = resolve_pi()
+            result.update(origin=resolved.origin, version=resolved.version)
+        elif runtime == "api":
             pass
         elif runtime == "openclaw":
             from easel.openclaw_cmd import openclaw_base_cmd
             openclaw_base_cmd.cache_clear()
             openclaw_base_cmd()
         elif runtime == "acp":
-            acp_command(Path(__file__).resolve().parents[2])
+            acp_command(workspace_root())
         else:
             base_command(runtime)
+        if runtime == "codex":
+            from .runtime import resolve_codex
+            resolved = resolve_codex()
+            result.update(origin=resolved.origin, version=resolved.version)
         result["installed"] = True
-    except (HarnessError, OSError):
+    except (HarnessError, OSError) as error:
         result["installed"] = False
+        result["resolution_error"] = str(error) if isinstance(error, HarnessError) else "无法读取运行时，请检查安装"
     return result
 
 
 async def console_turn(prompt: str, root: Path, env: dict, native_id="", *,
-                       timeout=1800, interactive=True, on_bind=None) -> tuple[str, str]:
-    config = settings(root / "outputs", env)
+                       timeout=1800, interactive=True, on_bind=None, config=None, context=None) -> tuple[str, str]:
+    config = dict(config) if config is not None else settings(root / "outputs", env)
     runtime = config["runtime"]
+    from easel.service_contracts import task_context
+    context = context or await asyncio.to_thread(task_context, config, root=root)
+    runtime = context.runtime
     full_text = []
     identifiers = [native_id]
 
@@ -68,9 +92,19 @@ async def console_turn(prompt: str, root: Path, env: dict, native_id="", *,
             answers[question["questionId"]] = [answer]
         return answers
 
+    # The CLI keeps its accepted chat context across user messages, whereas
+    # central invocation limits belong to one user turn (including its tools).
+    invocation_key = context.invocation_key
+    if context.service_source == "subscription" and context.subscription_backend == "central":
+        from uuid import uuid4
+        invocation_key = str(uuid4())
     request = RunRequest(prompt, root, {**env, "EASEL_AGENT_RUNTIME": runtime}, native_id,
-                         config["models"].get(runtime, ""), config["sandbox"], timeout,
-                         codex_auto_approve=config["codex_auto_approve"])
+                         context.model, config["sandbox"], timeout,
+                         codex_auto_approve=config["codex_auto_approve"],
+                         service_source=context.service_source, execution_target=context.execution_target,
+                         account_id=context.account_id, platform_url=context.platform_url,
+                         subscription_backend=context.subscription_backend, central_scope=context.central_scope,
+                         invocation_key=invocation_key)
 
     def bind(value):
         identifiers[0] = value

@@ -1,0 +1,11 @@
+[Unit]
+Description=Easel: sealed New API database backup, copied to Cloudflare R2
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -B /usr/local/lib/easel-backup/newapi_backup.py
+ExecStart=/usr/bin/python3 -B /usr/local/lib/easel-backup/offsite_sync.py --config /etc/easel-backup/newapi.env
+Nice=10

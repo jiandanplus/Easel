@@ -1,0 +1,104 @@
+{
+  "status": "FOCUSED_GREEN_AWAITING_INDEPENDENT_REVIEW_AND_FRESH_FULL",
+  "source_files": {
+    "services/platform/src/platform_service/media/av_artifacts.py": "d90d14225f919cb792104ea68a9062e6a610348fda029ea40768428c4bce9949",
+    "services/platform/src/platform_service/media/decoded_timeline.py": "db95081705f6528e08224c4367db488c82735f41a4b40b25162e0dfe48ec2cea",
+    "services/platform/tests/test_media_av_artifacts.py": "a8ceda0cbd9e0aeb1ac9f5180d0895d68cfee737e83a51776df015ded9602957",
+    "services/platform/tests/test_media_decoded_timeline.py": "c16c993626d98ec16f8a23dde6866a624be20644fb58e7542af7edd2f1688677"
+  },
+  "focused_inputs_before_after_match": true,
+  "focused_input_count": 9,
+  "protected_migrations_001_020_match_frozen": true,
+  "protected_count": 20,
+  "local_focused": {
+    "tool_session": 15089,
+    "exit": 0,
+    "passed": 95,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "reported_duration_seconds": 7.57,
+    "junit_duration_seconds": "7.569"
+  },
+  "linux_algorithm": {
+    "tool_session": 77201,
+    "exit": 0,
+    "positive": 14,
+    "negative": 3,
+    "source_matches_candidate": true,
+    "scope": "explicit test-only private loader bridge",
+    "direct_cleanenv_exit": 127,
+    "result_sha256": "2f20e384cd919256c3a69b6e6e79210640129646086a73c7f073ef4b8dcfae7e"
+  },
+  "red_evidence": {
+    "repo_initial": {
+      "session": 62617,
+      "exit": 1,
+      "failed": 58
+    },
+    "real_ubuntu61_old": {
+      "session": 92700,
+      "exit": 1,
+      "wav_expected_actual_ms": [
+        500,
+        384
+      ],
+      "vfr_expected_actual_ms": [
+        800,
+        750
+      ]
+    },
+    "oversize_cleanup": {
+      "session": 28196,
+      "exit": 1,
+      "failure": "2s timeout while waiting for killed child with undrained stdout"
+    },
+    "spawn_cancel": {
+      "exit": 1,
+      "failure": "late created child still existed"
+    },
+    "rotation": {
+      "exit": 1,
+      "failure": "autorotate changed framehash dimensions; fixed-noautorotate positive green"
+    }
+  },
+  "scope_limits": [
+    "No PG/full suite run",
+    "No system package install or APT dry-run by this agent",
+    "No production service/DB/wallet/model/user data operations",
+    "Library loading and API UID/systemd namespace still unaccepted",
+    "Prior e7af wheel and 1895/14 or1794 evidence are historical, not this candidate"
+  ],
+  "artifacts": {
+    "approved-design-before-progress.md": "3748a8aa39f3e71da31126da46e43c21898cc1edc6c069eabd538bceec6fe9d6",
+    "candidate-before-linux.json": "9c76264caf25661ebf44ae3839abe46076c4e7ecf22ee96ea5ce61956f8134ba",
+    "ffmpeg-local-version.txt": "8e4596249b9743ce4af9b1f54c3030938adbd91f39f41c576e8a82d9a35abaf9",
+    "ffprobe-local-version.txt": "ad6c8ca8373ec876350075d712aa5edd256ed36b1465deddc4ce58c3b7ff831d",
+    "first-green-attempt.safe.log": "1c5abadef0e2ea467f081bf269ec2f0c2116c7dd47bffa07613e53a5e2e30035",
+    "focused-final.junit.xml": "61c7ef6652eca78eb0140d9321f2a8fbc69115096f374d9ea35ba6cbce162161",
+    "focused-final.safe.log": "34e873ed6db45d766679d35a174e164e5fc83a670ad618b10f134d99eaea17c6",
+    "focused-inputs-after.json": "8b65eec4a7ce8eabcb6e771de8e020126b8406c1399bb050e225256109c26c47",
+    "focused-inputs-before.json": "8b65eec4a7ce8eabcb6e771de8e020126b8406c1399bb050e225256109c26c47",
+    "initial-red.safe.log": "78efa74f9a9d5c753933d5594fd920e691e40cbe82708689d21942634595654d",
+    "linux-candidate-r1.safe.log": "bdaed26c5e53277722fc449bd8b54da1c1fada3787fd5eaf79a7a192bcf21eb6",
+    "linux-old-red.safe.json": "45ed3ccc5adff2871f418882945a133da802fcccdd2d0543b321c97bd5cfc2ac",
+    "linux-result.safe.json": "2f20e384cd919256c3a69b6e6e79210640129646086a73c7f073ef4b8dcfae7e",
+    "linux-run.safe.log": "c66bb87fc0021871ef31326d9a56a698eada4b96a4f1aec1c1ff90c65504541f",
+    "linux-source-manifest.json": "4a35dea97511302b036a93f8bf195c99ccbefc64887b76b42054e7a528947be8",
+    "linux_algorithm.py": "204eb05d7ee232a1e98cd812b637d76045071398ac61c7f1e71faa6c93e250f0",
+    "oversize-cleanup-red.safe.log": "d0441d70561f14a153872cdddfe10b5cf2b3660c10ac2a2967534808b6461594",
+    "precise-and-long.safe.log": "c227801f94c709e8c88e50c1e59c54e0097b3e8aa171a807001758c930f34a7b",
+    "protected-001-020.json": "7322a73dbfeed11f9998b9f55a3fa0ad83a6505a79a6222de0593f69bcc901aa",
+    "reviewed-source.tar.gz": "655597c5cf63ec4fd1bbfd5be867d39365335ff527171f609a11dee5b5f7ad71",
+    "rotation-behavior-red.safe.log": "89f4036039e3737dca2619d1946599f91af593500d7b7dd2e1b921d1ea74a5ae",
+    "rotation-green.safe.log": "3be62f393f5921607a873beb897436b1f6af7bf8e959115d728ee0ecc5bd3a34",
+    "rotation-red.safe.log": "41be4a44717a0a0ed829b45309d35dbe074aa2748cb740fe690d672692c97179",
+    "second-green-attempt.safe.log": "6989d56b1e3def0c6a5886e4ca49accc39e5b7f9e8fff2abe0ec3020bdfae7a3",
+    "source-manifest.json": "9c76264caf25661ebf44ae3839abe46076c4e7ecf22ee96ea5ce61956f8134ba",
+    "spawn-cancel-green.safe.log": "35d86279d96ed65491ba8ff0748e1c8e7891711531404dc5d4b9cd6ae33de3ec",
+    "spawn-cancel-red.safe.log": "8d8ab7a1d1abe3432c1c1241dec788faae3ff9eedd8c6eb5e8f7d2f435977ec2"
+  },
+  "focused_input_scope": "four edited files plus five selected direct dependencies/config; not full dependency closure",
+  "approved_design_original_sha256": "3748a8aa39f3e71da31126da46e43c21898cc1edc6c069eabd538bceec6fe9d6",
+  "plan_progress_sha256": "342b726e32e1bca1f8bf96d5da383ab3ca94e94b919e1d7423f65d4193923b47"
+}

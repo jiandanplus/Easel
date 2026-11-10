@@ -1,0 +1,37 @@
+{
+  "real_logto_login": true,
+  "test_issuance_idempotent": true,
+  "test_only": true,
+  "initial_wallet_zero": true,
+  "real_logto_second_product_sso": true,
+  "same_user_and_wallet": true,
+  "distinct_product_bearers": true,
+  "cross_product_bearer_rejected": true,
+  "separate_pg_backends": true,
+  "concurrent_80_plus_80_on_100_success_count": 1,
+  "settlement_replay_idempotent": true,
+  "wallet": {
+    "unit": "microcredit",
+    "microcredits_per_point": "1000000",
+    "available": "92500000",
+    "reserved": "0",
+    "spent": "7500000",
+    "expired": "0",
+    "issued": "100000000",
+    "pending_reconciliation": 0,
+    "test_only": true
+  },
+  "easel_logout_revoked": true,
+  "second_product_logout_rejects_old_bearer": true,
+  "private_auth_removed": true,
+  "session_file_mode": "0o600",
+  "private_directory_mode": "0o700",
+  "browser_console_errors": 0,
+  "mobile_css_width": 390,
+  "mobile_document_width": 390,
+  "mobile_account_horizontal_overflow": false,
+  "appearance": [
+    "paper",
+    "forest"
+  ]
+}

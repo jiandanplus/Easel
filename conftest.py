@@ -5,6 +5,12 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def fixed_service_source(monkeypatch):
+    """Tests choose the service source themselves; the automatic subscription rule has its own tests."""
+    monkeypatch.setenv("EASEL_SUBSCRIPTION_AUTO", "0")
+
+
+@pytest.fixture(autouse=True)
 def isolate_web_outputs(request, tmp_path_factory, monkeypatch):
     if not request.node.path.is_relative_to(Path(__file__).parent / "tests"):
         return

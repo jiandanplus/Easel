@@ -1,0 +1,216 @@
+--- a/services/platform/src/platform_service/media/av_artifacts.py
++++ b/services/platform/src/platform_service/media/av_artifacts.py
+@@ -6,6 +6,7 @@
+ import asyncio
+ from dataclasses import dataclass
+ from decimal import Decimal
++from fractions import Fraction
+ import hashlib
+ import json
+ import os
+@@ -100,6 +101,67 @@
+     walk(0,len(raw),0)
+ 
+ 
++def _mp4_declared_durations(raw):
++    """Read original track declarations before the demuxer clamps them.
++
++    Only a single ordinary-speed, nonempty edit is supported. More complicated
++    timelines cannot establish decoded audio length with this profile.
++    """
++    count=0
++    def boxes(start,end):
++        nonlocal count
++        result=[]
++        while start<end:
++            count+=1
++            if count>8192 or start+8>end:raise ValueError
++            size,kind=struct.unpack_from('>I4s',raw,start);header=8
++            if size==1:
++                if start+16>end:raise ValueError
++                size=struct.unpack_from('>Q',raw,start+8)[0];header=16
++            if size==0:size=end-start
++            if size<header or start+size>end:raise ValueError
++            result.append((kind,start+header,start+size));start+=size
++        return result
++    def only(items,kind):
++        matches=[(a,b)for name,a,b in items if name==kind]
++        if len(matches)!=1:raise ValueError
++        return matches[0]
++    def timing(a,b):
++        if b-a<4 or raw[a] not in (0,1) or raw[a+1:a+4]!=b'\x00'*3:raise ValueError
++        offset=12 if raw[a]==0 else 20;size=4 if raw[a]==0 else 8
++        if a+offset+4+size>b:raise ValueError
++        scale=struct.unpack_from('>I',raw,a+offset)[0]
++        duration=struct.unpack_from('>I' if size==4 else '>Q',raw,a+offset+4)[0]
++        if scale==0 or duration==(1<<(size*8))-1:raise ValueError
++        return scale,duration
++    moov=boxes(*only(boxes(0,len(raw)),b'moov'))
++    movie_scale,_=timing(*only(moov,b'mvhd'));result={}
++    for name,a,b in moov:
++        if name!=b'trak':continue
++        track=boxes(a,b);mdia=boxes(*only(track,b'mdia'))
++        hdlr,end=only(mdia,b'hdlr')
++        if end-hdlr<12:raise ValueError
++        handler=raw[hdlr+8:hdlr+12]
++        kind={b'vide':'video',b'soun':'audio'}.get(handler)
++        if kind is None or kind in result:raise ValueError
++        scale,duration=timing(*only(mdia,b'mdhd'))
++        durations=[Fraction(duration,scale)]
++        edits=[(x,y)for name,x,y in track if name==b'edts']
++        if len(edits)>1:raise ValueError
++        if edits:
++            start,end=only(boxes(*edits[0]),b'elst')
++            if end-start<8 or raw[start] not in (0,1) or raw[start+1:start+4]!=b'\x00'*3:raise ValueError
++            version=raw[start];entry=12 if version==0 else 20
++            if struct.unpack_from('>I',raw,start+4)[0]!=1 or end-start!=8+entry:raise ValueError
++            length,media_time,rate=struct.unpack_from('>IiI' if version==0 else '>QqI',raw,start+8)
++            if media_time<0 or media_time>=duration or rate!=65536:raise ValueError
++            durations=[Fraction(duration-media_time,scale),Fraction(length,movie_scale)]
++        if any(value<=0 for value in durations):raise ValueError
++        result[kind]=durations
++    if not result:raise ValueError
++    return result
++
++
+ def _format(raw,kind):
+     if len(raw)>=16 and raw[4:8]==b'ftyp':
+         brand=raw[8:12]
+@@ -141,7 +203,7 @@
+             key,value=line.split('=',1);values[key]=value
+     if values.get('progress')!='end' or not re.fullmatch(r'[0-9]{1,15}',values.get('out_time_us','')):raise ValueError
+     micros=int(values['out_time_us'])
+-    if not 0<micros<=maximum*1000:raise ValueError
++    if not 1000<=micros<=maximum*1000:raise ValueError
+     return micros//1000
+ 
+ 
+@@ -153,6 +215,7 @@
+         _positive_int(max_pixels,33554432);_positive_int(max_channels,8);_positive_int(max_sample_rate,192000)
+         if not 0<len(raw)<=max_bytes:raise ValueError
+         demuxer,actual_mime,fmt=_format(raw,kind)
++        original_durations=_mp4_declared_durations(raw) if demuxer=='mov' else {}
+         if mime not in (None,actual_mime):raise ValueError
+         if not isinstance(tools,AVTools):raise PlatformError(503,'media_decoder_unavailable')
+         ffmpeg,ffprobe=tools.paths()
+@@ -172,6 +235,7 @@
+             if not isinstance(streams,list) or not 1<=len(streams)<=2:raise ValueError
+             video=[s for s in streams if s.get('codec_type')=='video'];audio=[s for s in streams if s.get('codec_type')=='audio']
+             if len(video)+len(audio)!=len(streams) or len(video)>1 or len(audio)>1:raise ValueError
++            if original_durations and set(original_durations)!={s['codec_type'] for s in streams}:raise ValueError
+             if kind=='video' and len(video)!=1 or kind=='audio' and (video or len(audio)!=1) or require_audio and not audio:raise ValueError
+             properties={'format':fmt}
+             for stream in streams:
+@@ -202,6 +266,11 @@
+                 measured=properties['audio_duration_ms' if video else 'duration_ms']
+                 declared=_duration(audio[0].get('duration') or (None if video else value.get('format',{}).get('duration')),max_duration_ms)
+                 if declared is not None and abs(declared-measured)>100:raise ValueError
++            # STTS and edit-list processing can shorten ffprobe's duration.
++            # Retain the original per-track declarations as an independent gate.
++            for track,durations in original_durations.items():
++                measured=properties['audio_duration_ms' if track=='audio' and video else 'duration_ms']
++                if any(value*1000>max_duration_ms or abs(value*1000-measured)>100 for value in durations):raise ValueError
+             if any(properties[key]<=0 for key in ('duration_ms',)):raise ValueError
+             return {'sha256':hashlib.sha256(raw).hexdigest(),'size':len(raw),'mime':actual_mime,'properties':properties}
+     except (OSError,ValueError,TypeError,KeyError,UnicodeError,RecursionError):
+--- a/services/platform/tests/test_media_av_artifacts.py
++++ b/services/platform/tests/test_media_av_artifacts.py
+@@ -30,6 +30,9 @@
+       'wav':generate('tone.wav',['-f','lavfi','-i','sine=frequency=440:duration=0.5','-c:a','pcm_s16le']),
+       'mp3':generate('tone.mp3',['-f','lavfi','-i','sine=frequency=440:duration=0.5','-c:a','libmp3lame']),
+       'ogg':generate('tone.ogg',['-f','lavfi','-i','sine=frequency=440:duration=0.5','-c:a','libopus'])}
++    result['tiny_av']=generate('tiny-audio.mp4',['-f','lavfi','-i','color=c=blue:s=32x32:r=10:d=0.5',
++      '-f','lavfi','-i','sine=frequency=440:sample_rate=48000:duration=0.3','-af','atrim=end_sample=1',
++      '-c:v','mpeg4','-c:a','pcm_s16le','-movie_timescale','48000'])
+     version=subprocess.run([ffmpeg,'-version'],capture_output=True,text=True,timeout=5).stdout.splitlines()[0].split()[2]
+     return result,(Path(ffmpeg),Path(ffprobe),version)
+ 
+@@ -118,7 +121,7 @@
+ 
+ 
+ 
+-def extend_declared_audio_track(raw):
++def extend_declared_audio_track(raw,*,media_header=True,edit=True):
+     result=bytearray(raw)
+     def boxes(start,end):
+         while start<end:
+@@ -137,16 +140,74 @@
+         mdhd=child(*mdia,b'mdhd');assert result[mdhd[0]]==0
+         scale=struct.unpack_from('>I',result,mdhd[0]+12)[0]
+         duration=struct.unpack_from('>I',result,mdhd[0]+16)[0]
+-        struct.pack_into('>I',result,mdhd[0]+16,duration+scale//5)
++        if media_header:struct.pack_into('>I',result,mdhd[0]+16,duration+scale//5)
+         edts=child(a,b,b'edts');elst=child(*edts,b'elst');assert result[elst[0]]==0
+         length=struct.unpack_from('>I',result,elst[0]+8)[0]
+-        struct.pack_into('>I',result,elst[0]+8,length+movie_scale//5)
++        if edit:struct.pack_into('>I',result,elst[0]+8,length+movie_scale//5)
+         return bytes(result)
+     raise AssertionError('Fixture must contain an audio track')
+ 
+ 
+ @pytest.mark.asyncio
+-async def test_audio_track_declared_duration_cannot_hide_missing_tail_samples_under_valid_video(files):
+-    data,tools=files
+-    corrupted=extend_declared_audio_track(data['av'])
++@pytest.mark.parametrize('media_header,edit',[(True,True),(True,False),(False,True)])
++async def test_audio_track_declared_duration_cannot_hide_missing_tail_samples_under_valid_video(files,media_header,edit):
++    data,tools=files
++    corrupted=extend_declared_audio_track(data['av'],media_header=media_header,edit=edit)
+     with pytest.raises(PlatformError):await inspect(corrupted,tools,kind='video',require_audio=True)
++
++
++def timing_version_one(raw):
++    # Fixture mdat is before moov, so extending metadata does not move samples.
++    assert raw.find(b'mdat')<raw.find(b'moov')
++    def rewrite(start,end):
++        result=bytearray()
++        while start<end:
++            size,kind=struct.unpack_from('>I4s',raw,start)
++            assert size>=8 and start+size<=end
++            body=raw[start+8:start+size]
++            if kind in {b'moov',b'trak',b'mdia',b'edts'}:body=rewrite(start+8,start+size)
++            elif kind in {b'mvhd',b'mdhd'}:
++                assert body[0]==0
++                created,modified,scale,duration=struct.unpack_from('>IIII',body,4)
++                body=b'\x01'+body[1:4]+struct.pack('>QQIQ',created,modified,scale,duration)+body[20:]
++            elif kind==b'elst':
++                assert body[0]==0 and struct.unpack_from('>I',body,4)[0]==1
++                length,media_time,rate=struct.unpack_from('>IiI',body,8)
++                body=b'\x01'+body[1:8]+struct.pack('>QqI',length,media_time,rate)
++            result.extend(struct.pack('>I4s',len(body)+8,kind)+body);start+=size
++        return bytes(result)
++    return rewrite(0,len(raw))
++
++
++@pytest.mark.asyncio
++async def test_64bit_track_timing_keeps_actual_audio_length_and_rejects_missing_tail(files):
++    data,tools=files
++    valid=timing_version_one(data['av'])
++    result=await inspect(valid,tools,kind='video',require_audio=True)
++    assert result['sha256']==hashlib.sha256(valid).hexdigest()
++    assert 250<=result['properties']['audio_duration_ms']<=400
++    assert result['properties']['audio_duration_ms']<result['properties']['duration_ms']
++    with pytest.raises(PlatformError):
++        await inspect(timing_version_one(extend_declared_audio_track(data['av'])),tools,kind='video',require_audio=True)
++
++
++@pytest.mark.asyncio
++async def test_present_audio_track_cannot_be_delivered_as_zero_milliseconds(files):
++    data,tools=files
++    with pytest.raises(PlatformError):await inspect(data['tiny_av'],tools,kind='video',require_audio=True)
++
++
++@pytest.mark.asyncio
++@pytest.mark.parametrize('box,offset,fmt,value',[
++    (b'mdhd',0,'>B',2),(b'mdhd',12,'>I',0),(b'mdhd',16,'>I',0xFFFFFFFF),
++    (b'elst',4,'>I',2),(b'elst',12,'>i',-1),(b'elst',16,'>I',0),
++])
++async def test_unknown_or_unsupported_track_timing_is_closed_before_external_tools(files,tmp_path,box,offset,fmt,value):
++    from platform_service.media.av_artifacts import AVTools,inspect_av
++    data,_=files
++    raw=bytearray(data['av']);marker=raw.rfind(box);assert marker>0
++    struct.pack_into(fmt,raw,marker+4+offset,value)
++    unavailable=AVTools(tmp_path/'not-a-tool',tmp_path/'not-a-probe','unavailable')
++    with pytest.raises(PlatformError) as error:
++        await inspect_av(bytes(raw),kind='video',max_bytes=1048576,max_duration_ms=1000,max_pixels=1024,tools=unavailable)
++    assert error.value.code=='invalid_media_artifact'

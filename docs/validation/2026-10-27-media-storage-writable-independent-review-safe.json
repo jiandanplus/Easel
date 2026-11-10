@@ -1,0 +1,47 @@
+{
+  "changes": "Only append fixed API storage ReadWritePaths to existing exact 90 dropin. Strict protection, original configs and console unchanged.",
+  "files_sha256": {
+    "services/platform/scripts/prepare_m1_image_cutover.py": "32ba883a5362af05edf3a53dc070c05f80ec8275a947a4bb7063078ae80aba36",
+    "services/platform/scripts/prepare_m1_image_release.py": "ff9d019ef275798b24e12adcc25c8018c9f8f3ff244dc003133f2df4912c02ef",
+    "services/platform/scripts/prepare_media_storage_writable.py": "dee6c912a57df4a2659e8c2fcd205dd64e3754daefc4e429e94b2d1077c5ac6d",
+    "services/platform/tests/test_media_storage_writable.py": "b2ad290e896e33a688f4a66b61f9d8e336f1c6b80a6fa8ffdab1697a49e1bdfc"
+  },
+  "provider_posts": 0,
+  "remaining_limits": [
+    "Actual namespace results were collected by root independently, not by this reviewer.",
+    "Filesystem repair does not recover the original uncertain job or establish its actual supplier cost.",
+    "Old 68/49df restore proof does not cover appended dropin bytes. New nonempty DR not admissible while pending remains.",
+    "Backups and failure receipts retained; no blind automatic rollback after modified-file failure."
+  ],
+  "reviewed_guards": [
+    "exact script/raw private plan/file metadata/source release/source PID gates",
+    "0 active precheck; stop only API; inactive MainPID0; fresh full nonterminal and credit summaries before mutation and start",
+    "root private original-byte backup and exclusive atomic dropin replacement",
+    "namespace probe through actual API PID, drop to service UID/GID, O_EXCL0600 write/fsync/unlink",
+    "negative /etc and release probes require both failed writes and readonly mount flags",
+    "console process and original file comparison; fail-closed stop-window race restores only exact original API",
+    "No table or wallet writes; pending requests remain pending with holds untouched"
+  ],
+  "reviewer_production_mutations": 0,
+  "reviewer_ssh_calls": 0,
+  "root_reported_server_result_not_this_reviewers_ssh": {
+    "api_pid_after": 278494,
+    "api_pid_before": 246906,
+    "etc_release_readonly_negative_probes": true,
+    "media_namespace_positive_probe": true,
+    "old_pending_hold_microcredits": 1000000,
+    "other_seven_configs_and_console_and_financial_nonterminal_unchanged": true,
+    "status": "success_verified"
+  },
+  "scope": "offline mock contracts; reviewer did not run server apply",
+  "status": "limited_helper_independent_review_passed",
+  "tests": {
+    "existing_release_cutover_cases": 17,
+    "exit_code": 0,
+    "failed": 0,
+    "new_helper_cases": 28,
+    "passed": 45,
+    "seconds": 0.16,
+    "skipped": 0
+  }
+}

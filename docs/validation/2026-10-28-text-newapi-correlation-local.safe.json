@@ -1,0 +1,54 @@
+{
+  "status": "local_verified_not_deployed",
+  "behavior": "fallback x-oneapi-request-id only after absent/empty x-request-id and request-id",
+  "production_files": 1,
+  "correlation_regex_changed": false,
+  "arbitrary_headers_or_bodies_saved": false,
+  "financial_or_retry_semantics_changed": false,
+  "red": {
+    "failed": 1,
+    "reason": "http400 stored request id null instead of opaque New API header"
+  },
+  "final": {
+    "passed": 220,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 37.15,
+    "tool_session_id": 91232,
+    "exit_code": 0,
+    "scope": "all sixteen test_execution*.py files"
+  },
+  "inputs": {
+    "count": 206,
+    "changed": [],
+    "pre_post_sha256": "cf389054d6f0415c9d0f17bb609aad8b66ec4d0e92c2f7bf22548e3ffc45e6e8"
+  },
+  "candidate": {
+    "services/platform/src/platform_service/execution_runtime.py": {
+      "sha256": "60b803c0c1de11c69cf8f0a4235c58a3eb9b83477d2b82c38596b72cd83d17c7",
+      "bytes": 16443
+    },
+    "services/platform/tests/test_execution_newapi_correlation.py": {
+      "sha256": "380c0edb63668df5a0d1ec2be5ed39a5a29706455892ea5b2b3690e934faf5a1",
+      "bytes": 6494
+    }
+  },
+  "incho16_changed": false,
+  "real_provider_posts": 0,
+  "production_writes": 0,
+  "ssh_calls": 0,
+  "unknown_request_retried": false,
+  "existing_hold_released": false,
+  "http400_root_cause_fixed": false,
+  "evidence_sha256": {
+    "runtime-only.patch": "3abf6fd4ec7d737d889eeb8cecf9dad11a654ee86272244a3e4564375c8c2814",
+    "candidate-manifest.json": "9c272e326cc507c50e7a15d5303a03b9bf3410162333a3ecefcf9a2d0444a23c",
+    "red.log": "031a1aae666368aac28883db8673ceda45d63a578c6e869d5052e920411da2f7",
+    "green.log": "fa752f202a33ffc479d958d3a8f0fea6eacbbb1d98ea7feb5bf4826b5bd19ec4",
+    "final-execution.log": "c3ddcdac49b61223ae27afe421477411440ec58c73d8c452ba08f4481cdb0eec",
+    "final-execution.junit.xml": "4ddaf229a2b8e6ce281f4346f5249690bba85d47559ae26c4383b7f4f1792161",
+    "inputs-before.json": "cf389054d6f0415c9d0f17bb609aad8b66ec4d0e92c2f7bf22548e3ffc45e6e8",
+    "inputs-after.json": "cf389054d6f0415c9d0f17bb609aad8b66ec4d0e92c2f7bf22548e3ffc45e6e8",
+    "execution-source-snapshot.tar.gz": "101d7763a597f98daaafed74c7f074c91753d14bd36a6cb875ffdd49118d8b0b"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "server_version_num": "160015",
+  "database": "easel_logto_preview",
+  "schema": "public",
+  "transaction_read_only": "on",
+  "users_count": 6,
+  "default_users_count": 5,
+  "applications_count": 8,
+  "default_applications_count": 4,
+  "trigger_count": 85,
+  "policy_count": 153,
+  "inheritance_count": 0,
+  "relation_count": 79,
+  "native_enum_count": 8,
+  "enum_column_count": 9,
+  "source_owner_is_superuser": true,
+  "row_data_exported": false,
+  "schema_or_permissions_modified": false,
+  "read_only": true
+}

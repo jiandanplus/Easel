@@ -1,0 +1,117 @@
+{
+  "all_new_objects_stopped_retained": true,
+  "hashes_before_after_and_at_report_unchanged": true,
+  "input_hashes": {
+    "services/platform/scripts/capture_media_restore_plan.py": "af1906bf0a0d012f3033407e4a41ac136b3b37c5746dd2891ebf29a6ba43bd2b",
+    "services/platform/scripts/capture_settled_media_restore_plan.py": "356667ad623b31739af2c6431312f7f5c250b9f40265edd79c453becab93b1a3",
+    "services/platform/scripts/verify_encrypted_restore_drill.py": "4d3c4210469d6630dd4cbc71d8d5327e62aa972eedb7084685bb0df85a2c88ea",
+    "services/platform/scripts/verify_media_restore_drill.py": "68dccf3699a3c9b06d79e5cf87609dcf567b2d6c93c8b3c6186cc40c3474e1d3",
+    "services/platform/scripts/verify_settled_media_restore_drill.py": "49df4b72db760f88022c0dd3e7b4d8e566463fb12ab1a6044a8a2b59bf7f857d",
+    "services/platform/tests/settled_media_restore_fixture.py": "65ebab81664f1df36fda2443af637496917d5c6d804ea707a3a71155424ae51c",
+    "services/platform/tests/test_settled_media_restore_drill.py": "fc919f41d67f0e563cc186e0b979ebd7b123ef98cca7536331fd57dd72ce1397",
+    "services/platform/tests/test_settled_media_restore_fixture.py": "b62bacfd0d2f79db4d26a5f317b7534d58bb82037df2a6a7f5ded24ac6c9eb48",
+    "services/platform/tests/test_settled_media_restore_plan_capture.py": "6b43e1605645b45148215d059ec588486f3cc8defd29a7bed714dbe15c8ef764"
+  },
+  "local_restore": {
+    "blob_bytes": 2101644,
+    "blob_count": 2,
+    "budgets_released": 2,
+    "candidate_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+    "ciphertext_bytes": 2704203,
+    "complete_inventory_match": true,
+    "constraints": 529,
+    "constraints_sha256": "9722f553a5816680fe488f96b71813821ebb0a74498480799ea98542f9ccc4cc",
+    "data_sha256": "f442aa69e18d2f091b7a0c9924a74d4a50e7b672fbda6da5cda57e15c0ebd84e",
+    "durable_ciphertext_restored": true,
+    "fake_transport_posts": 2,
+    "migrations": 16,
+    "real_provider_posts": 0,
+    "rows": 82,
+    "schema_sha256": "d2295241b42feeb30ac9824faaea49d3add600c17800e8fb4ac914cb4e579954",
+    "server_executed": false,
+    "settled_typed_window_match": true,
+    "source_configuration_count": 11,
+    "status": "synthetic_settled_nonempty_restore_verified",
+    "tables": 75,
+    "tampered_ciphertext_rejected": true,
+    "tool_sha256": "49df4b72db760f88022c0dd3e7b4d8e566463fb12ab1a6044a8a2b59bf7f857d",
+    "typed_receipts": 2,
+    "wallet_held": 0,
+    "wallet_spent": 2000000
+  },
+  "no_oom": true,
+  "old_frozen_dr_and_wrapper_unchanged": true,
+  "owned_objects": [
+    {
+      "id": "06e0e0ac986ad30c22916a883c6e69e25f46fef5e7bef0c4ca099867e525a6e1",
+      "labels": {
+        "easel.restore-drill": "516b3d276a1f4ce3aeb47a99344819d6",
+        "easel.restore-kind": "central"
+      },
+      "memory": 536870912,
+      "name": "easel-restore-drill-516b3d276a1f4ce3aeb47a99344819d6-central",
+      "network": "none",
+      "oom_killed": false,
+      "published_ports": {},
+      "running": false
+    },
+    {
+      "id": "8eb98d27e769aecc293884243b5be511d986fefebe0e7e481177379fb20cf684",
+      "labels": {
+        "easel.settled-media-fixture": "3f8a14418b5f40edaaea3734c75133af"
+      },
+      "memory": 536870912,
+      "name": "easel-media-source-3f8a14418b5f40edaaea3734c75133af",
+      "network": "bridge",
+      "oom_killed": false,
+      "published_ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": ""
+          }
+        ]
+      },
+      "running": false
+    },
+    {
+      "id": "d15f320319ed2ac2d906c694bc701b813bcbe16544904677654b59e7bd0428f5",
+      "labels": {
+        "easel.settled-media-fixture": "370168f6f82f4fbf98710d51baa08bbf"
+      },
+      "memory": 536870912,
+      "name": "easel-media-source-370168f6f82f4fbf98710d51baa08bbf",
+      "network": "bridge",
+      "oom_killed": false,
+      "published_ports": {
+        "5432/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": ""
+          }
+        ]
+      },
+      "running": false
+    }
+  ],
+  "production_writes": 0,
+  "real_provider_posts": 0,
+  "review_limits": [
+    "This run restored synthetic central database, not a real central+Logto two-database snapshot.",
+    "Synthetic live-path uses httpx.MockTransport; it does not prove real provider billing or actual customer image delivery.",
+    "11 files restored under local UID/GID; server root/997 ownership and actual processes require server-only gates.",
+    "No claim of cross-database atomicity, ongoing media backup, PITR, or full M2/M3 completion."
+  ],
+  "scope": "local_synthetic_settled_central_media_restore_only",
+  "ssh_calls": 0,
+  "status": "limited_independent_review_passed_no_known_blocker",
+  "test_log_sha256": "aec368714cc5dc2dd8daf6c360dfc074172041d29877695a82a6f871106d546b",
+  "tested": {
+    "exit_code": 0,
+    "failed": 0,
+    "passed": 46,
+    "seconds": 33.73,
+    "skip_reason": "Explicit existing synthetic source handle intentionally absent; nonpublic source and target window SQL exercised in full new-source restore case.",
+    "skipped": 1
+  }
+}

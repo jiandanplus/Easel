@@ -1,0 +1,318 @@
+/* 设置：六组侧栏 + 每页的卡片样式。颜色全部用主题变量，五套风格自动跟随。 */
+.settings-overlay .settings-nav-grouped { width: 200px; gap: 1px; overflow-y: auto; padding: 12px 10px 16px; }
+.settings-overlay .snav-group { display: flex; flex-direction: column; gap: 1px; }
+.settings-overlay .snav-group + .snav-group { margin-top: 10px; }
+.settings-overlay .snav-group-title { display: flex; align-items: center; gap: 6px; padding: 4px 11px; border: 0; background: none; font: inherit; font-size: 12px; color: var(--text-tertiary); cursor: pointer; text-align: left; }
+.settings-overlay .snav-group-title span { font-size: 10px; }
+.settings-overlay .snav-group-title:hover { color: var(--text-secondary); }
+.settings-overlay .settings-nav-grouped .snav { padding: 8px 11px; }
+
+.settings-page-body { display: flex; flex-direction: column; gap: 14px; max-width: 860px; margin: 0 auto; }
+.settings-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.settings-page-head h3 { margin: 0 0 4px; font-size: 18px; }
+.settings-page-head .desc { margin: 0; }
+.settings-card { border: 1px solid var(--border); border-radius: var(--radius-lg, 14px); background: var(--surface); padding: 14px 18px; }
+.settings-card h4 { margin: 0 0 10px; font-size: 14px; }
+.settings-card.settings-embed { padding: 4px 18px 10px; }
+.settings-card.settings-embed .st-sec { padding: 0; }
+.settings-empty { text-align: center; padding: 32px 18px; }
+.settings-empty .desc { margin: 6px 0 0; }
+
+.settings-rows { margin: 0; display: flex; flex-direction: column; }
+.settings-rows > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; }
+.settings-rows > div + div { border-top: 1px solid var(--border); }
+.settings-rows dt { color: var(--text-secondary); font-size: 13.5px; }
+.settings-rows dd { margin: 0; display: flex; gap: 6px; font-size: 13.5px; }
+.settings-rows kbd { min-width: 24px; padding: 2px 8px; border: 1px solid var(--border-strong, var(--border)); border-bottom-width: 2px; border-radius: 6px; background: var(--bg); font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: center; }
+
+.settings-list { list-style: none; margin: 0; padding: 0; }
+.settings-list > li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; }
+.settings-list > li + li { border-top: 1px solid var(--border); }
+.settings-list strong { font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; }
+.settings-list .desc { margin: 3px 0 0; font-size: 12.5px; }
+.settings-list-side { display: flex; align-items: center; gap: 8px; flex: none; color: var(--text-secondary); font-size: 13px; }
+.settings-tag { flex: none; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--text-secondary); font-size: 12px; }
+.settings-tag.warn { background: var(--amber-soft); color: var(--amber); }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
+
+.settings-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 8px; }
+.settings-stats > div { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: var(--radius, 10px); background: var(--surface-2); }
+.settings-stats strong { font-size: 22px; font-weight: 700; }
+.settings-stats span { font-size: 12.5px; color: var(--text-secondary); }
+
+.settings-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); margin-bottom: 6px; gap: 2px; }
+.settings-bar > span { min-width: 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.seg-outputs { background: var(--accent-end); }
+.seg-sessions { background: var(--green); }
+.seg-uploads { background: var(--amber); }
+.seg-trash { background: var(--red); }
+.seg-profiles { background: var(--accent-start); }
+.seg-agent { background: var(--text-tertiary); }
+
+.central-account-summary { margin-top: 4px; }
+.settings-embed-page { margin: -8px -6px 0; }
+
+@media (max-width: 760px) {
+  .settings-overlay .settings-nav-grouped { width: auto; flex-direction: row; }
+  .settings-overlay .snav-group { flex-direction: row; }
+  .settings-overlay .snav-group-title { display: none; }
+  .settings-overlay .snav-group + .snav-group { margin-top: 0; }
+  .settings-rows > div, .settings-list > li { flex-wrap: wrap; }
+}
+
+/* The paper theme draws settings as a top tab bar; the grouped menu stays a left sidebar in every theme. */
+.settings-page .settings-body:has(> .settings-nav-grouped) { flex-direction: row; min-height: 0; }
+.settings-page .settings-nav.settings-nav-grouped { width: 208px; flex: none; flex-direction: column; gap: 1px; padding: 6px 12px 24px; border: 0; border-right: 1px solid var(--border); background: transparent; overflow-x: hidden; overflow-y: auto; }
+.settings-page .settings-nav.settings-nav-grouped .snav-group { display: flex; flex-direction: column; gap: 1px; }
+.settings-page .settings-nav.settings-nav-grouped .snav-group + .snav-group { margin-top: 12px; }
+.settings-page .settings-nav.settings-nav-grouped .snav-group-title { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border: 0; background: none; font: inherit; font-size: 12px; color: var(--text-tertiary); cursor: pointer; text-align: left; }
+.settings-page .settings-nav.settings-nav-grouped .snav { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: 9px; font-size: 13.5px; color: var(--text-secondary); background: none; white-space: nowrap; }
+.settings-page .settings-nav.settings-nav-grouped .snav:hover { background: var(--surface-hover); color: var(--text); }
+.settings-page .settings-nav.settings-nav-grouped .snav.active { background: var(--surface-hover); color: var(--text); font-weight: 600; border: 0; }
+.settings-page .settings-nav.settings-nav-grouped .snav svg { width: 16px; height: 16px; flex: none; }
+.settings-page .settings-nav.settings-nav-grouped .snav small { margin-left: auto; font-size: 11px; color: var(--text-tertiary); }
+.settings-page .settings-body:has(> .settings-nav-grouped) > .settings-main { flex: 1; min-width: 0; overflow-y: auto; padding: 8px 32px 32px; }
+@media (max-width: 760px) {
+  .settings-page .settings-body:has(> .settings-nav-grouped) { flex-direction: column; }
+  .settings-page .settings-nav.settings-nav-grouped { width: auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: 4px 12px; }
+  .settings-page .settings-nav.settings-nav-grouped .snav-group { flex-direction: row; }
+  .settings-page .settings-nav.settings-nav-grouped .snav-group + .snav-group { margin-top: 0; }
+  .settings-page .settings-nav.settings-nav-grouped .snav-group-title { display: none; }
+  .settings-page .settings-body:has(> .settings-nav-grouped) > .settings-main { padding: 12px 16px; }
+}
+
+/* 个人中心：标签在左、内容居中、操作在右，和设置页其他卡片同一套颜色。 */
+.profile-card { padding: 4px 22px; }
+.profile-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 18px 0; min-height: 64px; }
+.profile-row + .profile-row { border-top: 1px solid var(--border); }
+.profile-label { font-weight: 650; font-size: 14px; }
+.profile-value { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.profile-value .desc { margin: 2px 0 0; font-size: 12.5px; }
+.profile-field { display: inline-flex; align-items: center; gap: 8px; }
+.profile-action { display: flex; gap: 8px; justify-content: flex-end; }
+.profile-avatar-actions { display: flex; gap: 8px; }
+.profile-avatar { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-end); font-size: 22px; font-weight: 700; }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.profile-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--text-secondary); background: var(--bg); }
+.profile-chip .dot { background: var(--text-tertiary); width: 7px; height: 7px; }
+.profile-chip.on { color: var(--text); }
+.profile-chip.on .dot { background: var(--green); }
+.muted { color: var(--text-tertiary); }
+@media (max-width: 760px) { .profile-row { grid-template-columns: 1fr; gap: 8px; } .profile-action { justify-content: flex-start; } }
+
+/* 套餐：参考 LobeHub 的套餐页——周期切换、纹理卡头、黑色升级按钮、权益清单、权益对比表、模型价格表。 */
+.plan-page { display: flex; flex-direction: column; gap: 26px; max-width: 1120px; margin: 0 auto; padding: 4px 0 28px; }
+.plan-hero { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.plan-current { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: var(--surface-2); font-size: 12.5px; color: var(--text-secondary); }
+.plan-current strong { color: var(--text); }
+.plan-current .sep { width: 1px; height: 12px; background: var(--border); margin: 0 4px; }
+.plan-period { display: inline-flex; padding: 4px; border-radius: 14px; background: var(--surface-2); gap: 4px; }
+.plan-period button { display: inline-flex; align-items: center; gap: 10px; border: 0; background: none; font: inherit; font-size: 14px; padding: 9px 26px; border-radius: 11px; color: var(--text-secondary); cursor: pointer; }
+.plan-period button.active { background: var(--bg); color: var(--text); font-weight: 650; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.plan-period small { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.plan-pay-marks { display: inline-flex; gap: 4px; }
+.plan-pay-marks .pay { width: 18px; height: 18px; border-radius: 5px; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+.plan-pay-marks .alipay { background: #1677ff; }
+.plan-pay-marks .wechat { background: #07c160; border-radius: 50%; }
+.plan-notice { align-self: center; margin: -10px 0 0; }
+
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 340px)); justify-content: center; gap: 20px; align-items: stretch; }
+.plan-card { display: flex; flex-direction: column; border-radius: 22px; overflow: hidden; background: var(--bg); box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px -12px rgba(0,0,0,.14); border: 1px solid var(--border); }
+.plan-card.current { border-color: var(--accent-end); }
+.plan-card-head { position: relative; padding: 22px 24px 46px; display: flex; flex-direction: column; gap: 4px; background:
+  radial-gradient(120% 90% at 85% 10%, rgba(255,255,255,.75), transparent 55%),
+  radial-gradient(90% 80% at 10% 100%, rgba(255,255,255,.55), transparent 60%),
+  linear-gradient(135deg, #e9e7e3, #f4f2ee 45%, #dcdfe6); }
+.plan-card.tone-1 .plan-card-head { background: radial-gradient(120% 90% at 80% 0%, rgba(255,255,255,.8), transparent 55%), radial-gradient(80% 70% at 0% 100%, rgba(255,245,225,.8), transparent 60%), linear-gradient(135deg, #f2ede4, #faf7f1 50%, #efe6d6); }
+.plan-card.tone-2 .plan-card-head { background: radial-gradient(120% 90% at 80% 0%, rgba(255,255,255,.75), transparent 55%), radial-gradient(80% 70% at 0% 100%, rgba(240,226,200,.85), transparent 60%), linear-gradient(135deg, #ece3d2, #f7f1e6 50%, #e6d7bc); }
+:root[data-theme='dark'] .plan-card-head, :root[data-theme='dark'] .plan-card.tone-1 .plan-card-head, :root[data-theme='dark'] .plan-card.tone-2 .plan-card-head { background: linear-gradient(135deg, var(--surface-2), var(--surface)); }
+.plan-card-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.plan-card-title h4 { margin: 0; font-size: 22px; font-weight: 700; color: #1a1a1a; }
+.plan-badge { padding: 3px 10px; border-radius: 999px; background: #fff; color: #16a34a; font-size: 12px; white-space: nowrap; }
+.plan-card.current .plan-badge { color: var(--accent-end); }
+.plan-price { display: flex; align-items: baseline; gap: 2px; margin-top: 14px; color: #1a1a1a; }
+.plan-price small { font-size: 20px; font-weight: 700; align-self: flex-start; margin-top: 4px; }
+.plan-price strong { font-size: 44px; line-height: 1; font-weight: 750; letter-spacing: -.02em; }
+.plan-price span { color: #6b6b6b; font-size: 14px; margin-left: 4px; }
+.plan-price-none { font-size: 30px !important; }
+.plan-sub { margin: 2px 0 0; font-size: 14px; color: #7a7a7a; }
+.plan-card-body { flex: 1; display: flex; flex-direction: column; gap: 16px; margin-top: -24px; padding: 26px 24px 22px; border-radius: 22px 22px 0 0; background: var(--bg); position: relative; }
+.plan-cta { width: 100%; padding: 13px 0; border: 0; border-radius: 999px; background: #1f1f1f; color: #fff; font: inherit; font-size: 16px; font-weight: 650; cursor: pointer; letter-spacing: .05em; }
+.plan-cta:hover:not(:disabled) { background: #000; }
+.plan-cta:disabled { background: var(--surface-2); color: var(--text-secondary); cursor: default; }
+.plan-highlight { display: flex; flex-direction: column; gap: 2px; }
+.plan-highlight strong { font-size: 30px; line-height: 1.15; font-weight: 750; }
+.plan-highlight span { font-size: 13.5px; color: var(--text-tertiary); }
+.plan-card-body hr { border: 0; border-top: 1px solid var(--border); margin: 0; }
+.plan-inherit { margin: 0; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.plan-features { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.plan-features li { display: flex; gap: 10px; align-items: flex-start; }
+.plan-features li svg { flex: none; margin-top: 1px; color: var(--text-secondary); }
+.plan-features li.off { color: var(--text-tertiary); }
+.plan-more { display: inline-flex; align-items: center; gap: 10px; border: 0; background: none; padding: 0; font: inherit; font-size: 14px; color: var(--text-secondary); cursor: pointer; }
+.plan-more span { width: 17px; text-align: center; }
+.plan-model-list { display: flex; flex-direction: column; gap: 8px; }
+
+.plan-compare h3, .plan-prices-intro h3 { margin: 0 0 12px; font-size: 20px; }
+.plan-table-card { padding: 0; overflow-x: auto; }
+.plan-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.plan-table th { text-align: left; font-weight: 600; color: var(--text); font-size: 13.5px; padding: 12px 16px; background: var(--surface-2); white-space: nowrap; }
+.plan-table th small { display: block; font-weight: 400; font-size: 11.5px; color: var(--text-tertiary); }
+.plan-table td { padding: 11px 16px; border-top: 1px solid var(--border); vertical-align: middle; }
+.plan-compare-table td:first-child { color: var(--text-secondary); white-space: nowrap; }
+.plan-compare-table .yes { color: var(--green); display: inline-flex; }
+.plan-compare-table .no { color: var(--text-tertiary); display: inline-flex; }
+.plan-compare-toggle td { background: var(--surface); }
+.plan-model-row td { font-size: 12.5px; padding-top: 8px; padding-bottom: 8px; }
+.plan-prices { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 24px; align-items: start; }
+.plan-prices-intro .desc { margin: 0; }
+.plan-prices .plan-table td:nth-child(2) { color: var(--text-secondary); white-space: nowrap; }
+@media (max-width: 860px) { .plan-prices { grid-template-columns: 1fr; } }
+
+/* 用量：总览、使用情况图表、明细表，参考 LobeHub 的用量页。 */
+.usage-page { display: flex; flex-direction: column; gap: 28px; max-width: 1080px; margin: 0 auto; padding: 4px 0 28px; }
+.usage-block { display: flex; flex-direction: column; border-radius: 16px; background: var(--surface-2); padding: 4px; }
+.usage-block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 12px; }
+.usage-block-head h3 { margin: 0; font-size: 17px; }
+.usage-plan { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.usage-plan span { color: var(--text); }
+.usage-upgrade { margin-left: 6px; border: 0; border-radius: 8px; background: #1f1f1f; color: #fff; font: inherit; font-size: 13px; font-weight: 600; padding: 5px 12px; cursor: pointer; }
+.usage-card { padding: 0; border-radius: 13px; background: var(--bg); }
+.usage-section { padding: 16px 20px 18px; }
+.usage-section + .usage-section { border-top: 1px solid var(--border); }
+.usage-label { margin: 0 0 12px; font-size: 12.5px; color: var(--text-secondary); }
+.usage-limit { max-width: 640px; }
+.usage-limit-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+.usage-progress { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.usage-progress span { display: block; height: 100%; border-radius: 999px; background: var(--green); }
+.usage-progress span.mid { background: var(--amber); }
+.usage-progress span.low { background: var(--red); }
+.usage-limit .desc { margin: 8px 0 0; font-size: 12.5px; }
+.usage-two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+.usage-two .usage-label { grid-column: 1 / -1; }
+.usage-two > div > span { display: block; font-size: 14px; color: var(--text-secondary); margin-bottom: 6px; }
+.usage-two strong { font-size: 18px; font-weight: 650; }
+.usage-store { display: flex; align-items: center; gap: 12px; }
+.usage-store + .usage-store { border-left: 1px solid var(--border); padding-left: 20px; }
+.usage-store span { display: block; font-size: 14px; color: var(--text-secondary); margin-bottom: 2px; }
+.usage-store strong { font-size: 14px; font-weight: 500; }
+.usage-range { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--bg); gap: 2px; }
+.usage-range button { border: 0; background: none; font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 8px; color: var(--text-secondary); cursor: pointer; }
+.usage-range button.active { background: var(--surface-2); color: var(--text); font-weight: 600; }
+.usage-empty { padding: 40px 0; text-align: center; color: var(--text-tertiary); font-size: 13.5px; }
+.usage-chart { position: relative; padding: 18px 20px 10px; }
+.usage-bars { display: flex; align-items: flex-end; height: 160px; }
+.usage-bar-slot { height: 100%; display: flex; align-items: flex-end; justify-content: center; padding: 0 2px; }
+.usage-bar { width: 100%; max-width: 22px; border-radius: 4px 4px 0 0; background: var(--accent-start); opacity: .75; transition: opacity .12s; }
+.usage-bar.on { opacity: 1; }
+.usage-axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-tertiary); padding-top: 6px; border-top: 1px solid var(--border); }
+.usage-tip { position: absolute; top: 6px; transform: translateX(-50%); padding: 4px 8px; border-radius: 8px; background: var(--text); color: var(--bg); font-size: 12px; white-space: nowrap; pointer-events: none; display: flex; gap: 6px; align-items: baseline; }
+.usage-tip span { opacity: .7; }
+.usage-table-card { overflow: hidden; }
+.usage-filters { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 16px; align-items: center; }
+.usage-filters input, .usage-filters select { height: 34px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 13.5px; padding: 0 10px; }
+.usage-search { flex: 1 1 220px; }
+.usage-filters select { flex: 0 0 160px; }
+.usage-dates { display: inline-flex; align-items: center; gap: 6px; color: var(--text-tertiary); }
+.usage-table-scroll { overflow-x: auto; }
+.usage-table { width: 100%; border-collapse: collapse; font-size: 13.5px; white-space: nowrap; }
+.usage-table th { text-align: left; font-weight: 500; font-size: 13px; color: var(--text-secondary); padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.usage-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+.usage-sort { border: 0; background: none; color: var(--text-tertiary); cursor: pointer; font-size: 12px; padding: 0 2px; }
+.usage-sort.on { color: var(--text); }
+.usage-kind { display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: 12px; background: var(--accent-soft); color: var(--accent-end); }
+.usage-kind.k-image, .usage-kind.k-video { background: var(--amber-soft); color: var(--amber); }
+.usage-kind.k-voice, .usage-kind.k-music, .usage-kind.k-transcribe { background: var(--green-soft); color: var(--green); }
+.usage-model { font-weight: 500; }
+.usage-tokens { display: inline-flex; align-items: center; gap: 5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.usage-tokens .tok { padding: 1px 6px; border-radius: 5px; font-weight: 600; }
+.tok.low { background: var(--green-soft); color: var(--green); }
+.tok.mid { background: var(--amber-soft); color: var(--amber); }
+.tok.high { background: var(--red-soft); color: var(--red); }
+.usage-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 13px; color: var(--text-secondary); flex-wrap: wrap; }
+.usage-pager > div { display: flex; align-items: center; gap: 6px; }
+.usage-pager select { height: 30px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; padding: 0 8px; }
+.usage-pager button { min-width: 30px; height: 30px; border: 1px solid transparent; border-radius: 8px; background: none; font: inherit; color: var(--text); cursor: pointer; }
+.usage-pager button.on { border-color: var(--border); background: var(--bg); font-weight: 600; }
+.usage-pager button:disabled { color: var(--text-tertiary); cursor: default; }
+@media (max-width: 760px) { .usage-two { grid-template-columns: 1fr; row-gap: 14px; } .usage-store + .usage-store { border-left: 0; padding-left: 0; } }
+
+/* 余额：参考 LobeHub 的余额页——可用点数 + 订阅卡、充值方式、我的充值。 */
+.balance-card { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; padding: 18px 20px; }
+.balance-main { display: flex; flex-direction: column; }
+.balance-main .usage-label { margin-bottom: 6px; }
+.balance-amount { font-size: 26px; font-weight: 700; margin-bottom: 18px; }
+.balance-amount small { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+.balance-main .desc { margin: 8px 0 0; font-size: 12.5px; }
+.balance-links { display: flex; gap: 16px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.balance-links button { border: 0; background: none; padding: 0; font: inherit; font-size: 13.5px; color: var(--accent-end); cursor: pointer; }
+.balance-sub-card { display: flex; flex-direction: column; justify-content: space-between; gap: 18px; padding: 18px 20px; border-radius: 16px; border: 1px solid var(--border); background: linear-gradient(140deg, var(--surface-2), var(--bg)); min-height: 170px; }
+.balance-sub-top { display: flex; justify-content: space-between; font-size: 11.5px; letter-spacing: .06em; color: var(--text-secondary); font-weight: 600; }
+.balance-sub-card strong { font-size: 30px; font-weight: 750; letter-spacing: .02em; }
+.balance-sub-user { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.balance-avatar { width: 34px; height: 34px; border-radius: 8px; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-end); font-weight: 700; }
+.balance-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.usage-block-head .desc { margin: 4px 0 0; font-size: 12.5px; }
+.balance-topup { display: grid; grid-template-columns: 1fr 1fr; }
+.balance-option { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; }
+.balance-option + .balance-option { border-left: 1px solid var(--border); }
+.balance-option strong { font-size: 15px; }
+.balance-option .desc { margin: 4px 0 0; font-size: 12.5px; }
+.balance-redeem { display: block; }
+.balance-redeem .central-account-section { border: 0; padding: 0; margin: 0; }
+.balance-redeem h4 { margin: 0 0 4px; font-size: 15px; }
+.balance-filters { display: flex; gap: 8px; }
+.balance-filters select { height: 32px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; padding: 0 10px; }
+.balance-tabs { display: flex; gap: 4px; padding: 12px 16px 0; border-bottom: 1px solid var(--border); }
+.balance-tabs button { border: 0; background: none; font: inherit; font-size: 13.5px; padding: 8px 12px; color: var(--text-secondary); border-bottom: 2px solid transparent; cursor: pointer; }
+.balance-tabs button.active { color: var(--text); font-weight: 600; border-bottom-color: var(--text); }
+.balance-list { list-style: none; margin: 0; padding: 0 20px; }
+.balance-list li { padding: 14px 0; display: flex; flex-direction: column; gap: 8px; }
+.balance-list li + li { border-top: 1px solid var(--border); }
+.balance-grant-head { display: flex; align-items: center; gap: 8px; }
+.balance-grant-head strong { font-size: 14px; }
+.balance-grant-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; font-size: 13px; color: var(--text-secondary); }
+.balance-list .desc { margin: 0; font-size: 12.5px; }
+.usage-empty strong { display: block; color: var(--text-secondary); font-weight: 500; }
+@media (max-width: 860px) { .balance-card, .balance-topup { grid-template-columns: 1fr; } .balance-option + .balance-option { border-left: 0; border-top: 1px solid var(--border); } }
+
+/* 账单：参考 LobeHub 的账单页——提示条、账单摘要、当前套餐、账单历史。 */
+.billing-banner { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.billing-banner > span { font-size: 20px; color: var(--text-secondary); }
+.billing-banner > div { flex: 1; }
+.billing-banner strong { font-size: 15px; }
+.billing-banner .desc { margin: 2px 0 0; font-size: 12.5px; }
+.billing-summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 18px 20px; gap: 20px; }
+.billing-summary .balance-amount { display: block; margin: 4px 0 8px; }
+.billing-summary .desc { margin: 0; font-size: 12.5px; }
+.billing-info { border-left: 1px dashed var(--border); padding-left: 20px; font-size: 13.5px; }
+.billing-info p { margin: 0 0 6px; }
+.billing-link { border: 0; background: none; padding: 0; margin-left: 6px; font: inherit; font-size: 13px; color: var(--accent-end); cursor: pointer; }
+.billing-info .billing-link { margin-left: 0; }
+.billing-plan { padding: 18px 20px; }
+.billing-plan-head { padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
+.billing-plan-head strong { font-size: 16px; }
+.billing-plan-head .desc { margin: 4px 0 0; font-size: 13px; }
+.billing-features { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-top: 14px; }
+.billing-features ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; font-size: 13.5px; }
+.billing-features li { display: flex; gap: 10px; align-items: flex-start; }
+.billing-features li::before { flex: none; width: 14px; font-weight: 700; }
+.billing-features li.yes::before { content: '✓'; color: var(--green); }
+.billing-features li.no::before { content: '✕'; color: var(--red); }
+.billing-state { display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
+.billing-state.ok { background: var(--green-soft); color: var(--green); }
+.billing-state.wait { background: var(--amber-soft); color: var(--amber); }
+.billing-state.bad { background: var(--red-soft); color: var(--red); }
+.billing-state.muted { background: var(--surface-2); color: var(--text-secondary); }
+.billing-detail td { background: var(--surface); white-space: normal; }
+.billing-buy { padding: 4px 18px 14px; }
+@media (max-width: 760px) { .billing-summary, .billing-features { grid-template-columns: 1fr; } .billing-info { border-left: 0; padding-left: 0; } }
+
+/* AI 服务商：顶部说明当前用的是订阅还是自定义接口（自动决定）。 */
+.settings-source { display: flex; flex-direction: column; gap: 4px; margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.settings-source.on { border-color: var(--green); background: var(--green-soft); }
+.settings-source strong { font-size: 14px; }
+.settings-source span { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+.settings-fallback-note { margin: 4px 0 8px; font-size: 12.5px; color: var(--text-secondary); }

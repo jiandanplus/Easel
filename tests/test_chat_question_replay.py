@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import web.app as web
+from easel.routes import chat as chat_routes  # noqa: E402
 
 
 @pytest.mark.parametrize("stored_as_string", [True, False])
@@ -20,7 +21,7 @@ def test_question_replay_preserves_payload(tmp_path, monkeypatch, stored_as_stri
          "data": json.dumps(question, ensure_ascii=False) if stored_as_string else question},
         {"id": 3, "event": "done", "data": {"sessionKey": "web:test"}},
     ]
-    path = web._job_event_file("test-turn")
+    path = chat_routes._job_event_file("test-turn")
     path.parent.mkdir()
     path.write_text("\n".join(json.dumps(event, ensure_ascii=False) for event in events),
                     encoding="utf-8")

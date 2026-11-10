@@ -1,0 +1,24 @@
+{
+  "variant": "D",
+  "page": "17",
+  "title": "视频",
+  "source": "/Users/jiandan/.codex/generated_images/01a13b8f-a9e6-7523-aa3e-af559f30db2c/exec-0655fd76-026f-480a-873b-99e911178a5d.png",
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/D/17.png",
+  "width": 1586,
+  "height": 992,
+  "requiredLabels": [
+    "视频",
+    "视频生成服务",
+    "主通道",
+    "备用通道",
+    "自测本通道",
+    "保存配置"
+  ],
+  "status": "visually inspected; required labels clear",
+  "issues": [
+    "Demo configured states differ from brief; four configured instead of two"
+  ],
+  "ocrMissingLabels": [],
+  "ocrVerified": true,
+  "sha256": "06d7674836554f90fbc8e975f78377e67c9eda53d30fcd0b127a1b94bdabc27d"
+}

@@ -1,0 +1,31 @@
+{
+  "status": "blocked_at_upload_auto_approval_rejection",
+  "target": "easel-zhiyin / 154.217.245.179",
+  "strict_hostkey_checking": true,
+  "preflight_session": 93767,
+  "preflight_terminal_exit": 0,
+  "hostname": "ser362540173134",
+  "machine": "x86_64",
+  "uid": 0,
+  "disk_free_at_preflight": 41196224512,
+  "stage_creation_session": 31516,
+  "stage_creation_terminal_exit": 0,
+  "remote_stage": "/root/easel-central-av-preparation-20261028/metering-tdd-candidate-r2",
+  "remote_stage_created_mode": "0700",
+  "scp_executed": false,
+  "payload_files": 13,
+  "payload_bytes": 56314,
+  "payload_categories": [
+    "2 frozen Python source modules",
+    "small TEST_ONLY loader runner",
+    "expected hashes and upload SHA manifest",
+    "2 unchanged synthetic P1 media",
+    "6 synthetic short-rate MP3 files"
+  ],
+  "linux_r2_tests_started": false,
+  "blocked_reason": "Automatic approval treated source/runner/protocol and counterexample media as internal sensitive payload and found visible trusted-user authorization insufficient for this specific transfer. Explicit payload and destination authorization requested.",
+  "no_workaround_or_retry": true,
+  "local_manifest_sha256": "1d521fefce0c609cb8d30a6bf20604c27c2d36bc408b92e99c04a0a52521d71e",
+  "runner_sha256": "fd8674e3d50719ec67b8aa2f18211a1903257bda0cd1aacd689ad5cdf81173e9",
+  "no_production_change": true
+}

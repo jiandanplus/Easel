@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "branch": "codex/ui-redesign",
+  "merged": false,
+  "committed_or_pushed_this_batch": false,
+  "desktop_build": "pi-portable-20261027-v21",
+  "package": {
+    "zip": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261027-v21/Easel-Pi-macOS15-arm64.zip",
+    "sha256": "fc52665f83dd9653c0f838a1b719c5ceee64b390eed9b1fccb4dd4a9ac83da27",
+    "bytes": 124910525,
+    "archive_entries": 35802,
+    "crc_ok": true,
+    "private_workspace_names_absent": true,
+    "signed": false,
+    "notarized": false
+  },
+  "upgrade": {
+    "ok": true,
+    "protected_files": 121,
+    "new_private_runtime_files": [],
+    "history_and_custom_config_preserved": true,
+    "same_account_scope": true,
+    "same_wallet": true,
+    "wallet_observed": true,
+    "changes": [],
+    "model_calls": 0
+  },
+  "fresh_install": {
+    "ok": true,
+    "clean_home_workspace": true,
+    "bundled_pi": true,
+    "host_path": "system_only",
+    "default_subscription": true,
+    "public_login_entry_configured": true,
+    "prior_credentials_required": false,
+    "supplier_key_required": false,
+    "external_model_posts": 0,
+    "auth_posts": 0,
+    "same_machine_test": true,
+    "clean_device_or_gatekeeper_verified": false,
+    "owned_instance_stopped": true
+  },
+  "live_text_validation": {
+    "build": "pi-portable-20261027-v20",
+    "accounting": {
+      "actual_microcredits_sum": 1189,
+      "available_reduction": 1189,
+      "database_writes_by_this_helper": 0,
+      "lot_spent_delta": 1189,
+      "new_active": 0,
+      "new_job_count": 2,
+      "new_jobs": [
+        {
+          "actual_microcredits": 558,
+          "calculated_microcredits": 558,
+          "input_tokens": 1026,
+          "job_id": "6f899de0-ee9b-4e77-9d19-b1b3aa59a76a",
+          "output_tokens": 30,
+          "rate": {
+            "input": {
+              "denominator": "2",
+              "numerator": "1"
+            },
+            "output": {
+              "denominator": "2",
+              "numerator": "3"
+            },
+            "version": "internal-deepseek-20261026-v1"
+          },
+          "rounding": "ceil(input_tokens * input_numerator/input_denominator + output_tokens * output_numerator/output_denominator)",
+          "upstream_model": "deepseek-v4-pro"
+        },
+        {
+          "actual_microcredits": 631,
+          "calculated_microcredits": 631,
+          "input_tokens": 886,
+          "job_id": "87abe1d1-a628-41ca-a590-d6b456c66fa1",
+          "output_tokens": 125,
+          "rate": {
+            "input": {
+              "denominator": "2",
+              "numerator": "1"
+            },
+            "output": {
+              "denominator": "2",
+              "numerator": "3"
+            },
+            "version": "internal-deepseek-20261026-v1"
+          },
+          "rounding": "ceil(input_tokens * input_numerator/input_denominator + output_tokens * output_numerator/output_denominator)",
+          "upstream_model": "deepseek-v4-pro"
+        }
+      ],
+      "new_pending": 0,
+      "ok": true,
+      "original_three_waived_and_audit_unchanged": true,
+      "provider_posts_by_this_helper": 0,
+      "validation_state": "verified"
+    },
+    "artifact": {
+      "file_sha256": "d181755ebe4bb877b9b8646fc610542b441fd8e3174bff00add934e0b2e22677",
+      "bytes": 100,
+      "content_matches": true,
+      "relative_path": "delivery-validation-20261027/f39b5d1c/市集文案.md"
+    },
+    "download_sha256": "d181755ebe4bb877b9b8646fc610542b441fd8e3174bff00add934e0b2e22677",
+    "v21_original_history_preview_verified": true
+  },
+  "wallet_observation": {
+    "unit": "microcredit",
+    "microcredits_per_point": "1000000",
+    "available": "9969101",
+    "reserved": "0",
+    "spent": "30899",
+    "pending_reconciliation": 0
+  },
+  "tests": {
+    "frontend": {
+      "passed": 438,
+      "failed": 0
+    },
+    "desktop_entry_packaging_launch_and_client": {
+      "passed": 113,
+      "failed": 0
+    },
+    "desktop_entry_actual_bundled_sdk_and_auth": {
+      "passed": 63,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "browser": {
+    "separate_fixture": true,
+    "drafts_and_attachments_restored": true,
+    "two_unsent_sessions_restored": true,
+    "explicit_artifact_download_hash_verified": true,
+    "escape_returns_to_origin_and_composer": true,
+    "narrow_actual_css_width": 333,
+    "narrow_horizontal_overflow": false,
+    "native_clipboard_paste_verified": false,
+    "real_ime_composition_verified": false,
+    "voiceover_verified": false
+  },
+  "not_completed": [
+    "signed_notarized_clean_device_distribution",
+    "production_media_and_m2_m5",
+    "second_real_product",
+    "strict_fresh_restore",
+    "offsite_restore_and_multi_node_cloud_capacity"
+  ],
+  "explicitly_deferred": [
+    "formal_payment_configuration",
+    "windows_linux_distribution"
+  ]
+}

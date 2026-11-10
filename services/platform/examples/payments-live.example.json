@@ -1,0 +1,18 @@
+{
+  "wechat": {
+    "merchant_id": "REPLACE_WECHAT_MERCHANT_ID",
+    "app_id": "REPLACE_WECHAT_APP_ID",
+    "mch_serial": "REPLACE_MERCHANT_CERTIFICATE_SERIAL",
+    "merchant_private_key_file": "/etc/easel-central/secrets/wechat-merchant-private.pem",
+    "verification_key_files": {
+      "REPLACE_PLATFORM_CERT_SERIAL_OR_PUB_KEY_ID": "/etc/easel-central/secrets/wechat-verification.pem"
+    },
+    "api_v3_key_file": "/etc/easel-central/secrets/wechat-api-v3.key"
+  },
+  "alipay": {
+    "merchant_id": "REPLACE_ALIPAY_SELLER_ID",
+    "app_id": "REPLACE_ALIPAY_APP_ID",
+    "merchant_private_key_file": "/etc/easel-central/secrets/alipay-merchant-private.pem",
+    "alipay_public_key_file": "/etc/easel-central/secrets/alipay-verification.pem"
+  }
+}

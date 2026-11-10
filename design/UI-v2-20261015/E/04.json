@@ -1,0 +1,25 @@
+{
+  "variant": "E",
+  "page": "04",
+  "title": "选题库",
+  "source": "/Users/jiandan/.codex/generated_images/01a13ae3-4ac5-7633-9602-bc3e04951705/exec-16d4da7e-dc47-4e29-8189-7353c1a11a84.png",
+  "requiredLabels": [
+    "选题库",
+    "新建选题",
+    "待做",
+    "进行中",
+    "已完成"
+  ],
+  "status": "visually-reviewed",
+  "width": 1586,
+  "height": 992,
+  "path": "/Users/jiandan/.gstack/projects/ZJU-REAL-Easel/designs/ui-refined-20261015/E/04.png",
+  "visuallyConfirmedLabels": [
+    "选题库",
+    "新建选题",
+    "待做",
+    "进行中",
+    "已完成"
+  ],
+  "sha256": "feefd0ac0422bb9f0acd2ecb50a9619b5cdad53a74671bee499dbc7a0c41fb76"
+}

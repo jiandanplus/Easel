@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "now_utc": "2026-10-23T11:06:06.700234+00:00",
+  "recent_transactions": [
+    {
+      "expires_at_utc": "2026-10-23T10:16:53.647163+00:00",
+      "estimated_started_at_utc": "2026-10-23T10:11:53.647163+00:00",
+      "seconds_since_expiry": 2953,
+      "consumed": false,
+      "authorized": true,
+      "cookie_hash_set": true
+    },
+    {
+      "expires_at_utc": "2026-10-23T10:10:11.902852+00:00",
+      "estimated_started_at_utc": "2026-10-23T10:05:11.902852+00:00",
+      "seconds_since_expiry": 3355,
+      "consumed": false,
+      "authorized": true,
+      "cookie_hash_set": true
+    },
+    {
+      "expires_at_utc": "2026-10-23T10:09:17.921342+00:00",
+      "estimated_started_at_utc": "2026-10-23T10:04:17.921342+00:00",
+      "seconds_since_expiry": 3409,
+      "consumed": false,
+      "authorized": false,
+      "cookie_hash_set": false
+    }
+  ],
+  "row_counts": {
+    "identity_sessions": 0,
+    "identity_handoffs": 0,
+    "internal_grants": 0,
+    "execution_invocations": 0,
+    "billing_orders": 0
+  },
+  "local_registration_metadata": {
+    "latest_created_at_ms": "2026-10-23T11:03:23.685782+00:00",
+    "user_count": 4
+  }
+}

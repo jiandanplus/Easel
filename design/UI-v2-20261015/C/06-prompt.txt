@@ -1,0 +1,29 @@
+Use case: ui-mockup. Re-render one single full-size Easel Chinese desktop web application page using the supplied previous board only as a VISUAL STYLE REFERENCE. IMPORTANT: do not copy its collage or its inaccurate tiny text. EXACTLY ONE PAGE, full canvas, LANDSCAPE 16:10, target 2560x1600 or highest native resolution. No surrounding presentation title/banner, no browser chrome, no device, no perspective, no contact sheet. Readability and correct Simplified Chinese spelling are the first priority.
+Design a usable polished app screenshot. A single desktop page with practical screen density. Main heading about 36px, body/labels about 20px, sidebar 18px at output size. Keep all letters crisp, normal glyphs, generous line height and no text below 16px. Use fewer short rows rather than cram tiny writing.
+Use SAME sidebar navigation in all pages: brand 'Easel'; group '创作': '工作台', '对话', '热点雷达', '选题库', '爆款拆解', '技能库'; group '内容运营': '内容库', '内容日历', '发布中心'; group '管理': '账号', '画像', '设置'. Footer only '本地运行'. Active page highlighted correctly. Simple top bar with search placeholder '搜索内容' and fictitious avatar '示例创作者'. No TEAM/COLLABORATION/PRO PLAN/BILLING/UPSELL menus; do not invent extra destinations.
+Chinese typography: legible standard printed Simplified Chinese glyphs, akin PingFang SC / Noto Sans CJK. Body labels must be copied EXACTLY from the whitelist below, no paraphrasing, no generated gibberish, no English translations beside Chinese, no microtext or extra decorative paragraphs. English technical provider names and numeric demo counts are allowed only as specified. If uncertain about a long text, omit the nonessential text rather than spell it incorrectly. All important labels and headings MUST appear verbatim. Render typography carefully with correct strokes. Never use the corrupted labels from the reference board.
+Retain existing Easel functionality only. Reference palette, spacing character, edges and overall aesthetic, but redraw all text at native readable size. Use realistic fictional demo content; no real credentials. All keys masked with bullets. No claims of actual external posting.
+VISUAL DIRECTION C: 深色创作舱
+Premium dark creative command studio: deep green-black #101917, forest surface #182723, warm ivory #E8EEE8 text, electric mint #B5F36C accent and muted teal #73A79B secondary. Sharp high contrast, clearly separated surface layers, elegant condensed sans large headings, tiny monospaced metadata, narrow icon rail plus contextual sidebar, inset panels, 8px radii, no glow/no cyberpunk/no neon haze. Sophisticated calm night productivity.
+PAGE: 爆款拆解
+LAYOUT: One input and analysis workspace split45/55. Input exact short reference title, analyze button; resultsfour structured sections with short copy and small score. No fake infinite metrics.
+EXACT TEXT WHITELIST:
+"爆款拆解"
+"学习优秀内容，提炼可复用方法"
+"参考内容"
+"粘贴文案或内容链接"
+"开始拆解"
+"拆解结果"
+"开头钩子"
+"用问题引起兴趣"
+"内容结构"
+"问题、方法、案例"
+"传播原因"
+"实用且容易收藏"
+"可复用模板"
+"先提问，再给出三步方法"
+"保存模板"
+"加入选题库"
+MANDATORY CLEAR LABELS:
+"爆款拆解", "参考内容", "开始拆解", "开头钩子", "可复用模板"
+Single full desktop page, style reference only. No unspecified dates, no extra paragraphs. ALL Chinese type must be large and correctly written. Every required search input must be visible; do not omit it.

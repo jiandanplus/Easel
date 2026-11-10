@@ -1,0 +1,47 @@
+{
+  "private_python": {
+    "version": "3.12.13",
+    "build": "20260510",
+    "source": "fixed official python-build-standalone archive; uv 0.11.16 offline derivation",
+    "inventory": "python-runtime-files.json",
+    "source_provenance": "python-source-provenance.json",
+    "archive_sha256": "55bc1a5edbc8ac4da0081f4f5731ed2d1ed10c57cb37a820b2a0dbc7cad742e9",
+    "archive_sha_verified": true,
+    "scope": "new prepared inputs only"
+  },
+  "core_wheels": {
+    "count": 26,
+    "lock": "core-requirements.txt",
+    "provenance": "wheels-provenance.json",
+    "sha256_verified": true
+  },
+  "native_codex": {
+    "version": "0.146.0",
+    "inventory": "codex-vendor-provenance.json"
+  },
+  "core_import": {
+    "path": "/usr/bin:/bin:/usr/sbin:/sbin",
+    "home_unchanged": true,
+    "isolation": "Python -I -B, user site disabled",
+    "packages": 26,
+    "evidence_scope": "new isolated dependency stage; exact wheel versions and synthetic PNG decode verified",
+    "external_http": 0,
+    "model_requests": 0
+  },
+  "privacy_patterns": {
+    "file": "source-privacy-patterns.json",
+    "findings": 0
+  },
+  "os": {
+    "build_host": "macOS26.4.1 arm64",
+    "native_zsh_minos": "15.0",
+    "trial_target": "macOS15+ ARM64"
+  },
+  "image_decoder": {
+    "version": "12.3.0",
+    "architecture": "macosx_11_0_arm64",
+    "sha256": "ffd0c5368496f41b0944be820fcb7a838aa6e623d250b01acf2643939c3f99d7",
+    "verified_against_pypi_metadata": true,
+    "full_package_import": "verified_new_offline_runtime_isolated_stage"
+  }
+}

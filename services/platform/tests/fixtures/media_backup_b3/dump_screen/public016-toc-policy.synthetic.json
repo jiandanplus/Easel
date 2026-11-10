@@ -1,0 +1,4809 @@
+{
+  "provenance": "Root independent fixture extraction from trusted successful synthetic PUBLIC016 case; metadata owners/db sanitized; NOT future untrusted-input authority",
+  "toc_sha256": "05aa6241ae2b37d88d4924e8e942af85aedc88edc0f30a9fc3011c15caf15188",
+  "logical_records": [
+    [
+      "ACL",
+      "-",
+      "SCHEMA public",
+      "pg_database_owner"
+    ],
+    [
+      "ACL",
+      "public",
+      "SEQUENCE console_audit_events_id_seq",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "SEQUENCE credit_entries_id_seq",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "SEQUENCE payment_event_audits_id_seq",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE billing_accounts",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE billing_offer_withdrawals",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE billing_offers",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE billing_orders",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE billing_outbox",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE billing_refunds",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_acl_events",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_admins",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_audit_events",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_identity_aliases",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_login_requests",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_login_transactions",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_operations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_reconciliation_cases",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE console_sessions",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE credit_entries",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE credit_holds",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE credit_journals",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE credit_lots",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE credit_reservations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_blocked_bindings",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_invocations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_jobs",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_model_states",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_models",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_provider_associations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_provider_attempts",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_receipts",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_resolution_operations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_resolutions",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_results",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_task_tokens",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE execution_terminal_evidence",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE external_identities",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE identity_handoffs",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE identity_migration_entries",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE identity_migrations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE identity_restore_candidates",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE identity_restore_proofs",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE identity_sessions",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE identity_tokens",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE identity_transactions",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE internal_feature_extensions",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE internal_grants",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_artifacts",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_assets",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_blobs",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_blocked_bindings",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_http_response_references",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_invocations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_jobs",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_model_states",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_models",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_provider_associations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_provider_attempts",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_receipts",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_storage_budgets",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_storage_policy",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_task_tokens",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_terminal_evidence",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE media_voices",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE membership_revocations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE memberships",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE payment_event_audits",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE payment_events",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE payment_orphan_events",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE payment_refund_transactions",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE payment_transactions",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE plans",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE product_clients",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE products",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE schema_migrations",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE tenant_members",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE tenants",
+      "fixture_role"
+    ],
+    [
+      "ACL",
+      "public",
+      "TABLE users",
+      "fixture_role"
+    ],
+    [
+      "COMMENT",
+      "-",
+      "SCHEMA public",
+      "pg_database_owner"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_accounts billing_accounts_id_tenant_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_accounts billing_accounts_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_offer_withdrawals billing_offer_withdrawals_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_offers billing_offers_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_offers billing_offers_plan_id_version_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_id_billing_account_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_membership_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_user_id_product_id_tenant_id_billing_account_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_outbox billing_outbox_dedupe_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_outbox billing_outbox_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_refunds billing_refunds_operator_id_idempotency_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "billing_refunds billing_refunds_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_acl_events console_acl_events_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_admins console_admins_issuer_subject_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_admins console_admins_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_audit_events console_audit_events_operation_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_audit_events console_audit_events_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_identity_aliases console_identity_aliases_migration_entry_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_identity_aliases console_identity_aliases_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_login_requests console_login_requests_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_login_transactions console_login_transactions_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_login_transactions console_login_transactions_state_hash_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_operations console_operations_actor_id_key_hash_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_operations console_operations_id_actor_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_operations console_operations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_reconciliation_cases console_reconciliation_cases_last_operation_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_reconciliation_cases console_reconciliation_cases_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "console_sessions console_sessions_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_entries credit_entries_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_holds credit_holds_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_journals credit_journals_billing_account_id_kind_source_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_journals credit_journals_id_billing_account_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_journals credit_journals_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_lots credit_lots_id_billing_account_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_lots credit_lots_membership_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_lots credit_lots_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_reservations credit_reservations_billing_account_id_product_id_operation_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_reservations credit_reservations_id_billing_account_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "credit_reservations credit_reservations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_blocked_bindings execution_blocked_bindings_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_invocations execution_invocations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_invocations execution_invocations_session_id_invocation_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_attempt_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_invocation_id_operation_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_reservation_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_model_states execution_model_states_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_models execution_models_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_provider_associations execution_provider_associations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_provider_attempts execution_provider_attempts_attempt_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_provider_attempts execution_provider_attempts_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_provider_attempts execution_provider_attempts_request_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_receipts execution_receipts_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_resolution_operations execution_resolution_operations_actor_id_operation_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_resolution_operations execution_resolution_operations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_resolutions execution_resolutions_attempt_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_resolutions execution_resolutions_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_resolutions execution_resolutions_reservation_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_results execution_results_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_task_tokens execution_task_tokens_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_terminal_evidence execution_terminal_evidence_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "execution_terminal_evidence execution_terminal_evidence_provider_scope_hash_provider_re_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "external_identities external_identities_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_handoffs identity_handoffs_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_handoffs identity_handoffs_transaction_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_migration_entries identity_migration_entries_migration_id_kind_subject_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_migration_entries identity_migration_entries_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_migrations identity_migrations_environment_key_hash_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_migrations identity_migrations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_migrations identity_migrations_proof_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_restore_candidates identity_restore_candidates_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_restore_proofs identity_restore_proofs_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_sessions identity_sessions_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_tokens identity_tokens_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_transactions identity_transactions_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "identity_transactions identity_transactions_state_hash_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_environment_id_issuance_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_grant_id_product_id_feature_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_environment_id_billing_account_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_environment_id_issuance_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_lot_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_membership_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_source_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_artifacts media_artifacts_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_artifacts media_artifacts_storage_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_assets media_assets_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_assets media_assets_storage_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_blobs media_blobs_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_blocked_bindings media_blocked_bindings_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_http_response_references media_http_response_reference_job_id_attempt_id_binding_has_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_http_response_references media_http_response_reference_provider_scope_hash_namespace_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_http_response_references media_http_response_references_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_invocations media_invocations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_invocations media_invocations_session_id_invocation_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_attempt_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_invocation_id_operation_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_reservation_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_model_states media_model_states_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_models media_models_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_provider_associations media_provider_associations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_provider_attempts media_attempt_reference_identity",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_provider_attempts media_provider_attempts_attempt_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_provider_attempts media_provider_attempts_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_receipts media_receipts_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_storage_budgets media_storage_budgets_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_storage_policy media_storage_policy_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_task_tokens media_task_tokens_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_terminal_evidence media_terminal_evidence_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_voices media_voices_job_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "media_voices media_voices_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "membership_revocations membership_revocations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "memberships memberships_id_billing_account_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "memberships memberships_operator_id_issuance_key_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "memberships memberships_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "payment_event_audits payment_event_audits_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "payment_events payment_events_channel_mode_merchant_id_event_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "payment_events payment_events_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "payment_orphan_events payment_orphan_events_channel_mode_merchant_id_event_id_fin_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "payment_orphan_events payment_orphan_events_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "payment_refund_transactions payment_refund_transactions_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "payment_transactions payment_transactions_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "plans plans_name_version_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "plans plans_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "product_clients product_clients_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "products products_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "schema_migrations schema_migrations_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "tenant_members tenant_members_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "tenants tenants_id_owner_user_id_key",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "tenants tenants_pkey",
+      "fixture_role"
+    ],
+    [
+      "CONSTRAINT",
+      "public",
+      "users users_pkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_accounts billing_accounts_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_offer_withdrawals billing_offer_withdrawals_offer_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_offers billing_offers_plan_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_membership_id_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_offer_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_orders billing_orders_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_outbox billing_outbox_order_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_outbox billing_outbox_refund_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "billing_refunds billing_refunds_order_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_acl_events console_acl_events_admin_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_acl_events console_acl_events_request_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_audit_events console_audit_events_actor_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_audit_events console_audit_events_operation_id_actor_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_identity_aliases console_identity_aliases_admin_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_identity_aliases console_identity_aliases_migration_entry_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_login_requests console_login_requests_approved_admin_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_operations console_operations_actor_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_reconciliation_cases console_reconciliation_cases_actor_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_reconciliation_cases console_reconciliation_cases_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_reconciliation_cases console_reconciliation_cases_last_operation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "console_sessions console_sessions_admin_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_entries credit_entries_journal_id_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_holds credit_holds_lot_id_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_holds credit_holds_reservation_id_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_journals credit_journals_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_lots credit_lots_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_lots credit_lots_membership_id_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_reservations credit_reservations_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_reservations credit_reservations_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "credit_reservations credit_reservations_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_invocations execution_invocations_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_invocations execution_invocations_model_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_invocations execution_invocations_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_invocations execution_invocations_session_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_invocations execution_invocations_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_invocation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_model_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_reservation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_jobs execution_jobs_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_model_states execution_model_states_model_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_provider_associations execution_provider_associations_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_provider_attempts execution_provider_attempts_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_receipts execution_receipts_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_resolutions execution_resolutions_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_resolutions execution_resolutions_operation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_resolutions execution_resolutions_reservation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_results execution_results_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_task_tokens execution_task_tokens_invocation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "execution_terminal_evidence execution_terminal_evidence_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "external_identities external_identities_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_handoffs identity_handoffs_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_handoffs identity_handoffs_issuer_subject_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_handoffs identity_handoffs_tenant_id_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_handoffs identity_handoffs_transaction_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_handoffs identity_handoffs_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_migration_entries identity_migration_entries_migration_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_migrations identity_migrations_proof_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_restore_candidates identity_restore_candidates_proof_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_sessions identity_sessions_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_sessions identity_sessions_issuer_subject_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_sessions identity_sessions_product_id_client_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_sessions identity_sessions_source_transaction_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_sessions identity_sessions_tenant_id_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_sessions identity_sessions_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_tokens identity_tokens_session_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "identity_transactions identity_transactions_product_id_client_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_grant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_tenant_id_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_lot_id_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_membership_id_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_session_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_source_transaction_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_tenant_id_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "internal_grants internal_grants_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_artifacts media_artifacts_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_artifacts media_artifacts_invocation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_artifacts media_artifacts_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_artifacts media_artifacts_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_artifacts media_artifacts_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_assets media_assets_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_assets media_assets_invocation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_assets media_assets_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_assets media_assets_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_blobs media_blobs_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_blobs media_blobs_invocation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_blobs media_blobs_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_http_response_references media_http_response_reference_job_id_attempt_id_binding_ha_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_http_response_references media_http_response_references_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_invocations media_invocations_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_invocations media_invocations_model_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_invocations media_invocations_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_invocations media_invocations_session_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_invocations media_invocations_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_invocation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_model_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_reservation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_jobs media_jobs_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_model_states media_model_states_model_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_provider_associations media_provider_associations_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_provider_attempts media_provider_attempts_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_receipts media_receipts_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_storage_budgets media_storage_budgets_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_task_tokens media_task_tokens_invocation_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_terminal_evidence media_terminal_evidence_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_terminal_evidence media_terminal_http_reference",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_voices media_voices_billing_account_id_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_voices media_voices_job_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_voices media_voices_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "media_voices media_voices_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "membership_revocations membership_revocations_membership_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "membership_revocations membership_revocations_order_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "memberships memberships_billing_account_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "memberships memberships_plan_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "payment_event_audits payment_event_audits_event_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "payment_event_audits payment_event_audits_order_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "payment_events payment_events_order_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "payment_refund_transactions payment_refund_transactions_order_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "payment_refund_transactions payment_refund_transactions_refund_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "payment_transactions payment_transactions_event_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "payment_transactions payment_transactions_order_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "product_clients product_clients_product_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "tenant_members tenant_members_tenant_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "tenant_members tenant_members_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FK CONSTRAINT",
+      "public",
+      "tenants tenants_owner_user_id_fkey",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_balanced_journal()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_billing_reconciliation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_console_identity_namespace()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_console_operation_audit()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_console_review_case()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_console_review_operation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_execution_evidence_resolution()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_execution_reconciliation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_execution_resolution_audit()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_identity_continuity()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_internal_feature_extension()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_internal_grant()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_media_http_reference()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_media_reconciliation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_media_storage_integrity()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_reservation_reconciliation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_waived_execution_audit()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "check_wallet_reconciliation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "deny_immutable_change()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "deny_initial_waived_state()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_billing_workflow()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_console_review_revision()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_entry_append()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_execution_evidence_binding()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_execution_invocation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_execution_job()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_execution_result()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_hold_append()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_identity_alias_insert()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_identity_entry_insert()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_lot_funding()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_media_blob()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_media_invocation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_media_job()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_media_storage_blob()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_media_storage_budget()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_reservation_funding()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_reservation_mutation()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "guard_restore_candidate_insert()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "identity_lock_stripe(text, text)",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "lock_console_identity(text, text)",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "lock_identity_stripe(text, integer)",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "lock_product_identity(text, text)",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "materialize_restore_candidates()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "media_storage_pinned(public.media_blobs)",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "media_storage_quota()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "touch_refund_order()",
+      "fixture_role"
+    ],
+    [
+      "FUNCTION",
+      "public",
+      "verify_execution_resolution_operation(text)",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "billing_orders_owner",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "billing_outbox_due",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "console_audit_actor",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "console_audit_created",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "console_pending_queue",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "console_review_history",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "console_review_state",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "console_review_updated",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "console_sessions_admin",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "credit_lots_wallet_expiry",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "credit_reservations_wallet_status",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "execution_jobs_lease_idx",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "execution_provider_response_unique",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "execution_resolutions_operation",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "external_identities_user_idx",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "identity_sessions_source_transaction",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "identity_sessions_user_idx",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "identity_tokens_session_idx",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "media_blobs_gc_idx",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "media_blobs_owner_idx",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "media_jobs_work_idx",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "media_provider_job_unique",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "media_provider_response_unique",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "media_storage_budget_owner_idx",
+      "fixture_role"
+    ],
+    [
+      "INDEX",
+      "public",
+      "one_pending_refund",
+      "fixture_role"
+    ],
+    [
+      "SCHEMA",
+      "-",
+      "public",
+      "pg_database_owner"
+    ],
+    [
+      "SEQUENCE",
+      "public",
+      "console_audit_events_id_seq",
+      "fixture_role"
+    ],
+    [
+      "SEQUENCE",
+      "public",
+      "credit_entries_id_seq",
+      "fixture_role"
+    ],
+    [
+      "SEQUENCE",
+      "public",
+      "payment_event_audits_id_seq",
+      "fixture_role"
+    ],
+    [
+      "SEQUENCE SET",
+      "public",
+      "console_audit_events_id_seq",
+      "fixture_role"
+    ],
+    [
+      "SEQUENCE SET",
+      "public",
+      "credit_entries_id_seq",
+      "fixture_role"
+    ],
+    [
+      "SEQUENCE SET",
+      "public",
+      "payment_event_audits_id_seq",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "billing_accounts",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "billing_offer_withdrawals",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "billing_offers",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "billing_orders",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "billing_outbox",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "billing_refunds",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_acl_events",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_admins",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_audit_events",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_identity_aliases",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_login_requests",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_login_transactions",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_operations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_reconciliation_cases",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "console_sessions",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "credit_entries",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "credit_holds",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "credit_journals",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "credit_lots",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "credit_reservations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_blocked_bindings",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_invocations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_jobs",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_model_states",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_models",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_provider_associations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_provider_attempts",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_receipts",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_resolution_operations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_resolutions",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_results",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_task_tokens",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "execution_terminal_evidence",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "external_identities",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "identity_handoffs",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "identity_migration_entries",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "identity_migrations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "identity_restore_candidates",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "identity_restore_proofs",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "identity_sessions",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "identity_tokens",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "identity_transactions",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "internal_feature_extensions",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "internal_grants",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_artifacts",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_assets",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_blobs",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_blocked_bindings",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_http_response_references",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_invocations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_jobs",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_model_states",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_models",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_provider_associations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_provider_attempts",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_receipts",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_storage_budgets",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_storage_policy",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_task_tokens",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_terminal_evidence",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "media_voices",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "membership_revocations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "memberships",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "payment_event_audits",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "payment_events",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "payment_orphan_events",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "payment_refund_transactions",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "payment_transactions",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "plans",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "product_clients",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "products",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "schema_migrations",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "tenant_members",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "tenants",
+      "fixture_role"
+    ],
+    [
+      "TABLE",
+      "public",
+      "users",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "billing_accounts",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "billing_offer_withdrawals",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "billing_offers",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "billing_orders",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "billing_outbox",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "billing_refunds",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_acl_events",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_admins",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_audit_events",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_identity_aliases",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_login_requests",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_login_transactions",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_operations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_reconciliation_cases",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "console_sessions",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "credit_entries",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "credit_holds",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "credit_journals",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "credit_lots",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "credit_reservations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_blocked_bindings",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_invocations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_jobs",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_model_states",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_models",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_provider_associations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_provider_attempts",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_receipts",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_resolution_operations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_resolutions",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_results",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_task_tokens",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "execution_terminal_evidence",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "external_identities",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "identity_handoffs",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "identity_migration_entries",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "identity_migrations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "identity_restore_candidates",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "identity_restore_proofs",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "identity_sessions",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "identity_tokens",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "identity_transactions",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "internal_feature_extensions",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "internal_grants",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_artifacts",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_assets",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_blobs",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_blocked_bindings",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_http_response_references",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_invocations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_jobs",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_model_states",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_models",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_provider_associations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_provider_attempts",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_receipts",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_storage_budgets",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_storage_policy",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_task_tokens",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_terminal_evidence",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "media_voices",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "membership_revocations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "memberships",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "payment_event_audits",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "payment_events",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "payment_orphan_events",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "payment_refund_transactions",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "payment_transactions",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "plans",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "product_clients",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "products",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "schema_migrations",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "tenant_members",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "tenants",
+      "fixture_role"
+    ],
+    [
+      "TABLE DATA",
+      "public",
+      "users",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_offer_withdrawals immutable_history",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_offer_withdrawals immutable_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_offers immutable_history",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_offers immutable_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_orders billing_orders_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_orders workflow_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_orders workflow_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_outbox workflow_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_outbox workflow_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_refunds billing_refunds_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_refunds refund_order_revision",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_refunds workflow_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "billing_refunds workflow_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_acl_events console_acl_events_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_acl_events console_acl_events_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_admins console_canonical_namespace",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_audit_events console_audit_bound",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_audit_events console_audit_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_audit_events console_audit_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_identity_aliases console_alias_namespace",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_identity_aliases console_aliases_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_identity_aliases console_aliases_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_identity_aliases identity_alias_member",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_operations console_operation_audited",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_operations console_operations_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_operations console_operations_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_operations console_review_operation_bound",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_reconciliation_cases console_review_case_audited",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_reconciliation_cases console_review_no_delete",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_reconciliation_cases console_review_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "console_reconciliation_cases console_review_revision",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_entries a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_entries a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_entries entries_balanced",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_entries entries_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_entries entries_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_entries entries_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_entries entry_insert_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_entries entry_reservations_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_holds a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_holds a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_holds hold_append_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_holds holds_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_holds holds_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_holds holds_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_journals a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_journals a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_journals journal_balanced",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_journals journal_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_journals journal_reservations_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_journals journals_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_lots b2_media_lot_commit",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_lots internal_lot_consistent",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_lots lot_funding_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_lots lots_holds_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_lots lots_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_lots lots_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations credit_reservations_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations execution_reservation_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations reservation_funding_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations reservation_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations reservation_no_initial_waiver",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations reservation_waiver_audited",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations reservations_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "credit_reservations reservations_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_blocked_bindings execution_blocked_bindings_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_blocked_bindings execution_blocks_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_invocations execution_invocation_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_invocations execution_invocation_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_invocations execution_invocations_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_jobs execution_job_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_jobs execution_job_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_jobs execution_job_terminal_evidence_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_jobs execution_jobs_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_jobs execution_no_initial_waiver",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_jobs execution_waiver_audited",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_model_states execution_model_states_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_models execution_models_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_models execution_models_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_provider_associations execution_provider_association_binding",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_provider_associations execution_provider_associations_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_provider_associations execution_provider_associations_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_provider_attempts execution_provider_attempt_binding",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_provider_attempts execution_provider_attempts_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_provider_attempts execution_provider_attempts_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_receipts execution_receipt_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_receipts execution_receipts_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_receipts execution_receipts_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_resolution_operations execution_resolution_operation_audited",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_resolution_operations execution_resolution_operations_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_resolution_operations execution_resolution_operations_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_resolutions execution_resolution_audited",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_resolutions execution_resolutions_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_resolutions execution_resolutions_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_results execution_result_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_results execution_results_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_task_tokens execution_task_tokens_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_task_tokens execution_tokens_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_terminal_evidence execution_terminal_evidence_binding",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_terminal_evidence execution_terminal_evidence_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_terminal_evidence execution_terminal_evidence_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "execution_terminal_evidence execution_terminal_resolution_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_migration_entries identity_entries_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_migration_entries identity_entries_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_migration_entries identity_entry_member",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_migrations identity_migration_complete",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_migrations identity_migrations_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_migrations identity_migrations_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_restore_candidates identity_candidate_member",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_restore_candidates identity_candidates_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_restore_candidates identity_candidates_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_restore_proofs identity_proof_candidates",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_restore_proofs identity_proofs_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "identity_restore_proofs identity_proofs_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "internal_feature_extensions internal_feature_extension_binding",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "internal_feature_extensions internal_feature_extensions_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "internal_grants internal_grants_consistent",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "internal_grants internal_grants_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "internal_grants internal_grants_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_artifacts a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_artifacts a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_artifacts media_artifact_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_artifacts media_artifacts_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_artifacts media_artifacts_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_artifacts media_artifacts_storage_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_assets a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_assets a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_assets media_asset_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_assets media_assets_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_assets media_assets_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_assets media_assets_storage_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blobs a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blobs a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blobs media_blobs_storage_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blobs media_storage_blob_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blobs media_storage_blob_quota",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blocked_bindings a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blocked_bindings a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blocked_bindings media_blocked_bindings_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_blocked_bindings media_blocked_bindings_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_http_response_references a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_http_response_references a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_http_response_references media_http_reference_binding",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_http_response_references media_http_reference_reconciliation",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_http_response_references media_http_response_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_http_response_references media_http_response_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_invocations a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_invocations a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_invocations media_invocation_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_invocations media_invocations_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_invocations media_invocations_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_jobs a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_jobs a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_jobs media_job_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_jobs media_jobs_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_jobs media_jobs_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_jobs media_jobs_storage_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_model_states a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_model_states a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_model_states media_model_states_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_models a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_models a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_models media_models_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_models media_models_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_associations a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_associations a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_associations media_provider_associations_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_associations media_provider_associations_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_associations media_provider_associations_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_attempts a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_attempts a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_attempts media_provider_attempts_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_attempts media_provider_attempts_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_provider_attempts media_provider_attempts_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_receipts a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_receipts a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_receipts media_receipts_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_receipts media_receipts_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_receipts media_receipts_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_storage_budgets a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_storage_budgets a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_storage_budgets media_storage_budget_guard",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_storage_budgets media_storage_budget_quota",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_storage_budgets media_storage_budgets_storage_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_storage_policy a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_storage_policy a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_task_tokens a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_task_tokens a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_task_tokens media_task_tokens_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_task_tokens media_task_tokens_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_terminal_evidence a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_terminal_evidence a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_terminal_evidence media_terminal_evidence_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_terminal_evidence media_terminal_evidence_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_terminal_evidence media_terminal_evidence_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_terminal_evidence media_terminal_evidence_storage_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_voices a_b2_rows",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_voices a_b2_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_voices media_voices_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_voices media_voices_media_reconcile",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "media_voices media_voices_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "membership_revocations immutable_history",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "membership_revocations immutable_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "memberships internal_membership_audited",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "memberships memberships_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "memberships memberships_no_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_event_audits immutable_history",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_event_audits immutable_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_events immutable_history",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_events immutable_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_orphan_events immutable_history",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_orphan_events immutable_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_refund_transactions immutable_history",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_refund_transactions immutable_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_transactions immutable_history",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "payment_transactions immutable_truncate",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "plans plans_immutable",
+      "fixture_role"
+    ],
+    [
+      "TRIGGER",
+      "public",
+      "plans plans_no_truncate",
+      "fixture_role"
+    ]
+  ],
+  "selected_count": 798,
+  "category_counts": {
+    "SCHEMA": 1,
+    "COMMENT": 1,
+    "ACL": 79,
+    "FUNCTION": 48,
+    "TABLE": 75,
+    "SEQUENCE": 3,
+    "TABLE DATA": 75,
+    "SEQUENCE SET": 3,
+    "CONSTRAINT": 134,
+    "INDEX": 25,
+    "TRIGGER": 221,
+    "FK CONSTRAINT": 133
+  }
+}

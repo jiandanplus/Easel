@@ -1,0 +1,113 @@
+{
+  "reviewer": "delivery_media_review",
+  "candidate": "M1.1 strict1024 NewAPI image delivery gate",
+  "wheel": {
+    "wheel_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+    "wheel_files": 83,
+    "crc_ok": true,
+    "source_py_sql_byte_match": 76,
+    "source_delta_from_02626": [
+      "platform_service/media_runtime.py",
+      "platform_service/media/adapters/openai_images.py"
+    ],
+    "migrations001_016_byte_identical_to_02626": true,
+    "candidate_manifest_sha256": "9bb0c7087a362e568b4a36a1a498a815d289c39daf3b8405d2368615c57f16d6",
+    "support_manifest_sha256": "0c6ea25d55ebc3bb5c4f9cf734989e77fe53bf9736de8a8e608edf0c5c3add8c"
+  },
+  "source_changes": [
+    {
+      "path": "platform_service/internal_features.py",
+      "sha256": "3e8f0019aa54df21c2c4f0a132b0af5a7bb81cf6bff919315f2d689a0040541f",
+      "new": true
+    },
+    {
+      "path": "platform_service/media_config.py",
+      "sha256": "19c4865e0515e08a111eeda215a3e063dc6f92474ffc500f8ed7fd76e036c042",
+      "new": false
+    },
+    {
+      "path": "platform_service/media_runtime.py",
+      "sha256": "b96eb8619c0615d59e9b42f9028f081b9e8c612270b04c22779a51da0ec0dd57",
+      "new": false
+    },
+    {
+      "path": "platform_service/membership.py",
+      "sha256": "b28dd740a0fc1b5bf2141d3ad58d692db51671a2c51d3652ac379ec206f3c922",
+      "new": false
+    },
+    {
+      "path": "platform_service/permissions.py",
+      "sha256": "4bdd5882f30bf9ee4777a733d2a8aa814f4bf765904f6bd61b97f33c044677a5",
+      "new": false
+    },
+    {
+      "path": "platform_service/media/contracts.py",
+      "sha256": "1af81b67d6057e3abcee58289e77b72a399a8a8465d9d0499022f3352b273e6d",
+      "new": false
+    },
+    {
+      "path": "platform_service/media/core.py",
+      "sha256": "97272499a7b7d8d2560952e9535373f93d33ce432ae6a13bd0653d9f6afd403b",
+      "new": false
+    },
+    {
+      "path": "platform_service/media/references.py",
+      "sha256": "f90465b257eeb0b836c619b3466f158bcdc4f7bf330d5b4b8cd1978a5485c959",
+      "new": true
+    },
+    {
+      "path": "platform_service/media/adapters/base.py",
+      "sha256": "3707fd509771e45d29527e588f602716219b874c3edbf8c62ba4241d8839f0e9",
+      "new": false
+    },
+    {
+      "path": "platform_service/media/adapters/openai_images.py",
+      "sha256": "b1494b8d51b9e1814546ca342d0775175e1ac1e5b171afafcf9b163794d7da20",
+      "new": false
+    },
+    {
+      "path": "platform_service/migrations/016_m1_image_enablement.sql",
+      "sha256": "a5a1dcfdb90299ebd063b18377a900ad68e1338bb2137cba9a7010f9694d6cba",
+      "new": true
+    }
+  ],
+  "test_sha256": {
+    "test_media_newapi_images.py": "fcf65dbaafda390a762634b1a06f1999877e5b9fe1d1538daf17a777e825f8df",
+    "test_internal_features.py": "1e9ec6ca7e013c1974acab66cbd25e3f9fa4a86882a688c26f58c23d840dc735",
+    "test_media_storage.py": "7b58f143921040f755bdf5d3f27559144c71c9d8fbd8962b21731fe58a16c5b6",
+    "test_media_images_runtime.py": "03e34268b45a9b4792f3ea40b8565008104c6b283d0ffd056e32db177e17423a",
+    "test_internal_grants.py": "48bb61b8f9a7fa824289e7628201a6c692619bf196e903497976ed51906357f6"
+  },
+  "full_central_regression": {
+    "exit_code": 0,
+    "elapsed_seconds": 296.76,
+    "log": "/private/tmp/easel-media-review-20261027-m11/candidate-size-central-full.log",
+    "source_manifest_verified_before_after": true,
+    "support_files_verified_before_after": 189,
+    "wheel_sha256": "f50e52511e941d3bea8e724eddbd68330e20eaa6339c5e2437b3880ca9705abf",
+    "excluded_paused_m2_m3": [
+      "test_media_audio_protocol.py",
+      "test_media_audio_references.py",
+      "test_media_voice_protocol.py",
+      "test_media_voice_stages.py",
+      "test_media_resources.py",
+      "test_media_av_artifacts.py"
+    ],
+    "passed": 1322,
+    "skipped": 2,
+    "pytest_seconds": 296.16,
+    "new_modules_cases": 29,
+    "skips": [
+      "test_encrypted_restore_drill.py:100 explicit synthetic Docker environment required",
+      "test_encrypted_restore_drill.py:350 explicit synthetic Docker environment required"
+    ]
+  },
+  "schema_proof_reused_because_migrations_001_016_identical": {
+    "source_safe_receipt_sha256": "a8e2b614b3a9a33c173c7a21a5d2b2d4c6b4e3ac1f3b76124dbb73e7552dddab",
+    "migration016_sha256": "a5a1dcfdb90299ebd063b18377a900ad68e1338bb2137cba9a7010f9694d6cba",
+    "constraint_count": 529,
+    "exact_r2_seven_old_checks_reconstruction_required": true
+  },
+  "remaining_known_backend_blocking_findings": [],
+  "production_or_provider_actions_by_reviewer": false
+}

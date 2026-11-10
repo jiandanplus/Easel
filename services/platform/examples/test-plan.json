@@ -1,0 +1,11 @@
+{
+  "id": "easel-test-v1",
+  "name": "Easel 账号与钱包测试套餐",
+  "version": "1",
+  "included_products": ["easel"],
+  "features": ["account-preview"],
+  "credits": "100000000",
+  "days": 7,
+  "concurrency": 2,
+  "test_only": true
+}

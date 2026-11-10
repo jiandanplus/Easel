@@ -3,15 +3,16 @@
 
 给短视频 / 社媒内容生成原创背景音乐（BGM / 配乐 / 纯音乐），支持可插拔 provider：
 
-  - dashscope        阿里云 DashScope（百炼）音频/音乐生成，异步任务 + 轮询
+  - dashscope        DashScope 旧版异步接口，或显式 New API Fun-Music 同步插件
   - suno-compatible  Suno 类第三方 API 的通用格式（异步提交 → 轮询 → 下载）
 
-统一流程：异步提交任务 → 轮询任务状态 → 下载生成的音频到 --output。
+legacy 保留原提交/轮询流程；new-api 按对应插件的同步或异步协议执行，下载到 --output。
 
 配置来自环境变量或 .env 文件（脚本会从当前目录向上查找 .env）：
 
   【通用】
     MUSIC_PROVIDER       选择 provider（dashscope / suno-compatible），也可用 --provider
+    MUSIC_API_MODE       默认 legacy；显式 new-api 使用 New API 插件协议，不猜测域名
 
   【dashscope】
     DASHSCOPE_API_KEY    API key（别名：DASHSCOPE_KEY / ALIYUN_API_KEY）
@@ -36,10 +37,13 @@
     ai_music.py generate --provider suno-compatible \\
         --prompt "史诗感电影配乐，弦乐渐强" --lyrics "..." -o outputs/ai-music/track.mp3
 
-说明：每个 provider 的实现"依据公开 API 文档实现，未用真实 key 实测"，
-模型名 / 端点路径均可通过 env 或 --model 覆盖，以适配各家实际参数。
+说明：legacy 保留既有自定义接口；new-api 对照锁定插件源码实现。
+本地 HTTP mock 测试不代表已用真实供应商 key 完成生成，详见 docs/platform/new-api-media-client.md。
 """
 from __future__ import annotations
+
+from media_gateway import require_media_available
+require_media_available()
 
 import argparse
 import http.client
@@ -65,6 +69,7 @@ UA = (
 DEFAULT_DASHSCOPE_BASE = "https://dashscope.aliyuncs.com/api/v1"
 DEFAULT_DASHSCOPE_MODEL = "audio-generation"
 DEFAULT_SUNO_MODEL = "music-1"
+DEFAULT_NEWAPI_DASHSCOPE_MODEL = "fun-music-v1"
 
 # 每个 provider 声明所需 env（主名 → 别名元组）。check / 报错都基于这份声明。
 PROVIDERS = provider_ids("music")
@@ -94,12 +99,14 @@ def find_default_env_file() -> Path | None:
 
 
 def load_env_file(env_file: Path | None) -> None:
+    require_media_available()
     if env_file is None:
         return
     try:
         lines = env_file.read_text(encoding="utf-8").splitlines()
     except OSError as exc:
         fail(f"无法读取 .env 文件：{exc}")
+    saved_gateway = {}
     for line_number, raw_line in enumerate(lines, start=1):
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -111,11 +118,18 @@ def load_env_file(env_file: Path | None) -> None:
             continue
         key, value = line.split("=", 1)
         key = key.strip()
+        saved_gateway[key] = strip_env_value(value)
         if not key:
             print(f"警告：.env 第 {line_number} 行缺少变量名，已跳过。", file=sys.stderr)
             continue
         if key not in os.environ:
             os.environ[key] = strip_env_value(value)
+
+    from media_gateway import GATEWAY_ENV_KEYS, refresh_gateway_environment
+    effective = refresh_gateway_environment(os.environ, saved_gateway)
+    for name in GATEWAY_ENV_KEYS:
+        os.environ.pop(name, None)
+    os.environ.update(effective)
 
 
 def env_lookup(name: str) -> str:
@@ -136,7 +150,15 @@ def require_env(name: str) -> str:
 
 
 def resolve_provider(explicit: str | None) -> str:
-    provider = (explicit or os.environ.get("MUSIC_PROVIDER", "") or "").strip()
+    from media_gateway import gateway_managed, resolve_media_environment
+    try:
+        effective = resolve_media_environment("music", os.environ)
+    except ValueError as error:
+        fail(str(error))
+    selected = effective.get("MUSIC_PROVIDER", "").strip()
+    if gateway_managed("music", os.environ) and explicit and explicit != selected:
+        fail("显式 provider 与统一音乐网关配置冲突；请求未提交。")
+    provider = (explicit or selected or "").strip()
     if not provider:
         fail(
             "未指定 provider。请用 --provider 或设置 env MUSIC_PROVIDER。"
@@ -147,41 +169,68 @@ def resolve_provider(explicit: str | None) -> str:
     return provider
 
 
+def resolve_api_mode() -> str:
+    mode = os.environ.get("MUSIC_API_MODE", "").strip() or "legacy"
+    if mode not in ("legacy", "new-api"):
+        fail("MUSIC_API_MODE 仅支持 legacy 或 new-api；不会根据域名自动选择协议。")
+    return mode
+
+
 # ── HTTP 工具 ──────────────────────────────────────────────
 
+class _NewAPINoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Surface 3xx locally: never forward Authorization or resend to Location.
+        return None
+
+
+def _new_api_open(request: urllib.request.Request, timeout: int):
+    return urllib.request.build_opener(_NewAPINoRedirect()).open(request, timeout=timeout)
+
+
 def http_post(url: str, headers: dict[str, str], payload: dict[str, Any],
-              timeout: int = 60) -> dict[str, Any]:
+              timeout: int = 60, *, redact_errors: bool = False) -> dict[str, Any]:
     body = json.dumps(payload).encode("utf-8")
     base_headers = {"Content-Type": "application/json", "User-Agent": UA}
     base_headers.update(headers)
     request = urllib.request.Request(url, data=body, headers=base_headers, method="POST")
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        open_request = _new_api_open if redact_errors else urllib.request.urlopen
+        with open_request(request, timeout=timeout) as response:
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
+        if redact_errors:
+            fail(f"New API 接口返回 HTTP {exc.code}；未重新提交任务。")
         detail = exc.read().decode("utf-8", errors="replace")
         fail(f"接口返回 HTTP {exc.code}：{detail}")
     except urllib.error.URLError as exc:
+        if redact_errors:
+            fail("New API 接口连接失败；未切换协议或重新提交任务。")
         fail(f"无法连接接口：{exc.reason}")
     except (http.client.RemoteDisconnected, TimeoutError):
         fail("接口连接失败或超时，请稍后重试。")
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
+        if redact_errors:
+            fail("New API 接口未返回有效 JSON；未重新提交任务。")
         fail(f"接口返回的不是有效 JSON：{raw[:500]}")
     if not isinstance(parsed, dict):
         fail("接口返回格式不正确：顶层结果不是对象。")
     return parsed
 
 
-def http_get(url: str, headers: dict[str, str], timeout: int = 30) -> dict[str, Any]:
+def http_get(url: str, headers: dict[str, str], timeout: int = 30, *, redact_errors: bool = False) -> dict[str, Any]:
     base_headers = {"User-Agent": UA}
     base_headers.update(headers)
     request = urllib.request.Request(url, headers=base_headers, method="GET")
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        open_request = _new_api_open if redact_errors else urllib.request.urlopen
+        with open_request(request, timeout=timeout) as response:
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
+        if redact_errors:
+            fail(f"New API 查询返回 HTTP {exc.code}；未重新提交任务。")
         detail = exc.read().decode("utf-8", errors="replace")
         fail(f"查询接口返回 HTTP {exc.code}：{detail}")
     except (urllib.error.URLError, http.client.RemoteDisconnected, TimeoutError):
@@ -189,6 +238,8 @@ def http_get(url: str, headers: dict[str, str], timeout: int = 30) -> dict[str, 
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
+        if redact_errors:
+            fail("New API 查询未返回有效 JSON；未重新提交任务。")
         fail(f"查询接口返回的不是有效 JSON：{raw[:500]}")
     if not isinstance(parsed, dict):
         fail("查询接口返回格式不正确：顶层结果不是对象。")
@@ -244,6 +295,133 @@ def _find_audio_url(obj: Any) -> str | None:
     return None
 
 
+# ── 显式 New API 插件协议；不会回退或二次提交 ──────────────────
+
+def _new_api_endpoint(base_url: str, route: str) -> str:
+    parsed = urllib.parse.urlsplit(base_url)
+    if (parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username
+            or parsed.password or parsed.query or parsed.fragment):
+        fail("New API base URL 必须是无凭据、query 或 fragment 的网关根地址，可包含反向代理路径前缀。")
+    # urljoin('/route') 会丢失自定义前缀。此处只去末尾斜线，不猜测 /v1。
+    return base_url.rstrip("/") + route
+
+
+def _new_api_audio_url(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = urllib.parse.urlsplit(value)
+        if parsed.scheme in ("http", "https") and parsed.hostname and not (parsed.username or parsed.password):
+            return value
+    except ValueError:
+        pass
+    return None
+
+
+def _generate_dashscope_new_api(args: argparse.Namespace) -> Path:
+    if args.duration is not None:
+        fail("New API Fun-Music 不支持 --duration；不会发送旧版 parameters.duration。")
+    api_key = require_env("DASHSCOPE_API_KEY")
+    endpoint = _new_api_endpoint(require_env("DASHSCOPE_BASE_URL"),
+        "/easel/dashscope/api/v1/services/audio/music/generation")
+    model = args.model or env_lookup("DASHSCOPE_MUSIC_MODEL") or DEFAULT_NEWAPI_DASHSCOPE_MODEL
+    inputs: dict[str, Any] = {"prompt": args.prompt,
+                              "is_instrumental": bool(args.instrumental) and not bool(args.lyrics)}
+    if args.lyrics:
+        inputs["lyrics"] = args.lyrics
+    if args.timeout <= 0:
+        fail("New API 同步音乐请求的 --timeout 必须为正数。")
+    print(f"[dashscope/new-api] 同步生成（model={model}）...", file=sys.stderr)
+    result = http_post(endpoint, {"Authorization": f"Bearer {api_key}"},
+                       {"model": model, "input": inputs}, timeout=args.timeout, redact_errors=True)
+    if result.get("code") or result.get("error") or result.get("success") is False:
+        fail("New API Fun-Music 返回业务错误；未轮询或重新提交。")
+    output = result.get("output")
+    if (not isinstance(output, dict) or output.get("task_status") != "SUCCEEDED"
+            or output.get("finish_reason") != "stop"):
+        fail("New API Fun-Music 未返回可验证的同步完成态；未调用上游轮询接口或重新提交。")
+    audio = output.get("audio")
+    audio_url = _new_api_audio_url(audio.get("url") if isinstance(audio, dict) else None)
+    if not audio_url:
+        fail("New API Fun-Music 完成响应缺少 output.audio.url；未下载其他 URL。")
+    return download_audio(audio_url, Path(args.output))
+
+
+def _new_api_suno_envelope(result: dict[str, Any]) -> Any:
+    if result.get("code") != "success" or result.get("error") or result.get("success") is False:
+        fail("New API Suno 返回业务错误；未切换协议或重新提交任务。")
+    return result.get("data")
+
+
+def _new_api_suno_audio(data: Any) -> str | None:
+    # Match sunoapi artifactData: direct songs or a nested task-data wrapper.
+    if isinstance(data, dict):
+        nested = data.get("data")
+        if isinstance(nested, dict) and nested.get("task_id") and "data" in nested:
+            data = nested["data"]
+    songs = data if isinstance(data, list) else [data]
+    for song in songs:
+        if isinstance(song, dict):
+            audio_url = _new_api_audio_url(song.get("audio_url"))
+            if audio_url:
+                return audio_url
+    return None
+
+
+def _poll_suno_new_api(base_url: str, headers: dict[str, str], task_id: str,
+                       poll_interval: int, timeout: int) -> str:
+    endpoint = _new_api_endpoint(base_url, "/suno/fetch/" + urllib.parse.quote(task_id, safe=""))
+    deadline = time.monotonic() + timeout
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            fail("New API Suno 查询超时；原任务可能仍在运行，未重新提交任务。")
+        result = http_get(endpoint, headers, timeout=min(30, remaining), redact_errors=True)
+        task = _new_api_suno_envelope(result)
+        if not isinstance(task, dict):
+            fail("New API Suno 查询缺少任务对象；未重新提交任务。")
+        status = task.get("status")
+        if status == "SUCCESS":
+            audio_url = _new_api_suno_audio(task.get("data"))
+            if not audio_url:
+                fail("New API Suno 完成任务缺少 audio_url；未下载封面或其他 URL。")
+            return audio_url
+        if status == "FAILURE":
+            fail("New API Suno 任务失败；未重新提交任务。")
+        if status not in ("NOT_START", "SUBMITTED", "QUEUED", "IN_PROGRESS"):
+            fail("New API Suno 返回未知或不支持的任务状态；未下载或重新提交。")
+        print(f"  [suno/new-api] 轮询中... 状态={status}", file=sys.stderr)
+        time.sleep(min(poll_interval, max(0, deadline - time.monotonic())))
+
+
+def _generate_suno_new_api(args: argparse.Namespace) -> Path:
+    if args.duration is not None:
+        fail("New API Suno native 协议未声明 --duration；不会静默忽略或发送通用 duration 字段。")
+    if args.timeout <= 0 or args.poll_interval <= 0:
+        fail("New API Suno 的 --timeout 与 --poll-interval 必须为正数。")
+    api_key = require_env("MUSIC_API_KEY")
+    base_url = require_env("MUSIC_BASE_URL")
+    endpoint = _new_api_endpoint(base_url, "/suno/submit/music")
+    payload: dict[str, Any] = {"make_instrumental": bool(args.instrumental) and not bool(args.lyrics)}
+    if args.lyrics:
+        payload.update(prompt=args.lyrics, tags=args.prompt)
+    else:
+        payload["gpt_description_prompt"] = args.prompt
+    # Native MUSIC routes fix the gateway billing model to suno_music. An
+    # explicit --model/MUSIC_MODEL selects the upstream mv, not body.model.
+    mv = args.model or os.environ.get("MUSIC_MODEL", "").strip()
+    if mv:
+        payload["mv"] = mv
+    headers = {"Authorization": f"Bearer {api_key}"}
+    print("[suno/new-api] 提交音乐任务...", file=sys.stderr)
+    result = http_post(endpoint, headers, payload, timeout=60, redact_errors=True)
+    task_id = _new_api_suno_envelope(result)
+    if not isinstance(task_id, str) or not task_id.strip():
+        fail("New API Suno 提交响应缺少字符串 data 任务 ID；未重新提交任务。")
+    audio_url = _poll_suno_new_api(base_url, headers, task_id, args.poll_interval, args.timeout)
+    return download_audio(audio_url, Path(args.output))
+
+
 # ── provider: dashscope ────────────────────────────────────
 # 依据阿里云 DashScope（百炼）公开的异步任务规范实现：
 #   提交时带 header  X-DashScope-Async: enable  → 返回 output.task_id / task_status
@@ -252,6 +430,8 @@ def _find_audio_url(obj: Any) -> str | None:
 # 未用真实 key 实测。
 
 def generate_dashscope(args: argparse.Namespace) -> Path:
+    if resolve_api_mode() == "new-api":
+        return _generate_dashscope_new_api(args)
     api_key = require_env("DASHSCOPE_API_KEY")
     base_url = (os.environ.get("DASHSCOPE_BASE_URL", "").strip()
                 or DEFAULT_DASHSCOPE_BASE).rstrip("/")
@@ -321,6 +501,8 @@ def _poll_dashscope(task_url: str, headers: dict[str, str],
 # base_url / model 均由 env 提供。未用真实 key 实测。
 
 def generate_suno(args: argparse.Namespace) -> Path:
+    if resolve_api_mode() == "new-api":
+        return _generate_suno_new_api(args)
     api_key = require_env("MUSIC_API_KEY")
     base_url = require_env("MUSIC_BASE_URL").rstrip("/")
     model = args.model or os.environ.get("MUSIC_MODEL", "").strip() or DEFAULT_SUNO_MODEL
@@ -417,8 +599,14 @@ def _mask(value: str) -> str:
 def cmd_check(args: argparse.Namespace) -> int:
     """离线校验：不发任何请求，只检查所需 env 是否配好。"""
     provider = resolve_provider(args.provider)
+    mode = resolve_api_mode()
     print(f"provider = {provider}")
     required = PROVIDER_REQUIRED_ENV[provider]
+    if mode == "new-api":
+        print("api_mode = new-api")
+        required = [(name, is_required or name == "DASHSCOPE_BASE_URL") for name, is_required in required]
+        if provider == "dashscope" and not any(name == "DASHSCOPE_BASE_URL" for name, _ in required):
+            required = [*required, ("DASHSCOPE_BASE_URL", True)]
     all_required_ok = True
     for name, is_required in required:
         value = env_lookup(name)
@@ -432,9 +620,9 @@ def cmd_check(args: argparse.Namespace) -> int:
             print(f"  [缺失] {name} [{tag}] 未设置{alias_hint}")
         else:
             default = {
-                "DASHSCOPE_MUSIC_MODEL": DEFAULT_DASHSCOPE_MODEL,
+                "DASHSCOPE_MUSIC_MODEL": DEFAULT_NEWAPI_DASHSCOPE_MODEL if mode == "new-api" else DEFAULT_DASHSCOPE_MODEL,
                 "DASHSCOPE_BASE_URL": DEFAULT_DASHSCOPE_BASE,
-                "MUSIC_MODEL": DEFAULT_SUNO_MODEL,
+                "MUSIC_MODEL": "由 sunoapi 插件默认 mv=chirp-v3-0" if mode == "new-api" else DEFAULT_SUNO_MODEL,
             }.get(name, "")
             hint = f"（将用默认值：{default}）" if default else ""
             print(f"  [默认] {name} [{tag}] 未设置{hint}")
@@ -501,6 +689,11 @@ def main(argv: list[str] | None = None) -> int:
         args.output = str(validate_output_path(args.output))
     env_file = Path(args.env_file) if getattr(args, "env_file", None) else find_default_env_file()
     load_env_file(env_file)
+    from media_gateway import resolve_media_environment
+    try:
+        os.environ.update(resolve_media_environment("music", os.environ))
+    except ValueError as error:
+        fail(str(error))
     return args.func(args)
 
 

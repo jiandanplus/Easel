@@ -1,0 +1,341 @@
+{
+  "date": "2026-10-26",
+  "branch": "codex/ui-redesign",
+  "operation": "sync_central_subscription_models_to_current_token_allowed_upstream_catalog",
+  "future_auto_sync_implemented": false,
+  "plan": {
+    "backup": {
+      "bytes": 830282,
+      "fresh_restore": false,
+      "offsite": false,
+      "path": "/var/backups/easel-encrypted/20261026T092144Z-d91c36bb-fc0c-4cdf-98b2-88ef576631c3.sealed",
+      "receipt_sha256": "8eccc8a5ab8fa2e06939c8ba944a12182a0fc45bf55a84822b86c08023bd292e",
+      "sha256": "08387176dd270f8803e74d75adfed5fb1cbbda57ae527bf763e4e6dd69f865f9",
+      "status": "selfverified"
+    },
+    "configuration_changed": false,
+    "database_changed": false,
+    "limits": {
+      "max_input_bytes": 1048576,
+      "max_input_tokens": 16384,
+      "max_output_tokens": 1024
+    },
+    "mode": "plan",
+    "model_calls": 0,
+    "new_display_names": [
+      "DeepSeek Flash · 内部体验",
+      "DeepSeek V4 Pro · 内部体验"
+    ],
+    "new_models": {
+      "easel-deepseek-flash-internal-v1": "deepseek-flash",
+      "easel-deepseek-v4-pro-internal-v1": "deepseek-v4-pro"
+    },
+    "ok": true,
+    "old_bindings_preserved": true,
+    "old_model_to_disable": "easel-glm53-internal-v1",
+    "pending_actual": null,
+    "pending_amount_each": 9728,
+    "pending_job_count": 3,
+    "plan_path": "/root/easel-model-sync-20261026/catalog-update-plan-private.json",
+    "plan_sha256": "d484824b18c08ba4af3b5dba510a7e9db6cb4315cf7e95b60430a07662900db3",
+    "rate": {
+      "input": {
+        "denominator": "2",
+        "numerator": "1"
+      },
+      "output": {
+        "denominator": "2",
+        "numerator": "3"
+      },
+      "version": "internal-deepseek-20261026-v1"
+    },
+    "rate_policy": "retain_existing_internal_experience_rates_and_limits"
+  },
+  "applied": {
+    "api_and_console_healthy": true,
+    "backup": {
+      "bytes": 830282,
+      "fresh_restore": false,
+      "offsite": false,
+      "path": "/var/backups/easel-encrypted/20261026T092144Z-d91c36bb-fc0c-4cdf-98b2-88ef576631c3.sealed",
+      "receipt_sha256": "8eccc8a5ab8fa2e06939c8ba944a12182a0fc45bf55a84822b86c08023bd292e",
+      "sha256": "08387176dd270f8803e74d75adfed5fb1cbbda57ae527bf763e4e6dd69f865f9",
+      "status": "selfverified"
+    },
+    "code_migrations_acl_changed": false,
+    "configuration_hashes": {
+      "/etc/easel-central/central.env": "d080e4950940e8667b48a8e5be23ee54bb5077808b98270921602f14bef2ee72",
+      "/etc/easel-central/console.env": "77c414aabf06308148918a3b2a25596a72250c40398c4db17d966902e5f7d78d",
+      "/etc/easel-central/execution.json": "d258884d9f9b5c5ad4488daf1bd94fea3e6fd83e4e631b81aca6e911bdc7d62a"
+    },
+    "console_assets_ready": true,
+    "disabled_model_ids": [
+      "easel-glm53-internal-v1"
+    ],
+    "eight_financial_tables_all_wallets_unchanged": true,
+    "enabled_model_ids": [
+      "easel-deepseek-flash-internal-v1",
+      "easel-deepseek-v4-pro-internal-v1"
+    ],
+    "financial_counts": {
+      "credit_entries": 133,
+      "credit_holds": 28,
+      "credit_journals": 54,
+      "credit_lots": 1,
+      "credit_reservations": 28,
+      "execution_invocations": 12,
+      "execution_jobs": 28,
+      "execution_receipts": 25
+    },
+    "financial_sha256": "bb208ca8438244d2ef9363de7e7e4f12e8da0ac6a8589c2ea2668f238d6d929f",
+    "limits": {
+      "max_input_bytes": 1048576,
+      "max_input_tokens": 16384,
+      "max_output_tokens": 1024
+    },
+    "model_calls": 0,
+    "new_admission_restored": true,
+    "ok": true,
+    "old_model_definition_unchanged": true,
+    "old_provider_data_and_bindings_unchanged": true,
+    "original_nginx_restored": true,
+    "pending_jobs": [
+      {
+        "actual": null,
+        "amount": 9728,
+        "id": "33344a42-bfb1-4597-b1bf-54fa11567018",
+        "model": "easel-glm53-internal-v1",
+        "status": "pending_reconciliation"
+      },
+      {
+        "actual": null,
+        "amount": 9728,
+        "id": "690ef707-da7f-4f8c-be18-1fdbf7645e40",
+        "model": "easel-glm53-internal-v1",
+        "status": "pending_reconciliation"
+      },
+      {
+        "actual": null,
+        "amount": 9728,
+        "id": "c8fcc935-ecfd-464b-b127-78265212192c",
+        "model": "easel-glm53-internal-v1",
+        "status": "pending_reconciliation"
+      }
+    ],
+    "pending_rule_changed": false,
+    "phase": "complete",
+    "rate": {
+      "input": {
+        "denominator": "2",
+        "numerator": "1"
+      },
+      "output": {
+        "denominator": "2",
+        "numerator": "3"
+      },
+      "version": "internal-deepseek-20261026-v1"
+    },
+    "rate_policy": "retain_existing_internal_experience_rates_and_limits",
+    "reasoning_declared": false,
+    "release": "/srv/easel/releases/20261026-reconciliation-r1-v1",
+    "reviewed_plan_sha256": "d484824b18c08ba4af3b5dba510a7e9db6cb4315cf7e95b60430a07662900db3",
+    "same_release_and_units": true,
+    "secrets_left_server": false,
+    "wallet_writes": 0
+  },
+  "workbench": {
+    "ok": true,
+    "default": "easel-deepseek-flash-internal-v1",
+    "catalog_ids": [
+      "easel-deepseek-flash-internal-v1",
+      "easel-deepseek-v4-pro-internal-v1"
+    ],
+    "only_subscription_default_changed": true,
+    "custom_interfaces_preserved": true,
+    "same_account_scope": true,
+    "same_wallet": true,
+    "protected_files": 45,
+    "changed_files": [
+      "outputs/_harness/config.json"
+    ],
+    "new_model_requests": 0,
+    "pending_reconciliation": 3,
+    "pending_held_microcredits": "29184"
+  },
+  "final_read_only_verification": {
+    "ok": true,
+    "read_only": true,
+    "enabled_model_ids": [
+      "easel-deepseek-flash-internal-v1",
+      "easel-deepseek-v4-pro-internal-v1"
+    ],
+    "financial_tables_unchanged": true,
+    "financial_sha256": "bb208ca8438244d2ef9363de7e7e4f12e8da0ac6a8589c2ea2668f238d6d929f",
+    "pending_count": 3,
+    "endpoint_statuses": {
+      "public_api": 200,
+      "public_console": 404,
+      "private_console": 200
+    },
+    "services_active": [
+      "easel-central-production",
+      "easel-console-production",
+      "easel-gateway-tunnel"
+    ],
+    "new_model_requests": 0
+  },
+  "browser": {
+    "history_sha256": "116a0bf39a7183fd14f461cd12ae44d280a28bc70b084a3adfbab1c23efb842a",
+    "messages_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "draft_empty": true,
+    "theme": "forest",
+    "flash_selected": true,
+    "models_visible": [
+      "deepseek-flash",
+      "deepseek-v4-pro"
+    ],
+    "switched_pro_then_flash": true,
+    "no_message_submitted": true,
+    "original_history_summary_unchanged": true,
+    "current_empty_thread_summary_unchanged": true,
+    "all_history_bodies_individually_audited": false
+  },
+  "upstream": {
+    "models": [
+      {
+        "model": "deepseek-flash",
+        "requests": 2,
+        "ok": true,
+        "automatic_retry": false,
+        "synthetic_only": true,
+        "central_wallet_touched": false,
+        "request_hashes": [
+          "5d7876d70479bf93b820cc562e8ef4f21c6fa75ca1f6fb84a9d13c4760e3c97b",
+          "29cb9593dd463b129f9f3e42c9931ca4ec0629c806b880cdff9b73e2ceacac72"
+        ],
+        "http_statuses": [
+          200,
+          200
+        ],
+        "tool_roundtrip": true,
+        "marker_verified": true,
+        "usage": [
+          {
+            "input_tokens": 352,
+            "output_tokens": 46,
+            "total_tokens": 398
+          },
+          {
+            "input_tokens": 148,
+            "output_tokens": 11,
+            "total_tokens": 159
+          }
+        ],
+        "event_counts": {
+          "response.created": 2,
+          "response.in_progress": 2,
+          "response.output_item.added": 2,
+          "response.function_call_arguments.delta": 14,
+          "response.function_call_arguments.done": 1,
+          "response.output_item.done": 2,
+          "response.completed": 2,
+          "response.content_part.added": 1,
+          "response.output_text.delta": 10,
+          "response.output_text.done": 1,
+          "response.content_part.done": 1
+        },
+        "verified_output_limit": 1024
+      },
+      {
+        "model": "deepseek-v4-pro",
+        "requests": 2,
+        "ok": true,
+        "automatic_retry": false,
+        "synthetic_only": true,
+        "central_wallet_touched": false,
+        "request_hashes": [
+          "0bc1f75410d2b49cf5512dc5bb296cf19395c84010b7bdc11b38f3e8a6928fd5",
+          "a581e625b4ec64ff83669de28a159cf12d90e23bd70fc9d96827f18fd8f6da30"
+        ],
+        "http_statuses": [
+          200,
+          200
+        ],
+        "tool_roundtrip": true,
+        "marker_verified": true,
+        "usage": [
+          {
+            "input_tokens": 422,
+            "output_tokens": 114,
+            "total_tokens": 536
+          },
+          {
+            "input_tokens": 222,
+            "output_tokens": 114,
+            "total_tokens": 336
+          }
+        ],
+        "event_counts": {
+          "response.created": 2,
+          "response.in_progress": 2,
+          "response.output_item.added": 4,
+          "response.content_part.added": 3,
+          "response.reasoning_text.delta": 157,
+          "response.reasoning_text.done": 2,
+          "response.content_part.done": 3,
+          "response.output_item.done": 4,
+          "response.function_call_arguments.delta": 18,
+          "response.function_call_arguments.done": 1,
+          "response.completed": 2,
+          "response.output_text.delta": 14,
+          "response.output_text.done": 1
+        },
+        "verified_output_limit": 1024
+      }
+    ],
+    "physical_post_attempts": 7,
+    "successful_posts": 4,
+    "http_400_posts": 3,
+    "usage_of_successful_posts": {
+      "input_tokens": 1144,
+      "output_tokens": 285,
+      "total_tokens": 1429
+    },
+    "failed_request_cost_known": false,
+    "actual_pi_sdk_e2e_verified": false,
+    "real_filesystem_tool_executed": false,
+    "central_wallet_charge_verified_this_operation": false,
+    "pending_limit_blocks_new_wallet_tasks": true
+  },
+  "helper_sha256": "01936c55f0bdbda4b87e10099d90245135aa22b10af69c2dcb15300a16ea1683",
+  "offline_tests": {
+    "pure": 11,
+    "runtime_parsing": 2,
+    "passed": true
+  },
+  "secrets_exported": false,
+  "merged_main": false,
+  "post_acceptance_user_interaction": {
+    "read_only": true,
+    "post_acceptance_changes": {
+      "execution_invocations": {
+        "before_count": 12,
+        "after_count": 13,
+        "added": [
+          {
+            "model": "easel-deepseek-flash-internal-v1"
+          }
+        ],
+        "removed_count": 0,
+        "changed": []
+      }
+    },
+    "wallet_reservations_holds_journals_entries_lots_unchanged": true,
+    "all_original_pending_rows_unchanged": true,
+    "pending_count": 3,
+    "pending_held_microcredits": 29184,
+    "new_model_requests_by_this_inspection": 0,
+    "automatic_acceptance_sent_message": false,
+    "strict_all_table_followup_failed_due_to_new_invocation": true
+  }
+}

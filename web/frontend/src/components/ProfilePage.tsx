@@ -148,11 +148,10 @@ export default function ProfilePage({ persona, onNewProfile, onDeleted }: Profil
   if (!persona) {
     return (
       <div className="profile-page">
-        <h1 className="page-title">用户画像 Profile</h1>
+        <h1 className="page-title">画像</h1>
         <div className="empty-state" style={{ height: '70%' }}>
           <div className="empty-icon">👤</div>
           <h3>还没有选择画像</h3>
-          <p>画像沉淀你的定位、风格、受众与红线，生成内容会更贴合你的人设。</p>
           <button className="btn btn-primary" onClick={onNewProfile}>+ 新建画像</button>
         </div>
       </div>
@@ -164,7 +163,6 @@ export default function ProfilePage({ persona, onNewProfile, onDeleted }: Profil
       <div className="profile-head">
         <div>
           <h1 className="page-title">{persona}</h1>
-          <p className="page-subtitle">六个维度构成一个完整人设，可随时编辑保存。</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className={`btn ${editing ? 'btn-primary' : ''}`} onClick={() => setEditing((v) => !v)}>
@@ -192,7 +190,7 @@ export default function ProfilePage({ persona, onNewProfile, onDeleted }: Profil
                 <div style={{ display: 'flex', gap: 8 }}>
                   {f.filename === 'platforms.md' && (
                     <button className="btn btn-sm" disabled={fetchingWx}
-                      title="用已登录的公众号后台会话抓取粉丝/内容数据，写入本栏（与数据中心同源）"
+                      title="使用已登录的公众号数据更新本栏"
                       onClick={() => handleFetchWechat(f.filename)}>
                       {fetchingWx ? '抓取中…' : '📊 抓取公众号数据'}
                     </button>

@@ -1,0 +1,46 @@
+{
+  "kind": "workbench-pi-tool-proof",
+  "relative_path": "outputs/workbench-pi-proof-e6467e17.txt",
+  "synthetic_session_count": 1,
+  "tool_start_count": 2,
+  "tool_end_count": 2,
+  "tools": [
+    {
+      "name": "write_file",
+      "relative_path": "outputs/workbench-pi-proof-e6467e17.txt",
+      "start_count": 1,
+      "end_count": 1,
+      "success_count": 1,
+      "paired_success": true,
+      "path_matches": true,
+      "content_exact_marker": true,
+      "content_sha256": "26e33aa25db8c2ccedc3a5c8a3b246bd4915efa8bd854ca432906755373cd04b"
+    },
+    {
+      "name": "read_file",
+      "relative_path": "outputs/workbench-pi-proof-e6467e17.txt",
+      "start_count": 1,
+      "end_count": 1,
+      "success_count": 1,
+      "paired_success": true,
+      "path_matches": true,
+      "content_exact_marker": true,
+      "content_sha256": "26e33aa25db8c2ccedc3a5c8a3b246bd4915efa8bd854ca432906755373cd04b"
+    }
+  ],
+  "final": {
+    "marker": "EASEL_WORKBENCH_PI_OK",
+    "exact_marker": true,
+    "success": true,
+    "sha256": "26e33aa25db8c2ccedc3a5c8a3b246bd4915efa8bd854ca432906755373cd04b"
+  },
+  "file": {
+    "relative_path": "outputs/workbench-pi-proof-e6467e17.txt",
+    "bytes": 21,
+    "sha256": "26e33aa25db8c2ccedc3a5c8a3b246bd4915efa8bd854ca432906755373cd04b",
+    "exact_marker_bytes": true,
+    "has_trailing_newline": false
+  },
+  "evidence_source": "persisted Pi SDK toolCall/toolResult messages and actual workspace file",
+  "success": true
+}

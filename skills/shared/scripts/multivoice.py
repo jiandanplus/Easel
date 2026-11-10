@@ -27,6 +27,9 @@ skills/builtin/short-drama/scripts/dubbing.py，它委派本引擎）。
 """
 from __future__ import annotations
 
+from media_gateway import require_media_available
+require_media_available()
+
 import argparse
 import json
 import os
@@ -153,9 +156,14 @@ def combine_prosody(base_rate: str | None, base_pitch: str | None,
 
 
 # ── cast（显式文件路径）────────────────────────────────────────────────
+def _configured_voice_provider() -> str:
+    from media_gateway import resolve_media_environment
+    return resolve_media_environment("voice", os.environ).get("VOICE_PROVIDER", "").strip()
+
+
 def _closed_source_configured() -> bool:
     """是否已配闭源云 provider（环境变量 VOICE_PROVIDER 非空）——据此强制不许再用 edge(AI 音色)。"""
-    return bool((os.environ.get("VOICE_PROVIDER") or "").strip())
+    return bool(_configured_voice_provider())
 
 
 def cast_init(cast_file: Path, title: str = "", narrator_provider: str | None = None) -> dict:
@@ -165,8 +173,16 @@ def cast_init(cast_file: Path, title: str = "", narrator_provider: str | None = 
     退回 edge 并在 note 里标注「务必升级闭源」。"""
     if cast_file.exists():
         return {"path": str(cast_file), "created": False}
-    np = (narrator_provider or "").strip() or None
-    preset = PRESET_NARRATOR_VOICE.get(np) if np else None
+    from media_gateway import gateway_managed, resolve_media_environment
+    effective = resolve_media_environment("voice", os.environ)
+    unified = gateway_managed("voice", os.environ)
+    np = (effective.get("VOICE_PROVIDER", "") if unified else narrator_provider or "").strip() or None
+    preset = ((effective.get("VOICE_NARRATOR_VOICE_ID") or "").strip() if unified
+              else PRESET_NARRATOR_VOICE.get(np) if np else None)
+    if unified and not preset and np == "gemini":
+        preset = effective.get("GEMINI_VOICE") or "Kore"
+    if unified and not preset and np == "openai-compatible":
+        preset = "alloy"
     if np and preset:
         narrator = {"name": NARRATOR, "role": "narrator", "engine": "clone",
                     "provider": np, "voice_id": preset, "archetype": "旁白/画外音",
@@ -966,6 +982,8 @@ def _selftest() -> int:
 
 
 def main() -> int:
+    from voice_clone import find_default_env_file, load_env_file
+    load_env_file(find_default_env_file())
     ap = argparse.ArgumentParser(
         description="多角色/对话配音引擎（cast + lines → 多声线 voice.mp3 + srt）",
         formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
@@ -1012,12 +1030,12 @@ def main() -> int:
     if a.cmd == "cast":
         cf = Path(a.cast).expanduser()
         if a.castcmd == "init":
-            r = cast_init(cf, a.title, narrator_provider=os.environ.get("VOICE_PROVIDER"))
+            r = cast_init(cf, a.title, narrator_provider=_configured_voice_provider())
             print(f"✅ {r['path']}" + ("（新建）" if r["created"] else "（已存在，未覆盖）"))
         elif a.castcmd == "add":
             provider = a.provider
             if a.engine == "clone" and not provider:
-                provider = (os.environ.get("VOICE_PROVIDER") or "").strip() or None
+                provider = _configured_voice_provider() or None
             e = cast_add(cf, {"name": a.name, "role": a.role, "engine": a.engine,
                               "voice": a.voice or None, "rate": a.rate, "pitch": a.pitch,
                               "volume": a.volume, "provider": provider,

@@ -21,6 +21,9 @@ import binascii
 import http.client
 import json
 import os
+
+if os.environ.get("EASEL_SUBSCRIPTION_BACKEND") == "central":
+    raise RuntimeError("中央订阅的图片、视频、音乐和语音只能在内置 Pi 中使用。请在设置里把引擎切换为 Pi，或把接口来源改为自定义。")
 import sys
 import time
 import urllib.error

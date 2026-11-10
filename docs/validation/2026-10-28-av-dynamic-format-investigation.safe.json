@@ -1,0 +1,223 @@
+{
+  "status": "r1_blocked_r2_investigation_only",
+  "source": [
+    {
+      "path": "services/platform/src/platform_service/media/av_artifacts.py",
+      "sha256": "d90d14225f919cb792104ea68a9062e6a610348fda029ea40768428c4bce9949",
+      "matches_r1": true
+    },
+    {
+      "path": "services/platform/src/platform_service/media/decoded_timeline.py",
+      "sha256": "db95081705f6528e08224c4367db488c82735f41a4b40b25162e0dfe48ec2cea",
+      "matches_r1": true
+    },
+    {
+      "path": "services/platform/tests/test_media_av_artifacts.py",
+      "sha256": "a8ceda0cbd9e0aeb1ac9f5180d0895d68cfee737e83a51776df015ded9602957",
+      "matches_r1": true
+    },
+    {
+      "path": "services/platform/tests/test_media_decoded_timeline.py",
+      "sha256": "c16c993626d98ec16f8a23dde6866a624be20644fb58e7542af7edd2f1688677",
+      "matches_r1": true
+    }
+  ],
+  "red": "2 failed in 0.29s; both DID NOT RAISE",
+  "local_only": true,
+  "linux61_not_retested": true,
+  "production_source_modified": false,
+  "evidence": [
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/audit-tap.safe.json",
+      "sha256": "17d84dc8642aeb55589ce6980c178560713120ecd3132d7790cf167f6f2bd905"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/copied-evidence-manifest.json",
+      "sha256": "a8cc7439f6b13d7f402c977fa4b963a88563ac8d97b1dcbd3402fbb68e85534c"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-audio-result.json",
+      "sha256": "9eba14833f61216a195a600cd6a863254cee1a942008083e53537b55780e18b6"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3",
+      "sha256": "abb130f8e9ab2b674e59a44b5a0a2b6810be96bc6a415476dfdd2baf4687fc98"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.audit.stderr",
+      "sha256": "99c1f6ef98ae0fd9c79f44dc8299d4c8d44eddb7dcbfd5c1cf3276d3452e3280"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.audit.stdout",
+      "sha256": "99dc2d9261113b585a13263d7c17c55e705cb1beb67e46260665d22f55604a3a"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.base.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.base.stdout",
+      "sha256": "05553be7af84c74b07deca396d7077bb60f2106562c76b417e60d9a530fa81c1"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.no-autoconversion.stderr",
+      "sha256": "55dd0a4b9b66e49e71218fa4da5a112064ef91960bb0aad5d0473592f557d42c"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.no-autoconversion.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.no-reinit-noautoscale.stderr",
+      "sha256": "c12d6467e1046e6ab0b9875284fbf986022cabeabb8c1dc1c60e02848d10f8ad"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.no-reinit-noautoscale.stdout",
+      "sha256": "99dc2d9261113b585a13263d7c17c55e705cb1beb67e46260665d22f55604a3a"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.no-reinit.stderr",
+      "sha256": "320ab46a17e863ea7cd209c3433d55fdd00253ab4fc0ebacd75bd6cad3064418"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-channels-0.02.mp3.no-reinit.stdout",
+      "sha256": "99dc2d9261113b585a13263d7c17c55e705cb1beb67e46260665d22f55604a3a"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic-video-result.json",
+      "sha256": "0807d9f1694ddd0ba64f4439254efc055c08d97f229f8d4d2816ac88a4073d07"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic_audio.py",
+      "sha256": "616d5c83440259d217c9a58830978394ca725cb748fc4dc61a116e7cb0a121d6"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic_probe.py",
+      "sha256": "5eaf42b8c6aef63d520031a1eb967f4e3ef038eb89504aff46af1c4882deef64"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/dynamic_video.py",
+      "sha256": "fd274d71aaf0e1c04cd592477f7eb4b4747982e7c4f5e2a437a1d2922df8ca98"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/flag-matrix.safe.json",
+      "sha256": "84d5feaa70c329a09aca6a3dd14940afd9b09df8591b9ebe38877f582fc29e18"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/frame-audit.safe.json",
+      "sha256": "7562d283112b7a1854a40a0e7ab389e0046aa35cb93e3a9b6d7d796028514697"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4",
+      "sha256": "4de11598450cbdf62f4652760622f1a75869e406fc75fb34fc32298a58d20a4b"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.audit.stderr",
+      "sha256": "6159b2e767a2952f8da2fd15b1ec428fff3e9f124dc1d1cc1ba12a6871f51df5"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.audit.stdout",
+      "sha256": "943546fc58779648720cfb26ece5ea02e446387de06ea86e6b3f33830b033c52"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.base.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.base.stdout",
+      "sha256": "d694d85e7f8bdabbea5a8f15dfcdc56109c2577c271230dd0bea17b915a34917"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.no-autoconversion.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.no-autoconversion.stdout",
+      "sha256": "943546fc58779648720cfb26ece5ea02e446387de06ea86e6b3f33830b033c52"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.no-reinit-noautoscale.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.no-reinit-noautoscale.stdout",
+      "sha256": "943546fc58779648720cfb26ece5ea02e446387de06ea86e6b3f33830b033c52"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.no-reinit.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/h264-size-change.mp4.no-reinit.stdout",
+      "sha256": "943546fc58779648720cfb26ece5ea02e446387de06ea86e6b3f33830b033c52"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/pytest-red.safe.log",
+      "sha256": "3b8aa6554dba150594dc97f34a04a8e99d76650bb71f3b8428233eb73125597e"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-16000-48000-16000.mp3",
+      "sha256": "cc526f9aa2a96cd58318d31adcfab2efd4962ac062029db39a6d28f09682a0bc"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-16000-48000-16000.mp3.stderr",
+      "sha256": "70ac3f28e58f61d479658ebc58189aa0b51e2d6b12fa2ba303695fc03908fc45"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-16000-48000-16000.mp3.stdout",
+      "sha256": "83511ec797e964d4ccef8c58f9f0b40e89e133c6966e137902d677ca243daf93"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-16000-48000-8000-48000-16000.mp3",
+      "sha256": "3ae460128b38c0f89aa710d582f5af0a07bff5c7f62ebd9e8ce6a83ffcbeff74"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-16000-48000-8000-48000-16000.mp3.stderr",
+      "sha256": "4470e2202e15069caac57961ef87ed1578f5caff0a82cf204bee6044e9b2e90f"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-16000-48000-8000-48000-16000.mp3.stdout",
+      "sha256": "83511ec797e964d4ccef8c58f9f0b40e89e133c6966e137902d677ca243daf93"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-48000-16000-48000.mp3",
+      "sha256": "e1a9b96fe2d0e7c318e3d8cd09723bba28be9dbd96ff07c52e37d50cd7904af7"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-48000-16000-48000.mp3.stderr",
+      "sha256": "203040229b6b1ce6f8c954ae0bbca7d190764faa8d7f4dbe484c526f5fd8e42a"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-48000-16000-48000.mp3.stdout",
+      "sha256": "8dc86dddbc572342e38adcd40ad4af660c1c717982e39f6f9ef6fd84b4383bb6"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-direct-gate.safe.json",
+      "sha256": "7409c5844f291c3d2b5a349226db721cfd23c1903fba1b99b1c3b2978efe913a"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-gate-16000.mp3",
+      "sha256": "bcc265cf19669d4ff0c29ea269f1c17a6adcc4a810b5fa3a663619cf4b89aa68"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-gate-48000.mp3",
+      "sha256": "ce16ab6f484cad159a06bf2424b01eba28435f72403c7a983eb7a5f6ecec4774"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/rate-gate-8000.mp3",
+      "sha256": "02ebdf3b31e30d91174a0ada171817718e51ae1ff458a79aacd60e3ab57911cf"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/test_dynamic_red.py",
+      "sha256": "d37c6a13fa40c38d31f30a4143e1af580bbc6e90d148219c5ff3e4c41d6f4d8a"
+    },
+    {
+      "path": "outputs/_run/central-av-dynamic-format-investigation-20261028/unchanged-counterexamples-red.safe.json",
+      "sha256": "dd0896e9c22b1c96b956915fb934cccb1d961021044c2ce7e429a3a479a6a237"
+    }
+  ],
+  "plan": {
+    "path": "docs/superpowers/plans/2026-10-28-av-native-frame-audit-r2-plan.md",
+    "sha256": "4f8fbd33d7873061b0c9a39e4e37fab279a5656281779c0e4d7b34cd3b23d28d"
+  }
+}

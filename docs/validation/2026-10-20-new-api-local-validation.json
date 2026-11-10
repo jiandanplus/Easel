@@ -1,0 +1,45 @@
+{
+  "recorded_at": "2026-10-20T09:27:38.724391+00:00",
+  "branch": "codex/ui-redesign",
+  "checks": [
+    {
+      "scope": "client_contract_and_legacy_regression",
+      "command": "rtk proxy python3 -W error -m pytest -o asyncio_default_fixture_loop_scope=function tests/test_newapi_image.py tests/test_agnes_image.py tests/test_newapi_music.py tests/test_newapi_voice.py tests/test_gemini_tts.py tests/test_newapi_video.py tests/test_ai_video_env.py -q",
+      "passed": 139,
+      "exit_code": 0,
+      "requires_loopback_binding": true
+    },
+    {
+      "scope": "operations_fake_subprocess_and_http",
+      "command": "rtk proxy python3 -W error -m unittest discover -s integrations/newapi/ops/tests -q",
+      "passed": 52,
+      "exit_code": 0
+    },
+    {
+      "scope": "plugin_node_contract",
+      "command": "rtk proxy node --test integrations/newapi/plugins/easel-dashscope-music/1.0.0/tests/plugin.test.mjs integrations/newapi/plugins/easel-dashscope-voice/1.0.0/tests/plugin.test.mjs integrations/newapi/plugins/easel-fish-tts/1.0.0/plugin.test.mjs integrations/newapi/plugins/easel-minimax-voice/1.0.0/plugin.test.mjs integrations/newapi/plugins/easel-image-variations/1.0.0/tests/plugin.test.mjs",
+      "passed": 50,
+      "exit_code": 0
+    },
+    {
+      "scope": "fish_bridge_asgi_mock_supplier",
+      "command": "rtk proxy .venv/bin/python -W error -c 'import sys, os; sys.path.append(\"/opt/anaconda3/lib/python3.12/site-packages\"); os.environ[\"PYTEST_DISABLE_PLUGIN_AUTOLOAD\"]=\"1\"; import pytest; raise SystemExit(pytest.main([\"-q\", \"integrations/newapi/fish_bridge/test_app.py\"]))'",
+      "passed": 23,
+      "exit_code": 0,
+      "note": "Reused installed pytest on sys.path tail; FastAPI/Pydantic from project .venv. No environment installation."
+    }
+  ],
+  "supplier_http_calls": 0,
+  "evidence_boundary": "Local mocks and owned loopback endpoints; not real model, production supplier billing, audio/video playback, or performance acceptance.",
+  "additional_review": "2026-10-20-new-api-private-plugins-http-review.md",
+  "final_source_sha256": {
+    "skills/shared/scripts/ai_image.py": "147d88109a12146837c240c6e10045356358f1dab639ba22f3cec3e0167fd290",
+    "skills/shared/scripts/ai_video.py": "4e61a324377edab8e85f9ed8b7f082a7c56deeb364576429a474240cfaa7fe8a",
+    "skills/shared/scripts/ai_music.py": "eeac33af135700b46d5400e9a3b2b1b4aed6733729042a0ca98bb62cf1e699aa",
+    "skills/shared/scripts/voice_clone.py": "b86471ed6c5b43388af417a38f2ca025a9b3e2c93b2e4b52c37f37bc8a0d5a11",
+    "skills/shared/scripts/newapi_voice.py": "d001222110046e581d97d7d33e40ed331b29b99cd671b4ad8fdc017fe05bc191"
+  },
+  "git_diff_check": "passed",
+  "preexisting_ui_files_preserved": 12,
+  "main_unchanged": true
+}

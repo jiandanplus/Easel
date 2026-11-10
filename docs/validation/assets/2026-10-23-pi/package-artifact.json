@@ -1,0 +1,21 @@
+{
+  "app": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel/Easel.app",
+  "archive": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/pi-portable-20261023-v3/Easel-Pi-macOS15-arm64.zip",
+  "sha256": "31ab80a3d876c8e2247b68750c55b31332dc51972ae1cfdbf55e8fd7aff8200a",
+  "archive_bytes": 124868303,
+  "inventory_files": 15251,
+  "schema_version": 1,
+  "engine": "pi",
+  "git_commit": "e972af07444e181e3eb737441ecac306bca778b3",
+  "source_manifest_sha256": "71305e70de238e33b879bd20d203aa13fbc50b9e2e11070330b3ea5edd286c82",
+  "pi_manifest_sha256": "dbe6e347af5257c065a7edac1aabef44c35101f17f6db2012e4858fee0c06feb",
+  "frontend_receipt_sha256": "845c4ff4a3e735741821dbbced200fc76c9265c8120f7dab003247e2f74e5b39",
+  "python_archive_verified": false,
+  "python_runtime_inventory_verified": true,
+  "python_version": "3.12.13",
+  "wheel_count": 25,
+  "minimum_macos": "15.0",
+  "unsigned": true,
+  "notarized": false,
+  "ui": "loopback web browser"
+}

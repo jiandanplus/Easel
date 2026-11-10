@@ -1,0 +1,69 @@
+# New API gateway on the 154 host. Private: only 127.0.0.1 is published, and
+# nginx terminates TLS on 127.0.0.1:19443 for the central service.
+name: easel-newapi
+
+services:
+  new-api:
+    image: calciumion/new-api@sha256:6c63c7ee9cd5bf7880df3984e99dd3ef07992d7a97538cfb2719adf9d87bc3f9 # v1.0.0-rc.45
+    container_name: easel-newapi
+    restart: unless-stopped
+    command: --log-dir /app/logs
+    ports:
+      - "127.0.0.1:19880:3000"
+    environment:
+      SQL_DSN: "postgresql://newapi:${PG_PASSWORD}@pg:5432/newapi?sslmode=disable"
+      REDIS_CONN_STRING: "redis://redis:6379/0"
+      SESSION_SECRET: "${SESSION_SECRET}"
+      CRYPTO_SECRET: "${CRYPTO_SECRET}"
+      TZ: Asia/Shanghai
+      STREAMING_TIMEOUT: "300"
+      ERROR_LOG_ENABLED: "true"
+    volumes:
+      - data:/data
+      - logs:/app/logs
+    depends_on:
+      pg:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -q '\"success\":\\s*true'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  pg:
+    image: postgres@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
+    container_name: easel-newapi-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: newapi
+      POSTGRES_PASSWORD: "${PG_PASSWORD}"
+      POSTGRES_DB: newapi
+    volumes:
+      - pg:/var/lib/postgresql/data
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U newapi -d newapi"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  redis:
+    image: redis:7-alpine
+    container_name: easel-newapi-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    mem_limit: 96m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  data:
+  logs:
+  pg:

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "matched_gateway_request_ids": 12,
+  "all_three_settled_central_receipts_match_gateway_tokens": true,
+  "rate_formula": "ceil(input_tokens/2 + 3*output_tokens/2)",
+  "settled_microcredits": 1175,
+  "points": 0.001175,
+  "settled_request_matches": [
+    {
+      "job_id": "c4db863e-7714-4cfa-9b7e-ba23aec9082a",
+      "request_id": "202610230855378554771988268d9d6UfDx8lT4",
+      "input_tokens": 511,
+      "output_tokens": 185,
+      "expected_microcredits": 533,
+      "actual_microcredits": 533,
+      "matched": true
+    },
+    {
+      "job_id": "c7da2f9b-b274-412e-bba6-4921a32e58ed",
+      "request_id": "202610230856191992618038268d9d6H6s9hkyu",
+      "input_tokens": 547,
+      "output_tokens": 16,
+      "expected_microcredits": 298,
+      "actual_microcredits": 298,
+      "matched": true
+    },
+    {
+      "job_id": "9a23d9b1-be66-4dc0-9d08-daa86de172d1",
+      "request_id": "202610230856434554438628268d9d6I9PbHX9A",
+      "input_tokens": 574,
+      "output_tokens": 38,
+      "expected_microcredits": 344,
+      "actual_microcredits": 344,
+      "matched": true
+    }
+  ],
+  "gateway_log_quota_is_not_central_credits_or_cny": true,
+  "unknown_rows_not_automatically_settled_from_gateway_logs": true
+}

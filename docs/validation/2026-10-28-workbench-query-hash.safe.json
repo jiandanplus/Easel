@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "status": "author_evidence_archived_independent_review_pending_not_packaged",
+  "prepared_utc": "2026-10-28T11:56:57.738795+00:00",
+  "archive": {
+    "path": "/Users/jiandan/Code/GitCode/Easel/outputs/_run/workbench-query-hash-20261028",
+    "copied_files": 12,
+    "copied_content_bytes": 94792,
+    "archive_files_including_manifest": 13,
+    "archive_bytes_including_manifest": 99679,
+    "copy_manifest_sha256": "3518ce8c44af2b6ea5a8d49fd1a56c9a523e1b2e7cfef56e4ec536cc4d0386b2"
+  },
+  "candidate": {
+    "App_sha256": "475b2d4263d10cb278c99cfbb62d74abdf396dc4160a8dd0106add9d29191450",
+    "test_sha256": "a515993310096395d4fc3009dee48e20613d5d2bf3756f8d53c27540f9bbe593",
+    "App_net_insertions": 4,
+    "App_net_deletions": 0,
+    "only_authorized_product_edit": "App.queryOriginalTurn accepted pending requestHash guard"
+  },
+  "validation": {
+    "author_RED": {
+      "tests": 15,
+      "passed": 10,
+      "failed": 5,
+      "skipped": 0,
+      "exit_code": 1
+    },
+    "author_GREEN": {
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0
+    },
+    "typecheck_exit_code": 0,
+    "frontend_full": {
+      "test_files": 55,
+      "tests": 529,
+      "passed": 529,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "runs": 1
+    },
+    "counts_overlap_not_additive": true,
+    "new_tests_during_archival": 0
+  },
+  "old_central_full_boundary": {
+    "tests": 2475,
+    "passed": 2468,
+    "skipped": 7,
+    "failed": 0,
+    "current_bugfix_central_rerun": false,
+    "old_freeze_public_inputs": 1333,
+    "old_App_sha256": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+    "current_App_sha256": "475b2d4263d10cb278c99cfbb62d74abdf396dc4160a8dd0106add9d29191450",
+    "same_complete_snapshot": false,
+    "central_code_edited_by_this_bugfix": false
+  },
+  "author_closure_boundary": {
+    "before_count": 1334,
+    "after_count": 1335,
+    "author_phase_changed_existing": [
+      "web/frontend/src/App.tsx"
+    ],
+    "author_phase_added": [
+      "tests/frontend/queryOriginalTurnRequestHash.test.mjs"
+    ],
+    "large_author_snapshots": "absolute path and SHA references in copy-manifest; retained tmp, not copied or a new backup",
+    "current_whole_tree_unchanged_claimed": false,
+    "continuity_spec_author_phase_sha256": "ef712af781b0372cce3410ce75d21d2ea39a39c6ef1689e4625abed63966708d",
+    "continuity_spec_current_sha256": "fdb3d0cdc80a2eb61c3c0f51d2a576c71b913103c32a71c5849241232f9e4ca0",
+    "continuity_spec_changed_after_author_freeze": true,
+    "continuity_spec_edit_authority": "root subsequently edited design docs; no migration implementation by this bugfix"
+  },
+  "independent_review": {
+    "status": "pending incho root coordination",
+    "not_claimed_passed": true
+  },
+  "scope_limits": {
+    "actual_browser_or_new_package_verified": false,
+    "original17868_accessed_or_changed": false,
+    "central_PG_model_auth_real_storage_used": false,
+    "HOME_override": false,
+    "product_or_spec_or_mainplan_changed_during_archival": false,
+    "build_App_ZIP_commit_push": false,
+    "managed_workspace_continuity_implemented": false
+  },
+  "large_evidence_references": [
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-fix-20261028/before.safe.json",
+      "bytes": 2042116,
+      "sha256": "91ad85ccfaf2f08e4d3ab404fa538128b9eb2466537f1127e691ec9f548d9e00",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-fix-20261028/after.safe.json",
+      "bytes": 2042896,
+      "sha256": "b4edee2111c7bcb27254219c71bb5bda8f17f6e90a26c2c2cb283f80d035cecf",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-fix-20261028/App-before.tsx.txt",
+      "bytes": 66243,
+      "sha256": "65371dcef20b660360ade324015c3f8c13284713d61d8f9d4723076790b31615",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-fix-20261028/App-after.tsx.txt",
+      "bytes": 66448,
+      "sha256": "475b2d4263d10cb278c99cfbb62d74abdf396dc4160a8dd0106add9d29191450",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-fix-20261028/App-before-git.diff",
+      "bytes": 52476,
+      "sha256": "df46c45bc0fa6009b15778c5e873c211bdf1a599e0b1d293962b7ac1255c1dff",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-fix-20261028/App-after-git.diff",
+      "bytes": 52685,
+      "sha256": "5a52803dea832b5b2f9f5672728dacedd1ba969e330ce6688c947a0a36cd56e6",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-fix-20261028/git-status-before.txt",
+      "bytes": 54539,
+      "sha256": "89825e0df53090dc0cb541e44f793330beb2967cb8107a949c8c513dd4b0ebe7",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-fix-20261028/git-status-after.txt",
+      "bytes": 54595,
+      "sha256": "f5ae05b8cbdb3761e22ebd63c3b1238ab28a9fa1c468b342d54e573e0e609aec",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-independent-20261028/results.safe.json",
+      "bytes": 22432,
+      "sha256": "98fd77b65f0c5152282a9db13603c1fbc7d3f1c21eddd86b6d92cf2f3dbd9c7e",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-independent-20261028/node-test.log",
+      "bytes": 2864,
+      "sha256": "3bd040aa9ba7382ae4bb9f6059238e04a4bcbec71a6107c48b1e886b4a87f5fe",
+      "copied": false
+    },
+    {
+      "absolute_path": "/private/tmp/easel-query-turn-hash-independent-20261028/review.safe.json",
+      "bytes": 5813,
+      "sha256": "757384735115a08056d890fe9f4896eddd6326181e63cd7f35f1b72dab09d2b0",
+      "copied": false
+    }
+  ],
+  "evidence_sha256": {
+    "implementation-review.md": "8c468f01171c3e0e2a6c4d2dd65bd71e7a6d808d011cc6e973aefb4107f800b4",
+    "implementation-safe.json": "e500afaf56f34abef5abcd73a171a2706e1a36e6c8b5657984d42d6e090fa3b5",
+    "App-only-task.patch": "26190c218218f848aedaf0f19dd5046a60a49084698a6495d62215b196872b94",
+    "red.log": "13cad1f2ecc4e29ab5aa2941517a7a1e3ba0aa358311b6617d5d2a49b20f3261",
+    "red.run.safe.json": "ffefba218a1f33045faa367f9f6da9f201037be5825cfb7affccbd4862f017ac",
+    "green.log": "2e843ca1a5a81ebb03513849bf45fb008d7a381c96189261fca402d1136aeae7",
+    "green.run.safe.json": "d5788a687912bc24afb20a345af66a1067a45a862125c205a4bfbc42793a76b4",
+    "full-frontend.log": "1ff17c7caf7fd77e2a318f4876a79ac9200b751e468774f2178fe160fcfca6e9",
+    "full-frontend.run.safe.json": "8d392fd06273342962027ba781ba0374a86a0820360db5402ba92ef76b93c48f",
+    "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "typecheck.run.safe.json": "08f3a98e8b6fd9776a09d9ddfb84c9cd825a4cabad1b3e53a2eecc3cbee99b10",
+    "queryOriginalTurnRequestHash.test.mjs.txt": "a515993310096395d4fc3009dee48e20613d5d2bf3756f8d53c27540f9bbe593"
+  }
+}

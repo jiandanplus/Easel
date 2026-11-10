@@ -26,6 +26,9 @@
 """
 from __future__ import annotations
 
+from media_gateway import require_media_available
+require_media_available()
+
 import argparse
 import json
 import os
@@ -204,16 +207,24 @@ class ClosedTTSError(Exception):
 
 
 def _closed_provider() -> str | None:
-    p = (os.environ.get("VOICE_PROVIDER") or "").strip()
+    from media_gateway import resolve_media_environment
+    effective = resolve_media_environment("voice", os.environ)
+    p = (effective.get("VOICE_PROVIDER") or "").strip()
     return p or None
 
 
 def _closed_voice_id(voice: str | None) -> str | None:
     """闭源音色 id：显式 voice 像闭源音色(含 : 或 /)就用它；否则 env VOICE_NARRATOR_VOICE_ID；
     再否则 openai-compatible 用 CosyVoice2 沉稳男声 alex 作旁白默认；其它 provider 交给 voice_clone 默认。"""
+    from media_gateway import gateway_managed, resolve_media_environment
+    effective = resolve_media_environment("voice", os.environ)
+    if gateway_managed("voice", os.environ):
+        if voice and voice != DEFAULT_VOICE:
+            return voice
+        return (effective.get("VOICE_NARRATOR_VOICE_ID") or "").strip() or None
     if voice and (":" in voice or "/" in voice):
         return voice
-    vid = (os.environ.get("VOICE_NARRATOR_VOICE_ID") or "").strip()
+    vid = (effective.get("VOICE_NARRATOR_VOICE_ID") or "").strip()
     if vid:
         return vid
     if _closed_provider() == "openai-compatible":

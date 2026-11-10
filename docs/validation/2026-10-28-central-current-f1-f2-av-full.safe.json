@@ -1,0 +1,35 @@
+{
+  "status": "FRESH_CURRENT_FULL_PASSED_WITH_EXPLICIT_SKIPS",
+  "original_full": {
+    "passed": 2460,
+    "failed": 8,
+    "skipped": 7,
+    "errors": 0
+  },
+  "A": {
+    "passed": 7,
+    "failed": 1
+  },
+  "B": {
+    "passed": 8,
+    "failed": 0
+  },
+  "corrected_full": {
+    "tests": 2475,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 7,
+    "passed": 2468,
+    "seconds": 354.817
+  },
+  "corrected_full_complete": true,
+  "input_count": 1333,
+  "payload_count": 11932,
+  "source_unchanged": true,
+  "product_or_test_edits": false,
+  "clock_events": 0,
+  "actual_F2_Linux_PG25006_capture_or_WPD_proof": false,
+  "production_or_real_provider_operations": false,
+  "document_sha256": "1308d1830026618630c57cc1acb68924b00f3c6e564ae512239c21a81f4cfdb3",
+  "manifest_sha256": "46ba079515658ae84c283a295dc1c1c66b534879d3dbf19549da43ce71f852e0"
+}

@@ -9,6 +9,7 @@ from easel import __version__
 
 from .base import HarnessError, RunRequest
 from .commands import base_command
+from .runtime import prepare_codex, resolve_codex, codex_model
 from .rpc import RPC
 
 
@@ -18,13 +19,34 @@ def _valid_id(value):
 
 
 async def available_models(runtime: str, request: RunRequest) -> list[dict]:
+    if request.service_source == "subscription":
+        from .capabilities import supports_subscription
+        if not supports_subscription(runtime, request.subscription_backend) or request.execution_target != "local":
+            raise HarnessError("此引擎不支持当前订阅渠道；内置 Pi 支持中央订阅")
+        from easel.platform.client import PlatformClient
+        if request.subscription_backend == "central":
+            from easel.platform.central import CentralClient
+            catalog = await asyncio.to_thread(CentralClient(request.cwd).models)
+            return [{**item, "label": item.get("name", item["id"]), "default": bool(item.get("default"))}
+                    for item in catalog.get("models", []) if isinstance(item, dict) and _valid_id(item.get("id"))]
+        catalog = await asyncio.to_thread(PlatformClient(request.cwd).models)
+        return [{"id": item["id"], "label": item["id"], "default": False}
+                for item in catalog.get("models", []) if isinstance(item, dict) and _valid_id(item.get("id"))]
+    if runtime == "pi":
+        from .provider import pi_model
+        model = pi_model(request.cwd, request.model)
+        return [{"id": model, "label": model, "default": True}]
     if runtime == "codex":
+        if resolve_codex().origin == "bundled":
+            model = codex_model(request.cwd, request.model)
+            return [{"id": model, "label": model, "default": True}]
+        request, command = prepare_codex(request, base_command("codex") + ["app-server"])
         async def reject(method, params):
             raise HarnessError("读取模型列表时不允许执行工具")
 
         models = []
         cursor = None
-        async with RPC(request, base_command("codex") + ["app-server"],
+        async with RPC(request, command,
                        lambda method, params: None, reject) as rpc:
             await rpc.call("initialize", {
                 "clientInfo": {"name": "easel", "version": __version__},

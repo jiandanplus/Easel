@@ -26,6 +26,9 @@ model / base_url 均可用 env 覆盖；如报错请对照最新官方文档调�
 """
 from __future__ import annotations
 
+from media_gateway import require_media_available
+require_media_available()
+
 import argparse
 import base64
 import difflib
@@ -34,8 +37,10 @@ import hmac
 import http.client
 import json
 import os
+import re
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 from output_paths import validate_output_path
@@ -97,6 +102,7 @@ def find_default_env_file() -> Path | None:
 
 
 def load_env_file(env_file: Path | None) -> None:
+    require_media_available()
     if env_file is None:
         return
     try:
@@ -104,6 +110,7 @@ def load_env_file(env_file: Path | None) -> None:
     except OSError as exc:
         print(f"警告：无法读取 .env 文件：{exc}", file=sys.stderr)
         return
+    saved_gateway = {}
     for line_number, raw_line in enumerate(lines, start=1):
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -115,11 +122,18 @@ def load_env_file(env_file: Path | None) -> None:
             continue
         key, value = line.split("=", 1)
         key = key.strip()
+        saved_gateway[key] = strip_env_value(value)
         if not key:
             print(f"警告：.env 第 {line_number} 行缺少变量名，已跳过。", file=sys.stderr)
             continue
         if key not in os.environ:
             os.environ[key] = strip_env_value(value)
+
+    from media_gateway import GATEWAY_ENV_KEYS, refresh_gateway_environment
+    effective = refresh_gateway_environment(os.environ, saved_gateway)
+    for name in GATEWAY_ENV_KEYS:
+        os.environ.pop(name, None)
+    os.environ.update(effective)
 
 
 def env_lookup(name: str) -> str:
@@ -276,7 +290,15 @@ def _put_audio(payload: dict[str, Any], params: dict[str, Any] | None,
 
 
 def resolve_provider(explicit: str | None) -> str:
-    provider = (explicit or os.environ.get("VIDEO_PROVIDER", "") or "").strip()
+    from media_gateway import gateway_managed, resolve_media_environment
+    try:
+        effective = resolve_media_environment("video", os.environ)
+    except ValueError as error:
+        fail(str(error))
+    selected = effective.get("VIDEO_PROVIDER", "").strip()
+    if gateway_managed("video", os.environ) and explicit and explicit != selected:
+        fail("显式 provider 与统一视频网关配置冲突；请求未提交。")
+    provider = (explicit or selected or "").strip()
     if not provider:
         fail("未指定 provider。请用 --provider 或设置 env VIDEO_PROVIDER。"
              f"可选：{ '、'.join(PROVIDERS) }。")
@@ -287,6 +309,11 @@ def resolve_provider(explicit: str | None) -> str:
 
 def resolve_model(provider: str, explicit: str | None = None, *, image: bool = False) -> str:
     """Resolve the effective model exactly as the provider adapter will use it."""
+    from media_gateway import resolve_media_environment
+    try:
+        effective = resolve_media_environment("video", os.environ)
+    except ValueError as error:
+        fail(str(error))
     if explicit and explicit.strip():
         return explicit.strip()
     env_names = {
@@ -297,7 +324,7 @@ def resolve_model(provider: str, explicit: str | None = None, *, image: bool = F
         "agnes": ("AGNES_MODEL",),
     }.get(provider, ())
     for name in env_names:
-        value = env_lookup(name)
+        value = effective.get(name, "").strip() or env_lookup(name)
         if value:
             return value
     defaults = {
@@ -528,8 +555,279 @@ def generate_kling(args: argparse.Namespace, image: str | None) -> Path:
     return download_video(url, Path(args.output))
 
 
+# ── opt-in New API /v1/videos client ──────────────────────
+class _NewAPIVideoNoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # POST must never be replayed by urllib; content redirects are handled
+        # explicitly below and carry no gateway credentials after the first hop.
+        return None
+
+
+_NEWAPI_VIDEO_OPENER = urllib.request.build_opener(_NewAPIVideoNoRedirect())
+_NEWAPI_VIDEO_MAX_BYTES = 512 * 1024 * 1024
+_NEWAPI_VIDEO_JSON_BYTES = 1024 * 1024
+_NEWAPI_VIDEO_IMAGE_BYTES = 10 * 1024 * 1024
+# These are deliberately narrow, administrator-selected mappings, not guesses
+# based on the gateway domain or the client's model alias. See the client guide.
+_NEWAPI_VIDEO_PROFILES = {
+    "standard": {"seconds": (4, 8, 12), "default": 4, "square": None, "image": "file"},
+    "veo": {"seconds": (4, 6, 8), "default": 4, "square": None, "image": "file"},
+    "kling": {"seconds": (5, 10), "default": 5, "square": "1024x1024", "image": "both"},
+    "wan26-t2v": {"seconds": (5, 10, 15), "default": 5, "square": "960x960", "image": "none"},
+    "seedance1": {"seconds": tuple(range(2, 13)), "default": 5, "square": "960x960", "image": "url"},
+}
+
+
+def _newapi_video_url(value: str) -> str:
+    """Validate URLs without exposing userinfo, query secrets or upstream bodies."""
+    try:
+        parsed = urllib.parse.urlsplit(value)
+        if (parsed.scheme not in ("https", "http") or not parsed.hostname
+                or parsed.username is not None or parsed.password is not None
+                or parsed.fragment or any(ord(c) < 33 for c in value)):
+            raise ValueError("unsafe URL")
+        parsed.port  # Invalid ports must be rejected before a charged submission.
+    except ValueError:
+        fail("New API 视频 URL 无效：需要无用户凭据的 HTTP(S) 地址。")
+    return value
+
+
+def _newapi_video_remaining(deadline: float, task_id: str = "") -> float:
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        fail(f"New API 视频任务超时，结果未知；请用 public_id={task_id or '[尚未取得]'} 查询，勿重复提交。")
+    return remaining
+
+
+def _newapi_video_body(args: argparse.Namespace, image: str | None) -> tuple[bytes, str, str]:
+    model = (args.model or env_lookup("VIDEO_MODEL") or "").strip()
+    if not model:
+        fail("New API 模式必须显式配置 VIDEO_MODEL 或 --model，不使用 legacy 的默认模型。")
+    profile_name = os.environ.get("VIDEO_NEWAPI_PROFILE", "standard").strip().lower()
+    profile = _NEWAPI_VIDEO_PROFILES.get(profile_name)
+    if profile is None:
+        fail("未知 VIDEO_NEWAPI_PROFILE；可用：" + "、".join(_NEWAPI_VIDEO_PROFILES))
+    duration = args.duration if args.duration is not None else profile["default"]
+    if type(duration) is not int or duration not in profile["seconds"]:
+        fail(f"New API profile={profile_name} 不支持 duration={duration}。")
+    ratio = args.ratio or "16:9"
+    sizes = {"16:9": "1280x720", "9:16": "720x1280"}
+    if profile["square"]:
+        sizes["1:1"] = profile["square"]
+    if ratio not in sizes:
+        fail(f"New API profile={profile_name} 不支持 ratio={ratio}；支持：" + "、".join(sizes))
+    if getattr(args, "audio", "auto") != "auto":
+        fail("New API 视频 profile 尚未确认音频开关映射；--audio 仅支持 auto。")
+    prompt = args.prompt or ""
+    if not isinstance(prompt, str) or len(prompt.encode("utf-8")) > 128 * 1024 or (not image and not prompt.strip()):
+        fail("New API 视频 prompt 不能为空，且 UTF-8 长度不能超过 128 KiB。")
+    payload: dict[str, Any] = {"model": model, "prompt": prompt, "seconds": str(duration), "size": sizes[ratio]}
+    if profile_name == "seedance1":
+        # Doubao only derives resolution from size; aspect ratio belongs in metadata.
+        payload["metadata"] = {"ratio": ratio, "resolution": "720p"}
+    file_bytes, file_type = None, ""
+    if image:
+        image_kind = profile["image"]
+        if image_kind == "none":
+            fail(f"New API profile={profile_name} 仅支持文生视频。")
+        if image.startswith(("https://", "http://")):
+            if image_kind == "file":
+                fail(f"New API profile={profile_name} 的参考图仅支持本地 multipart 文件。")
+            image_url = _newapi_video_url(image)
+            if profile_name == "seedance1":
+                payload["metadata"]["content"] = [{"type": "image_url", "image_url": {"url": image_url}}]
+            else:
+                payload["input_reference"] = image_url
+        else:
+            if image_kind == "url":
+                fail(f"New API profile={profile_name} 的参考图必须是 HTTP(S) URL，不接受本地文件。")
+            try:
+                with Path(image).open("rb") as source:
+                    file_bytes = source.read(_NEWAPI_VIDEO_IMAGE_BYTES + 1)
+            except OSError:
+                fail("New API 视频参考图无法读取。")
+            if not file_bytes or len(file_bytes) > _NEWAPI_VIDEO_IMAGE_BYTES:
+                fail("New API 视频参考图必须非空且不超过 10 MiB。")
+            if file_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+                file_type = "png"
+            elif file_bytes.startswith(b"\xff\xd8\xff"):
+                file_type = "jpeg"
+            elif file_bytes.startswith(b"RIFF") and file_bytes[8:12] == b"WEBP":
+                file_type = "webp"
+            else:
+                fail("New API 视频参考图必须是 PNG、JPEG 或 WebP。")
+    if file_bytes is None:
+        return json.dumps(payload, ensure_ascii=False).encode("utf-8"), "application/json", model
+    boundary = "easel_video_" + os.urandom(16).hex()
+    parts = []
+    for name, value in payload.items():
+        text = json.dumps(value, ensure_ascii=False) if isinstance(value, dict) else str(value)
+        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{text}\r\n'.encode("utf-8"))
+    parts.append((f'--{boundary}\r\nContent-Disposition: form-data; name="input_reference"; filename="reference.{file_type}"'
+                  f'\r\nContent-Type: image/{file_type}\r\n\r\n').encode("ascii") + file_bytes + b"\r\n")
+    parts.append(f"--{boundary}--\r\n".encode("ascii"))
+    return b"".join(parts), "multipart/form-data; boundary=" + boundary, model
+
+
+def _newapi_video_json(url: str, api_key: str, deadline: float, *, task_id: str = "",
+                       body: bytes | None = None, content_type: str = "application/json") -> dict[str, Any]:
+    headers = {"User-Agent": UA, "Accept": "application/json", "Authorization": "Bearer " + api_key}
+    if body is not None:
+        headers["Content-Type"] = content_type
+    request = urllib.request.Request(url, data=body, headers=headers, method="POST" if body is not None else "GET")
+    label = f"public_id={task_id}" if task_id else "提交结果未知；勿自动重复提交"
+    try:
+        with _NEWAPI_VIDEO_OPENER.open(request, timeout=min(60, _newapi_video_remaining(deadline, task_id))) as response:
+            raw = response.read(_NEWAPI_VIDEO_JSON_BYTES + 1)
+    except urllib.error.HTTPError as exc:
+        fail(f"New API 视频 HTTP {exc.code}（{label}），未重发 POST。")
+    except (urllib.error.URLError, OSError, http.client.HTTPException):
+        fail(f"New API 视频连接失败或超时（{label}），未重发 POST。")
+    _newapi_video_remaining(deadline, task_id)
+    if len(raw) > _NEWAPI_VIDEO_JSON_BYTES:
+        fail(f"New API 视频 JSON 超过 1 MiB（{label}）。")
+    try:
+        result = json.loads(raw)
+    except (ValueError, UnicodeError):
+        fail(f"New API 视频未返回有效 JSON（{label}）。")
+    if not isinstance(result, dict) or result.get("error") or result.get("success") is False:
+        fail(f"New API 视频返回业务错误或无效对象（{label}）。")
+    return result
+
+
+def _newapi_video_download(endpoint: str, task_id: str, api_key: str, task: dict[str, Any],
+                           output: Path, deadline: float) -> Path:
+    # Prefer the gateway-owned content route, even if a completed response also
+    # contains a CDN URL. Native completion JSON often has no URL at all.
+    target = f"{endpoint}/{task_id}/content"
+    authenticated, fallback_allowed, redirects = True, True, 0
+    temp_path: Path | None = None
+    if not output.suffix:
+        output = output.with_suffix(".mp4")
+    try:
+        while True:
+            headers = {"User-Agent": UA, "Accept": "video/*, application/octet-stream"}
+            if authenticated:
+                headers["Authorization"] = "Bearer " + api_key
+            request = urllib.request.Request(target, headers=headers, method="GET")
+            try:
+                response = _NEWAPI_VIDEO_OPENER.open(request, timeout=min(300, _newapi_video_remaining(deadline, task_id)))
+            except urllib.error.HTTPError as exc:
+                if exc.code in (301, 302, 303, 307, 308):
+                    if redirects >= 3:
+                        fail(f"New API 视频下载重定向超过 3 次（public_id={task_id}）。")
+                    location = exc.headers.get("Location", "") if exc.headers else ""
+                    if not location:
+                        fail(f"New API 视频下载重定向缺少地址（public_id={task_id}）。")
+                    next_target = _newapi_video_url(urllib.parse.urljoin(target, location))
+                    if urllib.parse.urlsplit(target).scheme == "https" and urllib.parse.urlsplit(next_target).scheme != "https":
+                        fail(f"New API 视频下载拒绝 HTTPS 降级（public_id={task_id}）。")
+                    target = next_target
+                    authenticated, fallback_allowed = False, False
+                    redirects += 1
+                    continue
+                if fallback_allowed and exc.code in (404, 405, 501):
+                    # Only explicit result fields, never recursive reference/input URLs.
+                    candidate = task.get("video_url") or task.get("url")
+                    if isinstance(candidate, str) and candidate:
+                        target = _newapi_video_url(candidate)
+                        if urllib.parse.urlsplit(endpoint).scheme == "https" and urllib.parse.urlsplit(target).scheme != "https":
+                            fail(f"New API 视频下载拒绝 HTTPS 降级（public_id={task_id}）。")
+                        authenticated, fallback_allowed = False, False
+                        continue
+                fail(f"New API 视频内容下载失败 HTTP {exc.code}（public_id={task_id}），未重发任务。")
+            with response:
+                if response.status != 200:
+                    fail(f"New API 视频内容不是完整 HTTP 200 响应（public_id={task_id}）。")
+                mime = response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+                if not (mime.startswith("video/") or mime == "application/octet-stream"):
+                    fail(f"New API 视频内容不是视频二进制（public_id={task_id}）。")
+                expected = None
+                declared_length = response.headers.get("Content-Length")
+                if declared_length is not None:
+                    if not re.fullmatch(r"[0-9]{1,12}", declared_length.strip()):
+                        fail(f"New API 视频 Content-Length 无效（public_id={task_id}）。")
+                    expected = int(declared_length)
+                    if not 0 < expected <= _NEWAPI_VIDEO_MAX_BYTES:
+                        fail(f"New API 视频 Content-Length 为空或超过上限（public_id={task_id}）。")
+                output.parent.mkdir(parents=True, exist_ok=True)
+                total = 0
+                with tempfile.NamedTemporaryFile(prefix=".easel-video-", dir=output.parent, delete=False) as temp:
+                    temp_path = Path(temp.name)
+                    while True:
+                        _newapi_video_remaining(deadline, task_id)
+                        chunk = response.read(min(64 * 1024, _NEWAPI_VIDEO_MAX_BYTES - total + 1))
+                        if not chunk:
+                            break
+                        if total == 0:
+                            # MIME alone is insufficient: a 200 error page or JSON
+                            # may be mislabeled. Accept common video containers.
+                            mp4 = len(chunk) >= 12 and chunk[4:8] in (b"ftyp", b"styp", b"moov", b"mdat", b"wide", b"free")
+                            webm = chunk.startswith(b"\x1aE\xdf\xa3")
+                            avi = chunk.startswith(b"RIFF") and chunk[8:12] == b"AVI "
+                            if not (mp4 or webm or avi):
+                                fail(f"New API 视频内容缺少 MP4/MOV、WebM 或 AVI 文件头（public_id={task_id}）。")
+                        total += len(chunk)
+                        if total > _NEWAPI_VIDEO_MAX_BYTES:
+                            fail(f"New API 视频内容超过 512 MiB（public_id={task_id}）。")
+                        temp.write(chunk)
+                _newapi_video_remaining(deadline, task_id)
+                if not total:
+                    fail(f"New API 视频内容为空（public_id={task_id}）。")
+                if expected is not None and total != expected:
+                    fail(f"New API 视频下载字节数与 Content-Length 不符（public_id={task_id}），请重新下载已有任务。")
+                os.replace(temp_path, output)
+                temp_path = None
+                return output
+    except (urllib.error.URLError, OSError, http.client.HTTPException):
+        fail(f"New API 视频下载连接或文件写入失败（public_id={task_id}），未重发任务。")
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+
+
+def _generate_newapi_video(args: argparse.Namespace, image: str | None) -> Path:
+    api_key = require_env("VIDEO_API_KEY")
+    base = _newapi_video_url(require_env("VIDEO_BASE_URL").rstrip("/"))
+    if urllib.parse.urlsplit(base).query:
+        fail("VIDEO_BASE_URL 不能包含查询参数，请使用网关 API 根路径。")
+    if not urllib.parse.urlsplit(base).path.endswith("/v1"):
+        base += "/v1"
+    endpoint = base + "/videos"
+    if (not isinstance(args.timeout, (int, float)) or not 0 < args.timeout <= 86400
+            or not isinstance(args.poll_interval, (int, float)) or not 0 < args.poll_interval <= 3600):
+        fail("New API 视频 timeout 必须在 (0, 86400] 秒，poll_interval 必须在 (0, 3600] 秒。")
+    body, content_type, model = _newapi_video_body(args, image)
+    deadline = time.monotonic() + args.timeout
+    print(f"[new-api/video] 提交已配置的视频渠道（model={model}）...", file=sys.stderr)
+    task = _newapi_video_json(endpoint, api_key, deadline, body=body, content_type=content_type)
+    task_id = task.get("id")
+    if not isinstance(task_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", task_id):
+        fail("New API 视频提交未返回有效 public_id；提交结果未知，勿自动重复提交。")
+    print(f"[new-api/video] public_id={task_id}", file=sys.stderr)
+    while True:
+        _newapi_video_remaining(deadline, task_id)
+        if task.get("id") != task_id:
+            fail(f"New API 视频轮询 public_id 不一致（原 public_id={task_id}）。")
+        status = str(task.get("status", "")).lower()
+        if status == "completed":
+            return _newapi_video_download(endpoint, task_id, api_key, task, Path(args.output), deadline)
+        if status in ("failed", "error", "cancelled", "canceled"):
+            fail(f"New API 视频任务失败（public_id={task_id}，status={status}）。")
+        if status not in ("queued", "pending", "in_progress", "processing", "running"):
+            fail(f"New API 视频任务状态未知（public_id={task_id}），请人工查询，勿重复提交。")
+        time.sleep(min(args.poll_interval, _newapi_video_remaining(deadline, task_id)))
+        _newapi_video_remaining(deadline, task_id)
+        task = _newapi_video_json(f"{endpoint}/{task_id}", api_key, deadline, task_id=task_id)
+
+
 # ── provider: openai-compatible ───────────────────────────
 def generate_openai_compatible(args: argparse.Namespace, image: str | None) -> Path:
+    api_mode = os.environ.get("VIDEO_API_MODE", "custom").strip().lower() or "custom"
+    if api_mode == "new-api":
+        return _generate_newapi_video(args, image)
+    if api_mode not in ("custom", "legacy"):
+        fail("VIDEO_API_MODE 仅支持 custom、legacy 或 new-api。")
     api_key = require_env("VIDEO_API_KEY")
     base = require_env("VIDEO_BASE_URL").rstrip("/")
     model = resolve_model("openai-compatible", args.model, image=image is not None)
@@ -858,6 +1156,11 @@ def main() -> int:
     args = ap.parse_args()
     env_file = Path(args.env_file) if getattr(args, "env_file", None) else find_default_env_file()
     load_env_file(env_file)
+    from media_gateway import resolve_media_environment
+    try:
+        os.environ.update(resolve_media_environment("video", os.environ))
+    except ValueError as error:
+        fail(str(error))
     if getattr(args, "output", None):
         args.output = str(validate_output_path(args.output))
     return args.func(args)
