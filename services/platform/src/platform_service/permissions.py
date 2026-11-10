@@ -152,7 +152,7 @@ CONSOLE_FUNCTIONS = (
 )
 # The one SECURITY DEFINER entry point the product runtime may call (migration 026).
 RUNTIME_FUNCTIONS = ("redeem_code(text,text,text)",)
-RUNTIME_CATALOG_TABLES = ("provider_catalog", "managed_model_bindings", "model_prices", "model_trial_access", "provider_configs", "provider_config_status", "provider_voice_aliases")
+RUNTIME_CATALOG_TABLES = ("provider_catalog", "managed_model_bindings", "model_prices", "model_trial_access", "provider_configs", "provider_config_status", "provider_voice_aliases", "plan_states")
 
 
 async def can_issue_allowance(conn, role, schema):

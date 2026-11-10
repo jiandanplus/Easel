@@ -57,6 +57,12 @@ def local_model_id(upstream):
     return model
 
 
+def system_plan(value):
+    """The owner allowance and internal experience plans are managed by the service, not edited by hand."""
+    if isinstance(value, str) and value.startswith('easel-'):
+        raise PlatformError(403, 'console_internal_plan_protected')
+
+
 def protected(value):
     if isinstance(value, str) and value.startswith('easel-internal-'):
         raise PlatformError(403, 'console_internal_plan_protected')
@@ -149,12 +155,30 @@ class ConsoleCatalog:
                 return old['result']
             operator = OperatorIdentity(actor, frozenset(permissions))
             bound = BoundDatabase(conn)
-            if action == 'plan.publish':
-                for model in payload.get('models') or ():
+            if action in ('plan.publish', 'plan.revise'):
+                definition = payload['definition'] if action == 'plan.revise' else payload
+                for model in definition.get('models') or ():
                     if not await (await conn.execute('SELECT 1 FROM execution_models WHERE id=%s UNION ALL SELECT 1 FROM media_models WHERE id=%s', (model, model))).fetchone():
                         raise PlatformError(422, 'console_plan_model_unknown')
-                result = await MembershipService(bound).publish_plan(operator, payload)
+                if action == 'plan.revise':
+                    old = payload['replaces']
+                    if definition.get('id') == old:
+                        raise PlatformError(422, 'invalid_console_command')
+                    await self._retirable(conn, old)
+                result = await MembershipService(bound).publish_plan(operator, definition)
+                if action == 'plan.revise':
+                    await self._set_plan_state(conn, actor, old, True, reason, replaced_by=result['id'])
+                    result = {**result, 'replaced': old}
+            elif action == 'plan.state':
+                if payload['retired']:
+                    await self._retirable(conn, target_id)
+                elif not await (await conn.execute('SELECT 1 FROM plans WHERE id=%s', (target_id,))).fetchone():
+                    raise PlatformError(404, 'console_plan_not_found')
+                if await self._plan_retired(conn, target_id) != payload['retired']:
+                    await self._set_plan_state(conn, actor, target_id, payload['retired'], reason)
+                result = {'id': target_id, 'retired': payload['retired']}
             elif action == 'offer.publish':
+                await self._plan_open(conn, payload.get('plan_id'))
                 result = await BillingService(bound).publish_offer(operator, payload)
             elif action == 'offer.withdraw':
                 row = await (await conn.execute('SELECT plan_id FROM billing_offers WHERE id=%s', (target_id,))).fetchone()
@@ -183,6 +207,7 @@ class ConsoleCatalog:
                 result = await guarded(conn, 'SELECT console_issue_owner_allowance(%s,%s,%s,%s) AS result',
                                        (actor, target_id, key_hash, reason), ALLOWANCE_ERRORS)
             elif action == 'plan.issue':
+                await self._plan_open(conn, payload['plan_id'])
                 result = await guarded(conn, 'SELECT console_issue_plan(%s,%s,%s,%s,%s) AS result',
                                        (actor, target_id, payload['plan_id'], key_hash, reason), PLAN_ERRORS)
             elif action == 'user.status':
@@ -191,6 +216,7 @@ class ConsoleCatalog:
             elif action == 'user.logout':
                 result = await guarded(conn, 'SELECT console_force_logout(%s,%s) AS result', (actor, target_id), USER_ERRORS)
             elif action == 'redemption.create':
+                await self._plan_open(conn, payload['plan_id'])
                 result = await guarded(conn, 'SELECT console_create_redemption_batch(%s,%s,%s,%s,%s,%s) AS result',
                     (actor, payload['plan_id'], payload['name'], reason, payload['days'], [code_hash(c) for c in secret]), PLAN_ERRORS)
             elif action == 'redemption.disable':
@@ -236,6 +262,44 @@ class ConsoleCatalog:
         protected(definition.get('id'))
         permissions = ('plans:publish', 'billing:publish') if definition.get('test_only') is False else ('plans:publish',)
         return await self._command(principal, 'plan.publish', 'plan', definition.get('id'), definition, reason, key, permissions)
+
+    async def revise_plan(self, principal, replaces, definition, reason, key):
+        """Publish a new plan in place of an old one. The old plan keeps working for its members."""
+        if not isinstance(definition, dict):
+            raise PlatformError(422, 'invalid_console_command')
+        protected(definition.get('id'))
+        system_plan(replaces)
+        permissions = ('plans:publish', 'billing:publish') if definition.get('test_only') is False else ('plans:publish',)
+        return await self._command(principal, 'plan.revise', 'plan', text(replaces, 255), {'definition': definition, 'replaces': replaces}, reason, key, permissions)
+
+    async def set_plan_retired(self, principal, plan_id, retired, reason, key):
+        if type(retired) is not bool:
+            raise PlatformError(422, 'invalid_console_command')
+        system_plan(plan_id)
+        return await self._command(principal, 'plan.state', 'plan', plan_id, {'retired': retired}, reason, key, ('plans:publish',))
+
+    @staticmethod
+    async def _plan_retired(conn, plan_id):
+        row = await (await conn.execute('SELECT retired FROM plan_states WHERE plan_id=%s ORDER BY created_at DESC, id DESC LIMIT 1', (plan_id,))).fetchone()
+        return bool(row and row['retired'])
+
+    async def _plan_open(self, conn, plan_id):
+        """New issuance, redemption batches and offers only use plans that are not retired."""
+        if isinstance(plan_id, str) and await self._plan_retired(conn, plan_id):
+            raise PlatformError(409, 'console_plan_retired')
+
+    async def _retirable(self, conn, plan_id):
+        if not await (await conn.execute('SELECT 1 FROM plans WHERE id=%s', (plan_id,))).fetchone():
+            raise PlatformError(404, 'console_plan_not_found')
+        if await self._plan_retired(conn, plan_id):
+            raise PlatformError(409, 'console_plan_retired')
+        if await (await conn.execute('SELECT 1 FROM billing_offers o WHERE o.plan_id=%s AND NOT EXISTS (SELECT 1 FROM billing_offer_withdrawals w WHERE w.offer_id=o.id)', (plan_id,))).fetchone():
+            raise PlatformError(409, 'console_plan_has_offers')
+
+    @staticmethod
+    async def _set_plan_state(conn, actor, plan_id, retired, reason, replaced_by=None):
+        await conn.execute('INSERT INTO plan_states(id,plan_id,retired,replaced_by,operator_id,reason) VALUES (%s,%s,%s,%s,%s,%s)',
+                           (uuid4().hex, plan_id, retired, replaced_by, actor, reason))
 
     async def publish_offer(self, principal, definition, reason, key):
         if not isinstance(definition, dict):

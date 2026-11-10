@@ -320,11 +320,14 @@ class ConsoleQueries:
         return {**{key:row['definition'][key] for key in allowed},
                 'models':row['definition'].get('models'),'pricing':row['definition'].get('pricing'),
                 'created_by':row['created_by'],'created_at':row['created_at'].isoformat(),
-                'protected':row['definition']['id'].startswith('easel-internal-')}
+                'protected':row['definition']['id'].startswith('easel-internal-'),
+                'system':row['definition']['id'].startswith('easel-'),
+                'retired':bool(row.get('retired')),'replaced_by':row.get('replaced_by')}
 
     async def plans(self, principal, limit=25, offset=0, q=''):
-        return await self._list(principal,"""SELECT definition,created_by,created_at FROM plans
-            WHERE %s='' OR strpos(lower(id||' '||name),lower(%s))>0 ORDER BY created_at DESC,id DESC""",(q,q),limit,offset,q,self._plan)
+        return await self._list(principal,"""SELECT p.definition,p.created_by,p.created_at,s.retired,s.replaced_by FROM plans p
+            LEFT JOIN LATERAL (SELECT retired,replaced_by FROM plan_states WHERE plan_id=p.id ORDER BY created_at DESC,id DESC LIMIT 1) s ON true
+            WHERE %s='' OR strpos(lower(p.id||' '||p.name),lower(%s))>0 ORDER BY coalesce(s.retired,false),p.created_at DESC,p.id DESC""",(q,q),limit,offset,q,self._plan)
 
     @staticmethod
     def _wallet_sql():

@@ -352,6 +352,18 @@ def create_console_app(settings=None, *, database=None, auth=None, queries=None,
     for route, method, permission in (("plans", "plan", "plans:publish"), ("offers", "offer", "billing:publish"), ("models", "model", "execution:publish")):
         app.add_api_route("/api/" + route, publish(method, permission), methods=["POST"])
 
+    @app.post("/api/plans/{item_id}/revise")
+    async def revise_plan(request: Request, item_id: str):
+        actor = await principal(request, "plans:publish", write=True)
+        value, key = await command(request, {"definition", "reason"})
+        return await catalog.revise_plan(actor, item_id, value["definition"], value["reason"], key)
+
+    @app.post("/api/plans/{item_id}/state")
+    async def plan_state(request: Request, item_id: str):
+        actor = await principal(request, "plans:publish", write=True)
+        value, key = await command(request, {"retired", "reason"})
+        return await catalog.set_plan_retired(actor, item_id, value["retired"], value["reason"], key)
+
     @app.post("/api/offers/{item_id}/withdraw")
     async def withdraw(request: Request, item_id: str):
         actor = await principal(request, "billing:publish", write=True)

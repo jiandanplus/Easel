@@ -138,3 +138,59 @@ async def test_product_runtime_cannot_reach_console_functions(db, function):
         async with db.connection() as c:
             await c.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(role)))
             await c.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(role)))
+
+
+@pytest.mark.asyncio
+async def test_plans_are_revised_retired_and_restored_without_touching_members(db, console, console_role):
+    """Migration 036: a plan is never edited or deleted; editing publishes a new one and retires the old."""
+    _, _, _, scope = await seed(db)
+    members = MembershipService(db)
+    await members.publish_plan(PUBLISHER, live_plan('std-v1'))
+    catalog, queries, principal, _ = await low_catalog(console, console_role, 'admin')
+    issued = await catalog.issue_plan(principal, 'wallet', 'std-v1', '老用户', 'iss-1')
+
+    revised = await catalog.revise_plan(principal, 'std-v1', {**live_plan('std-v2', credits='80000000'), 'name': '试用 std-v1', 'version': '2'}, '加点数', 'rev-1')
+    assert revised['id'] == 'std-v2' and revised['replaced'] == 'std-v1'
+    assert await catalog.revise_plan(principal, 'std-v1', {**live_plan('std-v2', credits='80000000'), 'name': '试用 std-v1', 'version': '2'}, '加点数', 'rev-1') == revised
+    rows = {row['id']: row for row in (await queries.plans(principal))['items']}
+    assert rows['std-v2']['retired'] is False and rows['std-v1']['retired'] is True and rows['std-v1']['replaced_by'] == 'std-v2'
+    assert [row['id'] for row in (await queries.plans(principal))['items']][-1] == 'std-v1'  # Retired plans sort last.
+    assert [p['id'] for p in await members.plans('easel')].count('std-v1') == 0
+    assert (await CreditLedger(db).summary(scope))['live_available'] == issued['credits']  # The member keeps what they had.
+
+    for call in (lambda: catalog.issue_plan(principal, 'wallet', 'std-v1', '试用', 'iss-2'),
+                 lambda: catalog.create_redemptions(principal, 'std-v1', '旧码', 1, 30, '旧套餐', 'red-1'),
+                 lambda: catalog.revise_plan(principal, 'std-v1', live_plan('std-v3'), '再改', 'rev-2'),
+                 lambda: catalog.set_plan_retired(principal, 'std-v1', True, '停用', 'st-0')):
+        with pytest.raises(PlatformError) as error:
+            await call()
+        assert (error.value.status, error.value.code) == (409, 'console_plan_retired')
+
+    assert (await catalog.set_plan_retired(principal, 'std-v2', True, '停售', 'st-1'))['retired'] is True
+    assert 'std-v2' not in [p['id'] for p in await members.plans('easel')]
+    assert (await catalog.set_plan_retired(principal, 'std-v2', False, '恢复', 'st-2'))['retired'] is False
+    assert (await catalog.set_plan_retired(principal, 'std-v2', False, '再恢复', 'st-3'))['retired'] is False
+    assert 'std-v2' in [p['id'] for p in await members.plans('easel')]
+    async with db.connection() as c:
+        states = await (await c.execute("SELECT plan_id,retired,replaced_by FROM plan_states ORDER BY created_at,id")).fetchall()
+    assert [tuple(s.values()) for s in states] == [('std-v1', True, 'std-v2'), ('std-v2', True, None), ('std-v2', False, None)]
+
+    for plan in ('easel-owner-allowance-v1', 'easel-internal-experience-v1'):
+        with pytest.raises(PlatformError) as error:
+            await catalog.set_plan_retired(principal, plan, True, '停用', 'sys-' + plan)
+        assert error.value.code == 'console_internal_plan_protected'
+    with pytest.raises(PlatformError) as error:
+        await catalog.set_plan_retired(principal, 'missing-v1', True, '停用', 'st-404')
+    assert error.value.status == 404
+
+
+@pytest.mark.asyncio
+async def test_plan_states_cannot_be_rewritten(db, console, console_role):
+    await seed(db)
+    await MembershipService(db).publish_plan(PUBLISHER, live_plan('keep-v1'))
+    catalog, _, principal, _ = await low_catalog(console, console_role, 'admin')
+    await catalog.set_plan_retired(principal, 'keep-v1', True, '停用', 'keep-1')
+    for statement in ("UPDATE plan_states SET retired=false", "DELETE FROM plan_states", "TRUNCATE plan_states"):
+        with pytest.raises(psycopg.Error):
+            async with db.connection() as c:
+                await c.execute(statement)

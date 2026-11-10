@@ -126,7 +126,9 @@ class MembershipService:
             if not exists:
                 raise PlatformError(404, "product_not_found")
             rows = await (
-                await c.execute("SELECT definition FROM plans ORDER BY created_at,id")
+                # A retired plan (migration 036) is no longer offered; its members keep it.
+                await c.execute("""SELECT p.definition FROM plans p WHERE NOT coalesce((SELECT s.retired FROM plan_states s
+                    WHERE s.plan_id=p.id ORDER BY s.created_at DESC,s.id DESC LIMIT 1),false) ORDER BY p.created_at,p.id""")
             ).fetchall()
             return [
                 r["definition"]

@@ -8,7 +8,7 @@ export type Manage = { kind: 'disable' | 'enable' | 'logout' | 'note'; user: Rec
 const MAX_CREDITS = 100000000n;
 export function issuable(plan: RecordData): boolean {
   const id = String(plan.id ?? ''), credits = typeof plan.credits === 'string' && /^\d+$/.test(plan.credits) ? BigInt(plan.credits) : 0n;
-  return !id.startsWith('easel-internal-') && !id.startsWith('easel-owner-allowance-') && credits > 0n && credits <= MAX_CREDITS
+  return plan.retired !== true && !id.startsWith('easel-internal-') && !id.startsWith('easel-owner-allowance-') && credits > 0n && credits <= MAX_CREDITS
     && typeof plan.days === 'number' && plan.days >= 1 && plan.days <= 365;
 }
 export function parseTags(value: string): string[] {

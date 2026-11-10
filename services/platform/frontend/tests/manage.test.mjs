@@ -19,6 +19,9 @@ test('management commands use exact paths and need the matching permission',()=>
   for(const path of ['/api/users/u1/status','/api/users/u1/logout','/api/users/u1/note'])assert.ok(client.operation(path,{},'users:manage'));
   assert.throws(()=>client.operation('/api/wallets/w/plans',{},'plans:issue'));
   assert.throws(()=>client.operation('/api/users/u1/delete',{},'users:manage'));
+  client.setSession({admin:{id:'a',role:'admin',permissions:['console:read','plans:publish']},csrf_token:'csrf'});
+  for(const path of ['/api/plans','/api/plans/plan-a/revise','/api/plans/plan-a/state'])assert.ok(client.operation(path,{},'plans:publish'));
+  assert.throws(()=>client.operation('/api/plans/plan-a/delete',{},'plans:publish'));
 });
 test('redemption and admin commands are allowed only on their exact paths',()=>{
   const client=new c.ConsoleClient(async()=>new Response('{}'),()=> 'key-12345678');
@@ -38,6 +41,20 @@ test('plan editor builds exact multipliers and derives features from chosen mode
   assert.equal(plan.credits,'50000000');assert.equal(JSON.stringify(plan.features),'["image","text"]');assert.equal(JSON.stringify(plan.models),'["t","i"]');
   assert.equal(plan.pricing.models.i.numerator,'5');assert.equal(plan.test_only,false);
   assert.throws(()=>p.buildPlan({name:'x',credits:'1',days:'30',concurrency:'1',multiplier:'1',selected:[],overrides:{}},items,'p'));
+});
+test('editing a plan fills the form from it and publishes the next version',()=>{
+  const p=load('PlanEditor.tsx');
+  const items=[{id:'t',feature:'text'},{id:'i',feature:'image'},{id:'v',feature:'video'}];
+  assert.equal(p.fractionText({numerator:'8',denominator:'10'}),'0.8');assert.equal(p.fractionText({numerator:'1',denominator:'3'}),'0.3333');assert.equal(p.fractionText(null),'');
+  assert.equal(p.nextVersion('1'),'2');assert.equal(p.nextVersion('41'),'42');assert.match(p.nextVersion('beta'),/^beta-/);
+  const base={id:'plan-a',name:'标准版',version:'1',credits:'1000000000',days:30,concurrency:5,features:['image','text'],models:['t','i','gone'],pricing:{default:{numerator:'4',denominator:'5'},models:{i:{numerator:'1',denominator:'2'}}}};
+  const draft=p.planDraft(base,items);
+  assert.equal(draft.name,'标准版');assert.equal(draft.credits,'1000');assert.equal(draft.days,'30');assert.equal(draft.concurrency,'5');assert.equal(draft.multiplier,'0.8');
+  assert.equal(JSON.stringify(draft.selected),'["t","i"]');assert.equal(draft.overrides.i,'0.5');  // A model that no longer exists is dropped.
+  assert.equal(JSON.stringify(p.planDraft({...base,models:null},items).selected),'["t","i"]');  // No model list: every model of its features.
+  const plan=p.buildPlan(draft,items,'plan-b',p.nextVersion(base.version));
+  assert.equal(plan.version,'2');assert.equal(plan.credits,'1000000000');assert.equal(plan.pricing.default.numerator,'8');
+  assert.throws(()=>p.buildPlan({...draft,selected:['t','gone']},items,'plan-c'));
 });
 test('model catalog shows prices in points',()=>{
   const m=load('ModelCatalogPage.tsx');
