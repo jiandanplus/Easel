@@ -83,9 +83,11 @@ async def test_proof_freezes_only_central_candidates_and_expires_in_one_hour(con
 @pytest.mark.parametrize('changes',[{'policy_sha256':'f'*64},{'backup_sha256':'f'*64},{'tenant_id':'different'},
     {'source_context_sha256':'e'*64},{'user_ids':()},{'user_ids':('unrelated',)}, {'client_ids':()},
     {'schema_sha256':'x'},{'verified_at':datetime(2000,1,1,tzinfo=timezone.utc)},
-    {'verified_at':datetime.now(timezone.utc)+timedelta(minutes=5)}])
+    {'verified_at':'five minutes ahead'}])
 async def test_invalid_or_incomplete_evidence_never_records_proof(continuity,db,changes):
     service,policy,*_=continuity
+    if changes.get('verified_at')=='five minutes ahead':  # Computed now: a long suite run must not let it slip into the past.
+        changes={'verified_at':datetime.now(timezone.utc)+timedelta(minutes=5)}
     with pytest.raises(PlatformError):await service.record_proof(evidence(policy,**changes),operator('identity:collect'))
     async with db.connection() as c:
         assert (await (await c.execute('SELECT count(*) n FROM identity_restore_proofs')).fetchone())['n']==0
