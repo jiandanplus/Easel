@@ -134,6 +134,21 @@ def test_openai_slot_still_unchanged(sandbox):
 def _capture_probes(monkeypatch):
     """拦住真实网络请求，记录每次探测的 (url, headers)。"""
     seen: list[tuple[str, dict]] = []
+    # 不依赖本机 DNS：被污染的解析（如返回 2001:: 地址）会让内网拦截误判，测试就跟着网络环境变。
+    # 域名一律解析成公网地址；IP 字面量和 localhost 照常交给真实解析（不走 DNS）。
+    import ipaddress
+    import socket
+    real = socket.getaddrinfo
+
+    def resolve(host, *a, **k):
+        try:
+            ipaddress.ip_address(host)
+            return real(host, *a, **k)
+        except ValueError:
+            if host == "localhost" or host.endswith(".localhost"):
+                return real(host, *a, **k)
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))]
+    monkeypatch.setattr(socket, "getaddrinfo", resolve)
 
     class _Resp:
         status = 200

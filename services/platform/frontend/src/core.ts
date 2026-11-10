@@ -46,9 +46,12 @@ export function formatDay(value: unknown): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '数据无效' : date.toLocaleDateString('zh-CN');
 }
+const CODE_MESSAGES: Record<string, string> = {
+  console_price_too_high: '价格太高：按模型最大输入和输出估算，单次调用会超过 100 点上限，用户的每次调用都会被拒绝。文本模型按“每百万 token 多少点”填写。',
+};
 export class ConsoleError extends Error {
   constructor(public status: number, public code: string) {
-    super(status === 401 ? '登录已失效，请重新登录' : status === 403 ? '当前账号没有此操作权限，请联系运营者' : status === 409 ? '版本或幂等操作冲突。请核对原操作结果，再刷新数据' : status === 422 ? '提交内容未通过校验，请检查字段与版本' : status === 0 ? '连接中断，操作结果未知。请使用同一操作重试' : '服务暂不可用，请稍后重试');
+    super(CODE_MESSAGES[code] ?? (status === 401 ? '登录已失效，请重新登录' : status === 403 ? '当前账号没有此操作权限，请联系运营者' : status === 409 ? '版本或幂等操作冲突。请核对原操作结果，再刷新数据' : status === 422 ? '提交内容未通过校验，请检查字段与版本' : status === 0 ? '连接中断，操作结果未知。请使用同一操作重试' : '服务暂不可用，请稍后重试'));
   }
 }
 export class ConsoleClient {

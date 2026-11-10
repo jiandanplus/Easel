@@ -11,7 +11,8 @@ from easel.platform.execution_proxy import ExecutionProxy
 
 
 SAFE_CODES = ["concurrency_limit", "insufficient_credits", "membership_required",
-              "pending_reconciliation", "pending_reconciliation_limit", "execution_entitlement_required", "execution_running", "execution_waived"]
+              "pending_reconciliation", "pending_reconciliation_limit", "execution_entitlement_required", "execution_running", "execution_waived",
+              "invocation_budget_exceeded", "output_limit_exceeded", "unsupported_reasoning_effort"]
 
 
 class ErrorBody(httpx.AsyncByteStream):
@@ -116,6 +117,9 @@ def test_next_explicit_operation_clears_prior_safe_failure(tmp_path):
     ("execution_entitlement_required","未开通此模型功能"),
     ("execution_running","请求仍在执行"),
     ("execution_waived","费用由平台承担，用户不扣点；供应商用量仍未知"),
+    ("invocation_budget_exceeded","单次调用价格超过了平台上限"),
+    ("output_limit_exceeded","回复长度超过了模型上限"),
+    ("unsupported_reasoning_effort","不支持所选的思考强度"),
     ("PRIVATE_UNKNOWN","原通用执行错误"),
 ])
 async def test_subscription_pi_surfaces_owned_admission_without_resending(tmp_path,monkeypatch,code,expected):

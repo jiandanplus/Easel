@@ -29,6 +29,7 @@ MAX_CENTRAL_ERROR = 8192
 SAFE_CENTRAL_FAILURES = frozenset({
     "concurrency_limit", "insufficient_credits", "membership_required",
     "pending_reconciliation", "pending_reconciliation_limit", "execution_entitlement_required", "execution_running", "execution_waived",
+    "invocation_budget_exceeded", "output_limit_exceeded", "unsupported_reasoning_effort",
 })
 STREAM_ERROR = b'event: error\ndata: {"type":"error","error":{"code":"central_stream_failed"}}\n\n'
 

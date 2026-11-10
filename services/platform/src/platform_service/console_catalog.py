@@ -12,7 +12,7 @@ from .contracts import OperatorIdentity
 from .errors import PlatformError
 from .membership import MembershipService
 from .billing.service import BillingService
-from .execution.core import ExecutionService, validate_definition
+from .execution.core import MAX_BUDGET as TEXT_BUDGET, ExecutionService, validate_definition
 from .console_service import provider_registry
 from .redemptions import code_hash, new_code
 from .execution.rates import cost as cost_text, normalize as normalize_text_rate
@@ -23,6 +23,12 @@ from .model_names import upstream_model_ok
 from .provider_channels import CAPABILITY_CHANNEL, CHANNELS, PLATFORMS, clean_base_url, clean_key, clean_name, clean_options, provider_id as channel_provider_id, seal_scope, spec_of
 from .provider_secrets import seal, valid_public_key
 
+
+
+def text_price_ok(rate, limits):
+    """One call at the model's largest size must fit an invocation's budget, or every call is refused."""
+    if not 0 < cost_text(rate, limits['max_input_tokens'], limits['max_output_tokens']) <= TEXT_BUDGET:
+        raise PlatformError(422, 'console_price_too_high')
 
 class BoundDatabase:
     """Existing business methods commit only with the outer console transaction."""
@@ -339,6 +345,7 @@ class ConsoleCatalog:
             provider = await self._provider(conn, kind, payload['provider_id'])
             definition = validate_definition({**common, 'feature': 'text', 'provider_id': provider['provider_id'],
                                               'provider_version': provider['provider_version'], 'limits': dict(TEXT['limits'])})
+            text_price_ok(definition['rate'], definition['limits'])
             await conn.execute('INSERT INTO execution_models(id,definition,operator_id) VALUES (%s,%s,%s)', (model, Jsonb(definition), actor))
             await conn.execute('INSERT INTO execution_model_states(model_id,operator_id) VALUES (%s,%s)', (model, actor))
         else:
@@ -421,7 +428,7 @@ class ConsoleCatalog:
         rate = build_rate(definition['capability'], 'price-' + uuid4().hex[:12], payload['prices'])
         if payload['kind'] == 'execution':
             rate = normalize_text_rate(rate)
-            cost_text(rate, definition['limits']['max_input_tokens'], definition['limits']['max_output_tokens'])
+            text_price_ok(rate, definition['limits'])
         else:
             rate = normalize_media_rate(rate)
             if {m['unit'] for m in rate['meters']} != {m['unit'] for m in definition['rate']['meters']}:

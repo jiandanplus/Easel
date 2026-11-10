@@ -25,6 +25,9 @@ CENTRAL_EXECUTION_MESSAGES = {
     "execution_waived": "本次费用由平台承担，用户不扣点；供应商用量仍未知，原模型回复不可恢复。",
     "execution_entitlement_required": "当前订阅未开通此模型功能，请在账号与订阅中查看可用模型和权益。",
     "execution_running": "该请求仍在执行，请查询原请求状态，避免重复提交。",
+    "invocation_budget_exceeded": "这个模型的单次调用价格超过了平台上限，没有扣点。请联系运营者在后台核对模型价格，或换一个模型。",
+    "output_limit_exceeded": "这次请求要求的回复长度超过了模型上限，没有扣点。请换一个模型或缩短任务后重试。",
+    "unsupported_reasoning_effort": "这个模型不支持所选的思考强度，没有扣点。请换一个思考强度或模型后重试。",
 }
 
 

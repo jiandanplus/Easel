@@ -4,6 +4,8 @@ import re
 import pytest
 
 from platform_service.errors import PlatformError
+from platform_service.console_catalog import text_price_ok
+from platform_service.execution.rates import cost as cost_text, normalize as normalize_text_rate
 from platform_service.model_templates import build_rate, points_to_part
 from test_console_auth import console  # noqa: F401 (fixture)
 from test_console_owner_allowance import low_catalog
@@ -30,6 +32,17 @@ def test_prices_are_entered_in_points_and_stored_exactly():
             points_to_part(bad, 1)
 
 
+def test_text_prices_are_points_per_million_tokens():
+    """The form asks for points per million tokens; a rate is microcredits per token, so 1 point/M = 1/token."""
+    rate = build_rate("text", "v", {"input": "1", "output": "0.5"})
+    assert rate == {"version": "v", "input": {"numerator": "1", "denominator": "1"}, "output": {"numerator": "1", "denominator": "2"}}
+    assert cost_text(normalize_text_rate(rate), 16384, 1024) == 16896  # about 0.017 points for the largest call
+    text_price_ok(normalize_text_rate(rate), {"max_input_tokens": 16384, "max_output_tokens": 1024})
+    with pytest.raises(PlatformError) as refused:
+        text_price_ok(normalize_text_rate(build_rate("text", "v", {"input": "6000", "output": "6000"})), {"max_input_tokens": 16384, "max_output_tokens": 1024})
+    assert refused.value.code == "console_price_too_high"
+
+
 @pytest.mark.asyncio
 async def test_operator_adds_models_sets_prices_and_enables_them(db, console, console_role):
     await seed(db)
@@ -45,7 +58,7 @@ async def test_operator_adds_models_sets_prices_and_enables_them(db, console, co
     assert {p["provider_id"] for p in listing["providers"]} == {"gateway", "images"} and listing["templates"]
     await catalog.set_model_price(principal, "execution", "my-text", {"input": "8", "output": "32"}, "调价", "p1")
     rows = {row["id"]: row for row in (await queries.model_catalog(principal))["items"]}
-    assert rows["my-text"]["custom_price"] is True and rows["my-text"]["rate"]["input"]["numerator"] == "8000000"
+    assert rows["my-text"]["custom_price"] is True and rows["my-text"]["rate"]["input"] == {"numerator": "8", "denominator": "1"}
     updated = rows["my-text"]["updated_at"]
     assert (await catalog.set_model_state(principal, "my-text", True, "上线", "e1", updated))["enabled"] is True
     assert (await catalog.set_media_state(principal, "my-image", True, "上线", "e2"))["enabled"] is True
@@ -128,3 +141,30 @@ async def test_one_bad_model_leaves_nothing_behind(db, console, console_role):
     with pytest.raises(PlatformError):
         await catalog.import_models(principal, "image.edit", "images", ["a", "b"], {"image": "2"}, True, "拉取", "bad-2")  # This interface cannot edit.
     assert not [row for row in (await queries.model_catalog(principal))["items"] if row["managed"]]
+
+
+@pytest.mark.asyncio
+async def test_migration_037_divides_console_text_prices_by_a_million(db, console, console_role):
+    """Prices saved before the unit fix were a million times too high; 037 appends the corrected price."""
+    from pathlib import Path
+    import platform_service
+    from platform_service.pricing import current_rate
+    await seed(db)
+    await providers(db)
+    catalog, _, principal, _ = await low_catalog(console, console_role, "operator")
+    await catalog.create_managed_model(principal, "old-b", "旧文本", "text", "gateway", "u-b", TEXT_PRICES, "新增", "g2")
+    async with db.connection() as c:
+        # Re-create the stored shapes the old code produced: an inflated definition and an inflated reprice.
+        await c.execute("""INSERT INTO execution_models(id,definition,operator_id) SELECT 'old-a', jsonb_set(jsonb_set(definition,'{id}','"old-a"'), '{rate}',
+            '{"version":"console-aaaaaaaaaaaa","input":{"numerator":"1000000","denominator":"1"},"output":{"numerator":"3000000","denominator":"2"}}'), 'op'
+            FROM execution_models WHERE id='old-b'""")
+        await c.execute("""INSERT INTO model_prices(id,kind,model_id,rate,reason,operator_id) VALUES
+            (md5('x'),'execution','old-b','{"version":"price-bbbbbbbbbbbb","input":{"numerator":"500000","denominator":"1"},"output":{"numerator":"2000000","denominator":"1"}}','调价','op')""")
+        await c.execute("""INSERT INTO execution_models(id,definition,operator_id) SELECT 'internal', jsonb_set(jsonb_set(definition,'{id}','"internal"'),'{verification_ref}','"internal"'), 'op' FROM execution_models WHERE id='old-b'""")
+        await c.execute((Path(platform_service.__file__).parent / "migrations/037_text_price_unit.sql").read_text())
+        a = await current_rate(c, "execution", "old-a", None)
+        b = await current_rate(c, "execution", "old-b", None)
+        internal = await current_rate(c, "execution", "internal", "untouched")
+    assert a["input"] == {"numerator": "1", "denominator": "1"} and a["output"] == {"numerator": "3", "denominator": "2"}
+    assert b["input"] == {"numerator": "1", "denominator": "2"} and b["output"] == {"numerator": "2", "denominator": "1"}
+    assert a["version"].startswith("unit-fix-") and internal == "untouched"

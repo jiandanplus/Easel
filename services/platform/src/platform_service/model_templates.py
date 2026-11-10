@@ -7,9 +7,11 @@ OPENAI_IMAGE_SIZES = ["1024x1024", "1536x1024", "1024x1536"]
 # apimart takes ratios; the desktop keeps speaking in pixels at its 1k tier.
 APIMART_SIZES = {"1024x1024": "1:1", "1536x1024": "3:2", "1024x1536": "2:3", "1152x864": "4:3", "864x1152": "3:4", "1536x864": "16:9", "864x1536": "9:16"}
 
+# Text prices are entered as points per million tokens; rates are microcredits per token.
+TEXT_PER = 1_000_000
 TEXT = {"capability": "text", "label": "文本", "feature": "text", "kind": "execution",
         "limits": {"max_input_bytes": 1048576, "max_input_tokens": 16384, "max_output_tokens": 1024},
-        "meters": [{"key": "input", "label": "每百万输入 token", "per": 1}, {"key": "output", "label": "每百万输出 token", "per": 1}]}
+        "meters": [{"key": "input", "label": "每百万输入 token", "per": TEXT_PER}, {"key": "output", "label": "每百万输出 token", "per": TEXT_PER}]}
 
 MEDIA = {
     "image.generate": {
@@ -107,7 +109,7 @@ def build_rate(capability, version, prices):
     if capability == "text":
         if set(prices) != {"input", "output"}:
             raise PlatformError(422, "invalid_console_command")
-        return {"version": version, "input": points_to_part(prices["input"], 1), "output": points_to_part(prices["output"], 1)}
+        return {"version": version, "input": points_to_part(prices["input"], TEXT_PER), "output": points_to_part(prices["output"], TEXT_PER)}
     template = MEDIA.get(capability)
     if template is None or set(prices) != {template["unit"]}:
         raise PlatformError(422, "invalid_console_command")
